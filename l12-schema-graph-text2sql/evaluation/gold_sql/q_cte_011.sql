@@ -1,7 +1,8 @@
 -- CTE K: CTE + 熱物性テーブル到達
--- 「デバイ温度が高い上位10件のL1₂化合物について生成エンタルピーも計算して出して」
+-- 「デバイ温度が高い上位10件のL1₂化合物について純元素基底状態基準に再基準化した生成エネルギーも計算して出して」
 WITH thermal_l12 AS (
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
+           ps.reference_set,
            tp.debye_temperature_k
     FROM material_entry m
     JOIN structure s ON s.entry_id = m.entry_id
@@ -18,12 +19,14 @@ enthalpy AS (
     FROM thermal_l12 tl
     JOIN composition comp ON comp.entry_id = tl.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element
+        AND per.reference_set = tl.reference_set
     GROUP BY tl.entry_id, tl.formula, tl.formation_energy_per_atom,
              tl.debye_temperature_k
 )
 SELECT formula,
        ROUND(debye_temperature_k::numeric, 1) AS debye_temperature_k,
-       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4) AS delta_h_f
+       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4)
+           AS enthalpy_vs_element_ground_states
 FROM enthalpy
 ORDER BY debye_temperature_k DESC
 LIMIT 10;

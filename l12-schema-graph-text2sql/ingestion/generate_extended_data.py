@@ -59,6 +59,13 @@ STABLE_EAH_THRESHOLD = 0.001  # eV/atom
 # Package-specific energy convention name (see reference_energy_set master).
 REFERENCE_SET = "L12-FIXTURE-PBE-v1"
 
+# Second convention whose elemental delta_e values are deliberately shifted.
+# It exists so that SQL which omits the reference_set join/filter on
+# pure_element_reference returns visibly wrong (duplicated/shifted) results
+# instead of accidentally correct ones. No phase_stability row uses it.
+DIVERGENCE_TEST_REFERENCE_SET = "L12-FIXTURE-DIVERGENCE-TEST-v1"
+DIVERGENCE_TEST_DELTA_E_SHIFT = 0.05  # eV/atom added to every delta_e
+
 # Known L12 compounds (a_elem, b_elem, lattice_a, formation_energy,
 # energy_above_hull, bulk_modulus, shear_modulus); is_stable is derived
 # from energy_above_hull, never hand-assigned
@@ -437,6 +444,21 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
             "INSERT INTO source_energy_convention (source_db, reference_set) "
             f"VALUES ('{src}', '{REFERENCE_SET}');\n"
         )
+    out.write(
+        "\n-- Divergence-test convention: same elements, shifted delta_e.\n"
+        "-- Present so that queries which ignore reference_set on\n"
+        "-- pure_element_reference produce visibly different results\n"
+        "-- (see tests). Intentionally NOT mapped in source_energy_convention:\n"
+        "-- no material row may declare it.\n"
+        "INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)\n"
+        f"VALUES ('{DIVERGENCE_TEST_REFERENCE_SET}', 'DFT', 'PBE',\n"
+        "        'synthetic fixture (divergence test)',\n"
+        "        'shifted copy of the L12-FIXTURE-PBE-v1 elemental references',\n"
+        "        'Test-only convention: every elemental delta_e is shifted by "
+        f"+{DIVERGENCE_TEST_DELTA_E_SHIFT} eV/atom so that joins missing the "
+        "reference_set condition are detectable');\n"
+    )
+
     out.write("\n-- Pure element reference energies (OQMD ground states)\n")
     for sym in sorted(pure):
         info = pure[sym]
@@ -446,6 +468,25 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
             f"delta_e, volume_per_atom, stability, band_gap, n_polymorphs) "
             f"VALUES ('{sym}', '{REFERENCE_SET}', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
             f"{_sql_num(info['delta_e_per_atom'])}, {_sql_num(info['volume_per_atom'])}, "
+            f"{_sql_num(max(0.0, info['stability']) if info['stability'] is not None else None)}, "
+            f"{_sql_num(info['band_gap'])}, {info['n_polymorphs']});\n"
+        )
+
+    out.write("\n-- Divergence-test elemental references (shifted delta_e)\n")
+    for sym in sorted(pure):
+        info = pure[sym]
+        shifted = (
+            info["delta_e_per_atom"] + DIVERGENCE_TEST_DELTA_E_SHIFT
+            if info["delta_e_per_atom"] is not None
+            else None
+        )
+        out.write(
+            f"INSERT INTO pure_element_reference "
+            f"(element_symbol, reference_set, oqmd_entry_id, ground_state_spacegroup, "
+            f"delta_e, volume_per_atom, stability, band_gap, n_polymorphs) "
+            f"VALUES ('{sym}', '{DIVERGENCE_TEST_REFERENCE_SET}', {info['oqmd_entry_id']}, "
+            f"{_sql_str(info['spacegroup'])}, "
+            f"{_sql_num(shifted)}, {_sql_num(info['volume_per_atom'])}, "
             f"{_sql_num(max(0.0, info['stability']) if info['stability'] is not None else None)}, "
             f"{_sql_num(info['band_gap'])}, {info['n_polymorphs']});\n"
         )

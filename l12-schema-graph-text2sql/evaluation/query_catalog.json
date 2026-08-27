@@ -1778,7 +1778,7 @@
     },
     {
       "qid": "q_vhard_016",
-      "question": "安定なL1₂化合物の生成エンタルピーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。",
+      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。",
       "eval_set": "main",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -1814,7 +1814,7 @@
     },
     {
       "qid": "q_vhard_018",
-      "question": "安定なL1₂化合物のA-site元素ごとに平均生成エンタルピーを計算して。",
+      "question": "安定なL1₂化合物のA-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーの平均を計算して。",
       "eval_set": "main",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -1832,7 +1832,7 @@
     },
     {
       "qid": "q_vhard_019",
-      "question": "安定なL1₂化合物の生成エンタルピーを計算して、Ni含有のもので最も安定な5件を出して。",
+      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、Ni含有のもので最も安定な5件を出して。",
       "eval_set": "main",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3686,7 +3686,7 @@
     },
     {
       "qid": "q_vhard_016",
-      "question": "安定なL1₂化合物の生成エンタルピーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。",
+      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3704,7 +3704,7 @@
     },
     {
       "qid": "q_vhard_018",
-      "question": "安定なL1₂化合物のA-site元素ごとに平均生成エンタルピーを計算して。",
+      "question": "安定なL1₂化合物のA-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーの平均を計算して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3722,7 +3722,7 @@
     },
     {
       "qid": "q_vhard_019",
-      "question": "安定なL1₂化合物の生成エンタルピーを計算して、Ni含有のもので最も安定な5件を出して。",
+      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、Ni含有のもので最も安定な5件を出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3758,7 +3758,7 @@
     },
     {
       "qid": "q_cte_006",
-      "question": "A-site元素ごとに生成エンタルピーが最も低いL1₂化合物を1件ずつ出して。",
+      "question": "A-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーが最も低いL1₂化合物を1件ずつ出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3794,7 +3794,7 @@
     },
     {
       "qid": "q_cte_008",
-      "question": "B-site元素ごとの平均生成エンタルピーが-0.4 eV/atom未満のグループを出して。",
+      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3812,7 +3812,7 @@
     },
     {
       "qid": "q_cte_009",
-      "question": "元素ごとに安定なL1₂化合物の数と平均生成エンタルピーを計算し、化合物数上位5元素を出して。",
+      "question": "元素ごとに安定なL1₂化合物の数と純元素基底状態基準に再基準化した生成エネルギーの平均を計算し、化合物数上位5元素を出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3830,7 +3830,7 @@
     },
     {
       "qid": "q_cte_010",
-      "question": "体積弾性率が150 GPa以上のL1₂化合物の生成エンタルピーを計算して出して。",
+      "question": "体積弾性率が150 GPa以上のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3848,7 +3848,7 @@
     },
     {
       "qid": "q_cte_011",
-      "question": "デバイ温度が高い上位10件のL1₂化合物について生成エンタルピーも計算して出して。",
+      "question": "デバイ温度が高い上位10件のL1₂化合物について純元素基底状態基準に再基準化した生成エネルギーも計算して出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3866,7 +3866,7 @@
     },
     {
       "qid": "q_cte_012",
-      "question": "強磁性のL1₂化合物の生成エンタルピーを計算して安定な順に出して。",
+      "question": "強磁性のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して安定な順に出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3902,7 +3902,7 @@
     },
     {
       "qid": "q_cte_014",
-      "question": "元素ごとに、その元素を含むL1₂化合物のうち生成エンタルピーが負である割合を出して。",
+      "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3920,7 +3920,7 @@
     },
     {
       "qid": "q_cte_015",
-      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の平均生成エンタルピーをA-site元素ごとに出して。",
+      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
       "eval_set": "cte15",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3938,7 +3938,7 @@
     },
     {
       "qid": "q_cte_006",
-      "question": "A-site元素ごとに生成エンタルピーが最も低いL1₂化合物を1件ずつ出して。",
+      "question": "A-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーが最も低いL1₂化合物を1件ずつ出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3974,7 +3974,7 @@
     },
     {
       "qid": "q_cte_008",
-      "question": "B-site元素ごとの平均生成エンタルピーが-0.4 eV/atom未満のグループを出して。",
+      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -3992,7 +3992,7 @@
     },
     {
       "qid": "q_cte_009",
-      "question": "元素ごとに安定なL1₂化合物の数と平均生成エンタルピーを計算し、化合物数上位5元素を出して。",
+      "question": "元素ごとに安定なL1₂化合物の数と純元素基底状態基準に再基準化した生成エネルギーの平均を計算し、化合物数上位5元素を出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -4010,7 +4010,7 @@
     },
     {
       "qid": "q_cte_010",
-      "question": "体積弾性率が150 GPa以上のL1₂化合物の生成エンタルピーを計算して出して。",
+      "question": "体積弾性率が150 GPa以上のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -4028,7 +4028,7 @@
     },
     {
       "qid": "q_cte_011",
-      "question": "デバイ温度が高い上位10件のL1₂化合物について生成エンタルピーも計算して出して。",
+      "question": "デバイ温度が高い上位10件のL1₂化合物について純元素基底状態基準に再基準化した生成エネルギーも計算して出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -4046,7 +4046,7 @@
     },
     {
       "qid": "q_cte_012",
-      "question": "強磁性のL1₂化合物の生成エンタルピーを計算して安定な順に出して。",
+      "question": "強磁性のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して安定な順に出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -4082,7 +4082,7 @@
     },
     {
       "qid": "q_cte_014",
-      "question": "元素ごとに、その元素を含むL1₂化合物のうち生成エンタルピーが負である割合を出して。",
+      "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",
@@ -4100,7 +4100,7 @@
     },
     {
       "qid": "q_cte_015",
-      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の平均生成エンタルピーをA-site元素ごとに出して。",
+      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
       "eval_set": "cte_pattern",
       "category": "multistep",
       "category_ja": "多段計算",

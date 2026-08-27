@@ -6,8 +6,12 @@
 --
 --   formation_enthalpy_ev_per_atom
 --       = phase_stability.formation_energy_per_atom
---       = the source formation energy (OQMD delta_e convention), relative
---         to the fitted elemental reference states of ps.reference_set.
+--       = the fixture formation energy under ps.reference_set
+--         (L12-FIXTURE-PBE-v1 in this package), relative to the fitted
+--         elemental reference states of that set. Compound values are
+--         synthetic fixture data, NOT compound formation energies copied
+--         from OQMD/MP/AFLOW; only the pure-element delta_e values in
+--         pure_element_reference are adopted OQMD DFT-PBE data.
 --       This IS the formation enthalpy; no further subtraction is applied
 --       to it (subtracting elemental delta_e again would double-correct).
 --

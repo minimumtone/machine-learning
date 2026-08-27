@@ -46,9 +46,13 @@ CREATE TABLE element (
     symbol VARCHAR(5) NOT NULL UNIQUE,
     name VARCHAR(50),
     atomic_number INTEGER NOT NULL CHECK (atomic_number > 0),
-    atomic_mass NUMERIC(10,4) CHECK (atomic_mass > 0),
-    electronegativity NUMERIC(5,3) CHECK (electronegativity >= 0),
-    atomic_radius NUMERIC(6,2) CHECK (atomic_radius > 0),
+    -- NUMERIC admits NaN (which compares greater than any number), so
+    -- one-sided lower bounds alone would not reject it; hence <> 'NaN'.
+    atomic_mass NUMERIC(10,4) CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
+    electronegativity NUMERIC(5,3)
+        CHECK (electronegativity >= 0 AND electronegativity <> 'NaN'),
+    atomic_radius NUMERIC(6,2)
+        CHECK (atomic_radius > 0 AND atomic_radius <> 'NaN'),
     group_number INTEGER CHECK (group_number BETWEEN 1 AND 18),
     period_number INTEGER CHECK (period_number BETWEEN 1 AND 7),
     block VARCHAR(5),
@@ -117,10 +121,14 @@ CREATE TABLE structure (
     formula_type TEXT,
     space_group_number INTEGER REFERENCES space_group(space_group_number),
     crystal_system TEXT,
-    lattice_a DOUBLE PRECISION CHECK (lattice_a > 0),
-    lattice_b DOUBLE PRECISION CHECK (lattice_b > 0),
-    lattice_c DOUBLE PRECISION CHECK (lattice_c > 0),
-    volume_per_atom DOUBLE PRECISION CHECK (volume_per_atom > 0),
+    -- Finite-only physical values: NaN sorts above every number in
+    -- PostgreSQL, so 'x > 0' alone would accept NaN and +Infinity;
+    -- the upper bound rejects both.
+    lattice_a DOUBLE PRECISION CHECK (lattice_a > 0 AND lattice_a < 'Infinity'),
+    lattice_b DOUBLE PRECISION CHECK (lattice_b > 0 AND lattice_b < 'Infinity'),
+    lattice_c DOUBLE PRECISION CHECK (lattice_c > 0 AND lattice_c < 'Infinity'),
+    volume_per_atom DOUBLE PRECISION
+        CHECK (volume_per_atom > 0 AND volume_per_atom < 'Infinity'),
     space_group TEXT
 );
 
@@ -147,6 +155,11 @@ CREATE TABLE reference_energy_set (
 -- (source_db, phase_stability.reference_set) pair actually loaded is
 -- present in this map, so a source cannot silently declare a convention
 -- it was never mapped to.
+-- Scope: this table does NOT assert physical compatibility with the real
+-- external database named by source_db (source_db is a synthetic
+-- provenance label in this fixture, not the origin of the energy values).
+-- It only declares which (label, reference_set) combinations this
+-- fixture is allowed to load.
 CREATE TABLE source_energy_convention (
     source_db TEXT,
     reference_set TEXT REFERENCES reference_energy_set(reference_set),
@@ -230,7 +243,8 @@ CREATE TABLE element_property (
     -- calculated_property.value). NUMERIC still admits NaN, hence the CHECK.
     value NUMERIC(15,6) NOT NULL CHECK (value <> 'NaN'),
     unit VARCHAR(30),
-    temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
+    temperature_k NUMERIC(8,2)
+        CHECK (temperature_k >= 0 AND temperature_k <> 'NaN'),
     source VARCHAR(100),
     -- Temperature-dependent properties keep one row per temperature, and
     -- values from different literature sources may coexist.
@@ -287,8 +301,10 @@ CREATE TABLE experimental_measurement (
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     reference_id INTEGER REFERENCES literature_reference(reference_id),
     method VARCHAR(100),  -- 'XRD', 'neutron_diffraction', 'calorimetry'
-    temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
-    pressure_gpa NUMERIC(8,3) CHECK (pressure_gpa >= 0),
+    temperature_k NUMERIC(8,2)
+        CHECK (temperature_k >= 0 AND temperature_k <> 'NaN'),
+    pressure_gpa NUMERIC(8,3)
+        CHECK (pressure_gpa >= 0 AND pressure_gpa <> 'NaN'),
     -- One measurement per (entry, reference, method, T, P); replicate
     -- measurements are outside this verification schema, so accidental
     -- double-loading of the same measurement is rejected.
@@ -308,7 +324,8 @@ CREATE TABLE measured_property (
     -- NOT NULL: unknown values are represented by absence (see
     -- calculated_property.value). NUMERIC still admits NaN, hence the CHECK.
     value NUMERIC(15,6) NOT NULL CHECK (value <> 'NaN'),
-    uncertainty NUMERIC(15,6) CHECK (uncertainty >= 0),
+    uncertainty NUMERIC(15,6)
+        CHECK (uncertainty >= 0 AND uncertainty <> 'NaN'),
     unit VARCHAR(30),
     -- Intentional simplification: one scalar value per (measurement,
     -- property); component-resolved experimental properties are outside
@@ -334,8 +351,10 @@ CREATE TABLE material_synthesis (
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     synthesis_id INTEGER NOT NULL REFERENCES synthesis_method(synthesis_id),
     reference_id INTEGER REFERENCES literature_reference(reference_id),
-    temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
-    duration_hours NUMERIC(10,2) CHECK (duration_hours >= 0),
+    temperature_k NUMERIC(8,2)
+        CHECK (temperature_k >= 0 AND temperature_k <> 'NaN'),
+    duration_hours NUMERIC(10,2)
+        CHECK (duration_hours >= 0 AND duration_hours <> 'NaN'),
     atmosphere VARCHAR(50),
     success BOOLEAN NOT NULL DEFAULT TRUE
     -- No UNIQUE(entry_id, synthesis_id): the same material may be synthesized
@@ -356,8 +375,9 @@ CREATE TABLE material_defect (
     material_defect_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     defect_type_id INTEGER NOT NULL REFERENCES defect_type(defect_type_id),
-    formation_energy NUMERIC(10,6),
-    concentration NUMERIC(15,8) CHECK (concentration >= 0),
+    formation_energy NUMERIC(10,6) CHECK (formation_energy <> 'NaN'),
+    concentration NUMERIC(15,8)
+        CHECK (concentration >= 0 AND concentration <> 'NaN'),
     site VARCHAR(50),
     dopant_element_id INTEGER REFERENCES element(element_id),
     -- A defect record is identified by type + site + dopant: the same entry
@@ -372,8 +392,11 @@ CREATE TABLE band_structure (
     band_structure_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
     is_direct_gap BOOLEAN NOT NULL,
-    cbm_energy DOUBLE PRECISION,
-    vbm_energy DOUBLE PRECISION,
+    -- Sign-free energies: finite-only (NaN / +-Infinity rejected).
+    cbm_energy DOUBLE PRECISION
+        CHECK (cbm_energy > '-Infinity' AND cbm_energy < 'Infinity'),
+    vbm_energy DOUBLE PRECISION
+        CHECK (vbm_energy > '-Infinity' AND vbm_energy < 'Infinity'),
     band_gap_type VARCHAR(20),
     num_bands INTEGER CHECK (num_bands > 0),
     num_kpoints INTEGER CHECK (num_kpoints > 0)
@@ -382,8 +405,10 @@ CREATE TABLE band_structure (
 CREATE TABLE density_of_states (
     dos_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
-    total_dos_at_fermi DOUBLE PRECISION CHECK (total_dos_at_fermi >= 0),
-    efermi DOUBLE PRECISION,
+    total_dos_at_fermi DOUBLE PRECISION
+        CHECK (total_dos_at_fermi >= 0 AND total_dos_at_fermi < 'Infinity'),
+    efermi DOUBLE PRECISION
+        CHECK (efermi > '-Infinity' AND efermi < 'Infinity'),
     -- NULL means metallicity was not determined for this DOS record;
     -- three-valued on purpose, unlike the other two-state flags.
     is_metallic BOOLEAN,
@@ -395,9 +420,12 @@ CREATE TABLE density_of_states (
 CREATE TABLE elastic_tensor (
     elastic_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
-    bulk_modulus_vrh DOUBLE PRECISION CHECK (bulk_modulus_vrh > 0),
-    shear_modulus_vrh DOUBLE PRECISION CHECK (shear_modulus_vrh > 0),
-    youngs_modulus DOUBLE PRECISION CHECK (youngs_modulus > 0),
+    bulk_modulus_vrh DOUBLE PRECISION
+        CHECK (bulk_modulus_vrh > 0 AND bulk_modulus_vrh < 'Infinity'),
+    shear_modulus_vrh DOUBLE PRECISION
+        CHECK (shear_modulus_vrh > 0 AND shear_modulus_vrh < 'Infinity'),
+    youngs_modulus DOUBLE PRECISION
+        CHECK (youngs_modulus > 0 AND youngs_modulus < 'Infinity'),
     poisson_ratio DOUBLE PRECISION CHECK (poisson_ratio > -1 AND poisson_ratio < 0.5),
     is_stable BOOLEAN NOT NULL  -- mechanical (Born) stability, distinct from phase stability
 );
@@ -405,19 +433,28 @@ CREATE TABLE elastic_tensor (
 CREATE TABLE magnetic_property (
     magnetic_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL UNIQUE REFERENCES material_entry(entry_id),
-    total_magnetization DOUBLE PRECISION CHECK (total_magnetization >= 0),
+    total_magnetization DOUBLE PRECISION
+        CHECK (total_magnetization >= 0 AND total_magnetization < 'Infinity'),
     magnetic_ordering VARCHAR(30),
-    curie_temperature_k DOUBLE PRECISION CHECK (curie_temperature_k >= 0),
+    curie_temperature_k DOUBLE PRECISION
+        CHECK (curie_temperature_k >= 0 AND curie_temperature_k < 'Infinity'),
     magnetic_anisotropy_energy DOUBLE PRECISION
+        CHECK (magnetic_anisotropy_energy > '-Infinity'
+           AND magnetic_anisotropy_energy < 'Infinity')
 );
 
 CREATE TABLE thermal_property (
     thermal_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
-    debye_temperature_k DOUBLE PRECISION CHECK (debye_temperature_k > 0),
-    thermal_conductivity DOUBLE PRECISION CHECK (thermal_conductivity >= 0),
-    specific_heat_cv DOUBLE PRECISION CHECK (specific_heat_cv >= 0),
-    gruneisen_parameter DOUBLE PRECISION,
+    debye_temperature_k DOUBLE PRECISION
+        CHECK (debye_temperature_k > 0 AND debye_temperature_k < 'Infinity'),
+    thermal_conductivity DOUBLE PRECISION
+        CHECK (thermal_conductivity >= 0 AND thermal_conductivity < 'Infinity'),
+    specific_heat_cv DOUBLE PRECISION
+        CHECK (specific_heat_cv >= 0 AND specific_heat_cv < 'Infinity'),
+    gruneisen_parameter DOUBLE PRECISION
+        CHECK (gruneisen_parameter > '-Infinity'
+           AND gruneisen_parameter < 'Infinity'),
     temperature_k DOUBLE PRECISION NOT NULL DEFAULT 300.0
         CHECK (temperature_k >= 0 AND temperature_k < 'Infinity'),
     UNIQUE (calculation_id, temperature_k)
@@ -444,8 +481,10 @@ CREATE TABLE grain_boundary (
     sigma_value INTEGER CHECK (sigma_value > 0),
     rotation_axis VARCHAR(10),
     tilt_angle DOUBLE PRECISION CHECK (tilt_angle >= 0 AND tilt_angle <= 180),
-    gb_energy_j_m2 DOUBLE PRECISION CHECK (gb_energy_j_m2 > 0),
-    excess_volume DOUBLE PRECISION CHECK (excess_volume >= 0),
+    gb_energy_j_m2 DOUBLE PRECISION
+        CHECK (gb_energy_j_m2 > 0 AND gb_energy_j_m2 < 'Infinity'),
+    excess_volume DOUBLE PRECISION
+        CHECK (excess_volume >= 0 AND excess_volume < 'Infinity'),
     -- The same sigma / rotation axis admits distinct boundary geometries
     -- (e.g. sigma-5 [001] 36.87 deg vs 53.13 deg), so tilt_angle is part of
     -- the natural key. A full description would also need the GB plane,
