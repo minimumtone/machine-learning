@@ -803,7 +803,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \centering
 \caption{ユニットテストカテゴリ（報告時スナップショットで134件を収集。再現時はpytestで全件を再実行する）。}
 \label{tab:sup_test_categories}
-\small
+\footnotesize
 \begin{tabularx}{\textwidth}{llcX}
   \toprule
   カテゴリ & ID & $n$ & 検証の焦点 \\
@@ -993,7 +993,7 @@ LIMIT 10000;
   \centering
   \caption{Ni$_3$Al近傍の格子定数候補（$|a - a_{\text{ref}}| \leq 0.03$~\AA{}{}、14の代表的なエントリ）。化合物属性は合成検証データであり、$E_f$は生成エネルギー（eV/atom）である。同一組成に複数エントリが存在する場合、本表は格子マッチング条件を満たすエントリを示す（例：Ir$_3$Cuは\texttt{entry\_00214}（$a=3.573$）であり、表~\ref{tab:gamma_prime}の\texttt{entry\_00044}（$a=3.511$）とは別エントリ）。}
   \label{tab:sup_lattice_match}
-  \small
+  \footnotesize
   \begin{tabular}{lcccc}
     \toprule
     化合物 & $a$ (\AA{}{}) & $|\Delta a|$ & $E_\text{hull}$ & $E_f$ \\
@@ -1045,7 +1045,7 @@ LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_l
   \centering
   \caption{LLMモードの設定パラメータ。}
   \label{tab:sup_llm_params}
-  \small
+  \footnotesize
   \begin{tabular}{ll}
     \toprule
     パラメータ & 値 \\
@@ -1085,6 +1085,7 @@ GPT-5シリーズAPIは温度パラメータをサポートしておらず、本
 \label{sec:sup_query_detail}
 
 表~\ref{tab:sup_query_detail}には、すべての100の評価クエリ（著者設計、E=20/M=30/H=30/VH=20）が、その質問テキスト、実行精度（行一致リコール）、レイテンシ、および合格/不合格（精度が$\geq 0.8$の場合は$\checkmark$）とともに示されている。すべての値は、アブレーションフル条件の第1ラン（このランの全体値は84.6\%；表~\ref{tab:sup_ablation_diff}と同一ラン）から得られたものであり、したがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。クエリは元の日本語で示されている。
+\begin{footnotesize}
 \begin{longtable}{lp{8.1cm}ccl}
   \caption{100の評価クエリに関する詳細な結果（アブレーションfull条件の第1ラン；このランの全体値は84.6\%で、表~\ref{tab:sup_ablation_diff}と同一ラン。表~\ref{tab:ablation}の5ラン平均とは一致しない）。クエリは元の日本語である。}
   \label{tab:sup_query_detail} \\
@@ -1214,6 +1215,7 @@ GPT-5シリーズAPIは温度パラメータをサポートしておらず、本
     q\_vhard\_019 & Ni含有安定L1$_2$の$\Delta H_f$を多段CTEで算出、Top5。 & 1.00 & 30.2 & $\checkmark$ \\
     q\_vhard\_020 & 形成Eが加重純物質基準より0.1以上低い化合物（CTE）。 & 1.00 & 18.2 & $\checkmark$ \\
 \end{longtable}
+\end{footnotesize}
 % =====================================================================
 \section{アブレーション条件間の精度差クエリ}
 
@@ -1225,7 +1227,7 @@ GPT-5シリーズAPIは温度パラメータをサポートしておらず、本
 \centering
 \caption{アブレーション条件間のクエリレベルの精度差（アブレーション第1ラン; 28/100クエリ）。}
 \label{tab:sup_ablation_diff}
-\scriptsize
+\footnotesize
 \begin{tabular}{@{}llccccccc@{}}
   \toprule
   ID & D & Full & $-$FS & $-$Dict & $-$RR & $-$GD & $-$NB & $-$GR \\
@@ -1283,7 +1285,7 @@ GPT-5シリーズAPIは温度パラメータをサポートしておらず、本
   \caption{難易度別の独立に設計された100クエリの精度。難易度はセクション~\ref{sec:query_design}で定義された統一複雑さスコアによって決定される。}
 
   \label{tab:sup_expert_summary}
-  \small
+  \footnotesize
   \begin{tabular}{lcc}
     \toprule
     難易度 & 数量 & 平均実行精度 (\%) \\
@@ -1519,7 +1521,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
   \centering
   \caption{数値条件パーサパターン。}
   \label{tab:numeric_patterns}
-  \scriptsize
+  \footnotesize
   \begin{tabular}{lll}
     \toprule
     パターンタイプ & 入力例 & 出力 \\
@@ -1561,7 +1563,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 \caption{MeCab材料辞書がトークン化に与える影響。
 402の材料用語に対する単一トークン率。}
 \label{tab:mecab}
-\small
+\footnotesize
 \begin{tabular}{@{}lcc@{}}
 \toprule
 指標 & デフォルト & カスタム辞書 \\
@@ -1615,7 +1617,7 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 \centering
 \caption{OQMDスタイルのフラットソースレイアウトと正規化された検証スキーマの比較。フラットレイアウトはテーブル数を最小限に抑え、正規化されたレイアウトは材料科学の概念を分離してカラム名の曖昧さを減少させる。}
 \label{tab:schema_comparison}
-\small
+\footnotesize
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.0cm}X>{\raggedright\arraybackslash}X@{}}
 \toprule
 概念 & OQMDスタイルのフラットテーブル & 正規化テーブル（本研究） & 理由 \\
@@ -1686,7 +1688,7 @@ JOINマッチ率  &  97.5 & 99.2 & 97.5 & 73.5 \\
 \centering
 \caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は集約データの未丸め値から算出しており、表~\ref{tab:ablation}の表示値同士の差とは末尾桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。}
 \label{tab:ablation-detail}
-\small
+\footnotesize
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 条件 & Easy & Medium & Hard & VH \\
@@ -1702,7 +1704,7 @@ no\_reranker  &    0.0  & $-$10.5 & $-$5.2  & $-$9.5  \\
 \centering
 \caption{各アブレーション条件におけるクエリごとの平均レイテンシ（秒）、Table~\ref{tab:ablation}と同じ5回の実験で測定。$n$-best = 1に設定すると、精度の明確な損失なしにレイテンシが約70\%削減される。条件間の小差はLLM応答時間のラン間変動を含む。}
 \label{tab:latency}
-\small
+\footnotesize
 \begin{tabular}{@{}lr@{}}
 \toprule
 条件 & レイテンシ (s) \\
@@ -1733,7 +1735,7 @@ $k=15$ は VH ティアで精度低下を示す。
 したがって、レイテンシ値は
 表~\ref{tab:latency} の値と異なる（完全な5回のアブレーションで25.1\,s）。}
 \label{tab:fewshot_k}
-\small
+\footnotesize
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
 $k$ & 全体 & Easy & Medium & Hard & VH & レイテンシ (s) \\
@@ -1771,7 +1773,7 @@ $k$ を1から3に増やすと、全体で $+$3.0\,pp の改善が得られ、�
 \caption{スキーマ写像辞書（61エントリ）および用語辞書のサイズ感度（2辞書を同じ割合で同時削減；本アブレーションと同一プロトコルの単一ラン）。観測される低下は61エントリ辞書単独の寄与ではない。全体値は未丸め値から算出している。
 削減はコア用語（プロトタイプ、元素、安定性など）の保持を優先する。}
 \label{tab:dict_size}
-\small
+\footnotesize
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 辞書サイズ & 全体 & Easy & Medium & Hard & VH \\
@@ -1808,7 +1810,7 @@ $k$ を1から3に増やすと、全体で $+$3.0\,pp の改善が得られ、�
 GPT-4oは約9$\times$速く、全体・VHともGPT-5.5のfull（5ラン平均）と同等である（単一ラン）；レイテンシは測定条件が異なるため
 表~\ref{tab:fewshot_k} とは直接比較できない。}
 \label{tab:model_comp}
-\small
+\footnotesize
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 モデル & 全体 & Easy & Medium & Hard & VH & レイテンシ (s) \\
@@ -1849,7 +1851,7 @@ VHティアは正確な一致が0\%だが、55.2\%のリコールは多くの部
   \centering
   \caption{Very Hardクエリの失敗モード分類。}
   \label{tab:vhard_failure}
-  \small
+  \footnotesize
   \begin{tabular}{lcl}
     \toprule
     失敗モード & カウント & 代表的なケース \\
@@ -1879,7 +1881,7 @@ VHティアは正確な一致が0\%だが、55.2\%のリコールは多くの部
   \centering
   \caption{SQLインジェクションと安全性テスト結果（すべて安全に処理された）。}
   \label{tab:injection_results}
-  \small
+  \footnotesize
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
     ID & 入力 & アクション \\
@@ -1904,7 +1906,7 @@ VHティアは正確な一致が0\%だが、55.2\%のリコールは多くの部
   \centering
   \caption{採点方針別の実行再現率（\%）。historical＝本文の採点方式。require all＝全ゴールド列の存在を要求。no positional＝列位置フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複度を照合。exact＝共通列射影上でPrecision=Recall=1の割合（Exact Result-Set Match）。ordered＝順序も照合した場合のRecall。いずれも生成SQL付き保存ラン（main: Recall 85.6\%の単一ラン）に基づく。}
   \label{tab:scoring_audit}
-  \small
+  \footnotesize
   \begin{tabular}{@{}lrrrrrrr@{}}
     \toprule
     データセット & hist. & req.\ all & no pos. & drop empty & multiset & exact & ordered \\
@@ -1941,7 +1943,7 @@ VHティアは正確な一致が0\%だが、55.2\%のリコールは多くの部
   \centering
   \caption{上位10の$\gamma'$-相候補（複合スコア$S$によるランキング）。化合物属性は合成検証データである。$\Delta a$は参照値$a_{\text{ref}}=3.572$~\AA{}{}（Ni$_3$Al行から動的取得）に対する差。同一組成に複数エントリがある場合は複合スコア$S$最大のエントリを代表とする（決定的選択規則；例えばIr$_3$Cuは\texttt{entry\_00044}であり、表~\ref{tab:sup_lattice_match}の\texttt{entry\_00214}とは別エントリ）。}
   \label{tab:gamma_prime}
-  \small
+  \footnotesize
   \begin{tabular}{rllcccc c}
     \toprule
     ランク & 化合物 & \texttt{entry\_id} & $a$ (\AA{}{}) & $E_\text{hull}$ & $B$ (GPa) & $\Delta a$ & $S$ \\
@@ -1986,7 +1988,7 @@ $E_\text{hull} \leq 0.05$~eV/atomを満たす162の安定/準安定L1$_2$候補�
   \centering
   \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}
   \label{tab:related_comparison}
-  \small
+  \footnotesize
   \begin{tabularx}{\textwidth}{llccccX}
     \toprule
     タイプ & 名前 & \shortstack{スキーマ\\対応} & \shortstack{正規化\\RDB} & \shortstack{材料\\特有} & \shortstack{NL$\to$\\クエリ} & 主な違い \\
@@ -2080,7 +2082,7 @@ CTE評価の既知5パターンがカバーするカテゴリと、15クエリ�
 \centering
 \caption{CTEマルチステップ計算クエリの精度（full条件、15クエリ）。few-shot例でカバーされた既知5パターンは100\%を維持する一方、例のない新規10パターンは42.3\%にとどまり、マルチステップ計算サポートの範囲がfew-shot例のパターンカバレッジに規定されることを示す。}
 \label{tab:cte_results}
-\small
+\footnotesize
 \begin{tabular}{@{}lrr@{}}
 \toprule
 サブセット & $n$ & 実行再現率 \\
