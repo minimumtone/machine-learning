@@ -28,7 +28,8 @@ END
 $$;
 
 -- Every material_entry with composition rows must be fully covered
--- (no entry with a declared element count differing from its rows).
+-- (no entry whose declared element count differs from its distinct
+-- composition elements; site-resolved rows may repeat an element).
 DO $$
 DECLARE
     n_bad BIGINT;
@@ -36,7 +37,7 @@ BEGIN
     SELECT COUNT(*) INTO n_bad
     FROM material_entry m
     JOIN (
-        SELECT entry_id, COUNT(*) AS n
+        SELECT entry_id, COUNT(DISTINCT element) AS n
         FROM composition
         GROUP BY entry_id
     ) c ON c.entry_id = m.entry_id
@@ -44,7 +45,7 @@ BEGIN
       AND m.number_of_elements <> c.n;
     IF n_bad > 0 THEN
         RAISE EXCEPTION
-            'material_entry: % entries whose number_of_elements disagrees with composition rows',
+            'material_entry: % entries whose number_of_elements disagrees with distinct composition elements',
             n_bad;
     END IF;
 END
