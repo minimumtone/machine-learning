@@ -3,6 +3,7 @@
 WITH top_polymorph AS (
     SELECT element_symbol, n_polymorphs
     FROM pure_element_reference
+    WHERE reference_set = 'L12-FIXTURE-PBE-v1'
     ORDER BY n_polymorphs DESC, element_symbol ASC
     LIMIT 5
 )

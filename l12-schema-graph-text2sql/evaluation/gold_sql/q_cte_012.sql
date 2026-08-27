@@ -1,7 +1,8 @@
 -- CTE L: CTE + 磁性テーブル到達
--- 「強磁性のL1₂化合物の生成エンタルピーを計算して安定な順に出して」
+-- 「強磁性のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して安定な順に出して」
 WITH fm_l12 AS (
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
+           ps.reference_set,
            mp.total_magnetization
     FROM material_entry m
     JOIN structure s ON s.entry_id = m.entry_id
@@ -17,12 +18,14 @@ enthalpy AS (
     FROM fm_l12 fl
     JOIN composition comp ON comp.entry_id = fl.entry_id
     JOIN pure_element_reference per ON per.element_symbol = comp.element
+        AND per.reference_set = fl.reference_set
     GROUP BY fl.entry_id, fl.formula, fl.formation_energy_per_atom,
              fl.total_magnetization
 )
 SELECT formula,
        ROUND(total_magnetization::numeric, 3) AS total_magnetization,
-       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4) AS delta_h_f
+       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4)
+           AS enthalpy_vs_element_ground_states
 FROM enthalpy
-ORDER BY delta_h_f ASC
+ORDER BY enthalpy_vs_element_ground_states ASC
 LIMIT 20;
