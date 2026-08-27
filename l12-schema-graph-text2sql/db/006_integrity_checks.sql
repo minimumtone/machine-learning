@@ -72,12 +72,16 @@ BEGIN
             'Required reference energy set OQMD-PBE does not exist';
     END IF;
     SELECT COUNT(*) INTO n_ref
-    FROM pure_element_reference
-    WHERE reference_set = 'OQMD-PBE';
-    IF n_ref < (SELECT COUNT(DISTINCT element) FROM composition) THEN
+    FROM (
+        SELECT DISTINCT element FROM composition
+        EXCEPT
+        SELECT element_symbol FROM pure_element_reference
+        WHERE reference_set = 'OQMD-PBE'
+    ) missing;
+    IF n_ref > 0 THEN
         RAISE EXCEPTION
-            'pure_element_reference(OQMD-PBE) covers only % elements, fewer than the % distinct elements used in composition',
-            n_ref, (SELECT COUNT(DISTINCT element) FROM composition);
+            'pure_element_reference(OQMD-PBE) is missing % element(s) used in composition',
+            n_ref;
     END IF;
 END
 $$;
