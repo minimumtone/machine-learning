@@ -42,6 +42,7 @@ sys.path.insert(0, str(PROJECT))
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
+    sql_is_ordered,
     validate_expected_schema,
 )
 
@@ -87,6 +88,7 @@ def main() -> int:
     ok: list[str] = []
     stale: list[str] = []
     order_mismatch: list[str] = []
+    order_contract_mismatch: list[str] = []
     column_mismatch: list[str] = []
     missing: list[str] = []
     malformed: list[tuple[str, str]] = []
@@ -142,7 +144,14 @@ def main() -> int:
             if actual_columns != expected["columns"]:
                 column_mismatch.append(qid)
                 continue
+            # The stored "ordered" flag is a contract, not a trusted input:
+            # it must agree with the SQL's actual top-level ORDER BY, so a
+            # gold SQL edit cannot silently downgrade an ordered comparison
+            # (or claim an order the SQL does not enforce).
             ordered = expected["ordered"]
+            if sql_is_ordered(sql) != ordered:
+                order_contract_mismatch.append(qid)
+                continue
             actual_norm = normalize_rows(rows)
             expected_norm = normalize_rows(expected["rows"])
             if rows_match(actual_norm, expected_norm, ordered=ordered):
@@ -157,6 +166,7 @@ def main() -> int:
         1 for _qid, msg in malformed if "'ordered'" in msg)
     print(f"ok={len(ok)} stale={len(stale)} "
           f"order_mismatch={len(order_mismatch)} "
+          f"order_contract_mismatch={len(order_contract_mismatch)} "
           f"column_mismatch={len(column_mismatch)} "
           f"missing={len(missing)} malformed={len(malformed)} "
           f"ordered_metadata_missing={ordered_metadata_missing} "
@@ -166,6 +176,9 @@ def main() -> int:
         print(f"STALE           {qid}")
     for qid in order_mismatch:
         print(f"ORDER_MISMATCH  {qid}")
+    for qid in order_contract_mismatch:
+        print(f"ORDER_CONTRACT_MISMATCH {qid}: expected JSON 'ordered' flag "
+              "disagrees with the SQL's top-level ORDER BY")
     for qid in column_mismatch:
         print(f"COLUMN_MISMATCH {qid}")
     for qid in missing:
@@ -178,8 +191,9 @@ def main() -> int:
         print(f"ERROR           {qid}: {msg}")
     if skipped:
         print(f"skipped (DSN not set): {', '.join(skipped)}")
-    failed = (stale or order_mismatch or column_mismatch or missing
-              or malformed or orphans or errors)
+    failed = (stale or order_mismatch or order_contract_mismatch
+              or column_mismatch or missing or malformed or orphans
+              or errors)
     if skipped and not args.allow_skip:
         print("FAIL: suites were skipped and --allow-skip was not given",
               file=sys.stderr)

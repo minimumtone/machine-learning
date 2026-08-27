@@ -49,6 +49,11 @@ def _db_conninfo(db: str) -> str:
     )
 
 
+def obfuscated_conninfo() -> str:
+    """Connection string for the obfuscated transfer database."""
+    return _db_conninfo(OBF_DB)
+
+
 def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
     """Yield unique prefixed words in random order, repeating with suffixes."""
     words = WORDS.copy()

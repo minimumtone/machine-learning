@@ -131,6 +131,38 @@ BEGIN
             n_bad;
     END IF;
 
+    -- Parent coverage assertions come BEFORE the dependent consistency
+    -- assertions below: the band-structure / DOS checks inner-join through
+    -- phase_stability, and many gold queries inner-join structure, so
+    -- exactly-one coverage must be established first — otherwise a deleted
+    -- parent row would silently remove its children from those checks.
+
+    -- Stability coverage: every material entry has exactly one
+    -- phase_stability row. phase_stability.entry_id is UNIQUE (at most
+    -- one), so a missing-parent check completes exactly-one.
+    SELECT COUNT(*) INTO n_bad
+    FROM material_entry m
+    LEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    WHERE ps.entry_id IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'phase_stability: % material entries without a phase_stability row',
+            n_bad;
+    END IF;
+
+    -- Structure coverage: every material entry has exactly one structure
+    -- row (structure.entry_id is UNIQUE, so missing-parent completes
+    -- exactly-one). Gold queries inner-join structure unconditionally.
+    SELECT COUNT(*) INTO n_bad
+    FROM material_entry m
+    LEFT JOIN structure s ON s.entry_id = m.entry_id
+    WHERE s.entry_id IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'structure: % material entries without a structure row',
+            n_bad;
+    END IF;
+
     -- Electronic-gap single truth: phase_stability.band_gap is the source
     -- of truth, so a band structure of the same material must satisfy
     -- band_gap = cbm_energy - vbm_energy.
@@ -215,21 +247,6 @@ BEGIN
     IF n_bad > 0 THEN
         RAISE EXCEPTION
             'phase_diagram_entry: % rows missing a phase_stability parent or whose hull_distance disagrees with phase_stability.energy_above_hull',
-            n_bad;
-    END IF;
-
-    -- Stability coverage: every material entry has exactly one
-    -- phase_stability row. phase_stability.entry_id is UNIQUE, so a
-    -- missing-parent check is sufficient for exactly-one; it also keeps
-    -- the band-structure / DOS assertions above honest (their inner joins
-    -- through phase_stability cannot hide rows once coverage holds).
-    SELECT COUNT(*) INTO n_bad
-    FROM material_entry m
-    LEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id
-    WHERE ps.entry_id IS NULL;
-    IF n_bad > 0 THEN
-        RAISE EXCEPTION
-            'phase_stability: % material entries without a phase_stability row',
             n_bad;
     END IF;
 
@@ -327,6 +344,49 @@ BEGIN
     IF n_bad > 0 THEN
         RAISE EXCEPTION
             'structure: % rows whose volume_per_atom contradicts lattice parameters and conventional_cell_atoms',
+            n_bad;
+    END IF;
+    -- Property-scope dictionary coverage: every property definition must
+    -- declare at least one scope, otherwise the dictionary carries a
+    -- property that no storage table may ever use (cross-row invariant
+    -- that a per-row CHECK cannot express).
+    SELECT COUNT(*) INTO n_bad
+    FROM property_definition pd
+    LEFT JOIN property_scope ps ON ps.property_name = pd.canonical_name
+    WHERE ps.property_name IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'property_definition: % properties without any property_scope declaration',
+            n_bad;
+    END IF;
+
+    -- Set-level shape/scope re-validation (the insert triggers enforce
+    -- these per-row; this re-validates loaded data that may not have
+    -- passed through the triggers): component-shaped properties may only
+    -- carry the calculated scope, because only calculated_property
+    -- stores tensor_component.
+    SELECT COUNT(*) INTO n_bad
+    FROM property_definition pd
+    JOIN property_scope ps ON ps.property_name = pd.canonical_name
+    WHERE pd.value_shape = 'component'
+      AND ps.applies_to <> 'calculated';
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'property_scope: % component-shaped property scopes outside calculated',
+            n_bad;
+    END IF;
+
+    -- tensor_component usage must agree with the declared value_shape:
+    -- scalar properties never carry a component, component properties
+    -- always do.
+    SELECT COUNT(*) INTO n_bad
+    FROM calculated_property cp
+    JOIN property_definition pd ON pd.canonical_name = cp.property_name
+    WHERE (pd.value_shape = 'scalar' AND cp.tensor_component IS NOT NULL)
+       OR (pd.value_shape = 'component' AND cp.tensor_component IS NULL);
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'calculated_property: % rows whose tensor_component contradicts the declared value_shape',
             n_bad;
     END IF;
 END;

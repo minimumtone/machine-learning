@@ -4,5 +4,5 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN surface_energy se ON se.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND se.miller_index = '111'
-ORDER BY se.surface_energy_j_m2 ASC
+ORDER BY se.surface_energy_j_m2 ASC, m.entry_id
 LIMIT 1;

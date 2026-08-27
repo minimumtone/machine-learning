@@ -5,9 +5,13 @@
 CREATE TABLE oqmd_elements (
     symbol          VARCHAR(5) PRIMARY KEY,
     element_name    TEXT,
-    atomic_number   INTEGER
+    -- Same NULL/uniqueness contract as the main schema's element master
+    -- (atomic_number NOT NULL UNIQUE, atomic_mass NOT NULL): the transfer
+    -- DB is a copy of the main fixture, so it must not admit states the
+    -- main schema forbids.
+    atomic_number   INTEGER NOT NULL UNIQUE
         CHECK (atomic_number BETWEEN 1 AND 118),
-    atomic_mass     DOUBLE PRECISION
+    atomic_mass     DOUBLE PRECISION NOT NULL
         CHECK (atomic_mass > 0 AND atomic_mass < 'Infinity')
 );
 
@@ -43,7 +47,11 @@ CREATE TABLE oqmd_formation_energies (
     -- columns can never contradict each other. Transfer gold SQL may use
     -- either; both are the same truth.
     on_hull       BOOLEAN GENERATED ALWAYS AS (hull_distance <= 0.001) STORED,
-    gap_ev        DOUBLE PRECISION CHECK (gap_ev >= 0 AND gap_ev < 'Infinity')
+    -- Copied from the main schema's NOT NULL phase_stability.band_gap,
+    -- so the same cardinality contract applies (no "energy row exists
+    -- but gap unknown" state that the main schema cannot represent).
+    gap_ev        DOUBLE PRECISION NOT NULL
+        CHECK (gap_ev >= 0 AND gap_ev < 'Infinity')
 );
 
 CREATE TABLE oqmd_element_ratios (
@@ -81,6 +89,7 @@ CREATE TABLE oqmd_reference_states (
     polymorph_count    INTEGER CHECK (polymorph_count >= 1)
 );
 
-CREATE INDEX idx_tr_fe_entry ON oqmd_formation_energies(entry_key);
+-- No separate index on oqmd_formation_energies(entry_key): the UNIQUE
+-- constraint above already provides one.
 CREATE INDEX idx_tr_ratio_entry ON oqmd_element_ratios(entry_key);
 CREATE INDEX idx_tr_ratio_symbol ON oqmd_element_ratios(symbol);
