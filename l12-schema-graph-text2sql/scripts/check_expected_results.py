@@ -21,7 +21,7 @@ sys.path.insert(0, str(PROJECT))
 import psycopg  # noqa: E402
 
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
-from scripts.eval_ablation import CONNINFO  # noqa: E402
+from scripts.db_conninfo import CONNINFO  # noqa: E402
 
 GOLD_DIR = PROJECT / "evaluation" / "gold_sql"
 RESULTS_DIR = PROJECT / "evaluation" / "expected_results"

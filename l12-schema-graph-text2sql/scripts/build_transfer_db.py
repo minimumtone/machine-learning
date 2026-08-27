@@ -20,7 +20,7 @@ sys.path.insert(0, str(PROJECT))
 import psycopg  # noqa: E402
 from psycopg import sql as pgsql  # noqa: E402
 
-from scripts.eval_ablation import CONNINFO  # noqa: E402
+from scripts.db_conninfo import CONNINFO  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 SCHEMA_SQL = PROJECT / "db" / "transfer_schema.sql"
