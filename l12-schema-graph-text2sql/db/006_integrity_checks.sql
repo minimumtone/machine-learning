@@ -28,7 +28,8 @@ END
 $$;
 
 -- Every material_entry with composition rows must be fully covered
--- (no entry with a declared element count differing from its rows).
+-- (no entry whose declared element count differs from its distinct
+-- composition elements; site-resolved rows may repeat an element).
 DO $$
 DECLARE
     n_bad BIGINT;
@@ -36,7 +37,7 @@ BEGIN
     SELECT COUNT(*) INTO n_bad
     FROM material_entry m
     JOIN (
-        SELECT entry_id, COUNT(*) AS n
+        SELECT entry_id, COUNT(DISTINCT element) AS n
         FROM composition
         GROUP BY entry_id
     ) c ON c.entry_id = m.entry_id
@@ -44,28 +45,15 @@ BEGIN
       AND m.number_of_elements <> c.n;
     IF n_bad > 0 THEN
         RAISE EXCEPTION
-            'material_entry: % entries whose number_of_elements disagrees with composition rows',
+            'material_entry: % entries whose number_of_elements disagrees with distinct composition elements',
             n_bad;
     END IF;
 END
 $$;
 
--- Pure-element reference rows must carry an energy: a NULL energy row
--- would be useless as a reference and must be removed, not stored.
-DO $$
-DECLARE
-    n_bad BIGINT;
-BEGIN
-    SELECT COUNT(*) INTO n_bad
-    FROM pure_element_reference
-    WHERE energy_per_atom IS NULL;
-    IF n_bad > 0 THEN
-        RAISE EXCEPTION
-            'pure_element_reference: % rows with NULL energy_per_atom',
-            n_bad;
-    END IF;
-END
-$$;
+-- NULL reference energies are now rejected row-by-row by the DDL
+-- (pure_element_reference.energy_per_atom NOT NULL); this file keeps only
+-- cross-row invariants that a single-row constraint cannot express.
 
 -- structure copies of master attributes must match the master tables
 -- (also enforced per-row by trg_structure_master_consistency; this is

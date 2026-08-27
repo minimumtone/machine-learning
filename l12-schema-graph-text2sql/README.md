@@ -44,9 +44,13 @@ docker compose up -d
 cd ..
 ```
 
-これにより `db/001_schema.sql`（32テーブル）→ `db/002_reference_data.sql`（マスタ）→
+これにより `db/001_schema.sql`（33テーブル）→ `db/002_reference_data.sql`（マスタ）→
 `db/003_material_data.sql`（材料データ）→ `db/004_views.sql`（ビュー）→
 `db/005_roles.sql`（読み取り専用ロール）→ `db/006_integrity_checks.sql`（整合性検査）が順に自動適用されます。
+
+注意：`db/005_roles.sql` は所有者ロール `l12_user` を名指しで参照するため、`POSTGRES_USER` はデフォルトの `l12_user` から変更しないでください（変更するとロード時に明示的なエラーで停止します）。
+
+設計上の意図的な簡略化：`calculation` は (entry, calculation_type, method, functional) ごとに1件のみ保持します。カットオフ・k点メッシュ・擬ポテンシャル・U値などの数値パラメータ軸は本検証用DBでは持たず、汎用の計算アーカイブとしては UNIQUE が強すぎる点を明示しておきます。
 
 ### 3. 環境変数の設定
 
@@ -93,7 +97,7 @@ l12-schema-graph-text2sql/
 ├── docker/              # Docker Compose設定（docker-compose.yml）
 │   └── docker-compose.yml
 ├── db/                  # スキーマ定義・データ投入（001→006の順に自動適用）
-│   ├── 001_schema.sql          # 32テーブルスキーマ（FK/UNIQUE/CHECK制約付き）
+│   ├── 001_schema.sql          # 33テーブルスキーマ（FK/UNIQUE/CHECK制約付き）
 │   ├── 002_reference_data.sql  # マスタ・参照データ（元素・プロトタイプ・辞書等）
 │   ├── 003_material_data.sql   # 材料エントリデータ（1,470化合物+89純元素）
 │   ├── 004_views.sql           # 派生ビュー（formation_enthalpy）

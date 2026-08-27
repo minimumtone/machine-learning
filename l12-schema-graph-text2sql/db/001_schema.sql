@@ -1,13 +1,17 @@
 -- ============================================================
 -- 001_schema.sql — Schema definition (DDL only)
--- 32 tables: 31 entity tables + property_definition dictionary
+-- 33 tables: 31 entity tables + property_definition dictionary
+--            + reference_energy_set (energy-convention master)
 -- Load order: 001_schema -> 002_reference_data -> 003_material_data
 --             -> 004_views -> 005_roles
 --
 -- Design rules enforced at the DDL level:
---   * Every categorical/master value is FK-constrained
---     (composition.element, structure.prototype, structure.space_group_number,
---      EAV property names/units via property_definition).
+--   * Core controlled vocabularies used for joins and evaluation are
+--     FK-constrained (composition.element, structure.prototype,
+--     structure.space_group_number, EAV property names/units via
+--     property_definition, pure_element_reference.reference_set via
+--     reference_energy_set); free-text descriptors (e.g. source_db,
+--     category, atmosphere) intentionally remain unconstrained.
 --   * Cardinality is explicit: 1:1 relations carry UNIQUE(entry_id) /
 --     UNIQUE(calculation_id); 1:N relations carry a composite natural key.
 --   * phase_stability.is_stable is a generated column derived from
@@ -66,7 +70,9 @@ CREATE TABLE composition (
     atomic_fraction DOUBLE PRECISION
         CHECK (atomic_fraction > 0 AND atomic_fraction <= 1),
     site_label TEXT,
-    UNIQUE (entry_id, element)
+    -- Site-resolved composition: the same element may occupy several
+    -- crystallographic sites (rows differ by site_label).
+    UNIQUE NULLS NOT DISTINCT (entry_id, element, site_label)
 );
 
 -- === Prototype & Space Group Master Tables ===
@@ -126,6 +132,9 @@ CREATE TABLE calculation (
     calculation_type TEXT,
     -- One calculation per (type, method, functional) combination; the same
     -- entry may hold e.g. PBE and HSE06 band-structure calculations.
+    -- Intentional simplification for this verification DB: numerical
+    -- parameters (cutoff, k-mesh, pseudopotential, U) are not part of the
+    -- key, so only one calculation per combination is stored (see README).
     UNIQUE NULLS NOT DISTINCT (entry_id, calculation_type, method, functional)
 );
 
@@ -136,10 +145,15 @@ CREATE TABLE calculated_property (
     value DOUBLE PRECISION,
     unit TEXT,
     tensor_component TEXT,
-    UNIQUE (calculation_id, property_name),
+    -- Tensor-valued properties store one row per component (e.g. C11, C12,
+    -- C44 of the elastic tensor); scalar properties leave it NULL.
+    UNIQUE NULLS NOT DISTINCT (calculation_id, property_name, tensor_component),
     -- Single-column FK closes the composite-FK NULL loophole (a NULL unit
     -- would otherwise skip the FK check entirely); the composite FK then
     -- additionally pins the unit to the canonical one when unit is present.
+    -- unit is deliberately denormalized (dictionary holds the canonical
+    -- unit) so Text-to-SQL queries can read it without an extra JOIN; the
+    -- composite FK prevents it from ever contradicting the dictionary.
     FOREIGN KEY (property_name)
         REFERENCES property_definition(canonical_name),
     FOREIGN KEY (property_name, unit)
@@ -154,7 +168,9 @@ CREATE TABLE element_property (
     unit VARCHAR(30),
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
     source VARCHAR(100),
-    UNIQUE (element_id, property_name),
+    -- Temperature-dependent properties keep one row per temperature, and
+    -- values from different literature sources may coexist.
+    UNIQUE NULLS NOT DISTINCT (element_id, property_name, temperature_k, source),
     FOREIGN KEY (property_name)
         REFERENCES property_definition(canonical_name),
     FOREIGN KEY (property_name, unit)
@@ -346,7 +362,11 @@ CREATE TABLE grain_boundary (
     tilt_angle DOUBLE PRECISION CHECK (tilt_angle >= 0 AND tilt_angle <= 180),
     gb_energy_j_m2 DOUBLE PRECISION CHECK (gb_energy_j_m2 > 0),
     excess_volume DOUBLE PRECISION CHECK (excess_volume >= 0),
-    UNIQUE (entry_id, sigma_value, rotation_axis)
+    -- The same sigma / rotation axis admits distinct boundary geometries
+    -- (e.g. sigma-5 [001] 36.87 deg vs 53.13 deg), so tilt_angle is part of
+    -- the natural key. A full description would also need the GB plane,
+    -- which this simplified model does not store.
+    UNIQUE NULLS NOT DISTINCT (entry_id, sigma_value, rotation_axis, tilt_angle)
 );
 
 -- === Phase Diagram & Alloy Tables ===
@@ -380,24 +400,42 @@ CREATE TABLE material_alloy_system (
 
 -- === Pure Element Reference (ground-state DFT energies, OQMD) ===
 
+-- Energy-convention master: each reference_set pins one (method, functional,
+-- source) combination, so the convention is defined in exactly one place.
+CREATE TABLE reference_energy_set (
+    reference_set TEXT PRIMARY KEY,
+    method TEXT NOT NULL,
+    functional TEXT NOT NULL,
+    source TEXT NOT NULL,
+    description TEXT,
+    -- Target for the composite FK from pure_element_reference, which keeps
+    -- the denormalized method/functional copies in sync with this master.
+    UNIQUE (reference_set, method, functional)
+);
+
 CREATE TABLE pure_element_reference (
     pure_ref_id SERIAL PRIMARY KEY,
     element_symbol VARCHAR(5) NOT NULL REFERENCES element(symbol),
     -- Reference energies are only comparable within one energy convention;
-    -- the calculation-condition axis (method / functional / reference_set)
-    -- makes that convention explicit. formation_enthalpy pins one set.
+    -- reference_set points at the reference_energy_set master, which fixes
+    -- method / functional / source once per set. formation_enthalpy pins
+    -- one set. The composite FK below keeps the denormalized method /
+    -- functional copies consistent with the master.
     method TEXT NOT NULL DEFAULT 'DFT',
     functional TEXT NOT NULL DEFAULT 'PBE',
-    reference_set TEXT NOT NULL DEFAULT 'OQMD-PBE',
+    reference_set TEXT NOT NULL DEFAULT 'OQMD-PBE'
+        REFERENCES reference_energy_set(reference_set),
     oqmd_entry_id INTEGER,
     ground_state_spacegroup VARCHAR(30),
-    energy_per_atom DOUBLE PRECISION,  -- eV/atom (delta_e from OQMD)
+    energy_per_atom DOUBLE PRECISION NOT NULL,  -- eV/atom (delta_e from OQMD)
     volume_per_atom DOUBLE PRECISION CHECK (volume_per_atom > 0),  -- Angstrom^3/atom
     stability DOUBLE PRECISION CHECK (stability >= 0),  -- eV/atom above hull
     band_gap DOUBLE PRECISION CHECK (band_gap >= 0),  -- eV
     n_polymorphs INTEGER CHECK (n_polymorphs > 0),
     source TEXT DEFAULT 'OQMD',
-    UNIQUE (element_symbol, reference_set)
+    UNIQUE (element_symbol, reference_set),
+    FOREIGN KEY (reference_set, method, functional)
+        REFERENCES reference_energy_set(reference_set, method, functional)
 );
 
 -- === Indexes ===
@@ -464,3 +502,66 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_structure_master_consistency
     BEFORE INSERT OR UPDATE ON structure
     FOR EACH ROW EXECUTE FUNCTION check_structure_master_consistency();
+
+-- Master-side companions: updating prototype_definition / space_group
+-- propagates the new values to structure's derived copies, so a master
+-- UPDATE cannot silently reintroduce two truths.
+CREATE FUNCTION sync_structure_from_prototype() RETURNS trigger AS $$
+BEGIN
+    UPDATE structure
+    SET strukturbericht = NEW.strukturbericht,
+        formula_type = NEW.formula_type
+    WHERE prototype = NEW.prototype_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prototype_sync_structure
+    AFTER UPDATE OF strukturbericht, formula_type ON prototype_definition
+    FOR EACH ROW EXECUTE FUNCTION sync_structure_from_prototype();
+
+CREATE FUNCTION sync_structure_from_space_group() RETURNS trigger AS $$
+BEGIN
+    UPDATE structure
+    SET crystal_system = NEW.crystal_system,
+        space_group = NEW.hermann_mauguin
+    WHERE space_group_number = NEW.space_group_number;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_space_group_sync_structure
+    AFTER UPDATE OF crystal_system, hermann_mauguin ON space_group
+    FOR EACH ROW EXECUTE FUNCTION sync_structure_from_space_group();
+
+-- === Dictionary scope enforcement: property_definition.applies_to ===
+-- Each EAV child table may only reference properties whose applies_to
+-- matches the table (calculated / measured / element); the FK alone does
+-- not check this classification.
+CREATE FUNCTION check_property_applies_to() RETURNS trigger AS $$
+DECLARE
+    expected TEXT := TG_ARGV[0];
+    actual TEXT;
+BEGIN
+    SELECT applies_to INTO actual
+    FROM property_definition WHERE canonical_name = NEW.property_name;
+    IF actual IS DISTINCT FROM expected THEN
+        RAISE EXCEPTION
+            '%: property % has applies_to=%, expected %',
+            TG_TABLE_NAME, NEW.property_name, actual, expected;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_calculated_property_applies_to
+    BEFORE INSERT OR UPDATE OF property_name ON calculated_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_applies_to('calculated');
+
+CREATE TRIGGER trg_measured_property_applies_to
+    BEFORE INSERT OR UPDATE OF property_name ON measured_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_applies_to('measured');
+
+CREATE TRIGGER trg_element_property_applies_to
+    BEFORE INSERT OR UPDATE OF property_name ON element_property
+    FOR EACH ROW EXECUTE FUNCTION check_property_applies_to('element');
