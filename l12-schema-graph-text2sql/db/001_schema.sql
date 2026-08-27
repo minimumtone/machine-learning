@@ -1,7 +1,8 @@
 -- ============================================================
 -- 001_schema.sql — Schema definition (DDL only)
--- 33 tables: 31 entity tables + property_definition dictionary
+-- 34 tables: 31 entity tables + property_definition dictionary
 --            + reference_energy_set (energy-convention master)
+--            + source_energy_convention (source_db -> reference_set map)
 -- Load order: 001_schema -> 002_reference_data -> 003_material_data
 --             -> 004_views -> 005_roles -> 006_integrity_checks
 --             -> 007_initialization_marker
@@ -20,6 +21,10 @@
 --   * Calculation-derived tables reference calculation only; entry_id is
 --     reached via calculation.entry_id (no redundant, unconstrained copies).
 --   * Physical-range CHECK constraints on fractions, energies, scores.
+--   * Physical quantities carry finiteness CHECKs: PostgreSQL floats
+--     accept NaN / Infinity / -Infinity, which are never valid physical
+--     values here, so the CHECKs reject them (NaN fails `x < 'Infinity'`
+--     because NaN sorts above Infinity in PostgreSQL).
 -- ============================================================
 
 -- === Core Entity Tables ===
@@ -57,11 +62,14 @@ CREATE TABLE property_definition (
     canonical_name VARCHAR(100) NOT NULL UNIQUE,
     canonical_unit VARCHAR(30),
     -- Storage contract: all EAV value columns are numeric
-    -- (DOUBLE PRECISION / NUMERIC), so the dictionary only declares types
-    -- the storage can actually hold. text/boolean properties are outside
-    -- this verification schema.
+    -- (DOUBLE PRECISION / NUMERIC) and no integer-typed property is used
+    -- by this verification DB, so the dictionary only declares the one
+    -- type the DB actually enforces. Allowing 'integer' here without a
+    -- trunc(value) trigger would make the declared type an unenforced
+    -- self-report; text/boolean properties are likewise outside this
+    -- schema.
     value_type VARCHAR(20) NOT NULL DEFAULT 'float'
-        CHECK (value_type IN ('float', 'integer')),
+        CHECK (value_type = 'float'),
     applies_to VARCHAR(30) NOT NULL
         CHECK (applies_to IN ('calculated', 'measured', 'element')),
     description TEXT,
@@ -126,10 +134,23 @@ CREATE TABLE reference_energy_set (
     functional TEXT NOT NULL,
     source TEXT NOT NULL,
     -- Name of the elemental-reference fit the formation energies are
-    -- relative to (e.g. the OQMD standard fit); 'OQMD-PBE' alone would not
-    -- identify which reference fit was used.
+    -- relative to (e.g. the OQMD standard fit); the set name alone would
+    -- not identify which reference fit was used. Once a set is referenced
+    -- by loaded energies, these convention fields are immutable (see
+    -- trg_reference_energy_set_change below).
     fit_name TEXT NOT NULL,
     description TEXT
+);
+
+-- Which energy convention each material source is allowed to declare.
+-- material_entry.source_db stays free text, but 006 asserts that every
+-- (source_db, phase_stability.reference_set) pair actually loaded is
+-- present in this map, so a source cannot silently declare a convention
+-- it was never mapped to.
+CREATE TABLE source_energy_convention (
+    source_db TEXT,
+    reference_set TEXT REFERENCES reference_energy_set(reference_set),
+    PRIMARY KEY (source_db, reference_set)
 );
 
 -- Operational stability definition (paper / gold SQL / DB single source):
@@ -140,19 +161,24 @@ CREATE TABLE phase_stability (
     -- Formation energy per atom relative to the elemental reference states
     -- of reference_set below. NOT NULL: every stability row must carry it
     -- (a NULL here could not be distinguished from a computation gap).
-    formation_energy_per_atom DOUBLE PRECISION NOT NULL,
+    formation_energy_per_atom DOUBLE PRECISION NOT NULL
+        CHECK (formation_energy_per_atom > '-Infinity'
+           AND formation_energy_per_atom < 'Infinity'),
     -- Energy convention of formation_energy_per_atom. Formation energies
-    -- from different source databases (OQMD / Materials Project / AFLOW)
-    -- use different pseudopotentials, corrections and elemental reference
-    -- fits, so they are only comparable within one reference_set; views
-    -- must join elemental references on the SAME reference_set.
+    -- from different source databases use different pseudopotentials,
+    -- corrections and elemental reference fits, so they are only
+    -- comparable within one reference_set; views must join elemental
+    -- references on the SAME reference_set, and 006 asserts that every
+    -- loaded (source_db, reference_set) pair is declared in
+    -- source_energy_convention.
     reference_set TEXT NOT NULL
         REFERENCES reference_energy_set(reference_set),
     -- NOT NULL keeps the generated is_stable strictly two-valued
     -- (a NULL hull energy would make is_stable NULL, i.e. three-valued).
-    energy_above_hull DOUBLE PRECISION NOT NULL CHECK (energy_above_hull >= 0),
+    energy_above_hull DOUBLE PRECISION NOT NULL
+        CHECK (energy_above_hull >= 0 AND energy_above_hull < 'Infinity'),
     is_stable BOOLEAN GENERATED ALWAYS AS (energy_above_hull <= 0.001) STORED,
-    band_gap DOUBLE PRECISION CHECK (band_gap >= 0)
+    band_gap DOUBLE PRECISION CHECK (band_gap >= 0 AND band_gap < 'Infinity')
 );
 
 -- === Calculation & Properties (parent-child) ===
@@ -175,7 +201,10 @@ CREATE TABLE calculated_property (
     property_id TEXT PRIMARY KEY,
     calculation_id TEXT NOT NULL REFERENCES calculation(calculation_id),
     property_name TEXT NOT NULL,
-    value DOUBLE PRECISION,
+    -- NOT NULL: a property row without a value would make COUNT(*) and
+    -- COUNT(value) diverge; unknown values are represented by absence.
+    value DOUBLE PRECISION NOT NULL
+        CHECK (value > '-Infinity' AND value < 'Infinity'),
     unit TEXT,
     tensor_component TEXT,
     -- Tensor-valued properties store one row per component (e.g. C11, C12,
@@ -197,7 +226,9 @@ CREATE TABLE element_property (
     element_property_id SERIAL PRIMARY KEY,
     element_id INTEGER NOT NULL REFERENCES element(element_id),
     property_name VARCHAR(100) NOT NULL,
-    value NUMERIC(15,6),
+    -- NOT NULL: unknown values are represented by absence (see
+    -- calculated_property.value). NUMERIC still admits NaN, hence the CHECK.
+    value NUMERIC(15,6) NOT NULL CHECK (value <> 'NaN'),
     unit VARCHAR(30),
     temperature_k NUMERIC(8,2) CHECK (temperature_k >= 0),
     source VARCHAR(100),
@@ -274,7 +305,9 @@ CREATE TABLE measured_property (
     measured_property_id SERIAL PRIMARY KEY,
     measurement_id INTEGER NOT NULL REFERENCES experimental_measurement(measurement_id),
     property_name VARCHAR(100) NOT NULL,
-    value NUMERIC(15,6),
+    -- NOT NULL: unknown values are represented by absence (see
+    -- calculated_property.value). NUMERIC still admits NaN, hence the CHECK.
+    value NUMERIC(15,6) NOT NULL CHECK (value <> 'NaN'),
     uncertainty NUMERIC(15,6) CHECK (uncertainty >= 0),
     unit VARCHAR(30),
     -- Intentional simplification: one scalar value per (measurement,
@@ -385,7 +418,8 @@ CREATE TABLE thermal_property (
     thermal_conductivity DOUBLE PRECISION CHECK (thermal_conductivity >= 0),
     specific_heat_cv DOUBLE PRECISION CHECK (specific_heat_cv >= 0),
     gruneisen_parameter DOUBLE PRECISION,
-    temperature_k DOUBLE PRECISION NOT NULL DEFAULT 300.0 CHECK (temperature_k >= 0),
+    temperature_k DOUBLE PRECISION NOT NULL DEFAULT 300.0
+        CHECK (temperature_k >= 0 AND temperature_k < 'Infinity'),
     UNIQUE (calculation_id, temperature_k)
 );
 
@@ -395,8 +429,10 @@ CREATE TABLE surface_energy (
     surface_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     miller_index VARCHAR(10) NOT NULL,
-    surface_energy_j_m2 DOUBLE PRECISION CHECK (surface_energy_j_m2 > 0),
-    work_function DOUBLE PRECISION CHECK (work_function > 0),
+    surface_energy_j_m2 DOUBLE PRECISION
+        CHECK (surface_energy_j_m2 > 0 AND surface_energy_j_m2 < 'Infinity'),
+    work_function DOUBLE PRECISION
+        CHECK (work_function > 0 AND work_function < 'Infinity'),
     is_reconstructed BOOLEAN NOT NULL DEFAULT FALSE,
     -- Reconstructed and unreconstructed variants of the same facet coexist.
     UNIQUE (entry_id, miller_index, is_reconstructed)
@@ -423,9 +459,14 @@ CREATE TABLE phase_diagram_entry (
     phase_entry_id SERIAL PRIMARY KEY,
     entry_id TEXT NOT NULL REFERENCES material_entry(entry_id),
     chemical_system TEXT NOT NULL,
-    is_on_hull BOOLEAN NOT NULL,
+    -- Single stability truth: is_on_hull is DERIVED from hull_distance
+    -- with the same operational threshold as phase_stability.is_stable
+    -- (on hull <=> hull_distance <= 0.001 eV/atom), so the two columns
+    -- can never contradict each other.
+    hull_distance DOUBLE PRECISION NOT NULL
+        CHECK (hull_distance >= 0 AND hull_distance < 'Infinity'),
+    is_on_hull BOOLEAN GENERATED ALWAYS AS (hull_distance <= 0.001) STORED,
     decomposition_products TEXT,
-    hull_distance DOUBLE PRECISION CHECK (hull_distance >= 0),
     UNIQUE (entry_id, chemical_system)
 );
 
@@ -470,10 +511,14 @@ CREATE TABLE pure_element_reference (
     -- the SAME reference_set re-references it to the stored pure-element
     -- ground states (the fitted reference energies cancel); it must never
     -- be combined with formation energies of a different reference_set.
-    delta_e DOUBLE PRECISION NOT NULL,
-    volume_per_atom DOUBLE PRECISION CHECK (volume_per_atom > 0),  -- Angstrom^3/atom
-    stability DOUBLE PRECISION CHECK (stability >= 0),  -- eV/atom above hull
-    band_gap DOUBLE PRECISION CHECK (band_gap >= 0),  -- eV
+    delta_e DOUBLE PRECISION NOT NULL
+        CHECK (delta_e > '-Infinity' AND delta_e < 'Infinity'),
+    volume_per_atom DOUBLE PRECISION
+        CHECK (volume_per_atom > 0 AND volume_per_atom < 'Infinity'),  -- Angstrom^3/atom
+    stability DOUBLE PRECISION
+        CHECK (stability >= 0 AND stability < 'Infinity'),  -- eV/atom above hull
+    band_gap DOUBLE PRECISION
+        CHECK (band_gap >= 0 AND band_gap < 'Infinity'),  -- eV
     n_polymorphs INTEGER CHECK (n_polymorphs > 0),
     UNIQUE (element_symbol, reference_set)
 );
@@ -681,3 +726,71 @@ CREATE TRIGGER trg_measured_property_unit
 CREATE TRIGGER trg_element_property_unit
     BEFORE INSERT OR UPDATE OF property_name, unit ON element_property
     FOR EACH ROW EXECUTE FUNCTION check_property_unit();
+
+-- Master-side companion of check_property_unit: changing canonical_unit
+-- while incompatible child rows exist would create dictionary/child
+-- contradictions that the child-side trigger can no longer see (the
+-- composite FK skips NULL child units under MATCH SIMPLE).
+CREATE FUNCTION prevent_invalid_canonical_unit_change() RETURNS trigger AS $$
+DECLARE
+    tbl TEXT;
+BEGIN
+    IF NEW.canonical_unit IS NOT DISTINCT FROM OLD.canonical_unit THEN
+        RETURN NEW;
+    END IF;
+    IF NEW.canonical_unit IS NOT NULL THEN
+        IF EXISTS (SELECT 1 FROM calculated_property
+                   WHERE property_name = OLD.canonical_name
+                     AND unit IS DISTINCT FROM NEW.canonical_unit) THEN
+            tbl := 'calculated_property';
+        ELSIF EXISTS (SELECT 1 FROM measured_property
+                      WHERE property_name = OLD.canonical_name
+                        AND unit IS DISTINCT FROM NEW.canonical_unit) THEN
+            tbl := 'measured_property';
+        ELSIF EXISTS (SELECT 1 FROM element_property
+                      WHERE property_name = OLD.canonical_name
+                        AND unit IS DISTINCT FROM NEW.canonical_unit) THEN
+            tbl := 'element_property';
+        END IF;
+        IF tbl IS NOT NULL THEN
+            RAISE EXCEPTION
+                'cannot change canonical unit for property % to %: % contains incompatible rows',
+                OLD.canonical_name, NEW.canonical_unit, tbl;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_property_definition_unit_change
+    BEFORE UPDATE OF canonical_unit ON property_definition
+    FOR EACH ROW EXECUTE FUNCTION prevent_invalid_canonical_unit_change();
+
+-- === Energy-convention master mutation guard ===
+-- A reference_set row defines what every child energy value MEANS; once
+-- phase_stability or pure_element_reference rows reference it, rewriting
+-- method / functional / source / fit_name would silently change the
+-- meaning of all loaded energies without breaking any FK. Reject it.
+CREATE FUNCTION prevent_referenced_convention_change() RETURNS trigger AS $$
+BEGIN
+    IF NEW.method IS NOT DISTINCT FROM OLD.method
+       AND NEW.functional IS NOT DISTINCT FROM OLD.functional
+       AND NEW.source IS NOT DISTINCT FROM OLD.source
+       AND NEW.fit_name IS NOT DISTINCT FROM OLD.fit_name THEN
+        RETURN NEW;
+    END IF;
+    IF EXISTS (SELECT 1 FROM phase_stability
+               WHERE reference_set = OLD.reference_set)
+       OR EXISTS (SELECT 1 FROM pure_element_reference
+                  WHERE reference_set = OLD.reference_set) THEN
+        RAISE EXCEPTION
+            'reference_set % is referenced by loaded energies; its convention (method/functional/source/fit_name) is immutable',
+            OLD.reference_set;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_reference_energy_set_change
+    BEFORE UPDATE ON reference_energy_set
+    FOR EACH ROW EXECUTE FUNCTION prevent_referenced_convention_change();

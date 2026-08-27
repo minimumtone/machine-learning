@@ -87,6 +87,31 @@ BEGIN
 END
 $$;
 
+-- Source/convention mapping: every (source_db, reference_set) pair that
+-- was actually loaded must be declared in source_energy_convention, so a
+-- source can never be silently assigned an energy convention it was not
+-- mapped to (e.g. labeling Materials-Project-derived energies with an
+-- OQMD convention would fail here unless explicitly declared and
+-- documented in the map).
+DO $$
+DECLARE
+    n_bad BIGINT;
+BEGIN
+    SELECT COUNT(*) INTO n_bad
+    FROM material_entry m
+    JOIN phase_stability ps ON ps.entry_id = m.entry_id
+    LEFT JOIN source_energy_convention sec
+        ON sec.source_db IS NOT DISTINCT FROM m.source_db
+       AND sec.reference_set = ps.reference_set
+    WHERE sec.reference_set IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'phase_stability: % rows whose (source_db, reference_set) pair is not declared in source_energy_convention',
+            n_bad;
+    END IF;
+END
+$$;
+
 -- structure copies of master attributes must match the master tables
 -- (also enforced per-row by trg_structure_master_consistency; this is
 -- the set-level assertion for databases loaded before the trigger).

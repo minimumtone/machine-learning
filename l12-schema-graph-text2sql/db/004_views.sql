@@ -47,9 +47,16 @@ SELECT
         THEN ps.formation_energy_per_atom - ref.weighted_element_delta_e
         ELSE NULL
     END AS enthalpy_vs_element_ground_states,
+    -- Every NULL-able input is handled by an explicit branch BEFORE the
+    -- comparisons that would go NULL on it, so no diagnosable state can
+    -- fall through a NULL comparison into 'ok'.
     CASE
+        WHEN ref.n_elements = 0
+            THEN 'missing_composition'
         WHEN m.number_of_elements <> ref.n_elements
             THEN 'element_count_mismatch'
+        WHEN ref.fraction_sum IS NULL
+            THEN 'missing_composition_fraction'
         WHEN ABS(ref.fraction_sum - 1.0) > 1e-8
             THEN 'invalid_composition'
         WHEN ref.n_elements <> ref.n_referenced

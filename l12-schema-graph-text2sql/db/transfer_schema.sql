@@ -22,15 +22,21 @@ CREATE TABLE oqmd_entries (
 CREATE TABLE oqmd_formation_energies (
     fe_key        TEXT PRIMARY KEY,
     entry_key     TEXT NOT NULL REFERENCES oqmd_entries(entry_key),
-    delta_e       DOUBLE PRECISION,
-    hull_distance DOUBLE PRECISION NOT NULL CHECK (hull_distance >= 0),
+    -- Every row of this table IS a formation energy (copied from the main
+    -- schema's NOT NULL formation_energy_per_atom), so NULL is not a valid
+    -- state; the CHECK also rejects NaN / +-Infinity (NaN sorts above
+    -- Infinity in PostgreSQL, so it fails `< 'Infinity'`).
+    delta_e       DOUBLE PRECISION NOT NULL
+        CHECK (delta_e > '-Infinity' AND delta_e < 'Infinity'),
+    hull_distance DOUBLE PRECISION NOT NULL
+        CHECK (hull_distance >= 0 AND hull_distance < 'Infinity'),
     -- Stability truth (single source): on_hull is DERIVED from
     -- hull_distance with the same operational definition as the main
     -- schema (stable <=> hull_distance <= 0.001 eV/atom), so the two
     -- columns can never contradict each other. Transfer gold SQL may use
     -- either; both are the same truth.
     on_hull       BOOLEAN GENERATED ALWAYS AS (hull_distance <= 0.001) STORED,
-    gap_ev        DOUBLE PRECISION CHECK (gap_ev >= 0)
+    gap_ev        DOUBLE PRECISION CHECK (gap_ev >= 0 AND gap_ev < 'Infinity')
 );
 
 CREATE TABLE oqmd_element_ratios (

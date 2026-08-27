@@ -56,6 +56,9 @@ B_ELEMENTS = [
 # never write it directly.
 STABLE_EAH_THRESHOLD = 0.001  # eV/atom
 
+# Package-specific energy convention name (see reference_energy_set master).
+REFERENCE_SET = "L12-FIXTURE-PBE-v1"
+
 # Known L12 compounds (a_elem, b_elem, lattice_a, formation_energy,
 # energy_above_hull, bulk_modulus, shear_modulus); is_stable is derived
 # from energy_above_hull, never hand-assigned
@@ -410,11 +413,30 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
     # --- Pure element reference energies (OQMD) ---
     out.write("\n-- Energy-convention master (one row per reference set)\n")
     out.write(
+        "-- Single package-specific convention: compound formation energies in\n"
+        "-- this fixture are synthetically generated (curated L12 values plus\n"
+        "-- random-in-range values; see ingestion/generate_extended_data.py) and\n"
+        "-- are DECLARED relative to the elemental reference states below. Only\n"
+        "-- the pure-element delta_e values are real data, adopted from OQMD\n"
+        "-- DFT-PBE. No formation energies were imported from Materials Project\n"
+        "-- or AFLOW; material_entry.source_db is a synthetic provenance label\n"
+        "-- (see source_energy_convention and README).\n"
         "INSERT INTO reference_energy_set (reference_set, method, functional, source, fit_name, description)\n"
-        "VALUES ('OQMD-PBE', 'DFT', 'PBE', 'OQMD', 'OQMD standard reference-energy fit',\n"
-        "        'OQMD DFT-PBE convention: formation energies (delta_e) relative to "
-        "the OQMD standard elemental reference fit');\n"
+        f"VALUES ('{REFERENCE_SET}', 'DFT', 'PBE',\n"
+        "        'synthetic fixture (elemental references adopted from OQMD)',\n"
+        "        'OQMD standard reference-energy fit (adopted for elemental references)',\n"
+        "        'Package-specific convention of this synthetic verification "
+        "fixture: compound formation energies are generated values declared "
+        "relative to the OQMD DFT-PBE elemental ground states stored in "
+        "pure_element_reference; only the elemental delta_e values are real "
+        "OQMD data');\n"
     )
+    out.write("\n-- source_db -> reference_set map (asserted by 006)\n")
+    for src in ("OQMD", "Materials Project", "AFLOW"):
+        out.write(
+            "INSERT INTO source_energy_convention (source_db, reference_set) "
+            f"VALUES ('{src}', '{REFERENCE_SET}');\n"
+        )
     out.write("\n-- Pure element reference energies (OQMD ground states)\n")
     for sym in sorted(pure):
         info = pure[sym]
@@ -422,7 +444,7 @@ def write_reference_data(out: TextIO, pure: dict[str, dict]) -> dict[str, int]:
             f"INSERT INTO pure_element_reference "
             f"(element_symbol, reference_set, oqmd_entry_id, ground_state_spacegroup, "
             f"delta_e, volume_per_atom, stability, band_gap, n_polymorphs) "
-            f"VALUES ('{sym}', 'OQMD-PBE', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
+            f"VALUES ('{sym}', '{REFERENCE_SET}', {info['oqmd_entry_id']}, {_sql_str(info['spacegroup'])}, "
             f"{_sql_num(info['delta_e_per_atom'])}, {_sql_num(info['volume_per_atom'])}, "
             f"{_sql_num(max(0.0, info['stability']) if info['stability'] is not None else None)}, "
             f"{_sql_num(info['band_gap'])}, {info['n_polymorphs']});\n"
@@ -509,7 +531,7 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         out.write(
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
             f"reference_set, energy_above_hull, band_gap) VALUES "
-            f"('stab_{entry_count:05d}', '{eid}', {fe:.4f}, 'OQMD-PBE', {eah:.4f}, "
+            f"('stab_{entry_count:05d}', '{eid}', {fe:.4f}, '{REFERENCE_SET}', {eah:.4f}, "
             f"{random.uniform(0, 0.5):.3f});\n"
         )
 
@@ -664,8 +686,8 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
         if random.random() < 0.4:
             out.write(
                 f"INSERT INTO phase_diagram_entry (entry_id, chemical_system, "
-                f"is_on_hull, decomposition_products, hull_distance) VALUES "
-                f"('{eid}', '{chem_sys}', {'TRUE' if eah <= STABLE_EAH_THRESHOLD else 'FALSE'}, "
+                f"decomposition_products, hull_distance) VALUES "
+                f"('{eid}', '{chem_sys}', "
                 f"'{formula} -> {a_elem} + {b_elem}', {eah:.4f});\n"
             )
 
@@ -788,7 +810,7 @@ def write_material_data(out: TextIO, pure: dict[str, dict], elem_ids: dict[str, 
             f"INSERT INTO phase_stability (stability_id, entry_id, formation_energy_per_atom, "
             f"reference_set, energy_above_hull, band_gap) VALUES "
             f"('stab_elem_{sym.lower()}', '{peid}', {_sql_num(info['delta_e_per_atom'])}, "
-            f"'OQMD-PBE', {_sql_num(eah)}, {_sql_num(info['band_gap'])});\n"
+            f"'{REFERENCE_SET}', {_sql_num(eah)}, {_sql_num(info['band_gap'])});\n"
         )
         out.write(
             f"INSERT INTO calculation (calculation_id, entry_id, method, functional, "
