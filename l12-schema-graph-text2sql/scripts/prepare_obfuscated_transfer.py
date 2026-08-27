@@ -196,7 +196,7 @@ SQL:
 """.replace("{{query_type_instruction}}", "{query_type_instruction}").replace("{{user_query}}", "{user_query}")
 
 
-def main() -> None:
+def main() -> int:
     obf_db = os.getenv("TRANSFER_DB", "oqmd_transfer") + "_obfuscated"
     translation = load_translation(MAP_PATH)
     mapping = json.loads(MAP_PATH.read_text())
@@ -208,6 +208,7 @@ def main() -> None:
     PROMPT_TEMPLATE.write_text(prompt)
 
     out_lines: list[dict[str, Any]] = []
+    n_failed = 0
     for line in SRC_DATASET.read_text().strip().splitlines():
         item = json.loads(line)
         old_id = item["id"]
@@ -218,13 +219,19 @@ def main() -> None:
         gold_obf_path = GOLD_DIR / f"{new_id}.sql"
         gold_obf_path.write_text(gold_obf)
 
+        # A generation failure must not leave a valid-looking expected
+        # JSON behind: remove any stale file, roll back the aborted
+        # transaction, and fail the whole run at the end.
         expected_path = EXPECTED_DIR / f"{new_id}.json"
         try:
             execute_and_save(gold_obf, conn, expected_path,
                              ordered=sql_is_ordered(gold_obf))
         except Exception as exc:
             print(f"FAILED {new_id}: {exc}")
-            expected_path.write_text(json.dumps({"columns": [], "ordered": False, "rows": [], "error": str(exc)}, ensure_ascii=False, indent=2))
+            n_failed += 1
+            expected_path.unlink(missing_ok=True)
+            conn.rollback()
+            continue
 
         out_lines.append({
             "id": new_id,
@@ -237,7 +244,11 @@ def main() -> None:
     OUT_DATASET.write_text("\n".join(json.dumps(line, ensure_ascii=False) for line in out_lines))
     conn.close()
     print(f"Wrote {OUT_DATASET}")
+    if n_failed:
+        print(f"generation_failed={n_failed}")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

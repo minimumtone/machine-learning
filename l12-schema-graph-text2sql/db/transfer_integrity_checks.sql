@@ -46,6 +46,25 @@ BEGIN
 END
 $$;
 
+-- Exactly one formation energy per entry (mirrors the main schema's
+-- one-phase_stability-per-material contract): entry_key is UNIQUE by DDL
+-- (at most one), so asserting no missing row makes it exactly one.
+DO $$
+DECLARE
+    n_bad BIGINT;
+BEGIN
+    SELECT COUNT(*) INTO n_bad
+    FROM oqmd_entries e
+    LEFT JOIN oqmd_formation_energies f ON f.entry_key = e.entry_key
+    WHERE f.entry_key IS NULL;
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'oqmd_entries: % entries have no formation-energy row',
+            n_bad;
+    END IF;
+END
+$$;
+
 -- Every entry with a formation energy must have ratio rows.
 DO $$
 DECLARE

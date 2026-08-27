@@ -34,6 +34,9 @@ import math
 import re
 from decimal import Decimal
 
+import sqlglot
+import sqlglot.errors
+
 REL_TOL = 1e-9
 ABS_TOL = 1e-8
 
@@ -60,8 +63,14 @@ def normalize_rows(rows: list) -> list[list]:
     return [[normalize_cell(c) for c in row] for row in rows]
 
 
-def sql_is_ordered(sql: str) -> bool:
-    """True when the outermost statement has a top-level ORDER BY clause."""
+def _sql_is_ordered_lexer(sql: str) -> bool:
+    """Lexer-based detection: top-level ORDER BY outside strings/comments.
+
+    Handles line/block comments, single-quoted strings and parenthesis
+    depth only. Dollar-quoted strings and quoted identifiers containing
+    "ORDER BY" or parentheses are not modeled; the sqlglot cross-check in
+    sql_is_ordered guards against such cases for parseable statements.
+    """
     stripped = _STRING_RE.sub("''", _COMMENT_RE.sub(" ", sql))
     depth = 0
     for m in re.finditer(r"[()]|\bORDER\s+BY\b", stripped, re.IGNORECASE):
@@ -73,6 +82,29 @@ def sql_is_ordered(sql: str) -> bool:
         elif depth == 0:
             return True
     return False
+
+
+def sql_is_ordered(sql: str) -> bool:
+    """True when the outermost statement has a top-level ORDER BY clause.
+
+    Primary detection is a real SQL parse (sqlglot, postgres dialect); the
+    simple lexer serves as a cross-check and as fallback for statements
+    sqlglot cannot parse. A disagreement between the two is raised rather
+    than silently resolved.
+    """
+    lexer_result = _sql_is_ordered_lexer(sql)
+    try:
+        expr = sqlglot.parse_one(sql, dialect="postgres")
+    except sqlglot.errors.ParseError:
+        return lexer_result
+    ast_result = expr.args.get("order") is not None
+    if ast_result != lexer_result:
+        raise ValueError(
+            "ORDER BY detection disagreement between sqlglot AST "
+            f"({ast_result}) and lexer ({lexer_result}) for SQL: "
+            f"{sql[:200]!r}"
+        )
+    return ast_result
 
 
 def _cells_equal(a: object, b: object) -> bool:

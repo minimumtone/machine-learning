@@ -70,8 +70,12 @@ def reduce_counts(counts: dict[str, int]) -> dict[str, int]:
     return {el: n // g for el, n in counts.items()}
 
 
-def formula_type_fractions(formula_type: str) -> list[Fraction] | None:
+def formula_type_fractions(
+    formula_type: str | None,
+) -> list[Fraction] | None:
     """'A3B' -> [3/4, 1/4] (descending); None when not parseable."""
+    if not formula_type:
+        return None
     parts = re.findall(r"([A-Z])(\d*)", formula_type)
     if not parts or "".join(p[0] + p[1] for p in parts) != formula_type:
         return None
@@ -94,11 +98,15 @@ def main() -> int:
             SELECT m.entry_id, m.formula, m.reduced_formula, s.prototype,
                    pd.formula_type
             FROM material_entry m
-            JOIN structure s ON s.entry_id = m.entry_id
-            JOIN prototype_definition pd ON pd.prototype_id = s.prototype
+            LEFT JOIN structure s ON s.entry_id = m.entry_id
+            LEFT JOIN prototype_definition pd
+              ON pd.prototype_id = s.prototype
             ORDER BY m.entry_id
         """)
         entries = cur.fetchall()
+        cur.execute("SELECT COUNT(*) FROM material_entry")
+        row = cur.fetchone()
+        n_materials = int(row[0]) if row else 0
         cur.execute("""
             SELECT entry_id, element, SUM(atomic_fraction)
             FROM composition
@@ -141,11 +149,16 @@ def main() -> int:
                     f"{entry_id}: reduced_formula {reduced_formula!r} != "
                     f"reduced counts of formula {formula!r}")
         # 3. prototype stoichiometry
+        if prototype is None:
+            failures.append(
+                f"{entry_id}: structure/prototype missing (cannot audit "
+                f"prototype stoichiometry)")
+            continue
         expected = formula_type_fractions(ftype)
         if expected is None:
             failures.append(
-                f"{entry_id}: prototype {prototype} has unparseable "
-                f"formula_type {ftype!r}")
+                f"{entry_id}: prototype {prototype} has missing or "
+                f"unparseable formula_type {ftype!r}")
             continue
         actual = sorted(stored.values(), reverse=True)
         if len(actual) != len(expected) or any(
@@ -153,6 +166,13 @@ def main() -> int:
             failures.append(
                 f"{entry_id}: composition fractions {actual} do not match "
                 f"prototype {prototype} formula_type {ftype}")
+
+    # Coverage contract: every material_entry row must have been audited;
+    # a smaller count means rows silently dropped out of the audit query.
+    if n_checked != n_materials:
+        failures.append(
+            f"coverage mismatch: checked {n_checked}, "
+            f"material_entry has {n_materials}")
 
     for f in failures:
         print(f"SEMANTIC MISMATCH: {f}")
