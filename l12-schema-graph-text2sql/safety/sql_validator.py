@@ -1118,9 +1118,13 @@ def validate_sql(
         errors.append("Tautological condition detected (possible injection)")
         _escalate("rejected_security")
 
+    sql_before_limit = sql
     has_limit, sql = check_limit(sql)
     if not has_limit:
-        warnings.append(f"LIMIT clause added (default {DEFAULT_LIMIT})")
+        if re.search(r"\bLIMIT\b", sql_before_limit, re.IGNORECASE):
+            warnings.append(f"LIMIT capped to maximum ({MAX_ROWS})")
+        else:
+            warnings.append(f"LIMIT clause added (default {DEFAULT_LIMIT})")
         _escalate("modified")
 
     bad_tables = check_allowed_tables(sql, allowed_tables)
