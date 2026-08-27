@@ -5,7 +5,13 @@
 -- which can only SELECT and whose transactions default to read-only.
 -- ============================================================
 
-CREATE ROLE l12_reader LOGIN PASSWORD 'l12_reader_password';
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'l12_reader') THEN
+        CREATE ROLE l12_reader LOGIN PASSWORD 'l12_reader_password';
+    END IF;
+END
+$$;
 
 REVOKE ALL ON SCHEMA public FROM l12_reader;
 GRANT USAGE ON SCHEMA public TO l12_reader;
