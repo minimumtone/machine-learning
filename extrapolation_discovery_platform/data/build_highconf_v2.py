@@ -30,6 +30,8 @@ ELEMENTS = ["Al", "C", "Co", "Cr", "Cu", "Fe", "Hf", "Mn", "Mo", "Nb",
 TEMP_COL = "PROPERTY: Test temperature ($^\\circ$C)"
 GRAIN_COL = "PROPERTY: grain size ($\\mu$m)"
 DENS_COL = "PROPERTY: Calculated Density (g/cm$^3$)"
+PROC_MAP = {"ANNEAL": "ANNEAL", "CAST": "CAST", "WROUGHT": "WROUGHT",
+            "OTHER": "OTHER", "POWDER": "OTHER"}
 
 
 def parse_formula(formula: str) -> dict:
@@ -55,18 +57,29 @@ def main(mpea_path: str) -> None:
         [{f"{e}_frac": parse_formula(f).get(e, 0.0) for e in ELEMENTS}
          for f in sub["FORMULA"]])
 
-    def key(fracs: np.ndarray, ys: float) -> tuple:
-        return tuple(np.round(fracs, 4)) + (round(float(ys), 1),)
+    def key(fracs: np.ndarray, ys: float, year: float, proc: str,
+            temp: float) -> tuple:
+        return (tuple(np.round(fracs, 4)) + (round(float(ys), 1),
+                int(year), str(proc), round(float(temp), 1)))
 
     frac_cols = [f"{e}_frac" for e in ELEMENTS]
+    proc_flags = ["ANNEAL", "CAST", "OTHER", "WROUGHT"]
     pool = defaultdict(list)
     for j in range(len(sub)):
         pool[key(fractions.loc[j].values,
-                 sub.loc[j, "PROPERTY: YS (MPa)"])].append(j)
+                 sub.loc[j, "PROPERTY: YS (MPa)"],
+                 sub.loc[j, "REFERENCE: year"],
+                 PROC_MAP.get(sub.loc[j, "PROPERTY: Processing method"],
+                              "OTHER"),
+                 sub.loc[j, TEMP_COL])].append(j)
     match = []
     for i in range(len(old)):
+        proc = next((p for p in proc_flags
+                     if old.loc[i, f"processing_{p}"] == 1.0), "OTHER")
         k = key(old.loc[i, frac_cols].values,
-                old.loc[i, "yield_strength_MPa"])
+                old.loc[i, "yield_strength_MPa"],
+                old.loc[i, "year"], proc,
+                old.loc[i, "temperature_C"])
         if not pool[k]:
             raise SystemExit(f"v1 row {i} not found in source")
         match.append(pool[k].pop(0))
