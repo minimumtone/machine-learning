@@ -4,11 +4,12 @@
     "n_compounds",
     "avg_enthalpy"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al",
       2,
-      "-0.3859"
+      -0.3859
     ]
   ]
 }

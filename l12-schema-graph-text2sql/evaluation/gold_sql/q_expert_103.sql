@@ -14,5 +14,5 @@ JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.property_name = 'bulk_modulus'
 GROUP BY ca.element, cb.element
-ORDER BY avg_bulk_modulus DESC
+ORDER BY avg_bulk_modulus DESC, a_site, b_site
 LIMIT 10000;

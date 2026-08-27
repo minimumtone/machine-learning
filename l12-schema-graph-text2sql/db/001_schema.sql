@@ -208,7 +208,11 @@ CREATE TABLE phase_stability (
     energy_above_hull DOUBLE PRECISION NOT NULL
         CHECK (energy_above_hull >= 0 AND energy_above_hull < 'Infinity'),
     is_stable BOOLEAN GENERATED ALWAYS AS (energy_above_hull <= 0.001) STORED,
-    band_gap DOUBLE PRECISION CHECK (band_gap >= 0 AND band_gap < 'Infinity')
+    -- NOT NULL: every fixture stability row carries a gap value (0 for
+    -- metals); "gap unknown" is not a fixture state, which keeps the
+    -- band-structure and metallicity integrity checks free of NULL holes.
+    band_gap DOUBLE PRECISION NOT NULL
+        CHECK (band_gap >= 0 AND band_gap < 'Infinity')
 );
 
 -- === Calculation & Properties (parent-child) ===
@@ -323,9 +327,10 @@ CREATE TABLE experimental_measurement (
         CHECK (temperature_k >= 0 AND temperature_k <> 'NaN'),
     pressure_gpa NUMERIC(8,3)
         CHECK (pressure_gpa >= 0 AND pressure_gpa <> 'NaN'),
-    -- One measurement per (entry, reference, method, T, P); replicate
-    -- measurements are outside this verification schema, so accidental
-    -- double-loading of the same measurement is rejected.
+    -- One measurement run per (entry, reference, method, T, P,
+    -- measurement_run); measurement_run distinguishes replicates, so
+    -- accidental double-loading of the same run is rejected while real
+    -- replicate measurements remain representable.
     -- NULLS NOT DISTINCT consequence (documented limitation): NULL condition
     -- values do NOT represent independent measurements — only one
     -- unknown-condition measurement per (entry, reference, method) is
@@ -421,9 +426,11 @@ CREATE TABLE band_structure (
     is_direct_gap BOOLEAN GENERATED ALWAYS AS
         (band_gap_type = 'direct') STORED,
     -- Sign-free energies: finite-only (NaN / +-Infinity rejected).
-    cbm_energy DOUBLE PRECISION
+    -- NOT NULL: a band-structure row asserts both band edges, so the
+    -- integrity check band_gap = cbm - vbm has no NULL escape hatch.
+    cbm_energy DOUBLE PRECISION NOT NULL
         CHECK (cbm_energy > '-Infinity' AND cbm_energy < 'Infinity'),
-    vbm_energy DOUBLE PRECISION
+    vbm_energy DOUBLE PRECISION NOT NULL
         CHECK (vbm_energy > '-Infinity' AND vbm_energy < 'Infinity'),
     num_bands INTEGER CHECK (num_bands > 0),
     num_kpoints INTEGER CHECK (num_kpoints > 0)
@@ -444,6 +451,12 @@ CREATE TABLE density_of_states (
 
 -- === Mechanical/Physical Property Tables ===
 
+-- Intentional denormalized duplicate: the scalar moduli below are also
+-- mirrored into calculated_property (EAV) so the benchmark can pose both
+-- wide-table and EAV navigation questions against the same physics. Both
+-- copies are written from one generated value and their equality is
+-- asserted by validate_fixture_integrity(); the fixture is immutable, so
+-- partial post-load updates are unsupported.
 CREATE TABLE elastic_tensor (
     elastic_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),

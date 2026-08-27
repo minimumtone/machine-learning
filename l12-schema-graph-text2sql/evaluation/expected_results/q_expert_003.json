@@ -1,4 +1,6 @@
 {
+  "expected_empty": true,
+  "purpose": "negative control: fixture contains only binary compounds and pure elements, so number_of_elements >= 3 must return zero rows",
   "columns": [
     "entry_id",
     "formula",

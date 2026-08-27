@@ -5,12 +5,13 @@
     "avg_enthalpy_vs_element_gs",
     "min_enthalpy_vs_element_gs"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al",
       2,
-      "-0.3859",
-      "-0.5010"
+      -0.3859,
+      -0.501
     ]
   ]
 }

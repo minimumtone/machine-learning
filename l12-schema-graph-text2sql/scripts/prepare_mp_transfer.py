@@ -16,7 +16,7 @@ sys.path.insert(0, str(PROJECT))
 from scripts.build_mp_transfer_db import mp_conninfo  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
-EXPECTED_DIR = EVAL_DIR / "expected_results"
+EXPECTED_DIR = EVAL_DIR / "expected_results_mp_transfer"
 PROMPT_DIR = PROJECT / "llm" / "prompt_templates"
 FEW_SHOT_DIR = PROJECT / "llm"
 

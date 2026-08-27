@@ -5,47 +5,48 @@
     "formation_energy",
     "site"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00136",
       "Au3Y",
-      "3.479000",
+      3.479,
       null
     ],
     [
       "entry_00176",
       "Mn3Ga",
-      "3.939000",
+      3.939,
       null
     ],
     [
       "entry_00275",
       "Mo3Mn",
-      "4.958000",
+      4.958,
       null
     ],
     [
       "entry_00086",
       "Rh3Sb",
-      "4.120000",
+      4.12,
       null
     ],
     [
       "entry_00278",
       "Rh3Zn",
-      "1.028000",
+      1.028,
       null
     ],
     [
       "entry_00018",
       "Ru3Mn",
-      "2.320000",
+      2.32,
       null
     ],
     [
       "entry_00332",
       "Ta3Sc",
-      "1.736000",
+      1.736,
       null
     ]
   ]

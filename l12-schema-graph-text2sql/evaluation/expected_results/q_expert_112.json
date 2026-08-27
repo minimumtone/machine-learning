@@ -6,18 +6,19 @@
     "bulk_modulus",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Ti",
       "Arc Melting",
-      "1495.00",
+      1495.0,
       190.0,
       0.0
     ],
     [
       "Ni3Al",
       "Electrodeposition",
-      "1706.00",
+      1706.0,
       180.0,
       0.0
     ]

@@ -5,8 +5,10 @@
 CREATE TABLE oqmd_elements (
     symbol          VARCHAR(5) PRIMARY KEY,
     element_name    TEXT,
-    atomic_number   INTEGER,
+    atomic_number   INTEGER
+        CHECK (atomic_number BETWEEN 1 AND 118),
     atomic_mass     DOUBLE PRECISION
+        CHECK (atomic_mass > 0 AND atomic_mass < 'Infinity')
 );
 
 CREATE TABLE oqmd_entries (
@@ -15,8 +17,10 @@ CREATE TABLE oqmd_entries (
     prototype_label     TEXT,
     spacegroup_number   INTEGER,
     crystal_system      TEXT,
-    lattice_param_a     DOUBLE PRECISION,
+    lattice_param_a     DOUBLE PRECISION
+        CHECK (lattice_param_a > 0 AND lattice_param_a < 'Infinity'),
     cell_volume_pa      DOUBLE PRECISION
+        CHECK (cell_volume_pa > 0 AND cell_volume_pa < 'Infinity')
 );
 
 CREATE TABLE oqmd_formation_energies (

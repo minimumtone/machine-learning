@@ -63,6 +63,14 @@ cd ..
 
 実験測定の未知条件の制限：`experimental_measurement` の `UNIQUE NULLS NOT DISTINCT` により、NULL の測定条件（reference/method/温度/圧力）は独立した測定を表しません。同一材料につき「条件未知の測定」は1件しか表現できず、独立した実測値を共存させるには実際の測定条件を記録する必要があります。
 
+検証器と期待結果の比較方針（第9次レビュー対応）：`scripts/run_gold_verification.py` / `scripts/check_expected_results.py` は `scripts/gold_compare.py` の共通ポリシーで比較します。(1) 列名（alias含む）を `cur.description` と期待JSONの `columns` で完全一致比較、(2) 最外層に ORDER BY を持つクエリは行順を保持したsequence比較・持たないクエリは重複を保持したmultiset比較（set化しない）、(3) 数値同士のみ `math.isclose(rel_tol=1e-9, abs_tol=1e-8)` の許容誤差を適用し、文字列・boolean・NULLは型ごと厳密比較（数値風TEXTをfloat化しない・6桁丸めなし）、(4) 期待JSONのスキーマ（columns=文字列list / rows=listのlist / ordered=bool）を検査、(5) gold SQLを持たない孤児期待ファイルを失敗として検出。接続は READ ONLY + `statement_timeout=30s` を強制します。難読化転用suite（`gold_sql_obfuscated` × `expected_results_obfuscated`）は `OBF_TRANSFER_DSN` で同一検証器により独立検証できます。MP転用実験（q_mp_*）の期待結果は評価専用の `evaluation/expected_results_mp_transfer/` に分離しています。
+
+意図的なnegative control：`q_expert_003`（3元系以上）・`q_expert_022`（非立方晶B2）・`q_expert_041`（GGA-PBE以外のfunctional）は本フィクスチャでは0行が正解の意図的な空結果クエリで、期待JSONに `expected_empty: true` と目的を明記しています。
+
+弾性スカラーの意図的な非正規化重複：`elastic_tensor` のVRHスカラー（K/G/E）は `calculated_property`（EAV）にも複製されています。これはワイド表経由とEAV経由の両方のschema navigation問題を同一物理量に対して出題するためのベンチマーク上の意図的設計で、両者は生成器の単一値から書き込まれ、`validate_fixture_integrity()` が一致を検査します（フィクスチャはimmutable運用のため片側のみの事後更新は非サポート）。
+
+NULL抜け穴の封鎖（第9次）：`phase_stability.band_gap`・`band_structure.cbm_energy / vbm_energy` を NOT NULL 化し、band gap整合検査がNULLで素通りしないようにしました。metallicity検査は `IS DISTINCT FROM` によるNULL-safe比較です。volume整合検査は、体積公式を持たない結晶系（cubic/hexagonal以外）が `conventional_cell_atoms` 付きprototypeに現れた時点で明示的に失敗します（公式追加までロード不可）。転用スキーマにも物理CHECK（原子番号1〜118・正の原子量・正の格子定数・正の原子あたり体積、いずれも有限値）を追加しています。
+
 転用スキーマ（`db/transfer_schema.sql`）の安定性truth：転用評価DBでは `oqmd_formation_energies.on_hull` は `hull_distance <= 0.001` から導出される生成列であり、両者が矛盾する行は存在できません。転用gold SQLの安定判定は `on_hull = true`（すなわち `hull_distance <= 0.001`、本体スキーマと同一の運用定義）をtruthとします。
 
 ### 3. 環境変数の設定

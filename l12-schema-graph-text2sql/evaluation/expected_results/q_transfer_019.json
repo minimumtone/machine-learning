@@ -3,26 +3,27 @@
     "composition_formula",
     "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
-      "-0.5505"
+      -0.5505
     ],
     [
       "Al3Sc",
-      "-0.5010"
+      -0.501
     ],
     [
       "Cr3Fe",
-      "-0.4400"
+      -0.44
     ],
     [
       "Co3Ti",
-      "-0.4380"
+      -0.438
     ],
     [
       "Ni3Al",
-      "-0.4193"
+      -0.4193
     ]
   ]
 }

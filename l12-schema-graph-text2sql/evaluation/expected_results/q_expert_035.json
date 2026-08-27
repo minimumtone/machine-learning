@@ -4,11 +4,12 @@
     "unstable",
     "unstable_pct"
   ],
+  "ordered": false,
   "rows": [
     [
       355,
       353,
-      "99.44"
+      99.44
     ]
   ]
 }

@@ -147,12 +147,14 @@ BEGIN
 
     -- Metallicity single truth: where density_of_states.is_metallic is
     -- known (non-NULL), it must equal (phase_stability.band_gap = 0).
+    -- IS DISTINCT FROM keeps the comparison NULL-safe even if band_gap
+    -- were ever relaxed back to nullable.
     SELECT COUNT(*) INTO n_bad
     FROM density_of_states d
     JOIN calculation cal ON cal.calculation_id = d.calculation_id
     JOIN phase_stability ps ON ps.entry_id = cal.entry_id
     WHERE d.is_metallic IS NOT NULL
-      AND d.is_metallic <> (ps.band_gap = 0);
+      AND d.is_metallic IS DISTINCT FROM (ps.band_gap = 0);
     IF n_bad > 0 THEN
         RAISE EXCEPTION
             'density_of_states: % rows whose is_metallic contradicts phase_stability.band_gap',
@@ -254,6 +256,17 @@ BEGIN
     -- volume_per_atom must equal the conventional-cell volume divided by
     -- the prototype's conventional_cell_atoms (cubic V=a^3, hexagonal
     -- V=(sqrt(3)/2)a^2c).
+    SELECT COUNT(*) INTO n_bad
+    FROM structure s
+    JOIN prototype_definition pd ON pd.prototype_id = s.prototype
+    WHERE pd.conventional_cell_atoms IS NOT NULL
+      AND s.crystal_system NOT IN ('cubic', 'hexagonal');
+    IF n_bad > 0 THEN
+        RAISE EXCEPTION
+            'structure: % rows use a crystal system the volume consistency check has no formula for (add its cell-volume formula before loading such prototypes)',
+            n_bad;
+    END IF;
+
     SELECT COUNT(*) INTO n_bad
     FROM structure s
     JOIN prototype_definition pd ON pd.prototype_id = s.prototype
