@@ -39,6 +39,8 @@ import psycopg
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
@@ -55,6 +57,18 @@ SUITES = [
     ("obfuscated", "gold_sql_obfuscated", "expected_results_obfuscated",
      "OBF_TRANSFER_DSN", lambda qid: True),
 ]
+
+# ok=N must mean "this distribution's schema answered N queries", not
+# "some database answered N queries": every connection is guarded before
+# any query runs. The main DB must carry the 007 marker with an
+# unchanged schema fingerprint and pass validate_fixture_integrity()
+# now; the transfer DBs must carry their initialization marker and pass
+# validate_transfer_integrity() now.
+GUARDS = {
+    "L12_DSN": assert_valid_fixture,
+    "TRANSFER_DSN": assert_valid_transfer,
+    "OBF_TRANSFER_DSN": assert_valid_transfer,
+}
 
 
 def _connect_readonly(dsn: str) -> psycopg.Connection:
@@ -83,7 +97,10 @@ def main() -> int:
     for _, _, _, env, _ in SUITES:
         dsn = os.environ.get(env)
         if env not in conns:
-            conns[env] = _connect_readonly(dsn) if dsn else None
+            conn = _connect_readonly(dsn) if dsn else None
+            if conn is not None:
+                GUARDS[env](conn)
+            conns[env] = conn
 
     ok: list[str] = []
     stale: list[str] = []

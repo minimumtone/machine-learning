@@ -36,6 +36,8 @@ from scripts.build_obfuscated_transfer_db import (  # noqa: E402
 )
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
@@ -168,13 +170,19 @@ def main() -> None:
                              "non-fatal (default: skipping fails the run)")
     args = parser.parse_args()
 
+    # Guard every connection before any query runs: 007 marker +
+    # fingerprint + validate_fixture_integrity() for the main DB,
+    # transfer marker + validate_transfer_integrity() for the others.
     conn = _connect_readonly(CONNINFO)
+    assert_valid_fixture(conn)
     try:
         transfer_conn = _connect_readonly(transfer_conninfo())
+        assert_valid_transfer(transfer_conn)
     except psycopg.OperationalError:
         transfer_conn = None
     try:
         obf_conn = _connect_readonly(obfuscated_conninfo())
+        assert_valid_transfer(obf_conn)
     except psycopg.OperationalError:
         obf_conn = None
 
