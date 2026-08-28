@@ -98,10 +98,11 @@ def formula_type_fractions(
 def main() -> int:
     dsn = os.environ.get("L12_DSN") or CONNINFO
     conn = psycopg.connect(dsn)
+    # One REPEATABLE READ READ ONLY snapshot for the whole audit run.
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
-    conn.commit()
     assert_valid_fixture(conn)
 
     failures: list[str] = []

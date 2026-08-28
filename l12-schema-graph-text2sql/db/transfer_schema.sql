@@ -88,12 +88,17 @@ CREATE TABLE oqmd_reference_states (
     ref_key            TEXT PRIMARY KEY,
     symbol             VARCHAR(5) NOT NULL UNIQUE
         REFERENCES oqmd_elements(symbol),
+    -- Ground-state Hermann–Mauguin space-group symbol (e.g. Fm-3m),
+    -- not a space-group number.
     gs_spacegroup      TEXT,
     reference_delta_e  DOUBLE PRECISION NOT NULL
         CHECK (reference_delta_e > '-Infinity'
            AND reference_delta_e < 'Infinity'),
     volume_pa          DOUBLE PRECISION
         CHECK (volume_pa > 0 AND volume_pa < 'Infinity'),
+    -- Number of OQMD single-element structure entries (polymorph
+    -- candidates) fetched for this element; NOT a count of
+    -- thermodynamically stable polymorphs.
     polymorph_count    INTEGER CHECK (polymorph_count >= 1)
 );
 

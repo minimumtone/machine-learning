@@ -5,8 +5,8 @@ Executes every gold SQL file against the fixture databases and compares the
 result to the stored expected_results JSON (column names, row order for
 ORDER BY queries, row multiset otherwise, typed value tolerance — see
 scripts/gold_compare.py for the full comparison policy), so a third party
-can re-verify the package claims alone (no LLM, no API key, only psycopg +
-loaded databases).
+can re-verify the package claims alone (no LLM, no API key; requires
+psycopg + sqlglot — see requirements-repro.txt — and the loaded databases).
 
 Main-database queries run against L12_DSN; q_transfer_* queries run against
 TRANSFER_DSN; the obfuscated transfer suite (evaluation/gold_sql_obfuscated)

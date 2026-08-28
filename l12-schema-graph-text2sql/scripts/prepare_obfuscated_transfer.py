@@ -21,6 +21,7 @@ sys.path.insert(0, str(PROJECT))
 
 from graph.schema_parser import get_foreign_keys  # noqa: E402
 from scripts.gold_compare import sql_is_ordered  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SRC_DATASET = PROJECT / "evaluation" / "transfer_evaluation_dataset.jsonl"
 MAP_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
@@ -50,10 +51,10 @@ COLUMN_DESCRIPTIONS: dict[str, str] = {
     "on_hull": "whether the structure is on the convex hull (boolean)",
     "gap_ev": "electronic band gap (eV)",
     "ref_key": "reference-state identifier",
-    "gs_spacegroup": "ground-state space group number",
+    "gs_spacegroup": "ground-state Hermann\u2013Mauguin space-group symbol (e.g. Fm-3m)",
     "reference_delta_e": "elemental reference formation energy per atom (same convention as delta_e; subtract the ratio-weighted sum from delta_e to re-reference to elemental ground states)",
     "volume_pa": "ground-state atomic volume",
-    "polymorph_count": "number of thermodynamically stable polymorphs",
+    "polymorph_count": "number of OQMD single-element structure entries (polymorph candidates) for this element",
 }
 
 
@@ -95,9 +96,16 @@ def translate_sql(sql: str, translation: dict[str, str]) -> str:
 def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path,
                      ordered: bool) -> dict[str, Any]:
     with conn.cursor() as cur:
-        cur.execute(sql)  # type: ignore[arg-type]
-        rows = cur.fetchall()
-        cols = [desc[0] for desc in cur.description] if cur.description else []
+        cur.execute("SAVEPOINT obf_gold")
+        try:
+            cur.execute(sql)  # type: ignore[arg-type]
+            rows = cur.fetchall()
+            cols = [desc[0] for desc in cur.description] if cur.description else []
+            cur.execute("RELEASE SAVEPOINT obf_gold")
+        except psycopg.Error:
+            cur.execute("ROLLBACK TO SAVEPOINT obf_gold")
+            cur.execute("RELEASE SAVEPOINT obf_gold")
+            raise
     data: list[list[Any]] = []
     for row in rows:
         record: list[Any] = []
@@ -202,6 +210,14 @@ def main() -> int:
     translation = load_translation(MAP_PATH)
     mapping = json.loads(MAP_PATH.read_text())
     conn = psycopg.connect(_obf_conninfo(obf_db))
+    # Same contract as the other expected-result generators: one
+    # REPEATABLE READ READ ONLY snapshot for the whole run, and the
+    # destination must be a valid (marker + fingerprint) transfer DB.
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+    with conn.cursor() as cur:
+        cur.execute("SET statement_timeout = '30s'")
+    assert_valid_transfer(conn)
     GOLD_DIR.mkdir(parents=True, exist_ok=True)
     EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -231,7 +247,6 @@ def main() -> int:
             print(f"FAILED {new_id}: {exc}")
             n_failed += 1
             expected_path.unlink(missing_ok=True)
-            conn.rollback()
             continue
 
         out_lines.append({

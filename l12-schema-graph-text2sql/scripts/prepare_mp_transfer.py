@@ -23,7 +23,7 @@ import psycopg
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.build_mp_transfer_db import mp_conninfo  # noqa: E402
+from scripts.db_conninfo import mp_conninfo  # noqa: E402
 from scripts.gold_compare import sql_is_ordered  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"

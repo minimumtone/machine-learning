@@ -47,9 +47,8 @@ every reference resolved (unresolved=0), 1 otherwise.
 Usage:
     L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... \
         python scripts/audit_vocabulary.py
-    (main suite falls back to the local CONNINFO defaults; transfer
-    suites are skipped with a warning when their DSN is unset unless
-    --require-all is given)
+    (main suite falls back to the local CONNINFO defaults; a missing
+    transfer-suite DSN is a failure unless --allow-skip is given)
 """
 from __future__ import annotations
 
@@ -316,9 +315,11 @@ def audit_suite(name: str, gold_dir: Path, dsn: str, qid_filter,
     n_skipped_nontext = 0
     audited_columns: set[tuple[str, str]] = set()
     with psycopg.connect(dsn) as conn:
+        # One REPEATABLE READ READ ONLY snapshot per suite so every
+        # audited literal is compared against the same DB state.
+        conn.read_only = True
+        conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
         with conn.cursor() as cur:
-            cur.execute(
-                "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
             cur.execute("SET statement_timeout = '30s'")
         guard(conn)
         all_cols, text_cols = db_catalog(conn)
@@ -392,14 +393,15 @@ def audit_suite(name: str, gold_dir: Path, dsn: str, qid_filter,
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--require-all", action="store_true",
-        help="fail (instead of warn) when a transfer suite DSN is unset")
+        "--allow-skip", action="store_true",
+        help="warn (instead of fail) when a transfer suite DSN is unset")
     parser.add_argument(
         "--show-null-stats", action="store_true",
         help="print non_null/null counts for every audited column")
     args = parser.parse_args()
 
     failures: list[str] = []
+    missing_suites: list[str] = []
     n_audited = 0
     n_skipped = 0
     for name, subdir, env_var, qid_filter, guard in SUITES:
@@ -409,10 +411,10 @@ def main() -> int:
             dsn = CONNINFO
         if not dsn:
             msg = f"suite {name}: DSN {env_var} not set"
-            if args.require_all:
-                failures.append(msg)
-            else:
+            if args.allow_skip:
                 print(f"WARNING: {msg}; suite skipped")
+            else:
+                missing_suites.append(msg)
             continue
         suite_failures, notes, suite_skipped = audit_suite(
             name, gold_dir, dsn, qid_filter, guard)
@@ -426,10 +428,13 @@ def main() -> int:
     n_unresolved = sum(1 for f in failures if "UNRESOLVED" in f)
     for f in failures:
         print(f"VOCABULARY MISMATCH: {f}")
+    for m in missing_suites:
+        print(f"SUITE MISSING: {m}")
     print(f"\nsuites_audited={n_audited} "
           f"vocabulary_mismatch={len(failures) - n_unresolved} "
-          f"unresolved={n_unresolved} skipped_nontext={n_skipped}")
-    return 1 if failures else 0
+          f"unresolved={n_unresolved} skipped_nontext={n_skipped} "
+          f"suites_missing={len(missing_suites)}")
+    return 1 if failures or missing_suites else 0
 
 
 if __name__ == "__main__":

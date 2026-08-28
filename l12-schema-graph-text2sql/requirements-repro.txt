@@ -1,0 +1,15 @@
+# Pinned dependencies for reproducing the SQL verification package.
+# These are the exact versions the package was validated with.
+#
+#   pip install -r requirements-repro.txt
+#
+# Runtime (gold verification / expected-result checks / audits / builders):
+psycopg[binary]==3.3.4
+sqlglot==30.12.0
+# Graph helpers (graph/ join-path generation used by the audits/builders):
+networkx==3.4.2
+# Dev dependency (unit tests only):
+pytest==9.1.1
+# Optional: rebuilding the MP transfer DB from the Materials Project API
+# (scripts/build_mp_transfer_db.py) additionally needs `requests` and an
+# MP_API_KEY; not required for any verification in this package.

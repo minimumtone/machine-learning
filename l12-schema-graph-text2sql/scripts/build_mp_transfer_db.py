@@ -20,7 +20,7 @@ import requests
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.eval_ablation import CONNINFO  # noqa: E402
+from scripts.db_conninfo import mp_conninfo  # noqa: E402, F401
 
 DB_NAME = "mp_transfer"
 MP_API_URL = "https://api.materialsproject.org/materials/summary/"
@@ -138,12 +138,6 @@ _ELEMENT_PROPERTIES: dict[str, dict[str, Any]] = {
     "Am": {"atomic_number": 95, "name": "Americium"},
     "Cm": {"atomic_number": 96, "name": "Curium"},
 }
-
-
-def mp_conninfo(db: str = DB_NAME) -> str:
-    """Build a psycopg connection string for the MP transfer DB."""
-    base = os.getenv("CONNINFO", CONNINFO)
-    return base.replace(f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')}", f"dbname={db}")
 
 
 def fetch_chemsys(chemsys: str, api_key: str) -> list[dict[str, Any]]:

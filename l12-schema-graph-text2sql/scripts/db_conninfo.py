@@ -16,3 +16,10 @@ CONNINFO = make_conninfo(
     user=os.getenv("POSTGRES_USER", "l12_user"),
     password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
 )
+
+
+def mp_conninfo(db: str = "mp_transfer") -> str:
+    """Connection string for the Materials Project transfer DB."""
+    base = os.getenv("CONNINFO", CONNINFO)
+    return base.replace(
+        f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')}", f"dbname={db}")
