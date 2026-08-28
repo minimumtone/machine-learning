@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Prepare queries, gold SQL, expected results, and prompt assets for MP transfer test."""
+"""Prepare queries, gold SQL, expected results, and prompt assets for MP transfer test.
+
+A gold SQL that fails to execute deletes any stale expected-results file
+for that query and makes the script exit non-zero, so a broken gold SQL
+can never leave behind a plausible-looking expected result (nor a
+success exit code).
+"""
 from __future__ import annotations
 
 import json
@@ -264,15 +270,22 @@ def main() -> None:
         for q in QUERIES:
             f.write(json.dumps(q, ensure_ascii=False) + "\n")
 
+    n_failed = 0
     for q in QUERIES:
+        expected_path = EXPECTED_DIR / f"{q['id']}.json"
         try:
             result = execute_gold(conn, q["gold_sql"])
         except Exception as exc:
+            conn.rollback()
+            # Never leave a stale or fabricated expected result behind
+            # for a gold SQL that no longer executes.
+            expected_path.unlink(missing_ok=True)
+            n_failed += 1
             print(f"ERROR {q['id']}: {exc}")
-            result = {"columns": [], "ordered": False, "rows": [], "error": str(exc)}
-        with open(EXPECTED_DIR / f"{q['id']}.json", "w", encoding="utf-8") as f:
+            continue
+        with open(expected_path, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
-        print(f"{q['id']}: rows={len(result.get('rows', []))}")
+        print(f"{q['id']}: rows={len(result['rows'])}")
 
     with open(PROMPT_DIR / "sql_generation_prompt_mp.md", "w", encoding="utf-8") as f:
         f.write(PROMPT_TEMPLATE)
@@ -281,8 +294,12 @@ def main() -> None:
     with open(FEW_SHOT_DIR / "few_shot_examples_mp.json", "w", encoding="utf-8") as f:
         json.dump(mp_few_shot, f, ensure_ascii=False, indent=2)
 
-    print("Prepared MP transfer assets.")
     conn.close()
+    if n_failed:
+        print(f"FAILED: {n_failed} gold SQL queries did not execute; "
+              "their expected results were removed", file=sys.stderr)
+        raise SystemExit(1)
+    print("Prepared MP transfer assets.")
 
 
 if __name__ == "__main__":

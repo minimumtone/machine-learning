@@ -17,7 +17,9 @@ All connections are forced READ ONLY with a 30 s statement_timeout, and
 each connection is pinned to a single REPEATABLE READ snapshot: the guard
 and every gold query of a suite see one and the same database state, so a
 concurrent writer cannot make part of the run verify a different state
-(a query error aborts that snapshot; the run is already failed then).
+(each gold query runs inside a SAVEPOINT, so a SQL error rolls back only
+that query — the outer snapshot transaction, and hence the single-state
+guarantee for the remaining queries, is preserved; the run still fails).
 
 Usage:
     L12_DSN="postgresql://l12_user:...@127.0.0.1:5432/l12_materials" \
@@ -147,15 +149,24 @@ def main() -> int:
             sql = sql_path.read_text()
             expected_path = results_dir / f"{qid}.json"
             try:
+                # SAVEPOINT: a failing gold query must roll back only
+                # itself, not the outer REPEATABLE READ transaction, so
+                # every later query still sees the same snapshot.
                 with conn.cursor() as cur:
-                    cur.execute(sql)
-                    actual_columns = (
-                        [d.name for d in cur.description]
-                        if cur.description else []
-                    )
-                    rows = cur.fetchall()
+                    cur.execute("SAVEPOINT gold_query")
+                    try:
+                        cur.execute(sql)
+                        actual_columns = (
+                            [d.name for d in cur.description]
+                            if cur.description else []
+                        )
+                        rows = cur.fetchall()
+                        cur.execute("RELEASE SAVEPOINT gold_query")
+                    except psycopg.Error:
+                        cur.execute("ROLLBACK TO SAVEPOINT gold_query")
+                        cur.execute("RELEASE SAVEPOINT gold_query")
+                        raise
             except psycopg.Error as exc:
-                conn.rollback()
                 errors.append((qid, str(exc).splitlines()[0]))
                 continue
             if not expected_path.exists():

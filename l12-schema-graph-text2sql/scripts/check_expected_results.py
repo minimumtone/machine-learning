@@ -12,7 +12,10 @@ Also reports orphan expected-results files that no longer have a gold SQL.
 All database connections are forced READ ONLY with a 30 s
 statement_timeout (--update only rewrites JSON files, never the DB), and
 each connection is pinned to a single REPEATABLE READ snapshot: the guard
-and every gold query of a suite see one and the same database state.
+and every gold query of a suite see one and the same database state. Each
+gold query runs inside a SAVEPOINT, so a SQL error rolls back only that
+query (never the outer snapshot transaction), and every execution error
+is recorded in an errors bucket that fails the run.
 Skipped transfer/obfuscated queries fail the run unless
 --allow-missing-transfer is given, so a partial run can never be mistaken
 for a full check.
@@ -96,6 +99,7 @@ class Buckets:
         self.order_mismatch: list[str] = []
         self.order_contract_mismatch: list[str] = []
         self.malformed: list[str] = []
+        self.errors: list[tuple[str, str]] = []
 
 
 def check_suite(gold_dir: Path, results_dir: Path,
@@ -114,13 +118,23 @@ def check_suite(gold_dir: Path, results_dir: Path,
         sql = sql_path.read_text()
         ordered = sql_is_ordered(sql)
         try:
+            # SAVEPOINT: a failing gold query must roll back only itself,
+            # not the outer REPEATABLE READ transaction, so every later
+            # query still sees the same snapshot.
             with conn.cursor() as cur:
-                cur.execute(sql)  # type: ignore[arg-type]
-                columns = ([d.name for d in cur.description]
-                           if cur.description else [])
-                rows = [list(r) for r in cur.fetchall()]
+                cur.execute("SAVEPOINT gold_query")
+                try:
+                    cur.execute(sql)  # type: ignore[arg-type]
+                    columns = ([d.name for d in cur.description]
+                               if cur.description else [])
+                    rows = [list(r) for r in cur.fetchall()]
+                    cur.execute("RELEASE SAVEPOINT gold_query")
+                except psycopg.Error:
+                    cur.execute("ROLLBACK TO SAVEPOINT gold_query")
+                    cur.execute("RELEASE SAVEPOINT gold_query")
+                    raise
         except Exception as e:
-            conn.rollback()
+            b.errors.append((qid, str(e).splitlines()[0]))
             print(f"{qid}: GOLD SQL ERROR: {e!s:.100s}")
             continue
         rows_norm = normalize_rows(rows)
@@ -222,14 +236,17 @@ def main() -> None:
           f"order_contract_mismatch={len(b.order_contract_mismatch)} "
           f"column_mismatch={len(b.column_mismatch)} "
           f"missing={len(b.missing)} malformed={len(b.malformed)} "
+          f"errors={len(b.errors)} "
           f"orphan={len(orphans)} skipped={len(b.skipped)}")
+    for qid, msg in b.errors:
+        print(f"ERROR           {qid}: {msg}")
     if b.missing:
         print("missing:", b.missing)
     if orphans:
         print("orphan expected_results (no matching gold SQL):", orphans)
         sys.exit(1)
     if (b.stale or b.order_mismatch or b.order_contract_mismatch
-            or b.column_mismatch or b.malformed):
+            or b.column_mismatch or b.malformed or b.errors):
         sys.exit(1)
     if b.missing and not args.update:
         sys.exit(1)

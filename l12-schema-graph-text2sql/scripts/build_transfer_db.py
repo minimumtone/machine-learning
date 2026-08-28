@@ -102,6 +102,10 @@ def main() -> None:
     contract checks and every copy SELECT, so the transfer DB is an
     exact copy of one source state (never a mix of states seen by
     successive READ COMMITTED statements).
+
+    Destination cleanup: if any step after recreation fails (schema
+    load, copy, integrity check, marker), the half-built transfer DB is
+    dropped again so no marker-less partial database is left behind.
     """
     src = psycopg.connect(CONNINFO)
     src.read_only = True
@@ -147,7 +151,33 @@ def main() -> None:
 
     # Source validated: only now may the existing transfer DB be touched.
     recreate_database()
-    dst = psycopg.connect(transfer_conninfo())
+    try:
+        dst = psycopg.connect(transfer_conninfo())
+        _build_into(src, dst)
+    except Exception:
+        # A partially built transfer DB carries no marker (guarded tools
+        # reject it), but leaving it around is still misleading, so drop
+        # the half-built DB before re-raising.
+        drop_database()
+        raise
+    src.close()
+    print("Transfer DB built.")
+
+
+def drop_database() -> None:
+    """Drop the transfer database (used to clean up a failed build)."""
+    assert_safe_transfer_db(TRANSFER_DB)
+    admin = psycopg.connect(CONNINFO, autocommit=True)
+    with admin.cursor() as cur:
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                pgsql.Identifier(TRANSFER_DB))
+        )
+    admin.close()
+
+
+def _build_into(src: psycopg.Connection, dst: psycopg.Connection) -> None:
+    """Apply the transfer schema to *dst* and copy data from *src*."""
     with dst.cursor() as cur:
         cur.execute(SCHEMA_SQL.read_text())  # type: ignore[arg-type]
 
@@ -227,9 +257,7 @@ def main() -> None:
     dst.commit()
     assert_valid_transfer(dst)
     print("Transfer integrity checks passed (marker written).")
-    src.close()
     dst.close()
-    print("Transfer DB built.")
 
 
 if __name__ == "__main__":

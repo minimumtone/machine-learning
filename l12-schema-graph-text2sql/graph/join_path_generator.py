@@ -63,7 +63,10 @@ def generate_join_clause(join_path: list[dict[str, str]], base_table: str = "mat
     A table_to_alias map is kept across edges so a multi-hop path reuses
     the alias already introduced for a table instead of minting a fresh
     one (which would emit an ON clause referencing an alias that never
-    appears in any JOIN).
+    appears in any JOIN). An edge whose two tables are BOTH not yet
+    joined is disconnected from the join tree: silently emitting SQL for
+    it would reference an alias no JOIN introduces, so it raises
+    ValueError instead.
     """
     parts: list[str] = []
     used_aliases: set[str] = set()
@@ -101,6 +104,10 @@ def generate_join_clause(join_path: list[dict[str, str]], base_table: str = "mat
             tgt_known = tgt_t in table_to_alias
             if src_known and tgt_known:
                 continue
+            if not src_known and not tgt_known:
+                raise ValueError(
+                    f"join edge {src_t}->{tgt_t} is disconnected from "
+                    "already joined tables")
             sa = alias_for(src_t)
             ta = alias_for(tgt_t)
             if src_known:
