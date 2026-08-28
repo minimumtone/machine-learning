@@ -2,144 +2,172 @@
   "columns": [
     "chemsys",
     "formula",
-    "energy_above_hull"
+    "energy_above_hull",
+    "entry_id"
   ],
   "ordered": true,
   "rows": [
     [
       "Ag-Al",
       "AlAg3",
-      0.0
+      0.0,
+      "mp-aaacryau"
     ],
     [
       "Al-Au",
       "Al2Au",
-      0.0
+      0.0,
+      "mp-aaaaadxv"
     ],
     [
       "Al-Co",
       "Al5Co2",
-      0.0
+      0.0,
+      "mp-aaaaaaho"
     ],
     [
       "Al-Cr",
       "Al3Cr",
-      0.0
+      0.0,
+      "mp-aaabxjse"
     ],
     [
       "Al-Cu",
       "Al2Cu",
-      0.0
+      0.0,
+      "mp-aaacechq"
     ],
     [
       "Al-Fe",
       "Al13Fe4",
-      0.0
+      0.0,
+      "mp-aaacqllk"
     ],
     [
       "Al-Hf",
       "Hf4Al3",
-      0.0
+      0.0,
+      "mp-aaacgipr"
     ],
     [
       "Al-Mg",
       "Mg17Al12",
-      0.0
+      0.0,
+      "mp-aaaaadet"
     ],
     [
       "Al-Mn",
       "Mn4Al11",
-      0.0
+      0.0,
+      "mp-aaaaaefw"
     ],
     [
       "Al-Mo",
       "Al3Mo",
-      0.0
+      0.0,
+      "mp-aaabgnbb"
     ],
     [
       "Al-Nb",
       "Nb2Al",
-      0.0
+      0.0,
+      "mp-aaaabbgt"
     ],
     [
       "Al-Ni",
       "Al3Ni",
-      0.0
+      0.0,
+      "mp-aaabjkld"
     ],
     [
       "Al-Pd",
       "Al21Pd8",
-      0.0
+      0.0,
+      "mp-aaaaacfq"
     ],
     [
       "Al-Pt",
       "Al21Pt8",
-      0.0
+      0.0,
+      "mp-aaaaacyg"
     ],
     [
       "Al-Rh",
       "Al5Rh2",
-      0.0
+      0.0,
+      "mp-aaaaacqx"
     ],
     [
       "Al-Sc",
       "Sc2Al",
-      0.0
+      0.0,
+      "mp-aaaaaqpo"
     ],
     [
       "Al-Si",
       "Al4Si",
-      0.11491430399999913
+      0.11491430399999913,
+      "mp-aaacrwtk"
     ],
     [
       "Al-Ta",
       "Ta2Al",
-      0.0
+      0.0,
+      "mp-aaacpxpb"
     ],
     [
       "Al-Ti",
       "Ti3Al",
-      0.0
+      0.0,
+      "mp-aaaaacsd"
     ],
     [
       "Al-V",
       "Al3V",
-      0.0
+      0.0,
+      "mp-aaaaadug"
     ],
     [
       "Al-W",
       "Al5W",
-      0.0
+      0.0,
+      "mp-aaaabswv"
     ],
     [
       "Al-Zn",
       "Al2Zn",
-      0.02457867833333438
+      0.02457867833333438,
+      "mp-aaacqrcb"
     ],
     [
       "Al-Zr",
       "Zr3Al",
-      0.0
+      0.0,
+      "mp-aaaaacep"
     ],
     [
       "Co-Ni",
       "Co3Ni",
-      0.0
+      0.0,
+      "mp-aaacpjgf"
     ],
     [
       "Co-Ti",
       "TiCo",
-      0.0
+      0.0,
+      "mp-aaaaabfr"
     ],
     [
       "Fe-Ni",
       "FeNi",
-      0.0
+      0.0,
+      "mp-aaaaadhd"
     ],
     [
       "Ni-Ti",
       "Ti2Ni",
-      0.0
+      0.0,
+      "mp-aaaaacro"
     ]
   ]
 }

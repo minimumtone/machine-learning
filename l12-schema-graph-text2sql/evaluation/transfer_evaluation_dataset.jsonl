@@ -5,7 +5,7 @@
 {"id": "q_transfer_005", "question": "登録されている元素の数を教えて。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_005.sql", "expected_result_path": "expected_results/q_transfer_005.json"}
 {"id": "q_transfer_006", "question": "バンドギャップが大きい上位5件を出して。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_transfer_006.sql", "expected_result_path": "expected_results/q_transfer_006.json"}
 {"id": "q_transfer_007", "question": "凸包上にある化合物の数を教えて。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_007.sql", "expected_result_path": "expected_results/q_transfer_007.json"}
-{"id": "q_transfer_008", "question": "形成エネルギーが-0.5 eV/atom未満の化合物を安定な順に出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_008.sql", "expected_result_path": "expected_results/q_transfer_008.json"}
+{"id": "q_transfer_008", "question": "形成エネルギーが-0.5 eV/atom未満の化合物を形成エネルギーが低い順に出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_008.sql", "expected_result_path": "expected_results/q_transfer_008.json"}
 {"id": "q_transfer_009", "question": "元素ごとのエントリ数を数えて上位10元素を出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_009.sql", "expected_result_path": "expected_results/q_transfer_009.json"}
 {"id": "q_transfer_010", "question": "Alを含む凸包上の化合物を形成エネルギー順に出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_010.sql", "expected_result_path": "expected_results/q_transfer_010.json"}
 {"id": "q_transfer_011", "question": "結晶系ごとの平均形成エネルギーを計算して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_transfer_011.sql", "expected_result_path": "expected_results/q_transfer_011.json"}

@@ -46,6 +46,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.mp_guard import assert_valid_mp_transfer  # noqa: E402
 from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
@@ -62,6 +63,8 @@ SUITES = [
      lambda qid: qid.startswith("q_transfer")),
     ("obfuscated", "gold_sql_obfuscated", "expected_results_obfuscated",
      "OBF_TRANSFER_DSN", lambda qid: True),
+    ("mp", "gold_sql_mp", "expected_results_mp_transfer",
+     "MP_DSN", lambda qid: True),
 ]
 
 # ok=N must mean "this distribution's schema answered N queries", not
@@ -74,6 +77,9 @@ GUARDS = {
     "L12_DSN": assert_valid_fixture,
     "TRANSFER_DSN": assert_valid_transfer,
     "OBF_TRANSFER_DSN": assert_valid_transfer,
+    # The MP transfer DB carries no marker table; its guard compares the
+    # live table contents' SHA-256 against the pinned snapshot digest.
+    "MP_DSN": assert_valid_mp_transfer,
 }
 
 

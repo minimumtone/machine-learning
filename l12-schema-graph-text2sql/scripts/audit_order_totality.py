@@ -47,6 +47,7 @@ SUITES = [
      lambda qid: qid.startswith("q_transfer")),
     ("obfuscated", "gold_sql_obfuscated", "OBF_TRANSFER_DSN",
      lambda qid: True),
+    ("mp", "gold_sql_mp", "MP_DSN", lambda qid: True),
 ]
 
 _COMMENT_RE = re.compile(r"--[^\n]*|/\*.*?\*/", re.DOTALL)

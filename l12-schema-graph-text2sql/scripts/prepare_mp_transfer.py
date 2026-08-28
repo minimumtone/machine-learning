@@ -28,6 +28,7 @@ from scripts.gold_compare import sql_is_ordered  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 EXPECTED_DIR = EVAL_DIR / "expected_results_mp_transfer"
+GOLD_DIR = EVAL_DIR / "gold_sql_mp"
 PROMPT_DIR = PROJECT / "llm" / "prompt_templates"
 FEW_SHOT_DIR = PROJECT / "llm"
 
@@ -72,7 +73,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "結晶系ごとの材料数を教えてください。",
         "gold_sql": (
             "SELECT crystal_system, COUNT(*) FROM mp_entries "
-            "GROUP BY crystal_system ORDER BY COUNT(*) DESC;"
+            "GROUP BY crystal_system ORDER BY COUNT(*) DESC, crystal_system ASC;"
         ),
     },
     {
@@ -94,7 +95,7 @@ QUERIES: list[dict[str, Any]] = [
         "id": "q_mp_009",
         "difficulty": "medium",
         "question": "体積が最も大きい材料の式を教えてください。",
-        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula LIMIT 1;",
+        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula, entry_id LIMIT 1;",
     },
     {
         "id": "q_mp_010",
@@ -103,7 +104,7 @@ QUERIES: list[dict[str, Any]] = [
         "gold_sql": (
             "SELECT e.formula, e.energy_above_hull FROM mp_entries e "
             "JOIN mp_element_ratios r ON e.entry_id = r.entry_id "
-            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula LIMIT 1;"
+            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula, e.entry_id LIMIT 1;"
         ),
     },
     {
@@ -111,8 +112,8 @@ QUERIES: list[dict[str, Any]] = [
         "difficulty": "hard",
         "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。",
         "gold_sql": (
-            "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull "
-            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula;"
+            "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull, entry_id "
+            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula, entry_id;"
         ),
     },
     {
@@ -130,7 +131,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "Co-Ti系の材料の中で、バンドギャップが最大の材料の式を教えてください。",
         "gold_sql": (
             "SELECT formula FROM mp_entries WHERE chemsys = 'Co-Ti' "
-            "ORDER BY band_gap DESC NULLS LAST, formula LIMIT 1;"
+            "ORDER BY band_gap DESC NULLS LAST, formula, entry_id LIMIT 1;"
         ),
     },
     {
@@ -149,7 +150,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "結晶系ごとの平均バンドギャップを大きい順に教えてください。",
         "gold_sql": (
             "SELECT crystal_system, AVG(band_gap) FROM mp_entries "
-            "GROUP BY crystal_system ORDER BY AVG(band_gap) DESC NULLS LAST;"
+            "GROUP BY crystal_system ORDER BY AVG(band_gap) DESC NULLS LAST, crystal_system ASC;"
         ),
     },
 ]
@@ -283,6 +284,10 @@ def main() -> None:
         cur.execute("SET statement_timeout = '30s'")
 
     EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
+    GOLD_DIR.mkdir(parents=True, exist_ok=True)
+    for q in QUERIES:
+        (GOLD_DIR / f"{q['id']}.sql").write_text(q["gold_sql"] + "\n",
+                                                 encoding="utf-8")
 
     with open(EVAL_DIR / "mp_transfer_evaluation_dataset.jsonl", "w", encoding="utf-8") as f:
         for q in QUERIES:
