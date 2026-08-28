@@ -22,7 +22,10 @@ from psycopg import sql as pgsql
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.build_transfer_db import assert_safe_transfer_db  # noqa: E402
+from scripts.build_transfer_db import (  # noqa: E402
+    assert_safe_transfer_db,
+    git_commit,
+)
 from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SRC_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
@@ -80,6 +83,15 @@ def main() -> None:
     assert_safe_transfer_db(OBF_DB)
     seed = int(os.getenv("OBFUSCATE_SEED", "42"))
     rng = random.Random(seed)
+
+    # Fail fast on a broken source: the template copy would otherwise
+    # drop the previous obfuscated DB and only fail at the very end.
+    # This also rejects a source whose schema drifted after its own
+    # initialization (fingerprint mismatch).
+    print(f"Guarding source transfer DB {SRC_DB}...")
+    src = psycopg.connect(_db_conninfo(SRC_DB))
+    assert_valid_transfer(src)
+    src.close()
 
     print("Terminating existing transfer connections...")
     admin = psycopg.connect(_db_conninfo("postgres"), autocommit=True)
@@ -161,15 +173,23 @@ def main() -> None:
     # The validator copied from the template DB still references the
     # pre-rename identifiers; reinstall it with the obfuscated names and
     # re-run it so the obfuscated DB carries a working CURRENT-STATE
-    # integrity check (and the marker survives the template copy).
+    # integrity check. The marker row copied from the template records
+    # the SOURCE schema's fingerprint, which no longer matches after the
+    # renames — clear it so this deliberately re-derived database is
+    # re-sealed with its OWN post-rename fingerprint (the anti-reseal
+    # guard would otherwise correctly refuse to overwrite it).
     print("Reinstalling validate_transfer_integrity() with obfuscated "
-          "identifiers...")
+          "identifiers and re-sealing the marker...")
     ident_map = dict(table_map)
     ident_map.update(global_col_map)
     integrity_sql = INTEGRITY_SQL.read_text()
     for old, new in sorted(ident_map.items(), key=lambda kv: -len(kv[0])):
         integrity_sql = re.sub(rf"\b{re.escape(old)}\b", new, integrity_sql)
     with conn.cursor() as cur:
+        cur.execute("DELETE FROM transfer_initialization_status "
+                    "WHERE version = '001'")
+        cur.execute("SELECT set_config('l12.git_commit', %s, false)",
+                    (git_commit(),))
         cur.execute(integrity_sql)  # type: ignore[arg-type]
     conn.commit()
     assert_valid_transfer(conn)

@@ -57,7 +57,11 @@ CREATE TABLE element (
         CHECK (atomic_number BETWEEN 1 AND 118),
     -- NUMERIC admits NaN (which compares greater than any number), so
     -- one-sided lower bounds alone would not reject it; hence <> 'NaN'.
-    atomic_mass NUMERIC(10,4) CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
+    -- Every element in the fixture has a known mass (002 loads all 89);
+    -- NOT NULL matches the transfer schema's oqmd_elements.atomic_mass so
+    -- the transfer copy can never hit a NOT NULL violation mid-build.
+    atomic_mass NUMERIC(10,4) NOT NULL
+        CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
     electronegativity NUMERIC(5,3)
         CHECK (electronegativity >= 0 AND electronegativity <> 'NaN'),
     atomic_radius NUMERIC(6,2)
