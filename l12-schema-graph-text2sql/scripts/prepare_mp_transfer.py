@@ -5,6 +5,10 @@ A gold SQL that fails to execute deletes any stale expected-results file
 for that query and makes the script exit non-zero, so a broken gold SQL
 can never leave behind a plausible-looking expected result (nor a
 success exit code).
+
+The whole generation run executes on a single REPEATABLE READ READ
+ONLY snapshot; a failing query rolls back to a savepoint so the
+remaining expected results still reflect the same DB state.
 """
 from __future__ import annotations
 
@@ -254,15 +258,29 @@ def _convert(v: Any) -> Any:
 
 def execute_gold(conn, sql: str) -> dict[str, Any]:
     with conn.cursor() as cur:
-        cur.execute("SET statement_timeout = '30s'")
-        cur.execute(sql)
-        columns = [d[0] for d in cur.description] if cur.description else []
-        rows = [_convert(list(r)) for r in cur.fetchall()]
+        cur.execute("SAVEPOINT mp_gold")
+        try:
+            cur.execute(sql)
+            columns = [d[0] for d in cur.description] if cur.description else []
+            rows = [_convert(list(r)) for r in cur.fetchall()]
+            cur.execute("RELEASE SAVEPOINT mp_gold")
+        except psycopg.Error:
+            cur.execute("ROLLBACK TO SAVEPOINT mp_gold")
+            cur.execute("RELEASE SAVEPOINT mp_gold")
+            raise
     return {"columns": columns, "ordered": sql_is_ordered(sql), "rows": rows}
 
 
 def main() -> None:
     conn = psycopg.connect(mp_conninfo())
+    # One REPEATABLE READ READ ONLY snapshot for the whole generation
+    # run: every expected result reflects the same DB state, and a
+    # failing gold SQL (rolled back to a savepoint) does not start a
+    # new snapshot for the remaining queries.
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+    with conn.cursor() as cur:
+        cur.execute("SET statement_timeout = '30s'")
 
     EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -276,7 +294,6 @@ def main() -> None:
         try:
             result = execute_gold(conn, q["gold_sql"])
         except Exception as exc:
-            conn.rollback()
             # Never leave a stale or fabricated expected result behind
             # for a gold SQL that no longer executes.
             expected_path.unlink(missing_ok=True)

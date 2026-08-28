@@ -78,6 +78,18 @@ def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
         suffix += 1
 
 
+def drop_obfuscated_database() -> None:
+    """Drop the obfuscated database (used to clean up a failed build)."""
+    assert_safe_transfer_db(OBF_DB)
+    admin = psycopg.connect(_db_conninfo("postgres"), autocommit=True)
+    with admin.cursor() as cur:
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                pgsql.Identifier(OBF_DB))
+        )
+    admin.close()
+
+
 def main() -> None:
     assert_safe_transfer_db(SRC_DB)
     assert_safe_transfer_db(OBF_DB)
@@ -113,9 +125,31 @@ def main() -> None:
         )
     admin.close()
 
-    obf_conninfo = _db_conninfo(OBF_DB)
-    print(f"Connecting to {OBF_DB}...")
-    conn = psycopg.connect(obf_conninfo)
+    try:
+        print(f"Connecting to {OBF_DB}...")
+        conn = psycopg.connect(_db_conninfo(OBF_DB))
+        # Guard the templated copy itself before any rename: the source
+        # was validated above, but another owner connection could have
+        # mutated it between that check and the template copy. The copy
+        # still carries the source marker/fingerprint, so validating it
+        # here proves the ACTUAL templated state is a valid transfer DB.
+        assert_valid_transfer(conn)
+        mapping = _obfuscate_into(conn, rng, seed)
+    except Exception:
+        # A partially obfuscated DB carries a stale/no marker (guarded
+        # tools reject it), but leaving it around is still misleading,
+        # so drop the half-built DB before re-raising.
+        drop_obfuscated_database()
+        raise
+
+    MAPPING_PATH.write_text(json.dumps(mapping, ensure_ascii=False, indent=2))
+    print(f"Obfuscated DB {OBF_DB} built.")
+    print(f"Mapping saved to {MAPPING_PATH}")
+
+
+def _obfuscate_into(conn: psycopg.Connection, rng: random.Random,
+                    seed: int) -> dict[str, Any]:
+    """Rename identifiers in *conn*'s DB and re-seal it; return the mapping."""
     with conn.cursor() as cur:
         print("Fetching table list...")
         cur.execute("""
@@ -195,10 +229,7 @@ def main() -> None:
     assert_valid_transfer(conn)
     print("Obfuscated transfer integrity checks passed (marker present).")
     conn.close()
-
-    MAPPING_PATH.write_text(json.dumps(mapping, ensure_ascii=False, indent=2))
-    print(f"Obfuscated DB {OBF_DB} built.")
-    print(f"Mapping saved to {MAPPING_PATH}")
+    return mapping
 
 
 if __name__ == "__main__":
