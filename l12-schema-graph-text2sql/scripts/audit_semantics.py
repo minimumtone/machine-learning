@@ -23,8 +23,9 @@ against fraction rows, so this Python audit closes that gap:
    composition is intentionally out of scope.
 
 The DB must be a fully initialized fixture: the audit first checks the
-version='007' marker and that the stored schema fingerprint equals a
-freshly computed compute_schema_fingerprint() (see fixture_guard.py).
+version='007' marker, that the stored schema fingerprint equals a
+freshly computed compute_schema_fingerprint(), and that the current
+data passes validate_fixture_integrity() (see fixture_guard.py).
 
 Read-only; exits 0 when every entry passes all three audits, 1 otherwise.
 
@@ -47,7 +48,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
-from scripts.fixture_guard import assert_initialized_fixture  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
 
 TOL = 1e-8
 
@@ -101,7 +102,7 @@ def main() -> int:
         cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
     conn.commit()
-    assert_initialized_fixture(conn)
+    assert_valid_fixture(conn)
 
     failures: list[str] = []
     with conn.cursor() as cur:

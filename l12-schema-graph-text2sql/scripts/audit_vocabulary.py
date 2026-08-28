@@ -14,10 +14,16 @@ still runs and simply matches nothing. This audit closes that gap:
 2. For equality literals, compare against the DISTINCT values of that
    specific table's column (NOT a union over same-named columns of
    other tables, which would hide a wrong literal that happens to exist
-   elsewhere). Columns that resolve only to CTEs/subqueries or that
-   cannot be resolved to exactly one candidate table are audited
-   against each candidate and pass if any matches; unresolvable
-   references are counted and reported.
+   elsewhere). Columns projected through CTEs/subqueries are followed
+   through the projection lineage down to their base table (so a
+   literal compared OUTSIDE a CTE against a CTE-projected column is
+   still audited against the underlying table). A reference that cannot
+   be traced to any base table (e.g. a computed projection compared to
+   a literal) is a FAILURE by default, counted as unresolved — it must
+   never be silently assumed to be "audited elsewhere". A reference
+   that resolves to a base table whose column is non-text is counted as
+   skipped (equality against non-text columns is type-checked by
+   execution itself).
 3. For LIKE/ILIKE, require at least one stored row to match the
    pattern (EXISTS probe), so a typo'd pattern ('%theraml%') fails the
    audit instead of silently returning zero rows.
@@ -29,14 +35,14 @@ Literals/patterns listed in INTENTIONAL_ZERO_MATCH /
 INTENTIONAL_ZERO_MATCH_LIKE are negative controls that deliberately
 query values absent from the fixture.
 
-Before auditing, each suite's DB must carry the version='007'
-initialization marker (main suite: schema_initialization_status, and
-the stored fingerprint must equal compute_schema_fingerprint(); the
-transfer schemas have no marker table and are validated by their own
-integrity-check scripts instead).
+Before auditing, each suite's DB is guarded: the main suite requires
+the version='007' marker + unchanged schema fingerprint + a fresh pass
+of validate_fixture_integrity(); the transfer and obfuscated suites
+require the transfer_initialization_status marker + a fresh pass of
+validate_transfer_integrity().
 
-Exit 0 when every audited literal is backed by a stored value, 1
-otherwise.
+Exit 0 when every audited literal is backed by a stored value and
+every reference resolved (unresolved=0), 1 otherwise.
 
 Usage:
     L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... \
@@ -62,17 +68,18 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
-from scripts.fixture_guard import assert_initialized_fixture  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SUITES = [
-    # (name, gold dir, DSN env var, qid filter, has 007 marker) — mirrors
+    # (name, gold dir, DSN env var, qid filter, guard) — mirrors
     # run_gold_verification.SUITES.
     ("main", "gold_sql", "L12_DSN",
-     lambda qid: not qid.startswith("q_transfer"), True),
+     lambda qid: not qid.startswith("q_transfer"), assert_valid_fixture),
     ("transfer", "gold_sql", "TRANSFER_DSN",
-     lambda qid: qid.startswith("q_transfer"), False),
+     lambda qid: qid.startswith("q_transfer"), assert_valid_transfer),
     ("obfuscated", "gold_sql_obfuscated", "OBF_TRANSFER_DSN",
-     lambda qid: True, False),
+     lambda qid: True, assert_valid_transfer),
 ]
 
 # (suite, table, column, literal) equality literals that intentionally
@@ -117,27 +124,61 @@ def _literals_of(node: exp.Expression) -> list[str] | None:
     return None
 
 
+def _resolve_source(src: object, name: str,
+                    table_columns: dict[str, set[str]],
+                    unqualified: bool) -> list[str]:
+    """Base tables a column named `name` in source `src` traces back to."""
+    if isinstance(src, exp.Table):
+        t = src.name.lower()
+        if unqualified:
+            return [t] if name in table_columns.get(t, set()) else []
+        return [t]
+    if isinstance(src, Scope):
+        inner = src.expression
+        if not isinstance(inner, exp.Select):
+            # UNION/VALUES-shaped sources are not traced; caller reports
+            # the reference as unresolved.
+            return []
+        for sel in inner.selects:
+            if isinstance(sel, exp.Star):
+                # SELECT *: the column passes through unchanged; resolve
+                # it as an unqualified reference inside the inner scope.
+                out: list[str] = []
+                for isrc in src.sources.values():
+                    out.extend(_resolve_source(
+                        isrc, name, table_columns, unqualified=True))
+                return out
+            if sel.alias_or_name.lower() == name:
+                target = sel.this if isinstance(sel, exp.Alias) else sel
+                col = _column_of(target)
+                if col is None:
+                    # Computed projection (expression/function): its
+                    # vocabulary cannot be attributed to a base table.
+                    return []
+                return _resolve_tables(src, col, table_columns)
+        return []
+    return []
+
+
 def _resolve_tables(scope: Scope, column: exp.Column,
                     table_columns: dict[str, set[str]]) -> list[str]:
-    """Candidate real table names for a column reference in a scope.
+    """Base table names a column reference in a scope traces back to.
 
-    Qualified references resolve through the scope's alias map; a source
-    that is itself a subquery/CTE scope yields no stored table (its
-    vocabulary is audited where the underlying table is referenced).
-    Unqualified references resolve to every table source in scope whose
-    catalog contains the column name.
+    Qualified references resolve through the scope's alias map;
+    references to CTE/subquery sources are followed through the
+    projection lineage (plain column projections and SELECT *) down to
+    the base tables. Unqualified references resolve to every source in
+    scope that can supply the column name. An empty result means the
+    reference is UNRESOLVED and must be reported by the caller.
     """
     name = column.name.lower()
     if column.table:
         src = scope.sources.get(column.table)
-        if isinstance(src, exp.Table):
-            return [src.name.lower()]
-        return []
-    candidates = []
+        return _resolve_source(src, name, table_columns, unqualified=False)
+    candidates: list[str] = []
     for src in scope.sources.values():
-        if (isinstance(src, exp.Table)
-                and name in table_columns.get(src.name.lower(), set())):
-            candidates.append(src.name.lower())
+        candidates.extend(
+            _resolve_source(src, name, table_columns, unqualified=True))
     return candidates
 
 
@@ -195,23 +236,34 @@ def extract_filters(
     return eq_filters, like_filters
 
 
-def db_catalog(conn: psycopg.Connection) -> dict[str, set[str]]:
-    """table name -> set of text-typed column names (tables and views)."""
+def db_catalog(
+    conn: psycopg.Connection,
+) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    """(all columns, text-typed columns) per table/view name.
+
+    Resolution must see EVERY column (so an unqualified reference to a
+    numeric column resolves to its table and is counted as skipped
+    rather than unresolved); vocabulary auditing itself only applies to
+    the text-typed subset.
+    """
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT c.table_name, c.column_name
+            SELECT c.table_name, c.column_name, c.data_type
             FROM information_schema.columns c
             JOIN information_schema.tables t
               ON t.table_schema = c.table_schema
              AND t.table_name = c.table_name
             WHERE c.table_schema = 'public'
-              AND c.data_type = ANY(%s)
               AND t.table_type IN ('BASE TABLE', 'VIEW')
-        """, (list(TEXT_TYPES),))
-        catalog: dict[str, set[str]] = {}
-        for table, column in cur.fetchall():
-            catalog.setdefault(table.lower(), set()).add(column.lower())
-    return catalog
+        """)
+        all_cols: dict[str, set[str]] = {}
+        text_cols: dict[str, set[str]] = {}
+        for table, column, data_type in cur.fetchall():
+            all_cols.setdefault(table.lower(), set()).add(column.lower())
+            if data_type in TEXT_TYPES:
+                text_cols.setdefault(
+                    table.lower(), set()).add(column.lower())
+    return all_cols, text_cols
 
 
 class ColumnStats:
@@ -258,31 +310,38 @@ class ColumnStats:
 
 
 def audit_suite(name: str, gold_dir: Path, dsn: str, qid_filter,
-                has_marker: bool) -> tuple[list[str], list[str]]:
+                guard) -> tuple[list[str], list[str], int]:
     failures: list[str] = []
     notes: list[str] = []
+    n_skipped_nontext = 0
     audited_columns: set[tuple[str, str]] = set()
     with psycopg.connect(dsn) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
             cur.execute("SET statement_timeout = '30s'")
-        if has_marker:
-            assert_initialized_fixture(conn)
-        catalog = db_catalog(conn)
+        guard(conn)
+        all_cols, text_cols = db_catalog(conn)
         stats = ColumnStats(conn)
         for path in sorted(gold_dir.glob("*.sql")):
             if not qid_filter(path.stem):
                 continue
             eq_filters, like_filters = extract_filters(
-                path.read_text(), catalog)
+                path.read_text(), all_cols)
             for tables, col, lit in eq_filters:
+                if not tables:
+                    failures.append(
+                        f"[{name}] {path.name}: UNRESOLVED column "
+                        f"reference {col!r} compared to {lit!r} — could "
+                        "not be traced to a base table")
+                    continue
                 stored = [t for t in tables
-                          if col in catalog.get(t, set())]
+                          if col in text_cols.get(t, set())]
                 if not stored:
-                    # Resolves only to CTE/subquery projections or
-                    # non-text columns; stored vocabulary is audited at
-                    # the underlying table reference.
+                    # Resolved to base table(s) but the column is not
+                    # text-typed there; equality against non-text
+                    # columns is outside vocabulary auditing.
+                    n_skipped_nontext += 1
                     continue
                 if any((name, t, col, lit) in INTENTIONAL_ZERO_MATCH
                        for t in stored):
@@ -297,9 +356,17 @@ def audit_suite(name: str, gold_dir: Path, dsn: str, qid_filter,
                         f"{lit!r} not among actual values {shown}")
                 audited_columns.update((t, col) for t in stored)
             for tables, col, pattern, ilike in like_filters:
+                if not tables:
+                    failures.append(
+                        f"[{name}] {path.name}: UNRESOLVED column "
+                        f"reference {col!r} matched against "
+                        f"{pattern!r} — could not be traced to a base "
+                        "table")
+                    continue
                 stored = [t for t in tables
-                          if col in catalog.get(t, set())]
+                          if col in text_cols.get(t, set())]
                 if not stored:
+                    n_skipped_nontext += 1
                     continue
                 if any((name, t, col, pattern)
                        in INTENTIONAL_ZERO_MATCH_LIKE for t in stored):
@@ -319,7 +386,7 @@ def audit_suite(name: str, gold_dir: Path, dsn: str, qid_filter,
                     f"[{name}] {table}.{col} used as controlled "
                     f"vocabulary in gold SQL but has {null} NULLs "
                     f"(declare in NULLS_ALLOWED if intentional)")
-    return failures, notes
+    return failures, notes, n_skipped_nontext
 
 
 def main() -> int:
@@ -334,7 +401,8 @@ def main() -> int:
 
     failures: list[str] = []
     n_audited = 0
-    for name, subdir, env_var, qid_filter, has_marker in SUITES:
+    n_skipped = 0
+    for name, subdir, env_var, qid_filter, guard in SUITES:
         gold_dir = PROJECT / "evaluation" / subdir
         dsn = os.environ.get(env_var)
         if not dsn and name == "main":
@@ -346,18 +414,21 @@ def main() -> int:
             else:
                 print(f"WARNING: {msg}; suite skipped")
             continue
-        suite_failures, notes = audit_suite(
-            name, gold_dir, dsn, qid_filter, has_marker)
+        suite_failures, notes, suite_skipped = audit_suite(
+            name, gold_dir, dsn, qid_filter, guard)
         failures.extend(suite_failures)
+        n_skipped += suite_skipped
         if args.show_null_stats:
             for note in notes:
                 print(f"NULL STATS: {note}")
         n_audited += 1
 
+    n_unresolved = sum(1 for f in failures if "UNRESOLVED" in f)
     for f in failures:
         print(f"VOCABULARY MISMATCH: {f}")
     print(f"\nsuites_audited={n_audited} "
-          f"vocabulary_mismatch={len(failures)}")
+          f"vocabulary_mismatch={len(failures) - n_unresolved} "
+          f"unresolved={n_unresolved} skipped_nontext={n_skipped}")
     return 1 if failures else 0
 
 

@@ -22,7 +22,8 @@ from psycopg import sql as pgsql  # noqa: E402
 from psycopg.conninfo import make_conninfo  # noqa: E402
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
-from scripts.fixture_guard import assert_initialized_fixture  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 
@@ -120,8 +121,11 @@ def main() -> None:
             f"does not match the fixture contract: got {master!r}, "
             f"expected {expected_master!r}"
         )
-    # Only build from a fully initialized, drift-free main fixture.
-    assert_initialized_fixture(src)
+    # Only build from a fully initialized main fixture whose schema is
+    # unchanged since initialization AND whose data currently passes the
+    # 006 invariants (schema-only guarding would let schema-preserving
+    # data edits flow into the transfer copy).
+    assert_valid_fixture(src)
 
     n = copy(
         "SELECT symbol, name, atomic_number, atomic_mass FROM element",
@@ -180,11 +184,14 @@ def main() -> None:
 
     dst.commit()
 
-    # Post-load cross-row assertions (ratio sums, reference coverage).
+    # Post-load cross-row assertions (ratio sums, reference coverage):
+    # installs validate_transfer_integrity(), runs it, and writes the
+    # transfer_initialization_status marker on success.
     with dst.cursor() as cur:
         cur.execute(INTEGRITY_SQL.read_text())  # type: ignore[arg-type]
     dst.commit()
-    print("Transfer integrity checks passed.")
+    assert_valid_transfer(dst)
+    print("Transfer integrity checks passed (marker written).")
     src.close()
     dst.close()
     print("Transfer DB built.")

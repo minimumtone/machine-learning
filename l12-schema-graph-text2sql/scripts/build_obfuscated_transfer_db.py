@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterator
@@ -22,10 +23,18 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.build_transfer_db import assert_safe_transfer_db  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SRC_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 OBF_DB = f"{SRC_DB}_obfuscated"
 MAPPING_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
+INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
+
+# Integrity infrastructure is NOT obfuscated: the marker table and the
+# validator function keep their names in both transfer databases so
+# scripts/transfer_guard.py can locate them; only the validator BODY is
+# rewritten to the obfuscated identifiers below.
+UNOBFUSCATED_TABLES = {"transfer_initialization_status"}
 
 WORDS = [
     "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
@@ -104,7 +113,8 @@ def main() -> None:
               AND table_type = 'BASE TABLE'
             ORDER BY table_name
         """)
-        tables = [r[0] for r in cur.fetchall()]
+        tables = [r[0] for r in cur.fetchall()
+                  if r[0] not in UNOBFUSCATED_TABLES]
 
     tbl_stream = _name_stream("tbl", rng)
     table_map = {old_t: next(tbl_stream) for old_t in tables}
@@ -147,6 +157,23 @@ def main() -> None:
             )
     print("Committing schema renames...")
     conn.commit()
+
+    # The validator copied from the template DB still references the
+    # pre-rename identifiers; reinstall it with the obfuscated names and
+    # re-run it so the obfuscated DB carries a working CURRENT-STATE
+    # integrity check (and the marker survives the template copy).
+    print("Reinstalling validate_transfer_integrity() with obfuscated "
+          "identifiers...")
+    ident_map = dict(table_map)
+    ident_map.update(global_col_map)
+    integrity_sql = INTEGRITY_SQL.read_text()
+    for old, new in sorted(ident_map.items(), key=lambda kv: -len(kv[0])):
+        integrity_sql = re.sub(rf"\b{re.escape(old)}\b", new, integrity_sql)
+    with conn.cursor() as cur:
+        cur.execute(integrity_sql)  # type: ignore[arg-type]
+    conn.commit()
+    assert_valid_transfer(conn)
+    print("Obfuscated transfer integrity checks passed (marker present).")
     conn.close()
 
     MAPPING_PATH.write_text(json.dumps(mapping, ensure_ascii=False, indent=2))
