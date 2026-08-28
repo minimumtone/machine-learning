@@ -4,6 +4,7 @@
     "formula",
     "band_gap"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00007",

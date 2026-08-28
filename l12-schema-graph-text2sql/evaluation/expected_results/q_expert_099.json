@@ -3,6 +3,7 @@
     "bin_start",
     "cnt"
   ],
+  "ordered": true,
   "rows": [
     [
       2.8,

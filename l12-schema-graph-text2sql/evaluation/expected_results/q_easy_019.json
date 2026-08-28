@@ -5,7 +5,14 @@
     "prototype",
     "crystal_system"
   ],
+  "ordered": true,
   "rows": [
+    [
+      "entry_00281",
+      "Ag3Al",
+      "L12",
+      "cubic"
+    ],
     [
       "entry_00360",
       "Ag3Al",
@@ -13,8 +20,8 @@
       "cubic"
     ],
     [
-      "entry_00281",
-      "Ag3Al",
+      "entry_00145",
+      "Ag3Cu",
       "L12",
       "cubic"
     ],
@@ -32,12 +39,6 @@
     ],
     [
       "entry_00319",
-      "Ag3Cu",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00145",
       "Ag3Cu",
       "L12",
       "cubic"
@@ -199,13 +200,13 @@
       "cubic"
     ],
     [
-      "entry_00193",
+      "entry_00186",
       "Au3Ti",
       "L12",
       "cubic"
     ],
     [
-      "entry_00186",
+      "entry_00193",
       "Au3Ti",
       "L12",
       "cubic"
@@ -217,13 +218,13 @@
       "cubic"
     ],
     [
-      "entry_00080",
+      "entry_00065",
       "Au3Y",
       "L12",
       "cubic"
     ],
     [
-      "entry_00065",
+      "entry_00080",
       "Au3Y",
       "L12",
       "cubic"
@@ -325,13 +326,13 @@
       "cubic"
     ],
     [
-      "entry_00232",
+      "entry_00197",
       "Co3V",
       "L12",
       "cubic"
     ],
     [
-      "entry_00197",
+      "entry_00232",
       "Co3V",
       "L12",
       "cubic"
@@ -397,6 +398,12 @@
       "cubic"
     ],
     [
+      "entry_00047",
+      "Cr3In",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00068",
       "Cr3In",
       "L12",
@@ -404,12 +411,6 @@
     ],
     [
       "entry_00209",
-      "Cr3In",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00047",
       "Cr3In",
       "L12",
       "cubic"
@@ -457,6 +458,12 @@
       "cubic"
     ],
     [
+      "entry_00064",
+      "Cr3V",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00144",
       "Cr3V",
       "L12",
@@ -464,12 +471,6 @@
     ],
     [
       "entry_00289",
-      "Cr3V",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00064",
       "Cr3V",
       "L12",
       "cubic"
@@ -511,25 +512,25 @@
       "cubic"
     ],
     [
-      "entry_00285",
-      "Cu3Ge",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00363",
-      "Cu3Ge",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00255",
       "Cu3Ge",
       "L12",
       "cubic"
     ],
     [
+      "entry_00285",
+      "Cu3Ge",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00314",
+      "Cu3Ge",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00363",
       "Cu3Ge",
       "L12",
       "cubic"
@@ -589,13 +590,13 @@
       "cubic"
     ],
     [
-      "entry_00348",
+      "entry_00324",
       "Cu3Ti",
       "L12",
       "cubic"
     ],
     [
-      "entry_00324",
+      "entry_00348",
       "Cu3Ti",
       "L12",
       "cubic"
@@ -697,7 +698,7 @@
       "cubic"
     ],
     [
-      "entry_00164",
+      "entry_00030",
       "Fe3Si",
       "L12",
       "cubic"
@@ -709,7 +710,7 @@
       "cubic"
     ],
     [
-      "entry_00030",
+      "entry_00164",
       "Fe3Si",
       "L12",
       "cubic"
@@ -721,13 +722,13 @@
       "cubic"
     ],
     [
-      "entry_00254",
+      "entry_00236",
       "Fe3Ti",
       "L12",
       "cubic"
     ],
     [
-      "entry_00236",
+      "entry_00254",
       "Fe3Ti",
       "L12",
       "cubic"
@@ -799,12 +800,6 @@
       "cubic"
     ],
     [
-      "entry_00328",
-      "Hf3Sc",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00199",
       "Hf3Sc",
       "L12",
@@ -817,7 +812,13 @@
       "cubic"
     ],
     [
-      "entry_00330",
+      "entry_00328",
+      "Hf3Sc",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00245",
       "Hf3Si",
       "L12",
       "cubic"
@@ -829,7 +830,7 @@
       "cubic"
     ],
     [
-      "entry_00245",
+      "entry_00330",
       "Hf3Si",
       "L12",
       "cubic"
@@ -841,13 +842,13 @@
       "cubic"
     ],
     [
-      "entry_00296",
+      "entry_00120",
       "Hf3Sn",
       "L12",
       "cubic"
     ],
     [
-      "entry_00120",
+      "entry_00296",
       "Hf3Sn",
       "L12",
       "cubic"
@@ -859,13 +860,13 @@
       "cubic"
     ],
     [
-      "entry_00154",
+      "entry_00074",
       "Hf3V",
       "L12",
       "cubic"
     ],
     [
-      "entry_00074",
+      "entry_00154",
       "Hf3V",
       "L12",
       "cubic"
@@ -889,13 +890,13 @@
       "cubic"
     ],
     [
-      "entry_00334",
+      "entry_00146",
       "Ir3Ge",
       "L12",
       "cubic"
     ],
     [
-      "entry_00146",
+      "entry_00334",
       "Ir3Ge",
       "L12",
       "cubic"
@@ -913,20 +914,14 @@
       "cubic"
     ],
     [
-      "entry_00390",
-      "Ir3Nb",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00009",
       "Ir3Nb",
       "L12",
       "cubic"
     ],
     [
-      "entry_00161",
-      "Ir3Sb",
+      "entry_00390",
+      "Ir3Nb",
       "L12",
       "cubic"
     ],
@@ -938,6 +933,12 @@
     ],
     [
       "entry_00105",
+      "Ir3Sb",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00161",
       "Ir3Sb",
       "L12",
       "cubic"
@@ -967,13 +968,13 @@
       "cubic"
     ],
     [
-      "entry_00317",
+      "entry_00096",
       "Ir3Zr",
       "L12",
       "cubic"
     ],
     [
-      "entry_00096",
+      "entry_00317",
       "Ir3Zr",
       "L12",
       "cubic"
@@ -1009,13 +1010,13 @@
       "cubic"
     ],
     [
-      "entry_00291",
+      "entry_00060",
       "Mn3Hf",
       "L12",
       "cubic"
     ],
     [
-      "entry_00060",
+      "entry_00291",
       "Mn3Hf",
       "L12",
       "cubic"
@@ -1063,6 +1064,12 @@
       "cubic"
     ],
     [
+      "entry_00181",
+      "Mo3Nb",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00321",
       "Mo3Nb",
       "L12",
@@ -1075,8 +1082,8 @@
       "cubic"
     ],
     [
-      "entry_00181",
-      "Mo3Nb",
+      "entry_00250",
+      "Mo3Si",
       "L12",
       "cubic"
     ],
@@ -1087,19 +1094,13 @@
       "cubic"
     ],
     [
-      "entry_00250",
-      "Mo3Si",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00160",
+      "entry_00053",
       "Mo3Sn",
       "L12",
       "cubic"
     ],
     [
-      "entry_00053",
+      "entry_00160",
       "Mo3Sn",
       "L12",
       "cubic"
@@ -1117,13 +1118,13 @@
       "cubic"
     ],
     [
-      "entry_00210",
+      "entry_00128",
       "Mo3Ti",
       "L12",
       "cubic"
     ],
     [
-      "entry_00128",
+      "entry_00210",
       "Mo3Ti",
       "L12",
       "cubic"
@@ -1141,7 +1142,7 @@
       "cubic"
     ],
     [
-      "entry_00307",
+      "entry_00133",
       "Nb3Cu",
       "L12",
       "cubic"
@@ -1153,7 +1154,7 @@
       "cubic"
     ],
     [
-      "entry_00133",
+      "entry_00307",
       "Nb3Cu",
       "L12",
       "cubic"
@@ -1255,13 +1256,13 @@
       "cubic"
     ],
     [
-      "entry_00163",
+      "entry_00025",
       "Nb3Y",
       "L12",
       "cubic"
     ],
     [
-      "entry_00025",
+      "entry_00163",
       "Nb3Y",
       "L12",
       "cubic"
@@ -1321,13 +1322,13 @@
       "cubic"
     ],
     [
-      "entry_00389",
+      "entry_00353",
       "Ni3Sc",
       "L12",
       "cubic"
     ],
     [
-      "entry_00353",
+      "entry_00389",
       "Ni3Sc",
       "L12",
       "cubic"
@@ -1339,7 +1340,7 @@
       "cubic"
     ],
     [
-      "entry_00229",
+      "entry_00013",
       "Ni3Ti",
       "L12",
       "cubic"
@@ -1351,7 +1352,7 @@
       "cubic"
     ],
     [
-      "entry_00013",
+      "entry_00229",
       "Ni3Ti",
       "L12",
       "cubic"
@@ -1375,6 +1376,12 @@
       "cubic"
     ],
     [
+      "entry_00098",
+      "Pd3Ga",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00234",
       "Pd3Ga",
       "L12",
@@ -1382,12 +1389,6 @@
     ],
     [
       "entry_00323",
-      "Pd3Ga",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00098",
       "Pd3Ga",
       "L12",
       "cubic"
@@ -1405,7 +1406,7 @@
       "cubic"
     ],
     [
-      "entry_00338",
+      "entry_00089",
       "Pd3Mg",
       "L12",
       "cubic"
@@ -1417,19 +1418,19 @@
       "cubic"
     ],
     [
-      "entry_00089",
+      "entry_00338",
       "Pd3Mg",
       "L12",
       "cubic"
     ],
     [
-      "entry_00287",
+      "entry_00066",
       "Pd3Mn",
       "L12",
       "cubic"
     ],
     [
-      "entry_00066",
+      "entry_00287",
       "Pd3Mn",
       "L12",
       "cubic"
@@ -1465,12 +1466,6 @@
       "cubic"
     ],
     [
-      "entry_00257",
-      "Pt3Al",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00008",
       "Pt3Al",
       "L12",
@@ -1478,6 +1473,12 @@
     ],
     [
       "entry_00151",
+      "Pt3Al",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00257",
       "Pt3Al",
       "L12",
       "cubic"
@@ -1585,20 +1586,14 @@
       "cubic"
     ],
     [
-      "entry_00377",
-      "Rh3Mn",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00179",
       "Rh3Mn",
       "L12",
       "cubic"
     ],
     [
-      "entry_00086",
-      "Rh3Sb",
+      "entry_00377",
+      "Rh3Mn",
       "L12",
       "cubic"
     ],
@@ -1609,13 +1604,19 @@
       "cubic"
     ],
     [
-      "entry_00242",
+      "entry_00086",
       "Rh3Sb",
       "L12",
       "cubic"
     ],
     [
       "entry_00168",
+      "Rh3Sb",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00242",
       "Rh3Sb",
       "L12",
       "cubic"
@@ -1651,12 +1652,6 @@
       "cubic"
     ],
     [
-      "entry_00299",
-      "Rh3Zn",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00222",
       "Rh3Zn",
       "L12",
@@ -1669,8 +1664,8 @@
       "cubic"
     ],
     [
-      "entry_00246",
-      "Rh3Zr",
+      "entry_00299",
+      "Rh3Zn",
       "L12",
       "cubic"
     ],
@@ -1687,19 +1682,25 @@
       "cubic"
     ],
     [
+      "entry_00246",
+      "Rh3Zr",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00274",
       "Rh3Zr",
       "L12",
       "cubic"
     ],
     [
-      "entry_00351",
+      "entry_00333",
       "Ru3Be",
       "L12",
       "cubic"
     ],
     [
-      "entry_00333",
+      "entry_00351",
       "Ru3Be",
       "L12",
       "cubic"
@@ -1741,13 +1742,13 @@
       "cubic"
     ],
     [
-      "entry_00352",
+      "entry_00040",
       "Ru3Mg",
       "L12",
       "cubic"
     ],
     [
-      "entry_00040",
+      "entry_00352",
       "Ru3Mg",
       "L12",
       "cubic"
@@ -1765,25 +1766,25 @@
       "cubic"
     ],
     [
-      "entry_00335",
-      "Ru3Nb",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00277",
       "Ru3Nb",
       "L12",
       "cubic"
     ],
     [
-      "entry_00302",
-      "Ru3Sb",
+      "entry_00335",
+      "Ru3Nb",
       "L12",
       "cubic"
     ],
     [
       "entry_00205",
+      "Ru3Sb",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00302",
       "Ru3Sb",
       "L12",
       "cubic"
@@ -1837,13 +1838,13 @@
       "cubic"
     ],
     [
-      "entry_00372",
+      "entry_00070",
       "Ta3Ga",
       "L12",
       "cubic"
     ],
     [
-      "entry_00070",
+      "entry_00372",
       "Ta3Ga",
       "L12",
       "cubic"
@@ -1891,13 +1892,13 @@
       "cubic"
     ],
     [
-      "entry_00318",
+      "entry_00050",
       "Ti3Be",
       "L12",
       "cubic"
     ],
     [
-      "entry_00050",
+      "entry_00318",
       "Ti3Be",
       "L12",
       "cubic"
@@ -1909,13 +1910,13 @@
       "cubic"
     ],
     [
-      "entry_00243",
+      "entry_00166",
       "Ti3Ge",
       "L12",
       "cubic"
     ],
     [
-      "entry_00166",
+      "entry_00243",
       "Ti3Ge",
       "L12",
       "cubic"
@@ -1933,13 +1934,13 @@
       "cubic"
     ],
     [
-      "entry_00271",
+      "entry_00113",
       "Ti3Mn",
       "L12",
       "cubic"
     ],
     [
-      "entry_00113",
+      "entry_00271",
       "Ti3Mn",
       "L12",
       "cubic"
@@ -1999,6 +2000,12 @@
       "cubic"
     ],
     [
+      "entry_00087",
+      "V3Al",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00142",
       "V3Al",
       "L12",
@@ -2006,12 +2013,6 @@
     ],
     [
       "entry_00204",
-      "V3Al",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00087",
       "V3Al",
       "L12",
       "cubic"
@@ -2065,7 +2066,7 @@
       "cubic"
     ],
     [
-      "entry_00256",
+      "entry_00215",
       "V3Nb",
       "L12",
       "cubic"
@@ -2077,7 +2078,7 @@
       "cubic"
     ],
     [
-      "entry_00215",
+      "entry_00256",
       "V3Nb",
       "L12",
       "cubic"
@@ -2107,13 +2108,13 @@
       "cubic"
     ],
     [
-      "entry_00212",
+      "entry_00177",
       "V3Y",
       "L12",
       "cubic"
     ],
     [
-      "entry_00177",
+      "entry_00212",
       "V3Y",
       "L12",
       "cubic"
@@ -2143,13 +2144,13 @@
       "cubic"
     ],
     [
-      "entry_00350",
+      "entry_00083",
       "W3Fe",
       "L12",
       "cubic"
     ],
     [
-      "entry_00083",
+      "entry_00350",
       "W3Fe",
       "L12",
       "cubic"
@@ -2185,14 +2186,20 @@
       "cubic"
     ],
     [
+      "entry_00048",
+      "W3Ta",
+      "L12",
+      "cubic"
+    ],
+    [
       "entry_00279",
       "W3Ta",
       "L12",
       "cubic"
     ],
     [
-      "entry_00048",
-      "W3Ta",
+      "entry_00017",
+      "W3Ti",
       "L12",
       "cubic"
     ],
@@ -2203,8 +2210,8 @@
       "cubic"
     ],
     [
-      "entry_00017",
-      "W3Ti",
+      "entry_00103",
+      "W3V",
       "L12",
       "cubic"
     ],
@@ -2216,12 +2223,6 @@
     ],
     [
       "entry_00315",
-      "W3V",
-      "L12",
-      "cubic"
-    ],
-    [
-      "entry_00103",
       "W3V",
       "L12",
       "cubic"
@@ -2239,13 +2240,13 @@
       "cubic"
     ],
     [
-      "entry_00238",
+      "entry_00107",
       "Zr3Al",
       "L12",
       "cubic"
     ],
     [
-      "entry_00107",
+      "entry_00238",
       "Zr3Al",
       "L12",
       "cubic"
@@ -2263,20 +2264,14 @@
       "cubic"
     ],
     [
-      "entry_00358",
-      "Zr3Ga",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00147",
       "Zr3Ga",
       "L12",
       "cubic"
     ],
     [
-      "entry_00211",
-      "Zr3Ge",
+      "entry_00358",
+      "Zr3Ga",
       "L12",
       "cubic"
     ],
@@ -2287,13 +2282,19 @@
       "cubic"
     ],
     [
-      "entry_00387",
-      "Zr3Hf",
+      "entry_00211",
+      "Zr3Ge",
       "L12",
       "cubic"
     ],
     [
       "entry_00029",
+      "Zr3Hf",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00387",
       "Zr3Hf",
       "L12",
       "cubic"
@@ -2311,20 +2312,14 @@
       "cubic"
     ],
     [
-      "entry_00235",
-      "Zr3Sc",
-      "L12",
-      "cubic"
-    ],
-    [
       "entry_00221",
       "Zr3Sc",
       "L12",
       "cubic"
     ],
     [
-      "entry_00316",
-      "Zr3Si",
+      "entry_00235",
+      "Zr3Sc",
       "L12",
       "cubic"
     ],
@@ -2335,13 +2330,19 @@
       "cubic"
     ],
     [
-      "entry_00266",
-      "Zr3Ta",
+      "entry_00316",
+      "Zr3Si",
       "L12",
       "cubic"
     ],
     [
       "entry_00097",
+      "Zr3Ta",
+      "L12",
+      "cubic"
+    ],
+    [
+      "entry_00266",
       "Zr3Ta",
       "L12",
       "cubic"

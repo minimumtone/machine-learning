@@ -6,5 +6,6 @@
     "formula",
     "crystal_system"
   ],
+  "ordered": true,
   "rows": []
 }

@@ -6,6 +6,7 @@
     "formation_energy_per_atom",
     "lattice_a"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00008",

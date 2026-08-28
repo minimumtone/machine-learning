@@ -4,6 +4,7 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cu3Ge",
@@ -96,12 +97,12 @@
       false
     ],
     [
-      "Cr3Cu",
+      "Zr3Cu",
       0.0462,
       false
     ],
     [
-      "Zr3Cu",
+      "Cr3Cu",
       0.0462,
       false
     ],

@@ -3,5 +3,5 @@ SELECT e.col_quebec, f.col_iris
 FROM tbl_zulu e
 JOIN tbl_delta f ON f.col_rhea = e.col_rhea
 WHERE e.col_apollo = 221 AND f.col_iris > 0
-ORDER BY f.col_iris DESC
+ORDER BY f.col_iris DESC, e.col_rhea ASC
 LIMIT 10000;

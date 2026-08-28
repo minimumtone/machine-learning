@@ -4,6 +4,7 @@
     "formula",
     "lattice_a"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00834",
@@ -206,13 +207,13 @@
       4.0699
     ],
     [
-      "entry_00836",
-      "AuMg",
+      "entry_00720",
+      "NiMn",
       4.0704
     ],
     [
-      "entry_00720",
-      "NiMn",
+      "entry_00836",
+      "AuMg",
       4.0704
     ],
     [
@@ -451,13 +452,13 @@
       4.1812
     ],
     [
-      "entry_00877",
-      "AuGe",
+      "entry_00667",
+      "NbSi",
       4.183
     ],
     [
-      "entry_00667",
-      "NbSi",
+      "entry_00877",
+      "AuGe",
       4.183
     ],
     [

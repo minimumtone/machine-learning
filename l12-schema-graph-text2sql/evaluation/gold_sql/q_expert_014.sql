@@ -7,5 +7,5 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
     JOIN element e ON e.symbol = c.element
     WHERE c.entry_id = m.entry_id AND e.category NOT IN ('transition_metal')
   )
-ORDER BY m.formula
+ORDER BY m.formula, m.entry_id ASC
 LIMIT 10000;

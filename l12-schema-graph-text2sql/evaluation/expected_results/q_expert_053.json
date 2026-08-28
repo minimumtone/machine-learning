@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00159",
@@ -41,14 +42,6 @@
       "AuAl"
     ],
     [
-      "entry_01382",
-      "AuGe"
-    ],
-    [
-      "entry_01172",
-      "AuGe"
-    ],
-    [
       "entry_00719",
       "AuGe"
     ],
@@ -57,19 +50,27 @@
       "AuGe"
     ],
     [
-      "entry_01142",
-      "AuHf"
+      "entry_01172",
+      "AuGe"
+    ],
+    [
+      "entry_01382",
+      "AuGe"
     ],
     [
       "entry_01048",
       "AuHf"
     ],
     [
-      "entry_00972",
-      "AuMg"
+      "entry_01142",
+      "AuHf"
     ],
     [
       "entry_00836",
+      "AuMg"
+    ],
+    [
+      "entry_00972",
       "AuMg"
     ],
     [
@@ -93,11 +94,11 @@
       "Co3Zn"
     ],
     [
-      "entry_01429",
+      "entry_01371",
       "CoAl"
     ],
     [
-      "entry_01371",
+      "entry_01429",
       "CoAl"
     ],
     [
@@ -105,11 +106,11 @@
       "CoBe"
     ],
     [
-      "entry_01444",
+      "entry_01088",
       "CoGa"
     ],
     [
-      "entry_01088",
+      "entry_01444",
       "CoGa"
     ],
     [
@@ -201,11 +202,11 @@
       "CuNb"
     ],
     [
-      "entry_01319",
+      "entry_00704",
       "CuSn"
     ],
     [
-      "entry_00704",
+      "entry_01319",
       "CuSn"
     ],
     [
@@ -225,11 +226,11 @@
       "Fe3Ti"
     ],
     [
-      "entry_01373",
+      "entry_01235",
       "FeHf"
     ],
     [
-      "entry_01235",
+      "entry_01373",
       "FeHf"
     ],
     [
@@ -277,11 +278,11 @@
       "HfY"
     ],
     [
-      "entry_00661",
+      "entry_00549",
       "HfZr"
     ],
     [
-      "entry_00549",
+      "entry_00661",
       "HfZr"
     ],
     [
@@ -313,11 +314,11 @@
       "IrSc"
     ],
     [
-      "entry_01262",
+      "entry_01141",
       "IrTa"
     ],
     [
-      "entry_01141",
+      "entry_01262",
       "IrTa"
     ],
     [
@@ -461,11 +462,11 @@
       "PdAl"
     ],
     [
-      "entry_00600",
+      "entry_00443",
       "PdMg"
     ],
     [
-      "entry_00443",
+      "entry_00600",
       "PdMg"
     ],
     [
@@ -497,19 +498,19 @@
       "PtGa"
     ],
     [
-      "entry_01436",
-      "PtGe"
-    ],
-    [
       "entry_01334",
       "PtGe"
     ],
     [
-      "entry_01390",
-      "PtHf"
+      "entry_01436",
+      "PtGe"
     ],
     [
       "entry_00711",
+      "PtHf"
+    ],
+    [
+      "entry_01390",
       "PtHf"
     ],
     [
@@ -585,11 +586,11 @@
       "RuFe"
     ],
     [
-      "entry_00847",
+      "entry_00629",
       "RuGe"
     ],
     [
-      "entry_00629",
+      "entry_00847",
       "RuGe"
     ],
     [
@@ -633,11 +634,11 @@
       "TaAl"
     ],
     [
-      "entry_00884",
+      "entry_00739",
       "TaHf"
     ],
     [
-      "entry_00739",
+      "entry_00884",
       "TaHf"
     ],
     [
@@ -773,11 +774,11 @@
       "ZrIn"
     ],
     [
-      "entry_01283",
+      "entry_00438",
       "ZrSc"
     ],
     [
-      "entry_00438",
+      "entry_01283",
       "ZrSc"
     ],
     [

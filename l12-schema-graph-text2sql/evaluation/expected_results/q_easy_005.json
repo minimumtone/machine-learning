@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "elem_co_637416",
@@ -45,11 +46,11 @@
       "Co3Sb"
     ],
     [
-      "entry_00094",
+      "entry_00012",
       "Co3Ta"
     ],
     [
-      "entry_00012",
+      "entry_00094",
       "Co3Ta"
     ],
     [
@@ -81,11 +82,7 @@
       "CoAl"
     ],
     [
-      "entry_01429",
-      "CoAl"
-    ],
-    [
-      "entry_01410",
+      "entry_01276",
       "CoAl"
     ],
     [
@@ -93,12 +90,12 @@
       "CoAl"
     ],
     [
-      "entry_01276",
+      "entry_01410",
       "CoAl"
     ],
     [
-      "entry_00949",
-      "CoBe"
+      "entry_01429",
+      "CoAl"
     ],
     [
       "entry_00671",
@@ -113,15 +110,15 @@
       "CoBe"
     ],
     [
+      "entry_00949",
+      "CoBe"
+    ],
+    [
       "entry_00638",
       "CoFe"
     ],
     [
-      "entry_01443",
-      "CoGa"
-    ],
-    [
-      "entry_01444",
+      "entry_00730",
       "CoGa"
     ],
     [
@@ -129,7 +126,11 @@
       "CoGa"
     ],
     [
-      "entry_00730",
+      "entry_01443",
+      "CoGa"
+    ],
+    [
+      "entry_01444",
       "CoGa"
     ],
     [
@@ -141,24 +142,16 @@
       "CoGe"
     ],
     [
+      "entry_00976",
+      "CoGe"
+    ],
+    [
       "entry_01023",
       "CoGe"
     ],
     [
       "entry_01349",
       "CoGe"
-    ],
-    [
-      "entry_00976",
-      "CoGe"
-    ],
-    [
-      "entry_01213",
-      "CoHf"
-    ],
-    [
-      "entry_01380",
-      "CoHf"
     ],
     [
       "entry_00830",
@@ -173,11 +166,19 @@
       "CoHf"
     ],
     [
+      "entry_01213",
+      "CoHf"
+    ],
+    [
       "entry_01287",
       "CoHf"
     ],
     [
       "entry_01313",
+      "CoHf"
+    ],
+    [
+      "entry_01380",
       "CoHf"
     ],
     [
@@ -193,7 +194,7 @@
       "CoMn"
     ],
     [
-      "entry_01452",
+      "entry_00792",
       "CoNb"
     ],
     [
@@ -201,7 +202,7 @@
       "CoNb"
     ],
     [
-      "entry_00792",
+      "entry_01452",
       "CoNb"
     ],
     [
@@ -209,11 +210,11 @@
       "CoSb"
     ],
     [
-      "entry_01356",
+      "entry_00484",
       "CoSc"
     ],
     [
-      "entry_01395",
+      "entry_00539",
       "CoSc"
     ],
     [
@@ -229,15 +230,15 @@
       "CoSc"
     ],
     [
-      "entry_00539",
+      "entry_01356",
       "CoSc"
     ],
     [
-      "entry_00484",
+      "entry_01395",
       "CoSc"
     ],
     [
-      "entry_01399",
+      "entry_01229",
       "CoSi"
     ],
     [
@@ -245,7 +246,7 @@
       "CoSi"
     ],
     [
-      "entry_01229",
+      "entry_01399",
       "CoSi"
     ],
     [
@@ -269,11 +270,7 @@
       "CoTa"
     ],
     [
-      "entry_01411",
-      "CoTa"
-    ],
-    [
-      "entry_01310",
+      "entry_01039",
       "CoTa"
     ],
     [
@@ -281,19 +278,23 @@
       "CoTa"
     ],
     [
-      "entry_01439",
-      "CoTa"
-    ],
-    [
-      "entry_01039",
-      "CoTa"
-    ],
-    [
       "entry_01163",
       "CoTa"
     ],
     [
-      "entry_01424",
+      "entry_01310",
+      "CoTa"
+    ],
+    [
+      "entry_01411",
+      "CoTa"
+    ],
+    [
+      "entry_01439",
+      "CoTa"
+    ],
+    [
+      "entry_01064",
       "CoTi"
     ],
     [
@@ -301,7 +302,7 @@
       "CoTi"
     ],
     [
-      "entry_01064",
+      "entry_01149",
       "CoTi"
     ],
     [
@@ -309,11 +310,15 @@
       "CoTi"
     ],
     [
-      "entry_01149",
+      "entry_01424",
       "CoTi"
     ],
     [
-      "entry_00917",
+      "entry_00531",
+      "CoV"
+    ],
+    [
+      "entry_00596",
       "CoV"
     ],
     [
@@ -325,27 +330,11 @@
       "CoV"
     ],
     [
-      "entry_00531",
+      "entry_00917",
       "CoV"
-    ],
-    [
-      "entry_00596",
-      "CoV"
-    ],
-    [
-      "entry_01386",
-      "CoY"
-    ],
-    [
-      "entry_01146",
-      "CoY"
     ],
     [
       "entry_00631",
-      "CoY"
-    ],
-    [
-      "entry_00855",
       "CoY"
     ],
     [
@@ -353,16 +342,16 @@
       "CoY"
     ],
     [
-      "entry_01364",
-      "CoZn"
+      "entry_00855",
+      "CoY"
     ],
     [
-      "entry_01233",
-      "CoZn"
+      "entry_01146",
+      "CoY"
     ],
     [
-      "entry_01194",
-      "CoZn"
+      "entry_01386",
+      "CoY"
     ],
     [
       "entry_00654",
@@ -370,6 +359,18 @@
     ],
     [
       "entry_01043",
+      "CoZn"
+    ],
+    [
+      "entry_01194",
+      "CoZn"
+    ],
+    [
+      "entry_01233",
+      "CoZn"
+    ],
+    [
+      "entry_01364",
       "CoZn"
     ],
     [

@@ -5,6 +5,7 @@
     "formation_energy_per_atom",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00004",

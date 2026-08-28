@@ -6,6 +6,7 @@
     "lattice_c",
     "crystal_system"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01442",

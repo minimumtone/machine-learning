@@ -4,6 +4,7 @@
     "lattice_a",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al3Sc",

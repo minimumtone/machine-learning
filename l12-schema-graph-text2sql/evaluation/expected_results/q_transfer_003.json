@@ -3,129 +3,50 @@
     "entry_key",
     "composition_formula"
   ],
+  "ordered": false,
   "rows": [
     [
-      "elem_ni_1485065",
-      "Ni"
-    ],
-    [
-      "entry_00001",
-      "Ni3Al"
-    ],
-    [
-      "entry_00002",
-      "Ni3Ga"
+      "entry_00555",
+      "NiMn"
     ],
     [
       "entry_00003",
       "Ni3Ge"
     ],
     [
-      "entry_00013",
-      "Ni3Ti"
+      "entry_00807",
+      "NiSn"
+    ],
+    [
+      "entry_01388",
+      "NiNb"
     ],
     [
       "entry_00069",
       "Ni3Sb"
     ],
     [
-      "entry_00132",
-      "Ni3In"
+      "entry_00526",
+      "NiMn"
     ],
     [
-      "entry_00174",
-      "Ni3V"
+      "entry_01391",
+      "NiGe"
     ],
     [
-      "entry_00191",
-      "Ni3Ti"
-    ],
-    [
-      "entry_00229",
-      "Ni3Ti"
-    ],
-    [
-      "entry_00233",
-      "Ni3Mn"
-    ],
-    [
-      "entry_00301",
-      "Ni3Ta"
-    ],
-    [
-      "entry_00336",
-      "Ni3In"
-    ],
-    [
-      "entry_00353",
-      "Ni3Sc"
-    ],
-    [
-      "entry_00389",
-      "Ni3Sc"
+      "entry_01303",
+      "NiSc"
     ],
     [
       "entry_00399",
       "NiSn"
     ],
     [
-      "entry_00404",
-      "NiAl"
+      "entry_01337",
+      "NiZn"
     ],
     [
-      "entry_00411",
-      "NiSb"
-    ],
-    [
-      "entry_00456",
-      "NiY"
-    ],
-    [
-      "entry_00470",
-      "NiIn"
-    ],
-    [
-      "entry_00495",
-      "NiHf"
-    ],
-    [
-      "entry_00499",
-      "NiTa"
-    ],
-    [
-      "entry_00504",
-      "NiBe"
-    ],
-    [
-      "entry_00511",
-      "NiBe"
-    ],
-    [
-      "entry_00526",
-      "NiMn"
-    ],
-    [
-      "entry_00555",
-      "NiMn"
-    ],
-    [
-      "entry_00556",
-      "NiGe"
-    ],
-    [
-      "entry_00567",
-      "NiFe"
-    ],
-    [
-      "entry_00616",
-      "NiTi"
-    ],
-    [
-      "entry_00621",
-      "NiAl"
-    ],
-    [
-      "entry_00636",
+      "entry_00652",
       "NiSc"
     ],
     [
@@ -133,96 +54,120 @@
       "NiMg"
     ],
     [
-      "entry_00645",
-      "NiSi"
-    ],
-    [
-      "entry_00652",
-      "NiSc"
-    ],
-    [
-      "entry_00670",
-      "NiZr"
-    ],
-    [
-      "entry_00700",
-      "NiZr"
-    ],
-    [
-      "entry_00712",
-      "NiTa"
+      "entry_00621",
+      "NiAl"
     ],
     [
       "entry_00720",
       "NiMn"
     ],
     [
-      "entry_00732",
-      "NiSn"
-    ],
-    [
-      "entry_00736",
-      "NiY"
-    ],
-    [
-      "entry_00768",
-      "NiY"
-    ],
-    [
-      "entry_00778",
-      "NiGa"
-    ],
-    [
-      "entry_00787",
-      "NiIn"
-    ],
-    [
-      "entry_00806",
-      "NiV"
-    ],
-    [
-      "entry_00807",
-      "NiSn"
-    ],
-    [
-      "entry_00845",
-      "NiSn"
-    ],
-    [
-      "entry_00850",
-      "NiHf"
+      "entry_01257",
+      "NiNb"
     ],
     [
       "entry_00863",
       "NiV"
     ],
     [
+      "entry_01177",
+      "NiY"
+    ],
+    [
+      "entry_00670",
+      "NiZr"
+    ],
+    [
+      "entry_00002",
+      "Ni3Ga"
+    ],
+    [
+      "entry_00499",
+      "NiTa"
+    ],
+    [
+      "entry_01106",
+      "NiZn"
+    ],
+    [
+      "entry_00001",
+      "Ni3Al"
+    ],
+    [
+      "entry_00013",
+      "Ni3Ti"
+    ],
+    [
+      "entry_00233",
+      "Ni3Mn"
+    ],
+    [
+      "entry_00229",
+      "Ni3Ti"
+    ],
+    [
+      "entry_01205",
+      "NiSc"
+    ],
+    [
+      "entry_00556",
+      "NiGe"
+    ],
+    [
+      "entry_00132",
+      "Ni3In"
+    ],
+    [
       "entry_00867",
       "NiSn"
     ],
     [
-      "entry_00872",
-      "NiSb"
+      "entry_01442",
+      "NiAl"
     ],
     [
-      "entry_00873",
-      "NiMg"
+      "entry_00456",
+      "NiY"
     ],
     [
-      "entry_00906",
-      "NiMg"
+      "entry_01207",
+      "NiNb"
     ],
     [
-      "entry_00981",
-      "NiTa"
+      "entry_01355",
+      "NiGe"
     ],
     [
-      "entry_01036",
-      "NiTi"
+      "entry_01093",
+      "NiY"
     ],
     [
       "entry_01057",
       "NiGe"
+    ],
+    [
+      "entry_00845",
+      "NiSn"
+    ],
+    [
+      "entry_01370",
+      "NiZn"
+    ],
+    [
+      "entry_00806",
+      "NiV"
+    ],
+    [
+      "entry_00645",
+      "NiSi"
+    ],
+    [
+      "entry_00736",
+      "NiY"
+    ],
+    [
+      "entry_00732",
+      "NiSn"
     ],
     [
       "entry_01071",
@@ -233,100 +178,156 @@
       "NiGe"
     ],
     [
-      "entry_01093",
-      "NiY"
+      "entry_00981",
+      "NiTa"
     ],
     [
-      "entry_01106",
-      "NiZn"
-    ],
-    [
-      "entry_01107",
-      "NiY"
-    ],
-    [
-      "entry_01143",
-      "NiAl"
-    ],
-    [
-      "entry_01177",
-      "NiY"
-    ],
-    [
-      "entry_01205",
-      "NiSc"
-    ],
-    [
-      "entry_01207",
-      "NiNb"
-    ],
-    [
-      "entry_01257",
-      "NiNb"
-    ],
-    [
-      "entry_01289",
-      "NiSn"
-    ],
-    [
-      "entry_01303",
-      "NiSc"
+      "entry_00495",
+      "NiHf"
     ],
     [
       "entry_01322",
       "NiGe"
     ],
     [
-      "entry_01332",
-      "NiHf"
+      "entry_00191",
+      "Ni3Ti"
     ],
     [
-      "entry_01337",
-      "NiZn"
+      "entry_00336",
+      "Ni3In"
+    ],
+    [
+      "entry_00301",
+      "Ni3Ta"
+    ],
+    [
+      "entry_00470",
+      "NiIn"
+    ],
+    [
+      "entry_00411",
+      "NiSb"
+    ],
+    [
+      "entry_01289",
+      "NiSn"
     ],
     [
       "entry_01348",
       "NiGe"
     ],
     [
-      "entry_01350",
-      "NiTa"
+      "elem_ni_1485065",
+      "Ni"
     ],
     [
-      "entry_01355",
-      "NiGe"
-    ],
-    [
-      "entry_01370",
-      "NiZn"
-    ],
-    [
-      "entry_01384",
-      "NiAs"
+      "entry_00511",
+      "NiBe"
     ],
     [
       "entry_01385",
       "NiSb"
     ],
     [
-      "entry_01388",
-      "NiNb"
+      "entry_00712",
+      "NiTa"
     ],
     [
-      "entry_01391",
-      "NiGe"
+      "entry_00567",
+      "NiFe"
+    ],
+    [
+      "entry_00787",
+      "NiIn"
+    ],
+    [
+      "entry_00174",
+      "Ni3V"
+    ],
+    [
+      "entry_01107",
+      "NiY"
+    ],
+    [
+      "entry_00906",
+      "NiMg"
+    ],
+    [
+      "entry_00353",
+      "Ni3Sc"
     ],
     [
       "entry_01408",
       "NiY"
     ],
     [
-      "entry_01442",
+      "entry_00768",
+      "NiY"
+    ],
+    [
+      "entry_00700",
+      "NiZr"
+    ],
+    [
+      "entry_00616",
+      "NiTi"
+    ],
+    [
+      "entry_00504",
+      "NiBe"
+    ],
+    [
+      "entry_01350",
+      "NiTa"
+    ],
+    [
+      "entry_01143",
       "NiAl"
+    ],
+    [
+      "entry_01036",
+      "NiTi"
+    ],
+    [
+      "entry_01332",
+      "NiHf"
+    ],
+    [
+      "entry_00873",
+      "NiMg"
     ],
     [
       "entry_01460",
       "NiSc3"
+    ],
+    [
+      "entry_01384",
+      "NiAs"
+    ],
+    [
+      "entry_00778",
+      "NiGa"
+    ],
+    [
+      "entry_00389",
+      "Ni3Sc"
+    ],
+    [
+      "entry_00872",
+      "NiSb"
+    ],
+    [
+      "entry_00850",
+      "NiHf"
+    ],
+    [
+      "entry_00404",
+      "NiAl"
+    ],
+    [
+      "entry_00636",
+      "NiSc"
     ]
   ]
 }

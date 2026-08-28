@@ -14,6 +14,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.build_mp_transfer_db import mp_conninfo  # noqa: E402
+from scripts.gold_compare import sql_is_ordered  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 EXPECTED_DIR = EVAL_DIR / "expected_results_mp_transfer"
@@ -251,7 +252,7 @@ def execute_gold(conn, sql: str) -> dict[str, Any]:
         cur.execute(sql)
         columns = [d[0] for d in cur.description] if cur.description else []
         rows = [_convert(list(r)) for r in cur.fetchall()]
-    return {"columns": columns, "rows": rows}
+    return {"columns": columns, "ordered": sql_is_ordered(sql), "rows": rows}
 
 
 def main() -> None:
@@ -268,7 +269,7 @@ def main() -> None:
             result = execute_gold(conn, q["gold_sql"])
         except Exception as exc:
             print(f"ERROR {q['id']}: {exc}")
-            result = {"columns": [], "rows": [], "error": str(exc)}
+            result = {"columns": [], "ordered": False, "rows": [], "error": str(exc)}
         with open(EXPECTED_DIR / f"{q['id']}.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"{q['id']}: rows={len(result.get('rows', []))}")

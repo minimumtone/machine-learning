@@ -4,6 +4,7 @@
     "bulk_modulus",
     "ref_count"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",

@@ -3,6 +3,7 @@
     "crystal_system",
     "count"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cubic",

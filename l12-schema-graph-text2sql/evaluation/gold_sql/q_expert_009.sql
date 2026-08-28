@@ -1,1 +1,2 @@
-SELECT entry_id, formula, chemical_system FROM material_entry WHERE chemical_system LIKE '%Ti%' ORDER BY formula LIMIT 10000;
+SELECT entry_id, formula, chemical_system FROM material_entry WHERE chemical_system LIKE '%Ti%' ORDER BY formula, material_entry.entry_id ASC
+LIMIT 10000;

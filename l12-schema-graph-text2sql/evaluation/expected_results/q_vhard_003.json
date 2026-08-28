@@ -6,6 +6,7 @@
     "bulk_modulus",
     "weighted_score"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",

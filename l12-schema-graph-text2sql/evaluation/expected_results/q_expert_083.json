@@ -5,6 +5,7 @@
     "bulk_modulus_vrh",
     "debye_temperature_k"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00004",

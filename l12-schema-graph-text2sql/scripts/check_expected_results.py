@@ -7,8 +7,14 @@ multiset otherwise, and typed value tolerance (see scripts/gold_compare.py
 for the full comparison policy). Also reports orphan expected-results files
 that no longer have a gold SQL.
 
+Both database connections are forced READ ONLY with a 30 s
+statement_timeout (--update only rewrites JSON files, never the DB).
+Skipped transfer queries fail the run unless --allow-missing-transfer is
+given, so a main-only run can never be mistaken for a full check.
+
 Usage:
     python scripts/check_expected_results.py [--update]
+        [--allow-missing-transfer]
 """
 from __future__ import annotations
 
@@ -35,6 +41,15 @@ GOLD_DIR = PROJECT / "evaluation" / "gold_sql"
 RESULTS_DIR = PROJECT / "evaluation" / "expected_results"
 
 
+def _connect_readonly(conninfo: str) -> psycopg.Connection:
+    conn = psycopg.connect(conninfo)
+    with conn.cursor() as cur:
+        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
+        cur.execute("SET statement_timeout = '30s'")
+    conn.commit()
+    return conn
+
+
 def _write_expected(path: Path, columns: list[str], rows: list,
                     ordered: bool) -> None:
     payload: dict = {}
@@ -58,11 +73,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--update", action="store_true",
                         help="Rewrite stale/missing expected_results files")
+    parser.add_argument("--allow-missing-transfer", action="store_true",
+                        help="Treat skipped transfer queries as non-fatal "
+                             "(default: skipping fails the run)")
     args = parser.parse_args()
 
-    conn = psycopg.connect(CONNINFO)
+    conn = _connect_readonly(CONNINFO)
     try:
-        transfer_conn = psycopg.connect(transfer_conninfo())
+        transfer_conn = _connect_readonly(transfer_conninfo())
     except psycopg.OperationalError:
         transfer_conn = None
     stale, missing, ok, skipped = [], [], [], []
@@ -86,7 +104,6 @@ def main() -> None:
         ordered = sql_is_ordered(sql)
         try:
             with active_conn.cursor() as cur:
-                cur.execute("SET statement_timeout = '30s'")
                 cur.execute(sql)  # type: ignore[arg-type]
                 columns = ([d.name for d in cur.description]
                            if cur.description else [])
@@ -104,8 +121,8 @@ def main() -> None:
         with open(expected_path) as f:
             expected = json.load(f)
         schema_err = validate_expected_schema(expected)
-        expected_ordered = expected.get("ordered", ordered) \
-            if isinstance(expected, dict) else ordered
+        expected_ordered = expected["ordered"] \
+            if isinstance(expected, dict) and schema_err is None else ordered
         expected_columns = expected.get("columns") \
             if isinstance(expected, dict) else None
         expected_rows = normalize_rows(expected.get("rows", [])) \
@@ -146,6 +163,12 @@ def main() -> None:
         print("orphan expected_results (no matching gold SQL):", orphans)
         sys.exit(1)
     if stale or order_mismatch or column_mismatch or malformed:
+        sys.exit(1)
+    if missing and not args.update:
+        sys.exit(1)
+    if skipped and not args.allow_missing_transfer:
+        print("FAIL: transfer queries were skipped and "
+              "--allow-missing-transfer was not given")
         sys.exit(1)
 
 

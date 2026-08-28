@@ -3,6 +3,7 @@
     "composition_formula",
     "delta_e"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",

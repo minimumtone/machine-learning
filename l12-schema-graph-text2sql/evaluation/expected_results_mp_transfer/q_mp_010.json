@@ -3,6 +3,7 @@
     "formula",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al5Co2",

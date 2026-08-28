@@ -3,6 +3,7 @@
     "composition_formula",
     "delta_e"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ru3Nb",
@@ -113,11 +114,11 @@
       -0.5417
     ],
     [
-      "Zr3Sc",
+      "Cu3Sn",
       -0.541
     ],
     [
-      "Cu3Sn",
+      "Zr3Sc",
       -0.541
     ],
     [

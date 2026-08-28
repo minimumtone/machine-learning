@@ -25,7 +25,10 @@ CREATE TABLE oqmd_entries (
 
 CREATE TABLE oqmd_formation_energies (
     fe_key        TEXT PRIMARY KEY,
-    entry_key     TEXT NOT NULL REFERENCES oqmd_entries(entry_key),
+    -- One formation-energy row per entry (mirrors the main schema's
+    -- phase_stability.entry_id UNIQUE): duplicate energies for one entry
+    -- would silently multiply every join through this table.
+    entry_key     TEXT NOT NULL UNIQUE REFERENCES oqmd_entries(entry_key),
     -- Every row of this table IS a formation energy (copied from the main
     -- schema's NOT NULL formation_energy_per_atom), so NULL is not a valid
     -- state; the CHECK also rejects NaN / +-Infinity (NaN sorts above

@@ -4,6 +4,7 @@
     "formula",
     "curie_temperature_k"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00056",

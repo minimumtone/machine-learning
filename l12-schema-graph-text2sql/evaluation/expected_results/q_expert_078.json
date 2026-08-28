@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00955",
@@ -21,11 +22,11 @@
       "Co3Mn"
     ],
     [
-      "entry_00976",
+      "entry_00835",
       "CoGe"
     ],
     [
-      "entry_00835",
+      "entry_00976",
       "CoGe"
     ],
     [
@@ -149,11 +150,11 @@
       "Ta3Zr"
     ],
     [
-      "entry_01422",
+      "entry_01329",
       "TiY"
     ],
     [
-      "entry_01329",
+      "entry_01422",
       "TiY"
     ],
     [

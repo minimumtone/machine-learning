@@ -5,6 +5,7 @@
     "debye_temperature_k",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",

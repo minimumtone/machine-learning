@@ -4,6 +4,7 @@
     "formula",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",

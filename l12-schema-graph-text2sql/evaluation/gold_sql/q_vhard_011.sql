@@ -10,5 +10,5 @@ JOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 
 JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND cp_bm.property_name = 'bulk_modulus'
-ORDER BY ps.energy_above_hull ASC
+ORDER BY ps.energy_above_hull ASC, m.entry_id ASC
 LIMIT 10000;

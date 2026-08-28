@@ -5,6 +5,7 @@
     "bulk_modulus",
     "lattice_diff"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cr3Sc",

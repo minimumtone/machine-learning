@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01393",
@@ -81,11 +82,11 @@
       "CuGa"
     ],
     [
-      "entry_01089",
+      "entry_00457",
       "CuGe"
     ],
     [
-      "entry_00457",
+      "entry_01089",
       "CuGe"
     ],
     [
@@ -161,11 +162,11 @@
       "IrHf"
     ],
     [
-      "entry_00911",
+      "entry_00566",
       "IrNb"
     ],
     [
-      "entry_00566",
+      "entry_00911",
       "IrNb"
     ],
     [
@@ -285,11 +286,11 @@
       "RhGe"
     ],
     [
-      "entry_01201",
+      "entry_01113",
       "RhSc"
     ],
     [
-      "entry_01113",
+      "entry_01201",
       "RhSc"
     ],
     [

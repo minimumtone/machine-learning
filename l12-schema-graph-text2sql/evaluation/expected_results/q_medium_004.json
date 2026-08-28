@@ -4,6 +4,7 @@
     "lattice_a",
     "lattice_diff"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",

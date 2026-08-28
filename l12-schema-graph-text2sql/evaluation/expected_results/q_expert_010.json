@@ -5,6 +5,7 @@
     "prototype",
     "strukturbericht"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01464",
@@ -31,13 +32,13 @@
       "D03"
     ],
     [
-      "entry_01470",
+      "entry_01468",
       "IrSc3",
       "BiF3",
       "D03"
     ],
     [
-      "entry_01468",
+      "entry_01470",
       "IrSc3",
       "BiF3",
       "D03"

@@ -4,6 +4,7 @@
     "n_compounds",
     "avg_enthalpy"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al",
