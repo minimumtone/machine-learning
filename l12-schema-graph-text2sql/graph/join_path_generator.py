@@ -60,10 +60,21 @@ def generate_join_clause(join_path: list[dict[str, str]], base_table: str = "mat
     """Generate SQL JOIN clauses from a list of join edge dicts.
 
     Skips edges that would JOIN the base_table itself (self-join bug).
+    A table_to_alias map is kept across edges so a multi-hop path reuses
+    the alias already introduced for a table instead of minting a fresh
+    one (which would emit an ON clause referencing an alias that never
+    appears in any JOIN).
     """
     parts: list[str] = []
     used_aliases: set[str] = set()
-    base_alias = _alias(base_table, used_aliases)
+    table_to_alias: dict[str, str] = {
+        base_table: _alias(base_table, used_aliases)
+    }
+
+    def alias_for(table: str) -> str:
+        if table not in table_to_alias:
+            table_to_alias[table] = _alias(table, used_aliases)
+        return table_to_alias[table]
 
     for edge in join_path:
         src_t = edge["source_table"]
@@ -72,19 +83,32 @@ def generate_join_clause(join_path: list[dict[str, str]], base_table: str = "mat
         tgt_c = edge["target_column"]
         # Determine which table to JOIN (skip if it would be the base table)
         if src_t == base_table:
-            join_table = tgt_t
-            sa = base_alias
-            ta = _alias(join_table, used_aliases)
-            parts.append(f"JOIN {join_table} {ta} ON {ta}.{tgt_c} = {sa}.{src_c}")
+            new = tgt_t not in table_to_alias
+            ta = alias_for(tgt_t)
+            if new:
+                parts.append(
+                    f"JOIN {tgt_t} {ta} ON {ta}.{tgt_c} = "
+                    f"{table_to_alias[base_table]}.{src_c}")
         elif tgt_t == base_table:
-            join_table = src_t
-            sa = _alias(join_table, used_aliases)
-            ta = base_alias
-            parts.append(f"JOIN {join_table} {sa} ON {sa}.{src_c} = {ta}.{tgt_c}")
+            new = src_t not in table_to_alias
+            sa = alias_for(src_t)
+            if new:
+                parts.append(
+                    f"JOIN {src_t} {sa} ON {sa}.{src_c} = "
+                    f"{table_to_alias[base_table]}.{tgt_c}")
         else:
-            sa = _alias(src_t, used_aliases)
-            ta = _alias(tgt_t, used_aliases)
-            parts.append(f"JOIN {tgt_t} {ta} ON {ta}.{tgt_c} = {sa}.{src_c}")
+            src_known = src_t in table_to_alias
+            tgt_known = tgt_t in table_to_alias
+            if src_known and tgt_known:
+                continue
+            sa = alias_for(src_t)
+            ta = alias_for(tgt_t)
+            if src_known:
+                parts.append(
+                    f"JOIN {tgt_t} {ta} ON {ta}.{tgt_c} = {sa}.{src_c}")
+            else:
+                parts.append(
+                    f"JOIN {src_t} {sa} ON {sa}.{src_c} = {ta}.{tgt_c}")
     return "\n".join(parts)
 
 

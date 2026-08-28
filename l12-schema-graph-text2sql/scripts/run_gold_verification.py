@@ -13,7 +13,11 @@ TRANSFER_DSN; the obfuscated transfer suite (evaluation/gold_sql_obfuscated)
 runs against OBF_TRANSFER_DSN. Suites whose DSN is not set are skipped and
 reported — and skipping is a FAILURE unless --allow-skip is passed, so a
 partial run can never be mistaken for full verification by its exit code.
-All connections are forced READ ONLY with a 30 s statement_timeout.
+All connections are forced READ ONLY with a 30 s statement_timeout, and
+each connection is pinned to a single REPEATABLE READ snapshot: the guard
+and every gold query of a suite see one and the same database state, so a
+concurrent writer cannot make part of the run verify a different state
+(a query error aborts that snapshot; the run is already failed then).
 
 Usage:
     L12_DSN="postgresql://l12_user:...@127.0.0.1:5432/l12_materials" \
@@ -72,9 +76,13 @@ GUARDS = {
 
 
 def _connect_readonly(dsn: str) -> psycopg.Connection:
+    """READ ONLY + REPEATABLE READ: after the initial commit below, the
+    first statement (the suite guard) opens one snapshot that every
+    subsequent gold query shares until the run ends."""
     conn = psycopg.connect(dsn)
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
     conn.commit()
     return conn

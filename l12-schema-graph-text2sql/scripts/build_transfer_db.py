@@ -90,19 +90,22 @@ def recreate_database() -> None:
 
 
 def main() -> None:
-    """Recreate the transfer DB, apply its schema, and copy data across."""
-    recreate_database()
-    src = psycopg.connect(CONNINFO)
-    dst = psycopg.connect(transfer_conninfo())
-    with dst.cursor() as cur:
-        cur.execute(SCHEMA_SQL.read_text())  # type: ignore[arg-type]
+    """Validate the source fixture, then recreate the transfer DB, apply
+    its schema, and copy data across.
 
-    def copy(select_sql: str, insert_sql: str) -> int:
-        with src.cursor() as sc, dst.cursor() as dc:
-            sc.execute(select_sql)  # type: ignore[arg-type]
-            rows = sc.fetchall()
-            dc.executemany(insert_sql, rows)  # type: ignore[arg-type]
-        return len(rows)
+    Fail-safe ordering: ALL source validation (fixture guard and
+    reference-set contract) runs BEFORE the existing transfer DB is
+    dropped, so a broken source never destroys a healthy transfer DB.
+
+    Snapshot consistency: the source connection is pinned to a single
+    REPEATABLE READ READ ONLY snapshot that covers the guard, the
+    contract checks and every copy SELECT, so the transfer DB is an
+    exact copy of one source state (never a mix of states seen by
+    successive READ COMMITTED statements).
+    """
+    src = psycopg.connect(CONNINFO)
+    src.read_only = True
+    src.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
 
     # The transfer DB carries a single energy convention. If the main DB
     # ever mixed reference sets in phase_stability, the copied formation
@@ -141,6 +144,19 @@ def main() -> None:
     # 006 invariants (schema-only guarding would let schema-preserving
     # data edits flow into the transfer copy).
     assert_valid_fixture(src)
+
+    # Source validated: only now may the existing transfer DB be touched.
+    recreate_database()
+    dst = psycopg.connect(transfer_conninfo())
+    with dst.cursor() as cur:
+        cur.execute(SCHEMA_SQL.read_text())  # type: ignore[arg-type]
+
+    def copy(select_sql: str, insert_sql: str) -> int:
+        with src.cursor() as sc, dst.cursor() as dc:
+            sc.execute(select_sql)  # type: ignore[arg-type]
+            rows = sc.fetchall()
+            dc.executemany(insert_sql, rows)  # type: ignore[arg-type]
+        return len(rows)
 
     n = copy(
         "SELECT symbol, name, atomic_number, atomic_mass FROM element",
