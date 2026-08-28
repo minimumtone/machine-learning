@@ -197,6 +197,11 @@ def save_snapshot(entries: list[dict[str, Any]],
                   elements: list[dict[str, Any]],
                   fetch_meta: dict[str, Any],
                   path: Path = SNAPSHOT_PATH) -> None:
+    # Canonical record order: must match the ORDER BY used by
+    # mp_guard.assert_valid_mp_transfer so digests are comparable.
+    entries = sorted(entries, key=lambda e: e["entry_id"])
+    ratios = sorted(ratios, key=lambda r: (r["entry_id"], r["element"]))
+    elements = sorted(elements, key=lambda el: el["symbol"])
     meta = dict(fetch_meta)
     meta["records_sha256"] = _records_sha256(entries, ratios, elements)
     meta["n_entries"] = len(entries)

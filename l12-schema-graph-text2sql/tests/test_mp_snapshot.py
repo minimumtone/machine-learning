@@ -48,6 +48,30 @@ def test_save_and_load_snapshot_roundtrip(tmp_path):
                                                      ELEMENTS)
 
 
+def test_save_snapshot_canonicalizes_record_order(tmp_path):
+    """Records saved in arbitrary (fetch) order must hash identically to
+    the guard's canonical order (entry_id / (entry_id, element) / symbol)."""
+    entries2 = ENTRIES + [dict(ENTRIES[0], entry_id="mp-0", formula="Co3Ti",
+                               chemsys="Co-Ti")]
+    ratios2 = RATIOS + [{"entry_id": "mp-0", "element": "Co",
+                         "atomic_fraction": 0.75},
+                        {"entry_id": "mp-0", "element": "Ti",
+                         "atomic_fraction": 0.25}]
+    path = tmp_path / "snap.json.gz"
+    save_snapshot(list(reversed(entries2)), list(reversed(ratios2)),
+                  list(reversed(ELEMENTS)), {"source": "unit test"},
+                  path=path)
+    snap = load_snapshot(path)
+    canonical_entries = sorted(entries2, key=lambda e: e["entry_id"])
+    canonical_ratios = sorted(ratios2,
+                              key=lambda r: (r["entry_id"], r["element"]))
+    assert snap["entries"] == canonical_entries
+    assert snap["ratios"] == canonical_ratios
+    assert snap["elements"] == ELEMENTS
+    assert snap["_meta"]["records_sha256"] == _records_sha256(
+        canonical_entries, canonical_ratios, ELEMENTS)
+
+
 def test_load_snapshot_rejects_tampered_records(tmp_path):
     path = tmp_path / "snap.json.gz"
     save_snapshot(ENTRIES, RATIOS, ELEMENTS, {"source": "unit test"},
