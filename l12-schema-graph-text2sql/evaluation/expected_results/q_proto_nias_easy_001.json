@@ -5,6 +5,7 @@
     "prototype",
     "strukturbericht"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01393",
@@ -25,13 +26,13 @@
       "B81"
     ],
     [
-      "entry_01404",
+      "entry_01394",
       "AgSc",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01394",
+      "entry_01404",
       "AgSc",
       "NiAs",
       "B81"
@@ -61,13 +62,13 @@
       "B81"
     ],
     [
-      "entry_01447",
+      "entry_01398",
       "AuHf",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01398",
+      "entry_01447",
       "AuHf",
       "NiAs",
       "B81"
@@ -127,13 +128,13 @@
       "B81"
     ],
     [
-      "entry_01439",
+      "entry_01411",
       "CoTa",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01411",
+      "entry_01439",
       "CoTa",
       "NiAs",
       "B81"
@@ -157,13 +158,13 @@
       "B81"
     ],
     [
-      "entry_01456",
+      "entry_01445",
       "CuGa",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01445",
+      "entry_01456",
       "CuGa",
       "NiAs",
       "B81"
@@ -355,25 +356,25 @@
       "B81"
     ],
     [
-      "entry_01453",
-      "RhGe",
-      "NiAs",
-      "B81"
-    ],
-    [
       "entry_01434",
       "RhGe",
       "NiAs",
       "B81"
     ],
     [
-      "entry_01438",
-      "RhSi",
+      "entry_01453",
+      "RhGe",
       "NiAs",
       "B81"
     ],
     [
       "entry_01409",
+      "RhSi",
+      "NiAs",
+      "B81"
+    ],
+    [
+      "entry_01438",
       "RhSi",
       "NiAs",
       "B81"

@@ -4,6 +4,7 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",
@@ -41,12 +42,12 @@
       "L12"
     ],
     [
-      "entry_00389",
+      "entry_00353",
       "Ni3Sc",
       "L12"
     ],
     [
-      "entry_00353",
+      "entry_00389",
       "Ni3Sc",
       "L12"
     ],
@@ -56,12 +57,12 @@
       "L12"
     ],
     [
-      "entry_00191",
+      "entry_00013",
       "Ni3Ti",
       "L12"
     ],
     [
-      "entry_00013",
+      "entry_00191",
       "Ni3Ti",
       "L12"
     ],

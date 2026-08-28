@@ -4,6 +4,7 @@
     "formula",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00138",
@@ -141,13 +142,13 @@
       -0.5417
     ],
     [
-      "entry_00221",
-      "Zr3Sc",
+      "entry_00041",
+      "Cu3Sn",
       -0.541
     ],
     [
-      "entry_00041",
-      "Cu3Sn",
+      "entry_00221",
+      "Zr3Sc",
       -0.541
     ],
     [
@@ -221,13 +222,13 @@
       -0.5196
     ],
     [
-      "entry_00271",
-      "Ti3Mn",
+      "entry_00079",
+      "Fe3Mn",
       -0.5178
     ],
     [
-      "entry_00079",
-      "Fe3Mn",
+      "entry_00271",
+      "Ti3Mn",
       -0.5178
     ],
     [

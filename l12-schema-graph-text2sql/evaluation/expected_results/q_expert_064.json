@@ -5,6 +5,7 @@
     "gb_energy_j_m2",
     "rotation_axis"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_01258",
@@ -97,16 +98,16 @@
       "011"
     ],
     [
-      "entry_01184",
-      "ZrSi",
-      1.071,
-      "011"
-    ],
-    [
       "entry_00094",
       "Co3Ta",
       1.071,
       "001"
+    ],
+    [
+      "entry_01184",
+      "ZrSi",
+      1.071,
+      "011"
     ],
     [
       "entry_01069",

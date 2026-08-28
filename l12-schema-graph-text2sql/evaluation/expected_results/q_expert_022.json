@@ -1,8 +1,11 @@
 {
+  "expected_empty": true,
+  "purpose": "negative control: B2 structures in the fixture are all cubic, so a non-cubic B2 must return zero rows",
   "columns": [
     "entry_id",
     "formula",
     "crystal_system"
   ],
+  "ordered": true,
   "rows": []
 }

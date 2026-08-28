@@ -6,5 +6,5 @@ JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id
     AND tp.temperature_k = 300  -- benchmark convention: representative temperature
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND tp.thermal_conductivity IS NOT NULL
-ORDER BY tp.thermal_conductivity DESC
+ORDER BY tp.thermal_conductivity DESC, m.entry_id ASC
 LIMIT 10000;

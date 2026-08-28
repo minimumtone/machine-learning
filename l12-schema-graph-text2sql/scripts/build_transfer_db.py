@@ -23,6 +23,25 @@ from psycopg import sql as pgsql  # noqa: E402
 from scripts.db_conninfo import CONNINFO  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
+
+# DROP DATABASE guard: this builder may only ever drop a transfer DB it
+# owns the naming convention for, never system DBs or the main fixture DB.
+FORBIDDEN_DB_NAMES = {
+    "postgres",
+    "template0",
+    "template1",
+    os.getenv("POSTGRES_DB", "l12_materials"),
+}
+
+
+def assert_safe_transfer_db(name: str) -> None:
+    """Refuse to drop/recreate anything outside the transfer-DB namespace."""
+    if name in FORBIDDEN_DB_NAMES or not name.startswith("oqmd_transfer"):
+        raise RuntimeError(
+            f"Refusing to drop database {name!r}: TRANSFER_DB must start "
+            "with 'oqmd_transfer' and must not name a system or main DB")
+
+
 SCHEMA_SQL = PROJECT / "db" / "transfer_schema.sql"
 INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
 
@@ -40,6 +59,7 @@ def transfer_conninfo() -> str:
 
 def recreate_database() -> None:
     """Drop and recreate the transfer database."""
+    assert_safe_transfer_db(TRANSFER_DB)
     admin = psycopg.connect(CONNINFO, autocommit=True)
     with admin.cursor() as cur:
         cur.execute(

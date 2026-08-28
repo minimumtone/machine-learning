@@ -1,6 +1,7 @@
 -- ============================================================
 -- 001_schema.sql — Schema definition (DDL only)
--- 34 tables: 31 entity tables + property_definition dictionary
+-- 35 tables: 31 entity tables + property_definition dictionary
+--            + property_scope (property -> storage-scope relation)
 --            + reference_energy_set (energy-convention master)
 --            + fixture_source_reference_set (source_db -> reference_set map)
 -- Load order: 001_schema -> 002_reference_data -> 003_material_data
@@ -81,8 +82,6 @@ CREATE TABLE property_definition (
     -- schema.
     value_type VARCHAR(20) NOT NULL DEFAULT 'float'
         CHECK (value_type = 'float'),
-    applies_to VARCHAR(30) NOT NULL
-        CHECK (applies_to IN ('calculated', 'measured', 'element')),
     -- Shape contract for calculated_property.tensor_component:
     --   'scalar'    -> child rows must have tensor_component IS NULL
     --   'component' -> child rows must carry a tensor_component
@@ -91,6 +90,23 @@ CREATE TABLE property_definition (
         CHECK (value_shape IN ('scalar', 'component')),
     description TEXT,
     UNIQUE (canonical_name, canonical_unit)
+);
+
+-- Scopes a property may be used in (many-to-many): one property can be
+-- legitimately stored as calculated AND measured (e.g. a lattice
+-- parameter). A single-valued applies_to column could not represent
+-- that, so the scope classification lives in this relation and the EAV
+-- child-table triggers below consult it.
+-- value_shape='component' is only representable in calculated_property
+-- (the only child table with a component column), so component-shaped
+-- properties may only carry the 'calculated' scope (enforced by
+-- trg_property_scope_shape / trg_property_definition_shape_change).
+CREATE TABLE property_scope (
+    property_name VARCHAR(100) NOT NULL
+        REFERENCES property_definition(canonical_name),
+    applies_to VARCHAR(30) NOT NULL
+        CHECK (applies_to IN ('calculated', 'measured', 'element')),
+    PRIMARY KEY (property_name, applies_to)
 );
 
 CREATE TABLE composition (
@@ -141,12 +157,23 @@ CREATE TABLE structure (
     -- Finite-only physical values: NaN sorts above every number in
     -- PostgreSQL, so 'x > 0' alone would accept NaN and +Infinity;
     -- the upper bound rejects both.
+    -- Lattice geometry NULL policy: compound entries carry full lattice
+    -- parameters; OQMD pure-element ground states carry only their
+    -- per-atom volume (their conventional cells vary), so lattice_a/b/c
+    -- may be unknown — but only as a whole. The table CHECK below rejects
+    -- partially-known geometry (a NULL hiding inside a non-NULL set).
     lattice_a DOUBLE PRECISION CHECK (lattice_a > 0 AND lattice_a < 'Infinity'),
     lattice_b DOUBLE PRECISION CHECK (lattice_b > 0 AND lattice_b < 'Infinity'),
     lattice_c DOUBLE PRECISION CHECK (lattice_c > 0 AND lattice_c < 'Infinity'),
-    volume_per_atom DOUBLE PRECISION
+    -- volume_per_atom is present for every fixture structure row.
+    volume_per_atom DOUBLE PRECISION NOT NULL
         CHECK (volume_per_atom > 0 AND volume_per_atom < 'Infinity'),
-    space_group TEXT
+    space_group TEXT,
+    CHECK (
+        (lattice_a IS NULL AND lattice_b IS NULL AND lattice_c IS NULL)
+        OR (lattice_a IS NOT NULL AND lattice_b IS NOT NULL
+            AND lattice_c IS NOT NULL)
+    )
 );
 
 -- Energy-convention master: each reference_set pins one (method, functional,
@@ -208,7 +235,11 @@ CREATE TABLE phase_stability (
     energy_above_hull DOUBLE PRECISION NOT NULL
         CHECK (energy_above_hull >= 0 AND energy_above_hull < 'Infinity'),
     is_stable BOOLEAN GENERATED ALWAYS AS (energy_above_hull <= 0.001) STORED,
-    band_gap DOUBLE PRECISION CHECK (band_gap >= 0 AND band_gap < 'Infinity')
+    -- NOT NULL: every fixture stability row carries a gap value (0 for
+    -- metals); "gap unknown" is not a fixture state, which keeps the
+    -- band-structure and metallicity integrity checks free of NULL holes.
+    band_gap DOUBLE PRECISION NOT NULL
+        CHECK (band_gap >= 0 AND band_gap < 'Infinity')
 );
 
 -- === Calculation & Properties (parent-child) ===
@@ -323,9 +354,10 @@ CREATE TABLE experimental_measurement (
         CHECK (temperature_k >= 0 AND temperature_k <> 'NaN'),
     pressure_gpa NUMERIC(8,3)
         CHECK (pressure_gpa >= 0 AND pressure_gpa <> 'NaN'),
-    -- One measurement per (entry, reference, method, T, P); replicate
-    -- measurements are outside this verification schema, so accidental
-    -- double-loading of the same measurement is rejected.
+    -- One measurement run per (entry, reference, method, T, P,
+    -- measurement_run); measurement_run distinguishes replicates, so
+    -- accidental double-loading of the same run is rejected while real
+    -- replicate measurements remain representable.
     -- NULLS NOT DISTINCT consequence (documented limitation): NULL condition
     -- values do NOT represent independent measurements — only one
     -- unknown-condition measurement per (entry, reference, method) is
@@ -421,9 +453,11 @@ CREATE TABLE band_structure (
     is_direct_gap BOOLEAN GENERATED ALWAYS AS
         (band_gap_type = 'direct') STORED,
     -- Sign-free energies: finite-only (NaN / +-Infinity rejected).
-    cbm_energy DOUBLE PRECISION
+    -- NOT NULL: a band-structure row asserts both band edges, so the
+    -- integrity check band_gap = cbm - vbm has no NULL escape hatch.
+    cbm_energy DOUBLE PRECISION NOT NULL
         CHECK (cbm_energy > '-Infinity' AND cbm_energy < 'Infinity'),
-    vbm_energy DOUBLE PRECISION
+    vbm_energy DOUBLE PRECISION NOT NULL
         CHECK (vbm_energy > '-Infinity' AND vbm_energy < 'Infinity'),
     num_bands INTEGER CHECK (num_bands > 0),
     num_kpoints INTEGER CHECK (num_kpoints > 0)
@@ -444,6 +478,12 @@ CREATE TABLE density_of_states (
 
 -- === Mechanical/Physical Property Tables ===
 
+-- Intentional denormalized duplicate: the scalar moduli below are also
+-- mirrored into calculated_property (EAV) so the benchmark can pose both
+-- wide-table and EAV navigation questions against the same physics. Both
+-- copies are written from one generated value and their equality is
+-- asserted by validate_fixture_integrity(); the fixture is immutable, so
+-- partial post-load updates are unsupported.
 CREATE TABLE elastic_tensor (
     elastic_id SERIAL PRIMARY KEY,
     calculation_id TEXT NOT NULL UNIQUE REFERENCES calculation(calculation_id),
@@ -693,21 +733,22 @@ CREATE TRIGGER trg_space_group_sync_structure
     AFTER UPDATE OF crystal_system, hermann_mauguin ON space_group
     FOR EACH ROW EXECUTE FUNCTION sync_structure_from_space_group();
 
--- === Dictionary scope enforcement: property_definition.applies_to ===
--- Each EAV child table may only reference properties whose applies_to
--- matches the table (calculated / measured / element); the FK alone does
--- not check this classification.
+-- === Dictionary scope enforcement: property_scope ===
+-- Each EAV child table may only reference properties that declare the
+-- matching scope (calculated / measured / element) in property_scope;
+-- the FK alone does not check this classification.
 CREATE FUNCTION check_property_applies_to() RETURNS trigger AS $$
 DECLARE
     expected TEXT := TG_ARGV[0];
-    actual TEXT;
 BEGIN
-    SELECT applies_to INTO actual
-    FROM property_definition WHERE canonical_name = NEW.property_name;
-    IF actual IS DISTINCT FROM expected THEN
+    IF NOT EXISTS (
+        SELECT 1 FROM property_scope
+        WHERE property_name = NEW.property_name
+          AND applies_to = expected
+    ) THEN
         RAISE EXCEPTION
-            '%: property % has applies_to=%, expected %',
-            TG_TABLE_NAME, NEW.property_name, actual, expected;
+            '%: property % does not declare scope % in property_scope',
+            TG_TABLE_NAME, NEW.property_name, expected;
     END IF;
     RETURN NEW;
 END;
@@ -778,6 +819,15 @@ BEGIN
             'property %: cannot become component-valued while scalar rows exist',
             OLD.canonical_name;
     END IF;
+    IF NEW.value_shape = 'component' AND EXISTS (
+        SELECT 1 FROM property_scope
+        WHERE property_name = OLD.canonical_name
+          AND applies_to <> 'calculated'
+    ) THEN
+        RAISE EXCEPTION
+            'property %: cannot become component-valued while scoped to measured/element storage',
+            OLD.canonical_name;
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -786,48 +836,77 @@ CREATE TRIGGER trg_property_definition_shape_change
     BEFORE UPDATE OF value_shape ON property_definition
     FOR EACH ROW EXECUTE FUNCTION prevent_invalid_value_shape_change();
 
--- Master-side guard: applies_to may not be changed while child rows still
--- reference the property, so the scope guarantee cannot be broken from the
--- dictionary side either. (Dictionary mutation and child-property writes
--- are not intended to occur concurrently in this verification DB.)
--- canonical_name renames are rejected by the child FKs themselves
--- (NO ACTION, no ON UPDATE CASCADE) once a property is referenced.
+-- Master-side guard: a property_scope row may not be removed (or renamed
+-- away) while child rows still use that scope, so the scope guarantee
+-- cannot be broken from the dictionary side either. (Dictionary mutation
+-- and child-property writes are not intended to occur concurrently in
+-- this verification DB.) canonical_name renames are rejected by the
+-- child FKs themselves (NO ACTION, no ON UPDATE CASCADE) once a property
+-- is referenced.
 CREATE FUNCTION prevent_invalid_property_scope_change() RETURNS trigger AS $$
 BEGIN
-    IF NEW.applies_to IS NOT DISTINCT FROM OLD.applies_to THEN
+    IF TG_OP = 'UPDATE'
+       AND NEW.property_name = OLD.property_name
+       AND NEW.applies_to = OLD.applies_to THEN
         RETURN NEW;
     END IF;
-    IF NEW.applies_to <> 'calculated' AND EXISTS (
+    IF OLD.applies_to = 'calculated' AND EXISTS (
         SELECT 1 FROM calculated_property
-        WHERE property_name = OLD.canonical_name
+        WHERE property_name = OLD.property_name
     ) THEN
         RAISE EXCEPTION
-            'property % is referenced by calculated_property and cannot change applies_to to %',
-            OLD.canonical_name, NEW.applies_to;
+            'property_scope (%, calculated) is in use by calculated_property and cannot be removed',
+            OLD.property_name;
     END IF;
-    IF NEW.applies_to <> 'measured' AND EXISTS (
+    IF OLD.applies_to = 'measured' AND EXISTS (
         SELECT 1 FROM measured_property
-        WHERE property_name = OLD.canonical_name
+        WHERE property_name = OLD.property_name
     ) THEN
         RAISE EXCEPTION
-            'property % is referenced by measured_property and cannot change applies_to to %',
-            OLD.canonical_name, NEW.applies_to;
+            'property_scope (%, measured) is in use by measured_property and cannot be removed',
+            OLD.property_name;
     END IF;
-    IF NEW.applies_to <> 'element' AND EXISTS (
+    IF OLD.applies_to = 'element' AND EXISTS (
         SELECT 1 FROM element_property
-        WHERE property_name = OLD.canonical_name
+        WHERE property_name = OLD.property_name
     ) THEN
         RAISE EXCEPTION
-            'property % is referenced by element_property and cannot change applies_to to %',
-            OLD.canonical_name, NEW.applies_to;
+            'property_scope (%, element) is in use by element_property and cannot be removed',
+            OLD.property_name;
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_property_definition_scope_change
-    BEFORE UPDATE OF applies_to ON property_definition
+CREATE TRIGGER trg_property_scope_change
+    BEFORE UPDATE OR DELETE ON property_scope
     FOR EACH ROW EXECUTE FUNCTION prevent_invalid_property_scope_change();
+
+-- Shape/scope compatibility: only calculated_property has a component
+-- column (tensor_component), so a component-shaped property may not be
+-- scoped to measured/element storage that cannot record which component
+-- a value belongs to.
+CREATE FUNCTION check_property_scope_shape() RETURNS trigger AS $$
+DECLARE
+    shape TEXT;
+BEGIN
+    SELECT value_shape INTO shape
+    FROM property_definition WHERE canonical_name = NEW.property_name;
+    IF shape = 'component' AND NEW.applies_to <> 'calculated' THEN
+        RAISE EXCEPTION
+            'property % is component-shaped and may only carry the calculated scope (got %)',
+            NEW.property_name, NEW.applies_to;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_property_scope_shape
+    BEFORE INSERT OR UPDATE ON property_scope
+    FOR EACH ROW EXECUTE FUNCTION check_property_scope_shape();
 
 -- === Canonical-unit enforcement ===
 -- The composite FK (property_name, unit) pins unit to the canonical one

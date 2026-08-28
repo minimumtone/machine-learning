@@ -5,6 +5,7 @@
     "energy_above_hull",
     "is_stable"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00001",

@@ -5,6 +5,7 @@
     "total_magnetization",
     "curie_temperature_k"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00094",

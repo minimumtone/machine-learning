@@ -6,6 +6,7 @@
     "bulk_modulus",
     "lattice_diff_ni3al"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Ti",

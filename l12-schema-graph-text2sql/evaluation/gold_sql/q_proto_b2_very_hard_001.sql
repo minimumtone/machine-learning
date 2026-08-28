@@ -9,5 +9,5 @@ JOIN structure s ON s.entry_id = m.entry_id
 JOIN phase_stability ps ON ps.entry_id = m.entry_id
 WHERE s.prototype = 'B2' OR s.strukturbericht = 'B2'
 GROUP BY ca.element, cb.element
-ORDER BY avg_eform ASC
+ORDER BY avg_eform ASC, a_site, b_site
 LIMIT 10000;

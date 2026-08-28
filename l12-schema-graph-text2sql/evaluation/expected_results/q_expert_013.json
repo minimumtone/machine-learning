@@ -4,6 +4,7 @@
     "formula",
     "element"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00116",
@@ -36,17 +37,17 @@
       "Y"
     ],
     [
-      "entry_00252",
-      "Au3Y",
-      "Y"
-    ],
-    [
       "entry_00080",
       "Au3Y",
       "Y"
     ],
     [
       "entry_00136",
+      "Au3Y",
+      "Y"
+    ],
+    [
+      "entry_00252",
       "Au3Y",
       "Y"
     ],
@@ -111,7 +112,7 @@
       "Sc"
     ],
     [
-      "entry_00216",
+      "entry_00025",
       "Nb3Y",
       "Y"
     ],
@@ -121,17 +122,17 @@
       "Y"
     ],
     [
-      "entry_00025",
+      "entry_00216",
       "Nb3Y",
       "Y"
     ],
     [
-      "entry_00389",
+      "entry_00353",
       "Ni3Sc",
       "Sc"
     ],
     [
-      "entry_00353",
+      "entry_00389",
       "Ni3Sc",
       "Sc"
     ],
@@ -141,12 +142,12 @@
       "Sc"
     ],
     [
-      "entry_00373",
+      "entry_00251",
       "Pt3Sc",
       "Sc"
     ],
     [
-      "entry_00251",
+      "entry_00373",
       "Pt3Sc",
       "Sc"
     ],
@@ -176,22 +177,22 @@
       "Y"
     ],
     [
-      "entry_00212",
-      "V3Y",
-      "Y"
-    ],
-    [
       "entry_00177",
       "V3Y",
       "Y"
     ],
     [
-      "entry_00235",
+      "entry_00212",
+      "V3Y",
+      "Y"
+    ],
+    [
+      "entry_00221",
       "Zr3Sc",
       "Sc"
     ],
     [
-      "entry_00221",
+      "entry_00235",
       "Zr3Sc",
       "Sc"
     ],

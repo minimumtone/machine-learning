@@ -4,16 +4,17 @@
     "cnt",
     "avg_gap"
   ],
+  "ordered": false,
   "rows": [
+    [
+      "non-zero gap",
+      225,
+      0.26296
+    ],
     [
       "metallic (gap=0)",
       167,
       0.0
-    ],
-    [
-      "non-zero gap",
-      225,
-      0.2629599999999999
     ]
   ]
 }

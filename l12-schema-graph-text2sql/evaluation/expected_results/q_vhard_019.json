@@ -4,11 +4,12 @@
     "formation_energy_per_atom",
     "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Al",
       -0.42,
-      "-0.4193"
+      -0.4193
     ]
   ]
 }

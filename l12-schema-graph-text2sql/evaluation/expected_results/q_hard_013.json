@@ -4,6 +4,7 @@
     "bulk_modulus",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ni3Mn",

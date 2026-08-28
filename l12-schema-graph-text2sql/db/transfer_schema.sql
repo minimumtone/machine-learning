@@ -5,8 +5,10 @@
 CREATE TABLE oqmd_elements (
     symbol          VARCHAR(5) PRIMARY KEY,
     element_name    TEXT,
-    atomic_number   INTEGER,
+    atomic_number   INTEGER
+        CHECK (atomic_number BETWEEN 1 AND 118),
     atomic_mass     DOUBLE PRECISION
+        CHECK (atomic_mass > 0 AND atomic_mass < 'Infinity')
 );
 
 CREATE TABLE oqmd_entries (
@@ -15,13 +17,18 @@ CREATE TABLE oqmd_entries (
     prototype_label     TEXT,
     spacegroup_number   INTEGER,
     crystal_system      TEXT,
-    lattice_param_a     DOUBLE PRECISION,
+    lattice_param_a     DOUBLE PRECISION
+        CHECK (lattice_param_a > 0 AND lattice_param_a < 'Infinity'),
     cell_volume_pa      DOUBLE PRECISION
+        CHECK (cell_volume_pa > 0 AND cell_volume_pa < 'Infinity')
 );
 
 CREATE TABLE oqmd_formation_energies (
     fe_key        TEXT PRIMARY KEY,
-    entry_key     TEXT NOT NULL REFERENCES oqmd_entries(entry_key),
+    -- One formation-energy row per entry (mirrors the main schema's
+    -- phase_stability.entry_id UNIQUE): duplicate energies for one entry
+    -- would silently multiply every join through this table.
+    entry_key     TEXT NOT NULL UNIQUE REFERENCES oqmd_entries(entry_key),
     -- Every row of this table IS a formation energy (copied from the main
     -- schema's NOT NULL formation_energy_per_atom), so NULL is not a valid
     -- state; the CHECK also rejects NaN / +-Infinity (NaN sorts above

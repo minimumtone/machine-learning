@@ -3,6 +3,7 @@
     "col_quebec",
     "enthalpy_vs_element_ground_states"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt3Al",
@@ -11,6 +12,10 @@
     [
       "Al3Sc",
       -0.501
+    ],
+    [
+      "Cr3Fe",
+      -0.44
     ],
     [
       "Co3Ti",

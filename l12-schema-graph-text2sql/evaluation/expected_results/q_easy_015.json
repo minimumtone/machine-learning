@@ -4,6 +4,7 @@
     "formula",
     "prototype"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00062",
@@ -11,12 +12,12 @@
       "L12"
     ],
     [
-      "entry_00355",
+      "entry_00276",
       "Fe3Ga",
       "L12"
     ],
     [
-      "entry_00276",
+      "entry_00355",
       "Fe3Ga",
       "L12"
     ],
@@ -61,12 +62,12 @@
       "L12"
     ],
     [
-      "entry_00241",
+      "entry_00109",
       "Pt3Ga",
       "L12"
     ],
     [
-      "entry_00109",
+      "entry_00241",
       "Pt3Ga",
       "L12"
     ],
@@ -86,12 +87,12 @@
       "L12"
     ],
     [
-      "entry_00358",
+      "entry_00147",
       "Zr3Ga",
       "L12"
     ],
     [
-      "entry_00147",
+      "entry_00358",
       "Zr3Ga",
       "L12"
     ]

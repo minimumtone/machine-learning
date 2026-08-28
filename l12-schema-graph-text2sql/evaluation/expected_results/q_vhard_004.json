@@ -4,6 +4,7 @@
     "bulk_modulus",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Ti",

@@ -3,6 +3,7 @@
     "stability",
     "count"
   ],
+  "ordered": true,
   "rows": [
     [
       "not_stable",

@@ -1,0 +1,33 @@
+{
+  "columns": [
+    "source_db",
+    "reference_set",
+    "method",
+    "functional",
+    "source"
+  ],
+  "ordered": true,
+  "rows": [
+    [
+      "AFLOW",
+      "L12-FIXTURE-PBE-v1",
+      "DFT",
+      "PBE",
+      "synthetic fixture (elemental references adopted from OQMD)"
+    ],
+    [
+      "Materials Project",
+      "L12-FIXTURE-PBE-v1",
+      "DFT",
+      "PBE",
+      "synthetic fixture (elemental references adopted from OQMD)"
+    ],
+    [
+      "OQMD",
+      "L12-FIXTURE-PBE-v1",
+      "DFT",
+      "PBE",
+      "synthetic fixture (elemental references adopted from OQMD)"
+    ]
+  ]
+}

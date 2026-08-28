@@ -12,5 +12,5 @@ JOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.05
   AND cp_bm.property_name = 'bulk_modulus'
-ORDER BY score DESC
+ORDER BY score DESC, m.entry_id ASC
 LIMIT 10000;

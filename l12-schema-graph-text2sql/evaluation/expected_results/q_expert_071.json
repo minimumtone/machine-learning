@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00281",
@@ -97,11 +98,11 @@
       "Cr3Sc"
     ],
     [
-      "entry_00144",
+      "entry_00064",
       "Cr3V"
     ],
     [
-      "entry_00064",
+      "entry_00144",
       "Cr3V"
     ],
     [
@@ -109,11 +110,11 @@
       "Cu3Al"
     ],
     [
-      "entry_00314",
+      "entry_00285",
       "Cu3Ge"
     ],
     [
-      "entry_00285",
+      "entry_00314",
       "Cu3Ge"
     ],
     [
@@ -153,11 +154,11 @@
       "Fe3Nb"
     ],
     [
-      "entry_00164",
+      "entry_00030",
       "Fe3Si"
     ],
     [
-      "entry_00030",
+      "entry_00164",
       "Fe3Si"
     ],
     [
@@ -193,11 +194,11 @@
       "Mn3Fe"
     ],
     [
-      "entry_00291",
+      "entry_00060",
       "Mn3Hf"
     ],
     [
-      "entry_00060",
+      "entry_00291",
       "Mn3Hf"
     ],
     [

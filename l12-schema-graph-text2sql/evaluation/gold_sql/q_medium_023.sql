@@ -3,5 +3,5 @@ FROM material_entry m
 JOIN structure s ON s.entry_id = m.entry_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND s.lattice_a >= 4.0
-ORDER BY s.lattice_a ASC
+ORDER BY s.lattice_a ASC, m.entry_id ASC
 LIMIT 10000;

@@ -4,16 +4,17 @@
     "n_compounds",
     "avg_enthalpy_vs_element_gs"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt",
       1,
-      "-0.5505"
+      -0.5505
     ],
     [
       "Al",
       2,
-      "-0.3859"
+      -0.3859
     ]
   ]
 }

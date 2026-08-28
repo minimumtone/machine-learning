@@ -3,13 +3,14 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
-      "entry_00360",
+      "entry_00281",
       "Ag3Al"
     ],
     [
-      "entry_00281",
+      "entry_00360",
       "Ag3Al"
     ],
     [
@@ -41,11 +42,11 @@
       "AlFe3"
     ],
     [
-      "entry_01034",
+      "entry_00951",
       "AuAl"
     ],
     [
-      "entry_00951",
+      "entry_01034",
       "AuAl"
     ],
     [
@@ -53,19 +54,23 @@
       "Co3Al"
     ],
     [
-      "entry_00309",
-      "Co3Al"
-    ],
-    [
       "entry_00290",
       "Co3Al"
     ],
     [
-      "entry_01371",
+      "entry_00309",
+      "Co3Al"
+    ],
+    [
+      "entry_01101",
       "CoAl"
     ],
     [
       "entry_01276",
+      "CoAl"
+    ],
+    [
+      "entry_01371",
       "CoAl"
     ],
     [
@@ -77,19 +82,15 @@
       "CoAl"
     ],
     [
-      "entry_01101",
-      "CoAl"
-    ],
-    [
       "entry_00604",
       "CrAl"
     ],
     [
-      "entry_00214",
+      "entry_00038",
       "Cu3Al"
     ],
     [
-      "entry_00038",
+      "entry_00214",
       "Cu3Al"
     ],
     [
@@ -117,11 +118,11 @@
       "FeAl"
     ],
     [
-      "entry_01432",
+      "entry_01209",
       "FeAl"
     ],
     [
-      "entry_01209",
+      "entry_01432",
       "FeAl"
     ],
     [
@@ -137,19 +138,11 @@
       "Ir3Al"
     ],
     [
-      "entry_01296",
-      "IrAl"
-    ],
-    [
       "entry_00679",
       "IrAl"
     ],
     [
       "entry_00749",
-      "IrAl"
-    ],
-    [
-      "entry_01407",
       "IrAl"
     ],
     [
@@ -170,6 +163,14 @@
     ],
     [
       "entry_01265",
+      "IrAl"
+    ],
+    [
+      "entry_01296",
+      "IrAl"
+    ],
+    [
+      "entry_01407",
       "IrAl"
     ],
     [
@@ -197,15 +198,7 @@
       "NiAl"
     ],
     [
-      "entry_01139",
-      "PdAl"
-    ],
-    [
       "entry_00445",
-      "PdAl"
-    ],
-    [
-      "entry_01165",
       "PdAl"
     ],
     [
@@ -213,7 +206,15 @@
       "PdAl"
     ],
     [
-      "entry_00257",
+      "entry_01139",
+      "PdAl"
+    ],
+    [
+      "entry_01165",
+      "PdAl"
+    ],
+    [
+      "entry_00008",
       "Pt3Al"
     ],
     [
@@ -221,11 +222,11 @@
       "Pt3Al"
     ],
     [
-      "entry_00008",
+      "entry_00257",
       "Pt3Al"
     ],
     [
-      "entry_01110",
+      "entry_00448",
       "PtAl"
     ],
     [
@@ -233,7 +234,7 @@
       "PtAl"
     ],
     [
-      "entry_01323",
+      "entry_01110",
       "PtAl"
     ],
     [
@@ -241,27 +242,15 @@
       "PtAl"
     ],
     [
+      "entry_01323",
+      "PtAl"
+    ],
+    [
       "entry_01403",
       "PtAl"
     ],
     [
-      "entry_00448",
-      "PtAl"
-    ],
-    [
-      "entry_01440",
-      "RhAl"
-    ],
-    [
-      "entry_01284",
-      "RhAl"
-    ],
-    [
       "entry_00765",
-      "RhAl"
-    ],
-    [
-      "entry_01359",
       "RhAl"
     ],
     [
@@ -269,7 +258,19 @@
       "RhAl"
     ],
     [
+      "entry_01284",
+      "RhAl"
+    ],
+    [
+      "entry_01359",
+      "RhAl"
+    ],
+    [
       "entry_01413",
+      "RhAl"
+    ],
+    [
+      "entry_01440",
       "RhAl"
     ],
     [
@@ -301,16 +302,20 @@
       "TaAl"
     ],
     [
-      "entry_01150",
+      "entry_00706",
       "TiAl"
     ],
     [
-      "entry_00706",
+      "entry_01150",
       "TiAl"
     ],
     [
       "entry_01224",
       "TiAl"
+    ],
+    [
+      "entry_00087",
+      "V3Al"
     ],
     [
       "entry_00142",
@@ -321,23 +326,7 @@
       "V3Al"
     ],
     [
-      "entry_00087",
-      "V3Al"
-    ],
-    [
-      "entry_00979",
-      "VAl"
-    ],
-    [
-      "entry_01315",
-      "VAl"
-    ],
-    [
-      "entry_01290",
-      "VAl"
-    ],
-    [
-      "entry_01258",
+      "entry_00633",
       "VAl"
     ],
     [
@@ -345,7 +334,19 @@
       "VAl"
     ],
     [
-      "entry_00633",
+      "entry_00979",
+      "VAl"
+    ],
+    [
+      "entry_01258",
+      "VAl"
+    ],
+    [
+      "entry_01290",
+      "VAl"
+    ],
+    [
+      "entry_01315",
       "VAl"
     ],
     [
@@ -353,15 +354,15 @@
       "WAl"
     ],
     [
-      "entry_00238",
-      "Zr3Al"
-    ],
-    [
       "entry_00107",
       "Zr3Al"
     ],
     [
-      "entry_01377",
+      "entry_00238",
+      "Zr3Al"
+    ],
+    [
+      "entry_00919",
       "ZrAl"
     ],
     [
@@ -369,7 +370,7 @@
       "ZrAl"
     ],
     [
-      "entry_00919",
+      "entry_01377",
       "ZrAl"
     ]
   ]

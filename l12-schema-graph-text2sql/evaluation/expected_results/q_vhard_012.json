@@ -8,6 +8,7 @@
     "mismatch",
     "design_score"
   ],
+  "ordered": true,
   "rows": [
     [
       "Co3Ti",

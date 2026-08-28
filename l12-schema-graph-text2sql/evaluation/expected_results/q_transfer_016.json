@@ -4,6 +4,7 @@
     "gs_spacegroup",
     "polymorph_count"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cu",

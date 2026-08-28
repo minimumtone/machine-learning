@@ -7,5 +7,5 @@ WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND ps.energy_above_hull <= 0.001
   AND c.site_label = 'B-site'
 GROUP BY c.element
-ORDER BY stable_count DESC
+ORDER BY stable_count DESC, c.element ASC
 LIMIT 10000;

@@ -4,6 +4,7 @@
     "col_gemini",
     "col_uniform"
   ],
+  "ordered": true,
   "rows": [
     [
       "Cu",

@@ -10,5 +10,5 @@ WHERE et.bulk_modulus_vrh > (
     WHERE m2.formula = 'Ni3Al' LIMIT 1
   )
   AND ps.energy_above_hull <= 0.01
-ORDER BY et.bulk_modulus_vrh DESC
+ORDER BY et.bulk_modulus_vrh DESC, m.entry_id ASC
 LIMIT 10000;

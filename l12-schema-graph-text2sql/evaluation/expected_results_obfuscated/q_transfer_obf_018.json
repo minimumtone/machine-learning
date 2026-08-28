@@ -5,6 +5,7 @@
     "weighted_ref",
     "enthalpy_vs_element_ground_states"
   ],
+  "ordered": false,
   "rows": [
     [
       "Co3Ti",

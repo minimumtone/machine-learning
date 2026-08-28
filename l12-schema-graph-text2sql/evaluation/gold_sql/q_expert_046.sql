@@ -7,5 +7,5 @@ JOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id
 WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')
   AND et.shear_modulus_vrh > 0
   AND (et.bulk_modulus_vrh / et.shear_modulus_vrh) >= 2.0
-ORDER BY bg_ratio DESC
+ORDER BY bg_ratio DESC, m.entry_id ASC
 LIMIT 10000;

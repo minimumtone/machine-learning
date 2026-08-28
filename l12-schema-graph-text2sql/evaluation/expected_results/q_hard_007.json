@@ -4,6 +4,7 @@
     "lattice_a",
     "formation_energy_per_atom"
   ],
+  "ordered": true,
   "rows": [
     [
       "Ru3Nb",

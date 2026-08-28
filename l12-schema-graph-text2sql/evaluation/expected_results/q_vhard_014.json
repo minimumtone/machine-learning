@@ -7,6 +7,7 @@
     "energy_above_hull",
     "bulk_modulus"
   ],
+  "ordered": true,
   "rows": [
     [
       "Pt",
@@ -34,17 +35,17 @@
     ],
     [
       "Al",
-      "V",
-      "Al3V",
-      3.93,
+      "Sc",
+      "Al3Sc",
+      4.09,
       0.0,
       155.0
     ],
     [
       "Al",
-      "Sc",
-      "Al3Sc",
-      4.09,
+      "V",
+      "Al3V",
+      3.93,
       0.0,
       155.0
     ],

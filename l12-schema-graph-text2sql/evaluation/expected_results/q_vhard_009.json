@@ -3,8 +3,9 @@
     "formula",
     "formation_energy_per_atom",
     "ref_energy",
-    "corrected_enthalpy"
+    "enthalpy_vs_element_ground_states"
   ],
+  "ordered": false,
   "rows": [
     [
       "Co3Ti",

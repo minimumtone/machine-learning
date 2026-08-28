@@ -4,6 +4,7 @@
     "is_stable",
     "energy_above_hull"
   ],
+  "ordered": true,
   "rows": [
     [
       "Al3Sc",

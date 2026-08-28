@@ -3,6 +3,7 @@
     "entry_id",
     "formula"
   ],
+  "ordered": true,
   "rows": [
     [
       "elem_ac_1216015",
@@ -13,15 +14,15 @@
       "Ag"
     ],
     [
-      "entry_00360",
-      "Ag3Al"
-    ],
-    [
       "entry_00281",
       "Ag3Al"
     ],
     [
-      "entry_00319",
+      "entry_00360",
+      "Ag3Al"
+    ],
+    [
+      "entry_00145",
       "Ag3Cu"
     ],
     [
@@ -33,7 +34,7 @@
       "Ag3Cu"
     ],
     [
-      "entry_00145",
+      "entry_00319",
       "Ag3Cu"
     ],
     [
@@ -65,11 +66,11 @@
       "Ag3Sc"
     ],
     [
-      "entry_00326",
+      "entry_00061",
       "Ag3Ti"
     ],
     [
-      "entry_00061",
+      "entry_00326",
       "Ag3Ti"
     ],
     [
@@ -85,11 +86,11 @@
       "Ag3Zn"
     ],
     [
-      "entry_01234",
+      "entry_01169",
       "AgAl"
     ],
     [
-      "entry_01169",
+      "entry_01234",
       "AgAl"
     ],
     [
@@ -105,11 +106,11 @@
       "AgFe"
     ],
     [
-      "entry_00954",
+      "entry_00558",
       "AgGa"
     ],
     [
-      "entry_00558",
+      "entry_00954",
       "AgGa"
     ],
     [
@@ -125,11 +126,11 @@
       "AgHf"
     ],
     [
-      "entry_00961",
+      "entry_00876",
       "AgHf"
     ],
     [
-      "entry_00876",
+      "entry_00961",
       "AgHf"
     ],
     [
@@ -141,19 +142,19 @@
       "AgMg"
     ],
     [
-      "entry_00955",
-      "AgMn"
-    ],
-    [
       "entry_00688",
       "AgMn"
     ],
     [
-      "entry_01393",
-      "AgNb"
+      "entry_00955",
+      "AgMn"
     ],
     [
       "entry_01217",
+      "AgNb"
+    ],
+    [
+      "entry_01393",
       "AgNb"
     ],
     [
@@ -165,31 +166,23 @@
       "AgNb"
     ],
     [
-      "entry_00887",
-      "AgSb"
-    ],
-    [
       "entry_00551",
       "AgSb"
     ],
     [
-      "entry_00814",
-      "AgSc"
-    ],
-    [
-      "entry_01404",
-      "AgSc"
+      "entry_00887",
+      "AgSb"
     ],
     [
       "entry_00552",
       "AgSc"
     ],
     [
-      "entry_00862",
+      "entry_00814",
       "AgSc"
     ],
     [
-      "entry_01423",
+      "entry_00862",
       "AgSc"
     ],
     [
@@ -201,11 +194,19 @@
       "AgSc"
     ],
     [
-      "entry_00993",
-      "AgSi"
+      "entry_01404",
+      "AgSc"
+    ],
+    [
+      "entry_01423",
+      "AgSc"
     ],
     [
       "entry_00452",
+      "AgSi"
+    ],
+    [
+      "entry_00993",
       "AgSi"
     ],
     [
@@ -221,11 +222,7 @@
       "AgSn"
     ],
     [
-      "entry_01136",
-      "AgSn"
-    ],
-    [
-      "entry_01032",
+      "entry_00828",
       "AgSn"
     ],
     [
@@ -233,7 +230,11 @@
       "AgSn"
     ],
     [
-      "entry_00828",
+      "entry_01032",
+      "AgSn"
+    ],
+    [
+      "entry_01136",
       "AgSn"
     ],
     [
@@ -241,11 +242,11 @@
       "AgSn"
     ],
     [
-      "entry_01418",
+      "entry_01345",
       "AgTa"
     ],
     [
-      "entry_01345",
+      "entry_01418",
       "AgTa"
     ],
     [
@@ -265,6 +266,10 @@
       "AgY3"
     ],
     [
+      "entry_00853",
+      "AgZn"
+    ],
+    [
       "entry_01183",
       "AgZn"
     ],
@@ -277,19 +282,15 @@
       "AgZn"
     ],
     [
-      "entry_00853",
-      "AgZn"
-    ],
-    [
       "entry_01330",
       "AgZn"
     ],
     [
-      "entry_00715",
+      "entry_00623",
       "AgZr"
     ],
     [
-      "entry_00623",
+      "entry_00715",
       "AgZr"
     ],
     [
@@ -325,11 +326,11 @@
       "Au"
     ],
     [
-      "entry_00347",
+      "entry_00027",
       "Au3Be"
     ],
     [
-      "entry_00027",
+      "entry_00347",
       "Au3Be"
     ],
     [
@@ -345,11 +346,11 @@
       "Au3Mg"
     ],
     [
-      "entry_00356",
+      "entry_00118",
       "Au3Sb"
     ],
     [
-      "entry_00118",
+      "entry_00356",
       "Au3Sb"
     ],
     [
@@ -365,11 +366,11 @@
       "Au3Sn"
     ],
     [
-      "entry_00186",
+      "entry_00045",
       "Au3Ti"
     ],
     [
-      "entry_00045",
+      "entry_00186",
       "Au3Ti"
     ],
     [
@@ -379,10 +380,6 @@
     [
       "entry_00119",
       "Au3V"
-    ],
-    [
-      "entry_00252",
-      "Au3Y"
     ],
     [
       "entry_00065",
@@ -397,6 +394,10 @@
       "Au3Y"
     ],
     [
+      "entry_00252",
+      "Au3Y"
+    ],
+    [
       "entry_00037",
       "Au3Zn"
     ],
@@ -405,19 +406,19 @@
       "Au3Zr"
     ],
     [
-      "entry_01034",
-      "AuAl"
-    ],
-    [
       "entry_00951",
       "AuAl"
     ],
     [
-      "entry_00957",
-      "AuBe"
+      "entry_01034",
+      "AuAl"
     ],
     [
       "entry_00477",
+      "AuBe"
+    ],
+    [
+      "entry_00957",
       "AuBe"
     ],
     [
@@ -427,6 +428,10 @@
     [
       "entry_00769",
       "AuFe"
+    ],
+    [
+      "entry_00779",
+      "AuGa"
     ],
     [
       "entry_01238",
@@ -441,23 +446,7 @@
       "AuGa"
     ],
     [
-      "entry_00779",
-      "AuGa"
-    ],
-    [
-      "entry_01454",
-      "AuGe"
-    ],
-    [
-      "entry_01156",
-      "AuGe"
-    ],
-    [
-      "entry_01382",
-      "AuGe"
-    ],
-    [
-      "entry_00969",
+      "entry_00719",
       "AuGe"
     ],
     [
@@ -465,43 +454,31 @@
       "AuGe"
     ],
     [
+      "entry_00969",
+      "AuGe"
+    ],
+    [
+      "entry_01156",
+      "AuGe"
+    ],
+    [
       "entry_01172",
       "AuGe"
     ],
     [
-      "entry_00719",
+      "entry_01382",
       "AuGe"
     ],
     [
-      "entry_01048",
-      "AuHf"
-    ],
-    [
-      "entry_01142",
-      "AuHf"
-    ],
-    [
-      "entry_01317",
-      "AuHf"
-    ],
-    [
-      "entry_01451",
-      "AuHf"
+      "entry_01454",
+      "AuGe"
     ],
     [
       "entry_00791",
       "AuHf"
     ],
     [
-      "entry_01274",
-      "AuHf"
-    ],
-    [
-      "entry_01447",
-      "AuHf"
-    ],
-    [
-      "entry_01398",
+      "entry_01048",
       "AuHf"
     ],
     [
@@ -509,15 +486,35 @@
       "AuHf"
     ],
     [
-      "entry_00972",
-      "AuMg"
+      "entry_01142",
+      "AuHf"
+    ],
+    [
+      "entry_01274",
+      "AuHf"
+    ],
+    [
+      "entry_01317",
+      "AuHf"
+    ],
+    [
+      "entry_01398",
+      "AuHf"
+    ],
+    [
+      "entry_01447",
+      "AuHf"
+    ],
+    [
+      "entry_01451",
+      "AuHf"
     ],
     [
       "entry_00527",
       "AuMg"
     ],
     [
-      "entry_00898",
+      "entry_00836",
       "AuMg"
     ],
     [
@@ -525,7 +522,11 @@
       "AuMg"
     ],
     [
-      "entry_00836",
+      "entry_00898",
+      "AuMg"
+    ],
+    [
+      "entry_00972",
       "AuMg"
     ],
     [
@@ -537,11 +538,11 @@
       "AuNb"
     ],
     [
-      "entry_01193",
+      "entry_01042",
       "AuNb"
     ],
     [
-      "entry_01042",
+      "entry_01193",
       "AuNb"
     ],
     [
@@ -549,11 +550,11 @@
       "AuNb"
     ],
     [
-      "entry_00927",
+      "entry_00846",
       "AuSb"
     ],
     [
-      "entry_00846",
+      "entry_00927",
       "AuSb"
     ],
     [
@@ -565,19 +566,19 @@
       "AuSi"
     ],
     [
-      "entry_01203",
-      "AuSi"
-    ],
-    [
       "entry_01145",
       "AuSi"
     ],
     [
-      "entry_01120",
-      "AuSn"
+      "entry_01203",
+      "AuSi"
     ],
     [
       "entry_01118",
+      "AuSn"
+    ],
+    [
+      "entry_01120",
       "AuSn"
     ],
     [
@@ -585,15 +586,15 @@
       "AuTa"
     ],
     [
+      "entry_00431",
+      "AuTi"
+    ],
+    [
       "entry_00900",
       "AuTi"
     ],
     [
       "entry_01037",
-      "AuTi"
-    ],
-    [
-      "entry_00431",
       "AuTi"
     ],
     [
@@ -617,7 +618,7 @@
       "AuY"
     ],
     [
-      "entry_00837",
+      "entry_00520",
       "AuZn"
     ],
     [
@@ -625,11 +626,11 @@
       "AuZn"
     ],
     [
-      "entry_01280",
+      "entry_00837",
       "AuZn"
     ],
     [
-      "entry_00520",
+      "entry_01280",
       "AuZn"
     ],
     [
@@ -685,15 +686,15 @@
       "Co"
     ],
     [
+      "entry_00010",
+      "Co3Al"
+    ],
+    [
       "entry_00290",
       "Co3Al"
     ],
     [
       "entry_00309",
-      "Co3Al"
-    ],
-    [
-      "entry_00010",
       "Co3Al"
     ],
     [
@@ -753,7 +754,7 @@
       "Co3Zn"
     ],
     [
-      "entry_01410",
+      "entry_01101",
       "CoAl"
     ],
     [
@@ -765,11 +766,11 @@
       "CoAl"
     ],
     [
-      "entry_01429",
+      "entry_01410",
       "CoAl"
     ],
     [
-      "entry_01101",
+      "entry_01429",
       "CoAl"
     ],
     [
@@ -781,11 +782,11 @@
       "CoBe"
     ],
     [
-      "entry_00949",
+      "entry_00931",
       "CoBe"
     ],
     [
-      "entry_00931",
+      "entry_00949",
       "CoBe"
     ],
     [
@@ -793,7 +794,7 @@
       "CoFe"
     ],
     [
-      "entry_01443",
+      "entry_00730",
       "CoGa"
     ],
     [
@@ -801,23 +802,19 @@
       "CoGa"
     ],
     [
+      "entry_01443",
+      "CoGa"
+    ],
+    [
       "entry_01444",
       "CoGa"
-    ],
-    [
-      "entry_00730",
-      "CoGa"
-    ],
-    [
-      "entry_00870",
-      "CoGe"
     ],
     [
       "entry_00835",
       "CoGe"
     ],
     [
-      "entry_01023",
+      "entry_00870",
       "CoGe"
     ],
     [
@@ -825,8 +822,20 @@
       "CoGe"
     ],
     [
+      "entry_01023",
+      "CoGe"
+    ],
+    [
       "entry_01349",
       "CoGe"
+    ],
+    [
+      "entry_00830",
+      "CoHf"
+    ],
+    [
+      "entry_00944",
+      "CoHf"
     ],
     [
       "entry_01181",
@@ -837,15 +846,7 @@
       "CoHf"
     ],
     [
-      "entry_00944",
-      "CoHf"
-    ],
-    [
       "entry_01287",
-      "CoHf"
-    ],
-    [
-      "entry_01380",
       "CoHf"
     ],
     [
@@ -853,7 +854,7 @@
       "CoHf"
     ],
     [
-      "entry_00830",
+      "entry_01380",
       "CoHf"
     ],
     [
@@ -869,10 +870,6 @@
       "CoMn"
     ],
     [
-      "entry_01452",
-      "CoNb"
-    ],
-    [
       "entry_00792",
       "CoNb"
     ],
@@ -881,15 +878,23 @@
       "CoNb"
     ],
     [
+      "entry_01452",
+      "CoNb"
+    ],
+    [
       "entry_00462",
       "CoSb"
     ],
     [
-      "entry_01395",
+      "entry_00484",
       "CoSc"
     ],
     [
       "entry_00539",
+      "CoSc"
+    ],
+    [
+      "entry_00605",
       "CoSc"
     ],
     [
@@ -901,20 +906,12 @@
       "CoSc"
     ],
     [
-      "entry_00605",
-      "CoSc"
-    ],
-    [
-      "entry_00484",
-      "CoSc"
-    ],
-    [
       "entry_01356",
       "CoSc"
     ],
     [
-      "entry_01399",
-      "CoSi"
+      "entry_01395",
+      "CoSc"
     ],
     [
       "entry_01229",
@@ -925,11 +922,11 @@
       "CoSi"
     ],
     [
-      "entry_01232",
-      "CoSn"
+      "entry_01399",
+      "CoSi"
     ],
     [
-      "entry_01226",
+      "entry_00480",
       "CoSn"
     ],
     [
@@ -937,11 +934,23 @@
       "CoSn"
     ],
     [
-      "entry_00480",
+      "entry_01226",
+      "CoSn"
+    ],
+    [
+      "entry_01232",
       "CoSn"
     ],
     [
       "entry_00554",
+      "CoTa"
+    ],
+    [
+      "entry_01039",
+      "CoTa"
+    ],
+    [
+      "entry_01047",
       "CoTa"
     ],
     [
@@ -953,35 +962,15 @@
       "CoTa"
     ],
     [
-      "entry_01439",
-      "CoTa"
-    ],
-    [
-      "entry_01047",
-      "CoTa"
-    ],
-    [
       "entry_01411",
       "CoTa"
     ],
     [
-      "entry_01039",
+      "entry_01439",
       "CoTa"
     ],
     [
-      "entry_01149",
-      "CoTi"
-    ],
-    [
       "entry_01064",
-      "CoTi"
-    ],
-    [
-      "entry_01424",
-      "CoTi"
-    ],
-    [
-      "entry_01246",
       "CoTi"
     ],
     [
@@ -989,15 +978,19 @@
       "CoTi"
     ],
     [
-      "entry_00912",
-      "CoV"
+      "entry_01149",
+      "CoTi"
+    ],
+    [
+      "entry_01246",
+      "CoTi"
+    ],
+    [
+      "entry_01424",
+      "CoTi"
     ],
     [
       "entry_00531",
-      "CoV"
-    ],
-    [
-      "entry_00659",
       "CoV"
     ],
     [
@@ -1005,16 +998,16 @@
       "CoV"
     ],
     [
-      "entry_00917",
+      "entry_00659",
       "CoV"
     ],
     [
-      "entry_01386",
-      "CoY"
+      "entry_00912",
+      "CoV"
     ],
     [
-      "entry_01146",
-      "CoY"
+      "entry_00917",
+      "CoV"
     ],
     [
       "entry_00631",
@@ -1029,15 +1022,23 @@
       "CoY"
     ],
     [
-      "entry_01194",
-      "CoZn"
+      "entry_01146",
+      "CoY"
+    ],
+    [
+      "entry_01386",
+      "CoY"
     ],
     [
       "entry_00654",
       "CoZn"
     ],
     [
-      "entry_01364",
+      "entry_01043",
+      "CoZn"
+    ],
+    [
+      "entry_01194",
       "CoZn"
     ],
     [
@@ -1045,7 +1046,7 @@
       "CoZn"
     ],
     [
-      "entry_01043",
+      "entry_01364",
       "CoZn"
     ],
     [
@@ -1061,11 +1062,11 @@
       "Cr3Be"
     ],
     [
-      "entry_00313",
+      "entry_00015",
       "Cr3Cu"
     ],
     [
-      "entry_00015",
+      "entry_00313",
       "Cr3Cu"
     ],
     [
@@ -1129,11 +1130,11 @@
       "Cr3V"
     ],
     [
-      "entry_00289",
+      "entry_00144",
       "Cr3V"
     ],
     [
-      "entry_00144",
+      "entry_00289",
       "Cr3V"
     ],
     [
@@ -1153,11 +1154,11 @@
       "CrCu"
     ],
     [
-      "entry_00857",
+      "entry_00696",
       "CrGe"
     ],
     [
-      "entry_00696",
+      "entry_00857",
       "CrGe"
     ],
     [
@@ -1169,11 +1170,11 @@
       "CrHf"
     ],
     [
-      "entry_00986",
+      "entry_00642",
       "CrIn"
     ],
     [
-      "entry_00642",
+      "entry_00986",
       "CrIn"
     ],
     [
@@ -1181,15 +1182,11 @@
       "CrMn"
     ],
     [
-      "entry_00713",
-      "CrNb"
-    ],
-    [
       "entry_00657",
       "CrNb"
     ],
     [
-      "entry_00888",
+      "entry_00713",
       "CrNb"
     ],
     [
@@ -1197,15 +1194,19 @@
       "CrNb"
     ],
     [
+      "entry_00888",
+      "CrNb"
+    ],
+    [
+      "entry_00494",
+      "CrSb"
+    ],
+    [
       "entry_00740",
       "CrSb"
     ],
     [
       "entry_00880",
-      "CrSb"
-    ],
-    [
-      "entry_00494",
       "CrSb"
     ],
     [
@@ -1221,15 +1222,15 @@
       "CrSn"
     ],
     [
+      "entry_00702",
+      "CrSn"
+    ],
+    [
       "entry_00760",
       "CrSn"
     ],
     [
       "entry_00881",
-      "CrSn"
-    ],
-    [
-      "entry_00702",
       "CrSn"
     ],
     [
@@ -1241,15 +1242,15 @@
       "CrTa"
     ],
     [
-      "entry_00825",
-      "CrTi"
-    ],
-    [
       "entry_00729",
       "CrTi"
     ],
     [
       "entry_00753",
+      "CrTi"
+    ],
+    [
+      "entry_00825",
       "CrTi"
     ],
     [
@@ -1273,11 +1274,11 @@
       "Cu"
     ],
     [
-      "entry_00214",
+      "entry_00038",
       "Cu3Al"
     ],
     [
-      "entry_00038",
+      "entry_00214",
       "Cu3Al"
     ],
     [
@@ -1289,10 +1290,6 @@
       "Cu3Ga"
     ],
     [
-      "entry_00314",
-      "Cu3Ge"
-    ],
-    [
       "entry_00255",
       "Cu3Ge"
     ],
@@ -1301,15 +1298,19 @@
       "Cu3Ge"
     ],
     [
+      "entry_00314",
+      "Cu3Ge"
+    ],
+    [
       "entry_00363",
       "Cu3Ge"
     ],
     [
-      "entry_00371",
+      "entry_00067",
       "Cu3In"
     ],
     [
-      "entry_00067",
+      "entry_00371",
       "Cu3In"
     ],
     [
@@ -1341,11 +1342,11 @@
       "Cu3Ta"
     ],
     [
-      "entry_00348",
+      "entry_00324",
       "Cu3Ti"
     ],
     [
-      "entry_00324",
+      "entry_00348",
       "Cu3Ti"
     ],
     [
@@ -1357,11 +1358,11 @@
       "Cu3Zn"
     ],
     [
-      "entry_01431",
+      "entry_00530",
       "CuAl"
     ],
     [
-      "entry_00530",
+      "entry_01431",
       "CuAl"
     ],
     [
@@ -1369,11 +1370,7 @@
       "CuFe"
     ],
     [
-      "entry_00869",
-      "CuGa"
-    ],
-    [
-      "entry_01456",
+      "entry_00512",
       "CuGa"
     ],
     [
@@ -1381,11 +1378,11 @@
       "CuGa"
     ],
     [
-      "entry_01215",
+      "entry_00869",
       "CuGa"
     ],
     [
-      "entry_00512",
+      "entry_01215",
       "CuGa"
     ],
     [
@@ -1393,15 +1390,15 @@
       "CuGa"
     ],
     [
-      "entry_01304",
+      "entry_01456",
+      "CuGa"
+    ],
+    [
+      "entry_00397",
       "CuGe"
     ],
     [
       "entry_00457",
-      "CuGe"
-    ],
-    [
-      "entry_01182",
       "CuGe"
     ],
     [
@@ -1413,28 +1410,16 @@
       "CuGe"
     ],
     [
+      "entry_01182",
+      "CuGe"
+    ],
+    [
+      "entry_01304",
+      "CuGe"
+    ],
+    [
       "entry_01326",
       "CuGe"
-    ],
-    [
-      "entry_00397",
-      "CuGe"
-    ],
-    [
-      "entry_01368",
-      "CuHf"
-    ],
-    [
-      "entry_01269",
-      "CuHf"
-    ],
-    [
-      "entry_01455",
-      "CuHf"
-    ],
-    [
-      "entry_01002",
-      "CuHf"
     ],
     [
       "entry_00400",
@@ -1442,6 +1427,22 @@
     ],
     [
       "entry_00928",
+      "CuHf"
+    ],
+    [
+      "entry_01002",
+      "CuHf"
+    ],
+    [
+      "entry_01269",
+      "CuHf"
+    ],
+    [
+      "entry_01368",
+      "CuHf"
+    ],
+    [
+      "entry_01455",
       "CuHf"
     ],
     [
@@ -1453,15 +1454,7 @@
       "CuIn"
     ],
     [
-      "entry_00895",
-      "CuMg"
-    ],
-    [
       "entry_00606",
-      "CuMg"
-    ],
-    [
-      "entry_00695",
       "CuMg"
     ],
     [
@@ -1469,19 +1462,27 @@
       "CuMg"
     ],
     [
-      "entry_01430",
-      "CuNb"
+      "entry_00695",
+      "CuMg"
+    ],
+    [
+      "entry_00895",
+      "CuMg"
     ],
     [
       "entry_01353",
       "CuNb"
     ],
     [
-      "entry_00756",
-      "CuSb"
+      "entry_01430",
+      "CuNb"
     ],
     [
       "entry_00528",
+      "CuSb"
+    ],
+    [
+      "entry_00756",
       "CuSb"
     ],
     [
@@ -1489,7 +1490,7 @@
       "CuSb"
     ],
     [
-      "entry_00947",
+      "entry_00686",
       "CuSc"
     ],
     [
@@ -1497,11 +1498,11 @@
       "CuSc"
     ],
     [
-      "entry_01361",
+      "entry_00947",
       "CuSc"
     ],
     [
-      "entry_00686",
+      "entry_01361",
       "CuSc"
     ],
     [
@@ -1509,7 +1510,11 @@
       "CuSi"
     ],
     [
-      "entry_01167",
+      "entry_00704",
+      "CuSn"
+    ],
+    [
+      "entry_00812",
       "CuSn"
     ],
     [
@@ -1517,7 +1522,7 @@
       "CuSn"
     ],
     [
-      "entry_00812",
+      "entry_01167",
       "CuSn"
     ],
     [
@@ -1529,15 +1534,11 @@
       "CuSn"
     ],
     [
-      "entry_00704",
-      "CuSn"
-    ],
-    [
-      "entry_01254",
+      "entry_00775",
       "CuTa"
     ],
     [
-      "entry_00775",
+      "entry_01254",
       "CuTa"
     ],
     [
@@ -1545,20 +1546,24 @@
       "CuTa"
     ],
     [
+      "entry_00804",
+      "CuTi"
+    ],
+    [
       "entry_01087",
       "CuTi"
     ],
     [
-      "entry_00804",
-      "CuTi"
+      "entry_00466",
+      "CuV"
     ],
     [
       "entry_00469",
       "CuV"
     ],
     [
-      "entry_00466",
-      "CuV"
+      "entry_00617",
+      "CuY"
     ],
     [
       "entry_01131",
@@ -1566,10 +1571,6 @@
     ],
     [
       "entry_01250",
-      "CuY"
-    ],
-    [
-      "entry_00617",
       "CuY"
     ],
     [
@@ -1621,11 +1622,11 @@
       "Fe3Ge"
     ],
     [
-      "entry_00283",
+      "entry_00219",
       "Fe3Hf"
     ],
     [
-      "entry_00219",
+      "entry_00283",
       "Fe3Hf"
     ],
     [
@@ -1633,11 +1634,11 @@
       "Fe3In"
     ],
     [
-      "entry_00361",
+      "entry_00059",
       "Fe3Mg"
     ],
     [
-      "entry_00059",
+      "entry_00361",
       "Fe3Mg"
     ],
     [
@@ -1673,11 +1674,11 @@
       "Fe3Sn"
     ],
     [
-      "entry_00254",
+      "entry_00236",
       "Fe3Ti"
     ],
     [
-      "entry_00236",
+      "entry_00254",
       "Fe3Ti"
     ],
     [
@@ -1701,19 +1702,19 @@
       "FeAl"
     ],
     [
-      "entry_01432",
-      "FeAl"
-    ],
-    [
       "entry_01209",
       "FeAl"
     ],
     [
-      "entry_00759",
-      "FeBe"
+      "entry_01432",
+      "FeAl"
     ],
     [
       "entry_00537",
+      "FeBe"
+    ],
+    [
+      "entry_00759",
       "FeBe"
     ],
     [
@@ -1721,7 +1722,7 @@
       "FeBe"
     ],
     [
-      "entry_01197",
+      "entry_00584",
       "FeGa"
     ],
     [
@@ -1729,19 +1730,19 @@
       "FeGa"
     ],
     [
-      "entry_01132",
-      "FeGa"
-    ],
-    [
-      "entry_00584",
-      "FeGa"
-    ],
-    [
       "entry_01040",
       "FeGa"
     ],
     [
+      "entry_01132",
+      "FeGa"
+    ],
+    [
       "entry_01140",
+      "FeGa"
+    ],
+    [
+      "entry_01197",
       "FeGa"
     ],
     [
@@ -1753,19 +1754,7 @@
       "FeGe"
     ],
     [
-      "entry_01219",
-      "FeGe"
-    ],
-    [
-      "entry_01428",
-      "FeGe"
-    ],
-    [
       "entry_01160",
-      "FeGe"
-    ],
-    [
-      "entry_01327",
       "FeGe"
     ],
     [
@@ -1773,11 +1762,19 @@
       "FeGe"
     ],
     [
-      "entry_01373",
-      "FeHf"
+      "entry_01219",
+      "FeGe"
     ],
     [
-      "entry_01288",
+      "entry_01327",
+      "FeGe"
+    ],
+    [
+      "entry_01428",
+      "FeGe"
+    ],
+    [
+      "entry_00798",
       "FeHf"
     ],
     [
@@ -1785,7 +1782,11 @@
       "FeHf"
     ],
     [
-      "entry_00798",
+      "entry_01288",
+      "FeHf"
+    ],
+    [
+      "entry_01373",
       "FeHf"
     ],
     [
@@ -1797,16 +1798,20 @@
       "FeMg"
     ],
     [
-      "entry_01063",
+      "entry_00515",
       "FeNb"
     ],
     [
-      "entry_00515",
+      "entry_01063",
       "FeNb"
     ],
     [
       "entry_01191",
       "FeNb"
+    ],
+    [
+      "entry_00598",
+      "FeSb"
     ],
     [
       "entry_00827",
@@ -1817,23 +1822,15 @@
       "FeSb"
     ],
     [
-      "entry_00598",
-      "FeSb"
-    ],
-    [
       "entry_00903",
       "FeSb"
-    ],
-    [
-      "entry_01161",
-      "FeSc"
     ],
     [
       "entry_01148",
       "FeSc"
     ],
     [
-      "entry_01421",
+      "entry_01161",
       "FeSc"
     ],
     [
@@ -1841,8 +1838,8 @@
       "FeSc"
     ],
     [
-      "entry_01318",
-      "FeSi"
+      "entry_01421",
+      "FeSc"
     ],
     [
       "entry_00674",
@@ -1853,7 +1850,15 @@
       "FeSi"
     ],
     [
+      "entry_01318",
+      "FeSi"
+    ],
+    [
       "entry_00393",
+      "FeSn"
+    ],
+    [
+      "entry_00491",
       "FeSn"
     ],
     [
@@ -1865,15 +1870,7 @@
       "FeSn"
     ],
     [
-      "entry_00491",
-      "FeSn"
-    ],
-    [
-      "entry_01249",
-      "FeTa"
-    ],
-    [
-      "entry_01331",
+      "entry_00422",
       "FeTa"
     ],
     [
@@ -1881,11 +1878,15 @@
       "FeTa"
     ],
     [
-      "entry_00422",
+      "entry_01045",
       "FeTa"
     ],
     [
-      "entry_01045",
+      "entry_01249",
+      "FeTa"
+    ],
+    [
+      "entry_01331",
       "FeTa"
     ],
     [
@@ -1897,7 +1898,7 @@
       "FeTi"
     ],
     [
-      "entry_01178",
+      "entry_00684",
       "FeZn"
     ],
     [
@@ -1905,7 +1906,11 @@
       "FeZn"
     ],
     [
-      "entry_01351",
+      "entry_01115",
+      "FeZn"
+    ],
+    [
+      "entry_01178",
       "FeZn"
     ],
     [
@@ -1913,27 +1918,23 @@
       "FeZn"
     ],
     [
-      "entry_00684",
+      "entry_01351",
       "FeZn"
-    ],
-    [
-      "entry_01115",
-      "FeZn"
-    ],
-    [
-      "entry_00508",
-      "FeZr"
     ],
     [
       "entry_00451",
       "FeZr"
     ],
     [
-      "entry_00535",
+      "entry_00508",
       "FeZr"
     ],
     [
       "entry_00517",
+      "FeZr"
+    ],
+    [
+      "entry_00535",
       "FeZr"
     ],
     [
@@ -2005,11 +2006,11 @@
       "Hf3Sc"
     ],
     [
-      "entry_00303",
+      "entry_00245",
       "Hf3Si"
     ],
     [
-      "entry_00245",
+      "entry_00303",
       "Hf3Si"
     ],
     [
@@ -2017,11 +2018,11 @@
       "Hf3Si"
     ],
     [
-      "entry_00120",
+      "entry_00035",
       "Hf3Sn"
     ],
     [
-      "entry_00035",
+      "entry_00120",
       "Hf3Sn"
     ],
     [
@@ -2033,10 +2034,6 @@
       "Hf3Ta"
     ],
     [
-      "entry_00170",
-      "Hf3V"
-    ],
-    [
       "entry_00074",
       "Hf3V"
     ],
@@ -2045,15 +2042,19 @@
       "Hf3V"
     ],
     [
+      "entry_00170",
+      "Hf3V"
+    ],
+    [
       "entry_01221",
       "HfAl"
     ],
     [
-      "entry_00968",
+      "entry_00402",
       "HfBe"
     ],
     [
-      "entry_00402",
+      "entry_00968",
       "HfBe"
     ],
     [
@@ -2065,19 +2066,7 @@
       "HfGa"
     ],
     [
-      "entry_01252",
-      "HfGe"
-    ],
-    [
       "entry_00415",
-      "HfGe"
-    ],
-    [
-      "entry_01116",
-      "HfGe"
-    ],
-    [
-      "entry_01305",
       "HfGe"
     ],
     [
@@ -2085,15 +2074,27 @@
       "HfGe"
     ],
     [
+      "entry_01116",
+      "HfGe"
+    ],
+    [
+      "entry_01252",
+      "HfGe"
+    ],
+    [
+      "entry_01305",
+      "HfGe"
+    ],
+    [
       "entry_01362",
       "HfGe"
     ],
     [
-      "entry_00998",
+      "entry_00673",
       "HfIn"
     ],
     [
-      "entry_00673",
+      "entry_00998",
       "HfIn"
     ],
     [
@@ -2101,11 +2102,11 @@
       "HfMg"
     ],
     [
-      "entry_00701",
+      "entry_00630",
       "HfMn"
     ],
     [
-      "entry_00630",
+      "entry_00701",
       "HfMn"
     ],
     [
@@ -2125,10 +2126,6 @@
       "HfSb"
     ],
     [
-      "entry_01298",
-      "HfSc"
-    ],
-    [
       "entry_00561",
       "HfSc"
     ],
@@ -2137,15 +2134,11 @@
       "HfSc"
     ],
     [
-      "entry_01383",
-      "HfSi"
+      "entry_01298",
+      "HfSc"
     ],
     [
-      "entry_01308",
-      "HfSi"
-    ],
-    [
-      "entry_01286",
+      "entry_00761",
       "HfSi"
     ],
     [
@@ -2153,16 +2146,28 @@
       "HfSi"
     ],
     [
-      "entry_00761",
+      "entry_01286",
       "HfSi"
+    ],
+    [
+      "entry_01308",
+      "HfSi"
+    ],
+    [
+      "entry_01383",
+      "HfSi"
+    ],
+    [
+      "entry_01050",
+      "HfSn"
     ],
     [
       "entry_01244",
       "HfSn"
     ],
     [
-      "entry_01050",
-      "HfSn"
+      "entry_01070",
+      "HfTa"
     ],
     [
       "entry_01102",
@@ -2173,8 +2178,8 @@
       "HfTa"
     ],
     [
-      "entry_01070",
-      "HfTa"
+      "entry_01054",
+      "HfTi"
     ],
     [
       "entry_01175",
@@ -2185,19 +2190,19 @@
       "HfTi"
     ],
     [
-      "entry_01054",
-      "HfTi"
-    ],
-    [
       "entry_00677",
       "HfV"
     ],
     [
-      "entry_00571",
+      "entry_00432",
       "HfY"
     ],
     [
-      "entry_00432",
+      "entry_00449",
+      "HfY"
+    ],
+    [
+      "entry_00571",
       "HfY"
     ],
     [
@@ -2209,11 +2214,7 @@
       "HfY"
     ],
     [
-      "entry_00449",
-      "HfY"
-    ],
-    [
-      "entry_00724",
+      "entry_00549",
       "HfZr"
     ],
     [
@@ -2221,7 +2222,7 @@
       "HfZr"
     ],
     [
-      "entry_00549",
+      "entry_00724",
       "HfZr"
     ],
     [
@@ -2253,11 +2254,11 @@
       "Ir3Cu"
     ],
     [
-      "entry_00334",
+      "entry_00146",
       "Ir3Ge"
     ],
     [
-      "entry_00146",
+      "entry_00334",
       "Ir3Ge"
     ],
     [
@@ -2269,16 +2270,12 @@
       "Ir3Mn"
     ],
     [
-      "entry_00390",
-      "Ir3Nb"
-    ],
-    [
       "entry_00009",
       "Ir3Nb"
     ],
     [
-      "entry_00161",
-      "Ir3Sb"
+      "entry_00390",
+      "Ir3Nb"
     ],
     [
       "entry_00024",
@@ -2286,6 +2283,10 @@
     ],
     [
       "entry_00105",
+      "Ir3Sb"
+    ],
+    [
+      "entry_00161",
       "Ir3Sb"
     ],
     [
@@ -2317,15 +2318,7 @@
       "IrAl"
     ],
     [
-      "entry_01296",
-      "IrAl"
-    ],
-    [
-      "entry_01265",
-      "IrAl"
-    ],
-    [
-      "entry_01248",
+      "entry_00749",
       "IrAl"
     ],
     [
@@ -2333,7 +2326,7 @@
       "IrAl"
     ],
     [
-      "entry_01407",
+      "entry_01154",
       "IrAl"
     ],
     [
@@ -2341,11 +2334,19 @@
       "IrAl"
     ],
     [
-      "entry_00749",
+      "entry_01248",
       "IrAl"
     ],
     [
-      "entry_01154",
+      "entry_01265",
+      "IrAl"
+    ],
+    [
+      "entry_01296",
+      "IrAl"
+    ],
+    [
+      "entry_01407",
       "IrAl"
     ],
     [
@@ -2357,11 +2358,11 @@
       "IrCu"
     ],
     [
-      "entry_01008",
+      "entry_00935",
       "IrCu"
     ],
     [
-      "entry_00935",
+      "entry_01008",
       "IrCu"
     ],
     [
@@ -2369,11 +2370,11 @@
       "IrGa"
     ],
     [
-      "entry_01237",
+      "entry_01166",
       "IrGe"
     ],
     [
-      "entry_01166",
+      "entry_01237",
       "IrGe"
     ],
     [
@@ -2393,6 +2394,10 @@
       "IrIn"
     ],
     [
+      "entry_00485",
+      "IrMg"
+    ],
+    [
       "entry_00587",
       "IrMg"
     ],
@@ -2401,23 +2406,19 @@
       "IrMg"
     ],
     [
-      "entry_00485",
-      "IrMg"
+      "entry_00627",
+      "IrMn"
     ],
     [
       "entry_00680",
       "IrMn"
     ],
     [
-      "entry_00627",
-      "IrMn"
-    ],
-    [
-      "entry_00566",
+      "entry_00506",
       "IrNb"
     ],
     [
-      "entry_01222",
+      "entry_00566",
       "IrNb"
     ],
     [
@@ -2425,19 +2426,19 @@
       "IrNb"
     ],
     [
-      "entry_01180",
-      "IrNb"
-    ],
-    [
-      "entry_00506",
-      "IrNb"
-    ],
-    [
       "entry_01125",
       "IrNb"
     ],
     [
-      "entry_01189",
+      "entry_01180",
+      "IrNb"
+    ],
+    [
+      "entry_01222",
+      "IrNb"
+    ],
+    [
+      "entry_00524",
       "IrSc"
     ],
     [
@@ -2449,11 +2450,11 @@
       "IrSc"
     ],
     [
-      "entry_00524",
+      "entry_01095",
       "IrSc"
     ],
     [
-      "entry_01095",
+      "entry_01189",
       "IrSc"
     ],
     [
@@ -2469,6 +2470,10 @@
       "IrSi"
     ],
     [
+      "entry_00560",
+      "IrTa"
+    ],
+    [
       "entry_00959",
       "IrTa"
     ],
@@ -2481,19 +2486,15 @@
       "IrTa"
     ],
     [
-      "entry_00560",
-      "IrTa"
-    ],
-    [
       "entry_01427",
       "IrTa"
     ],
     [
-      "entry_01192",
+      "entry_01126",
       "IrTi"
     ],
     [
-      "entry_01435",
+      "entry_01192",
       "IrTi"
     ],
     [
@@ -2501,7 +2502,7 @@
       "IrTi"
     ],
     [
-      "entry_01126",
+      "entry_01435",
       "IrTi"
     ],
     [
@@ -2513,15 +2514,11 @@
       "IrY"
     ],
     [
-      "entry_01278",
-      "IrZn"
-    ],
-    [
-      "entry_01379",
-      "IrZn"
-    ],
-    [
       "entry_00773",
+      "IrZn"
+    ],
+    [
+      "entry_01278",
       "IrZn"
     ],
     [
@@ -2529,11 +2526,15 @@
       "IrZn"
     ],
     [
-      "entry_00831",
-      "IrZr"
+      "entry_01379",
+      "IrZn"
     ],
     [
       "entry_00572",
+      "IrZr"
+    ],
+    [
+      "entry_00831",
       "IrZr"
     ],
     [
@@ -2577,11 +2578,11 @@
       "Mn3Fe"
     ],
     [
-      "entry_00386",
+      "entry_00176",
       "Mn3Ga"
     ],
     [
-      "entry_00176",
+      "entry_00386",
       "Mn3Ga"
     ],
     [
@@ -2621,6 +2622,10 @@
       "MnGe"
     ],
     [
+      "entry_00856",
+      "MnHf"
+    ],
+    [
       "entry_00866",
       "MnHf"
     ],
@@ -2629,15 +2634,11 @@
       "MnHf"
     ],
     [
-      "entry_00856",
-      "MnHf"
-    ],
-    [
-      "entry_00473",
+      "entry_00446",
       "MnIn"
     ],
     [
-      "entry_00446",
+      "entry_00473",
       "MnIn"
     ],
     [
@@ -2649,14 +2650,6 @@
       "MnMg"
     ],
     [
-      "entry_00594",
-      "MnNb"
-    ],
-    [
-      "entry_01019",
-      "MnNb"
-    ],
-    [
       "entry_00444",
       "MnNb"
     ],
@@ -2665,7 +2658,15 @@
       "MnNb"
     ],
     [
+      "entry_00594",
+      "MnNb"
+    ],
+    [
       "entry_00758",
+      "MnNb"
+    ],
+    [
+      "entry_01019",
       "MnNb"
     ],
     [
@@ -2685,15 +2686,15 @@
       "MnSi"
     ],
     [
-      "entry_00930",
-      "MnSn"
-    ],
-    [
       "entry_00614",
       "MnSn"
     ],
     [
-      "entry_00988",
+      "entry_00930",
+      "MnSn"
+    ],
+    [
+      "entry_00691",
       "MnTa"
     ],
     [
@@ -2705,11 +2706,11 @@
       "MnTa"
     ],
     [
-      "entry_00691",
+      "entry_00940",
       "MnTa"
     ],
     [
-      "entry_00940",
+      "entry_00988",
       "MnTa"
     ],
     [
@@ -2721,10 +2722,6 @@
       "MnV"
     ],
     [
-      "entry_01001",
-      "MnY"
-    ],
-    [
       "entry_00687",
       "MnY"
     ],
@@ -2733,15 +2730,19 @@
       "MnY"
     ],
     [
+      "entry_01001",
+      "MnY"
+    ],
+    [
       "entry_00538",
       "MnZn"
     ],
     [
-      "entry_00920",
+      "entry_00592",
       "MnZn"
     ],
     [
-      "entry_00592",
+      "entry_00920",
       "MnZn"
     ],
     [
@@ -2773,7 +2774,7 @@
       "Mo3Mn"
     ],
     [
-      "entry_00362",
+      "entry_00181",
       "Mo3Nb"
     ],
     [
@@ -2781,7 +2782,7 @@
       "Mo3Nb"
     ],
     [
-      "entry_00181",
+      "entry_00362",
       "Mo3Nb"
     ],
     [
@@ -2793,27 +2794,27 @@
       "Mo3Si"
     ],
     [
-      "entry_00160",
-      "Mo3Sn"
-    ],
-    [
       "entry_00053",
       "Mo3Sn"
     ],
     [
-      "entry_00230",
-      "Mo3Ta"
+      "entry_00160",
+      "Mo3Sn"
     ],
     [
       "entry_00126",
       "Mo3Ta"
     ],
     [
-      "entry_00210",
-      "Mo3Ti"
+      "entry_00230",
+      "Mo3Ta"
     ],
     [
       "entry_00128",
+      "Mo3Ti"
+    ],
+    [
+      "entry_00210",
       "Mo3Ti"
     ],
     [
@@ -2821,11 +2822,11 @@
       "Mo3Zn"
     ],
     [
-      "entry_00697",
+      "entry_00519",
       "MoBe"
     ],
     [
-      "entry_00519",
+      "entry_00697",
       "MoBe"
     ],
     [
@@ -2849,27 +2850,27 @@
       "MoGe"
     ],
     [
-      "entry_00843",
-      "MoGe"
-    ],
-    [
       "entry_00655",
       "MoGe"
     ],
     [
-      "entry_00992",
-      "MoHf"
+      "entry_00843",
+      "MoGe"
     ],
     [
       "entry_00651",
       "MoHf"
     ],
     [
-      "entry_00829",
-      "MoMg"
+      "entry_00992",
+      "MoHf"
     ],
     [
       "entry_00788",
+      "MoMg"
+    ],
+    [
+      "entry_00829",
       "MoMg"
     ],
     [
@@ -2881,11 +2882,11 @@
       "MoSb"
     ],
     [
-      "entry_01017",
+      "entry_00619",
       "MoSb"
     ],
     [
-      "entry_00619",
+      "entry_01017",
       "MoSb"
     ],
     [
@@ -2897,7 +2898,7 @@
       "MoSi"
     ],
     [
-      "entry_00802",
+      "entry_00781",
       "MoSn"
     ],
     [
@@ -2905,7 +2906,7 @@
       "MoSn"
     ],
     [
-      "entry_00781",
+      "entry_00802",
       "MoSn"
     ],
     [
@@ -2921,7 +2922,7 @@
       "MoTi"
     ],
     [
-      "entry_00956",
+      "entry_00421",
       "MoY"
     ],
     [
@@ -2929,7 +2930,7 @@
       "MoY"
     ],
     [
-      "entry_00421",
+      "entry_00956",
       "MoY"
     ],
     [
@@ -2941,11 +2942,7 @@
       "MoZn"
     ],
     [
-      "entry_01006",
-      "MoZr"
-    ],
-    [
-      "entry_00874",
+      "entry_00413",
       "MoZr"
     ],
     [
@@ -2953,7 +2950,11 @@
       "MoZr"
     ],
     [
-      "entry_00413",
+      "entry_00874",
+      "MoZr"
+    ],
+    [
+      "entry_01006",
       "MoZr"
     ],
     [
@@ -2973,6 +2974,10 @@
       "Nb3Be"
     ],
     [
+      "entry_00133",
+      "Nb3Cu"
+    ],
+    [
       "entry_00158",
       "Nb3Cu"
     ],
@@ -2981,15 +2986,11 @@
       "Nb3Cu"
     ],
     [
-      "entry_00133",
-      "Nb3Cu"
-    ],
-    [
-      "entry_00343",
+      "entry_00288",
       "Nb3Fe"
     ],
     [
-      "entry_00288",
+      "entry_00343",
       "Nb3Fe"
     ],
     [
@@ -3001,11 +3002,11 @@
       "Nb3Ge"
     ],
     [
-      "entry_00308",
+      "entry_00196",
       "Nb3In"
     ],
     [
-      "entry_00196",
+      "entry_00308",
       "Nb3In"
     ],
     [
@@ -3013,11 +3014,11 @@
       "Nb3Mg"
     ],
     [
-      "entry_00224",
+      "entry_00189",
       "Nb3Mg"
     ],
     [
-      "entry_00189",
+      "entry_00224",
       "Nb3Mg"
     ],
     [
@@ -3029,16 +3030,12 @@
       "Nb3Sc"
     ],
     [
-      "entry_00208",
-      "Nb3Sn"
-    ],
-    [
       "entry_00112",
       "Nb3Sn"
     ],
     [
-      "entry_00148",
-      "Nb3V"
+      "entry_00208",
+      "Nb3Sn"
     ],
     [
       "entry_00026",
@@ -3049,11 +3046,15 @@
       "Nb3V"
     ],
     [
-      "entry_00163",
-      "Nb3Y"
+      "entry_00148",
+      "Nb3V"
     ],
     [
       "entry_00025",
+      "Nb3Y"
+    ],
+    [
+      "entry_00163",
       "Nb3Y"
     ],
     [
@@ -3077,15 +3078,15 @@
       "NbCu"
     ],
     [
-      "entry_00838",
-      "NbFe"
-    ],
-    [
       "entry_00496",
       "NbFe"
     ],
     [
-      "entry_01025",
+      "entry_00838",
+      "NbFe"
+    ],
+    [
+      "entry_00398",
       "NbHf"
     ],
     [
@@ -3093,7 +3094,7 @@
       "NbHf"
     ],
     [
-      "entry_00398",
+      "entry_01025",
       "NbHf"
     ],
     [
@@ -3113,11 +3114,11 @@
       "NbSc"
     ],
     [
-      "entry_00667",
+      "entry_00662",
       "NbSi"
     ],
     [
-      "entry_00662",
+      "entry_00667",
       "NbSi"
     ],
     [
@@ -3125,19 +3126,19 @@
       "NbSn"
     ],
     [
-      "entry_00738",
-      "NbTa"
-    ],
-    [
       "entry_00476",
       "NbTa"
     ],
     [
-      "entry_00790",
-      "NbV"
+      "entry_00738",
+      "NbTa"
     ],
     [
       "entry_00430",
+      "NbV"
+    ],
+    [
+      "entry_00790",
       "NbV"
     ],
     [
@@ -3145,11 +3146,11 @@
       "NbY"
     ],
     [
-      "entry_00676",
+      "entry_00501",
       "NbZn"
     ],
     [
-      "entry_00501",
+      "entry_00676",
       "NbZn"
     ],
     [
@@ -3157,11 +3158,11 @@
       "NbZr"
     ],
     [
-      "entry_00754",
+      "entry_00615",
       "NbZr"
     ],
     [
-      "entry_00615",
+      "entry_00754",
       "NbZr"
     ],
     [
@@ -3189,11 +3190,11 @@
       "Ni3Ge"
     ],
     [
-      "entry_00336",
+      "entry_00132",
       "Ni3In"
     ],
     [
-      "entry_00132",
+      "entry_00336",
       "Ni3In"
     ],
     [
@@ -3205,11 +3206,11 @@
       "Ni3Sb"
     ],
     [
-      "entry_00389",
+      "entry_00353",
       "Ni3Sc"
     ],
     [
-      "entry_00353",
+      "entry_00389",
       "Ni3Sc"
     ],
     [
@@ -3217,7 +3218,7 @@
       "Ni3Ta"
     ],
     [
-      "entry_00229",
+      "entry_00013",
       "Ni3Ti"
     ],
     [
@@ -3225,7 +3226,7 @@
       "Ni3Ti"
     ],
     [
-      "entry_00013",
+      "entry_00229",
       "Ni3Ti"
     ],
     [
@@ -3233,7 +3234,7 @@
       "Ni3V"
     ],
     [
-      "entry_01143",
+      "entry_00404",
       "NiAl"
     ],
     [
@@ -3241,7 +3242,7 @@
       "NiAl"
     ],
     [
-      "entry_00404",
+      "entry_01143",
       "NiAl"
     ],
     [
@@ -3269,11 +3270,19 @@
       "NiGa"
     ],
     [
-      "entry_01391",
+      "entry_00556",
+      "NiGe"
+    ],
+    [
+      "entry_01057",
       "NiGe"
     ],
     [
       "entry_01090",
+      "NiGe"
+    ],
+    [
+      "entry_01322",
       "NiGe"
     ],
     [
@@ -3285,23 +3294,15 @@
       "NiGe"
     ],
     [
-      "entry_00556",
+      "entry_01391",
       "NiGe"
-    ],
-    [
-      "entry_01057",
-      "NiGe"
-    ],
-    [
-      "entry_01322",
-      "NiGe"
-    ],
-    [
-      "entry_00850",
-      "NiHf"
     ],
     [
       "entry_00495",
+      "NiHf"
+    ],
+    [
+      "entry_00850",
       "NiHf"
     ],
     [
@@ -3309,24 +3310,28 @@
       "NiHf"
     ],
     [
-      "entry_00787",
-      "NiIn"
-    ],
-    [
       "entry_00470",
       "NiIn"
     ],
     [
-      "entry_00873",
-      "NiMg"
+      "entry_00787",
+      "NiIn"
     ],
     [
       "entry_00639",
       "NiMg"
     ],
     [
+      "entry_00873",
+      "NiMg"
+    ],
+    [
       "entry_00906",
       "NiMg"
+    ],
+    [
+      "entry_00526",
+      "NiMn"
     ],
     [
       "entry_00555",
@@ -3337,15 +3342,11 @@
       "NiMn"
     ],
     [
-      "entry_00526",
-      "NiMn"
-    ],
-    [
-      "entry_01257",
+      "entry_01207",
       "NiNb"
     ],
     [
-      "entry_01207",
+      "entry_01257",
       "NiNb"
     ],
     [
@@ -3353,7 +3354,7 @@
       "NiNb"
     ],
     [
-      "entry_01385",
+      "entry_00411",
       "NiSb"
     ],
     [
@@ -3361,7 +3362,7 @@
       "NiSb"
     ],
     [
-      "entry_00411",
+      "entry_01385",
       "NiSb"
     ],
     [
@@ -3369,7 +3370,7 @@
       "NiSc"
     ],
     [
-      "entry_01303",
+      "entry_00652",
       "NiSc"
     ],
     [
@@ -3377,7 +3378,7 @@
       "NiSc"
     ],
     [
-      "entry_00652",
+      "entry_01303",
       "NiSc"
     ],
     [
@@ -3389,19 +3390,7 @@
       "NiSi"
     ],
     [
-      "entry_00807",
-      "NiSn"
-    ],
-    [
-      "entry_00867",
-      "NiSn"
-    ],
-    [
       "entry_00399",
-      "NiSn"
-    ],
-    [
-      "entry_01289",
       "NiSn"
     ],
     [
@@ -3409,7 +3398,19 @@
       "NiSn"
     ],
     [
+      "entry_00807",
+      "NiSn"
+    ],
+    [
       "entry_00845",
+      "NiSn"
+    ],
+    [
+      "entry_00867",
+      "NiSn"
+    ],
+    [
+      "entry_01289",
       "NiSn"
     ],
     [
@@ -3421,27 +3422,27 @@
       "NiTa"
     ],
     [
-      "entry_01350",
-      "NiTa"
-    ],
-    [
       "entry_00981",
       "NiTa"
     ],
     [
-      "entry_01036",
-      "NiTi"
+      "entry_01350",
+      "NiTa"
     ],
     [
       "entry_00616",
       "NiTi"
     ],
     [
-      "entry_00863",
-      "NiV"
+      "entry_01036",
+      "NiTi"
     ],
     [
       "entry_00806",
+      "NiV"
+    ],
+    [
+      "entry_00863",
       "NiV"
     ],
     [
@@ -3449,15 +3450,7 @@
       "NiY"
     ],
     [
-      "entry_01408",
-      "NiY"
-    ],
-    [
-      "entry_01177",
-      "NiY"
-    ],
-    [
-      "entry_01093",
+      "entry_00736",
       "NiY"
     ],
     [
@@ -3465,16 +3458,20 @@
       "NiY"
     ],
     [
+      "entry_01093",
+      "NiY"
+    ],
+    [
       "entry_01107",
       "NiY"
     ],
     [
-      "entry_00736",
+      "entry_01177",
       "NiY"
     ],
     [
-      "entry_01370",
-      "NiZn"
+      "entry_01408",
+      "NiY"
     ],
     [
       "entry_01071",
@@ -3486,6 +3483,10 @@
     ],
     [
       "entry_01337",
+      "NiZn"
+    ],
+    [
+      "entry_01370",
       "NiZn"
     ],
     [
@@ -3533,15 +3534,15 @@
       "Pd3Fe"
     ],
     [
+      "entry_00098",
+      "Pd3Ga"
+    ],
+    [
       "entry_00234",
       "Pd3Ga"
     ],
     [
       "entry_00323",
-      "Pd3Ga"
-    ],
-    [
-      "entry_00098",
       "Pd3Ga"
     ],
     [
@@ -3553,10 +3554,6 @@
       "Pd3Hf"
     ],
     [
-      "entry_00338",
-      "Pd3Mg"
-    ],
-    [
       "entry_00089",
       "Pd3Mg"
     ],
@@ -3565,11 +3562,15 @@
       "Pd3Mg"
     ],
     [
-      "entry_00287",
-      "Pd3Mn"
+      "entry_00338",
+      "Pd3Mg"
     ],
     [
       "entry_00066",
+      "Pd3Mn"
+    ],
+    [
+      "entry_00287",
       "Pd3Mn"
     ],
     [
@@ -3593,11 +3594,11 @@
       "Pd3V"
     ],
     [
-      "entry_00685",
+      "entry_00445",
       "PdAl"
     ],
     [
-      "entry_01165",
+      "entry_00685",
       "PdAl"
     ],
     [
@@ -3605,15 +3606,15 @@
       "PdAl"
     ],
     [
-      "entry_00445",
+      "entry_01165",
       "PdAl"
     ],
     [
-      "entry_00868",
+      "entry_00581",
       "PdBe"
     ],
     [
-      "entry_00581",
+      "entry_00868",
       "PdBe"
     ],
     [
@@ -3625,15 +3626,15 @@
       "PdCu"
     ],
     [
+      "entry_00996",
+      "PdGa"
+    ],
+    [
       "entry_01055",
       "PdGa"
     ],
     [
       "entry_01240",
-      "PdGa"
-    ],
-    [
-      "entry_00996",
       "PdGa"
     ],
     [
@@ -3649,11 +3650,11 @@
       "PdGe"
     ],
     [
-      "entry_01122",
+      "entry_00440",
       "PdHf"
     ],
     [
-      "entry_00440",
+      "entry_01122",
       "PdHf"
     ],
     [
@@ -3661,7 +3662,11 @@
       "PdIn"
     ],
     [
-      "entry_01015",
+      "entry_00443",
+      "PdMg"
+    ],
+    [
+      "entry_00600",
       "PdMg"
     ],
     [
@@ -3673,15 +3678,19 @@
       "PdMg"
     ],
     [
-      "entry_00600",
+      "entry_01015",
       "PdMg"
     ],
     [
-      "entry_00443",
-      "PdMg"
+      "entry_00401",
+      "PdNb"
     ],
     [
       "entry_00483",
+      "PdNb"
+    ],
+    [
+      "entry_00726",
       "PdNb"
     ],
     [
@@ -3693,20 +3702,8 @@
       "PdNb"
     ],
     [
-      "entry_00401",
-      "PdNb"
-    ],
-    [
       "entry_01387",
       "PdNb"
-    ],
-    [
-      "entry_00726",
-      "PdNb"
-    ],
-    [
-      "entry_01448",
-      "PdSc"
     ],
     [
       "entry_00985",
@@ -3717,15 +3714,11 @@
       "PdSc"
     ],
     [
-      "entry_01111",
-      "PdSi"
+      "entry_01448",
+      "PdSc"
     ],
     [
       "entry_00502",
-      "PdSi"
-    ],
-    [
-      "entry_01335",
       "PdSi"
     ],
     [
@@ -3733,11 +3726,19 @@
       "PdSi"
     ],
     [
-      "entry_01446",
+      "entry_01111",
+      "PdSi"
+    ],
+    [
+      "entry_01335",
       "PdSi"
     ],
     [
       "entry_01366",
+      "PdSi"
+    ],
+    [
+      "entry_01446",
       "PdSi"
     ],
     [
@@ -3749,20 +3750,12 @@
       "PdSn"
     ],
     [
-      "entry_01158",
-      "PdTa"
-    ],
-    [
       "entry_01108",
       "PdTa"
     ],
     [
-      "entry_00750",
-      "PdTi"
-    ],
-    [
-      "entry_01091",
-      "PdTi"
+      "entry_01158",
+      "PdTa"
     ],
     [
       "entry_00529",
@@ -3770,6 +3763,14 @@
     ],
     [
       "entry_00727",
+      "PdTi"
+    ],
+    [
+      "entry_00750",
+      "PdTi"
+    ],
+    [
+      "entry_01091",
       "PdTi"
     ],
     [
@@ -3785,7 +3786,7 @@
       "PdV"
     ],
     [
-      "entry_01130",
+      "entry_00707",
       "PdY"
     ],
     [
@@ -3793,11 +3794,11 @@
       "PdY"
     ],
     [
-      "entry_01415",
+      "entry_01130",
       "PdY"
     ],
     [
-      "entry_00707",
+      "entry_01415",
       "PdY"
     ],
     [
@@ -3821,6 +3822,10 @@
       "Pt"
     ],
     [
+      "entry_00008",
+      "Pt3Al"
+    ],
+    [
       "entry_00151",
       "Pt3Al"
     ],
@@ -3829,16 +3834,8 @@
       "Pt3Al"
     ],
     [
-      "entry_00008",
-      "Pt3Al"
-    ],
-    [
       "entry_00076",
       "Pt3Fe"
-    ],
-    [
-      "entry_00241",
-      "Pt3Ga"
     ],
     [
       "entry_00020",
@@ -3849,23 +3846,27 @@
       "Pt3Ga"
     ],
     [
-      "entry_00346",
-      "Pt3Hf"
+      "entry_00241",
+      "Pt3Ga"
     ],
     [
-      "entry_00373",
-      "Pt3Sc"
+      "entry_00346",
+      "Pt3Hf"
     ],
     [
       "entry_00251",
       "Pt3Sc"
     ],
     [
-      "entry_00374",
-      "Pt3Sn"
+      "entry_00373",
+      "Pt3Sc"
     ],
     [
       "entry_00237",
+      "Pt3Sn"
+    ],
+    [
+      "entry_00374",
       "Pt3Sn"
     ],
     [
@@ -3881,19 +3882,7 @@
       "Pt3Zn"
     ],
     [
-      "entry_01403",
-      "PtAl"
-    ],
-    [
       "entry_00448",
-      "PtAl"
-    ],
-    [
-      "entry_01155",
-      "PtAl"
-    ],
-    [
-      "entry_01323",
       "PtAl"
     ],
     [
@@ -3905,16 +3894,36 @@
       "PtAl"
     ],
     [
-      "entry_00599",
-      "PtCu"
+      "entry_01155",
+      "PtAl"
+    ],
+    [
+      "entry_01323",
+      "PtAl"
+    ],
+    [
+      "entry_01403",
+      "PtAl"
     ],
     [
       "entry_00568",
       "PtCu"
     ],
     [
+      "entry_00599",
+      "PtCu"
+    ],
+    [
       "entry_00907",
       "PtCu"
+    ],
+    [
+      "entry_00407",
+      "PtGa"
+    ],
+    [
+      "entry_00939",
+      "PtGa"
     ],
     [
       "entry_01028",
@@ -3925,19 +3934,7 @@
       "PtGa"
     ],
     [
-      "entry_01433",
-      "PtGa"
-    ],
-    [
-      "entry_00407",
-      "PtGa"
-    ],
-    [
       "entry_01204",
-      "PtGa"
-    ],
-    [
-      "entry_00939",
       "PtGa"
     ],
     [
@@ -3945,15 +3942,11 @@
       "PtGa"
     ],
     [
+      "entry_01433",
+      "PtGa"
+    ],
+    [
       "entry_00409",
-      "PtGe"
-    ],
-    [
-      "entry_01436",
-      "PtGe"
-    ],
-    [
-      "entry_01425",
       "PtGe"
     ],
     [
@@ -3965,15 +3958,23 @@
       "PtGe"
     ],
     [
-      "entry_00711",
-      "PtHf"
+      "entry_01425",
+      "PtGe"
+    ],
+    [
+      "entry_01436",
+      "PtGe"
     ],
     [
       "entry_00557",
       "PtHf"
     ],
     [
-      "entry_01414",
+      "entry_00711",
+      "PtHf"
+    ],
+    [
+      "entry_01225",
       "PtHf"
     ],
     [
@@ -3981,7 +3982,7 @@
       "PtHf"
     ],
     [
-      "entry_01225",
+      "entry_01414",
       "PtHf"
     ],
     [
@@ -3993,11 +3994,11 @@
       "PtMg"
     ],
     [
-      "entry_01138",
+      "entry_00861",
       "PtNb"
     ],
     [
-      "entry_00861",
+      "entry_01138",
       "PtNb"
     ],
     [
@@ -4009,14 +4010,6 @@
       "PtSb"
     ],
     [
-      "entry_01389",
-      "PtSc"
-    ],
-    [
-      "entry_01097",
-      "PtSc"
-    ],
-    [
       "entry_00464",
       "PtSc"
     ],
@@ -4025,12 +4018,16 @@
       "PtSc"
     ],
     [
+      "entry_01097",
+      "PtSc"
+    ],
+    [
       "entry_01129",
       "PtSc"
     ],
     [
-      "entry_00904",
-      "PtSi"
+      "entry_01389",
+      "PtSc"
     ],
     [
       "entry_00589",
@@ -4041,11 +4038,15 @@
       "PtSi"
     ],
     [
-      "entry_01119",
+      "entry_00718",
       "PtSi"
     ],
     [
-      "entry_00718",
+      "entry_00904",
+      "PtSi"
+    ],
+    [
+      "entry_01119",
       "PtSi"
     ],
     [
@@ -4065,7 +4066,7 @@
       "PtSn"
     ],
     [
-      "entry_00678",
+      "entry_00521",
       "PtTa"
     ],
     [
@@ -4073,15 +4074,7 @@
       "PtTa"
     ],
     [
-      "entry_01218",
-      "PtTa"
-    ],
-    [
-      "entry_00521",
-      "PtTa"
-    ],
-    [
-      "entry_01314",
+      "entry_00678",
       "PtTa"
     ],
     [
@@ -4089,11 +4082,15 @@
       "PtTa"
     ],
     [
-      "entry_00752",
-      "PtTi"
+      "entry_01218",
+      "PtTa"
     ],
     [
-      "entry_01243",
+      "entry_01314",
+      "PtTa"
+    ],
+    [
+      "entry_00752",
       "PtTi"
     ],
     [
@@ -4106,6 +4103,10 @@
     ],
     [
       "entry_01133",
+      "PtTi"
+    ],
+    [
+      "entry_01243",
       "PtTi"
     ],
     [
@@ -4125,6 +4126,10 @@
       "PtY"
     ],
     [
+      "entry_00479",
+      "PtZn"
+    ],
+    [
       "entry_01046",
       "PtZn"
     ],
@@ -4134,10 +4139,6 @@
     ],
     [
       "entry_01316",
-      "PtZn"
-    ],
-    [
-      "entry_00479",
       "PtZn"
     ],
     [
@@ -4181,19 +4182,19 @@
       "Rh3In"
     ],
     [
-      "entry_00320",
-      "Rh3Mg"
-    ],
-    [
       "entry_00092",
       "Rh3Mg"
     ],
     [
-      "entry_00377",
-      "Rh3Mn"
+      "entry_00320",
+      "Rh3Mg"
     ],
     [
       "entry_00179",
+      "Rh3Mn"
+    ],
+    [
+      "entry_00377",
       "Rh3Mn"
     ],
     [
@@ -4201,7 +4202,7 @@
       "Rh3Sb"
     ],
     [
-      "entry_00242",
+      "entry_00086",
       "Rh3Sb"
     ],
     [
@@ -4209,7 +4210,7 @@
       "Rh3Sb"
     ],
     [
-      "entry_00086",
+      "entry_00242",
       "Rh3Sb"
     ],
     [
@@ -4245,11 +4246,7 @@
       "Rh3Zn"
     ],
     [
-      "entry_00274",
-      "Rh3Zr"
-    ],
-    [
-      "entry_00246",
+      "entry_00039",
       "Rh3Zr"
     ],
     [
@@ -4257,8 +4254,24 @@
       "Rh3Zr"
     ],
     [
-      "entry_00039",
+      "entry_00246",
       "Rh3Zr"
+    ],
+    [
+      "entry_00274",
+      "Rh3Zr"
+    ],
+    [
+      "entry_00765",
+      "RhAl"
+    ],
+    [
+      "entry_01014",
+      "RhAl"
+    ],
+    [
+      "entry_01284",
+      "RhAl"
     ],
     [
       "entry_01359",
@@ -4269,23 +4282,11 @@
       "RhAl"
     ],
     [
-      "entry_00765",
-      "RhAl"
-    ],
-    [
-      "entry_01284",
-      "RhAl"
-    ],
-    [
-      "entry_01014",
-      "RhAl"
-    ],
-    [
       "entry_01440",
       "RhAl"
     ],
     [
-      "entry_00916",
+      "entry_00543",
       "RhBe"
     ],
     [
@@ -4293,15 +4294,15 @@
       "RhBe"
     ],
     [
-      "entry_00543",
+      "entry_00916",
       "RhBe"
     ],
     [
-      "entry_00742",
+      "entry_00722",
       "RhCu"
     ],
     [
-      "entry_00722",
+      "entry_00742",
       "RhCu"
     ],
     [
@@ -4309,11 +4310,7 @@
       "RhFe"
     ],
     [
-      "entry_01397",
-      "RhGa"
-    ],
-    [
-      "entry_01216",
+      "entry_00995",
       "RhGa"
     ],
     [
@@ -4321,7 +4318,11 @@
       "RhGa"
     ],
     [
-      "entry_00995",
+      "entry_01216",
+      "RhGa"
+    ],
+    [
+      "entry_01397",
       "RhGa"
     ],
     [
@@ -4349,7 +4350,7 @@
       "RhGe"
     ],
     [
-      "entry_01358",
+      "entry_00414",
       "RhHf"
     ],
     [
@@ -4357,12 +4358,16 @@
       "RhHf"
     ],
     [
-      "entry_00414",
+      "entry_00839",
       "RhHf"
     ],
     [
-      "entry_00839",
+      "entry_01358",
       "RhHf"
+    ],
+    [
+      "entry_00437",
+      "RhIn"
     ],
     [
       "entry_00748",
@@ -4370,10 +4375,6 @@
     ],
     [
       "entry_01026",
-      "RhIn"
-    ],
-    [
-      "entry_00437",
       "RhIn"
     ],
     [
@@ -4389,7 +4390,11 @@
       "RhSb"
     ],
     [
-      "entry_01352",
+      "entry_00834",
+      "RhSc"
+    ],
+    [
+      "entry_01031",
       "RhSc"
     ],
     [
@@ -4401,15 +4406,7 @@
       "RhSc"
     ],
     [
-      "entry_01357",
-      "RhSc"
-    ],
-    [
       "entry_01201",
-      "RhSc"
-    ],
-    [
-      "entry_00834",
       "RhSc"
     ],
     [
@@ -4417,8 +4414,16 @@
       "RhSc"
     ],
     [
-      "entry_01031",
+      "entry_01352",
       "RhSc"
+    ],
+    [
+      "entry_01357",
+      "RhSc"
+    ],
+    [
+      "entry_01123",
+      "RhSi"
     ],
     [
       "entry_01409",
@@ -4429,19 +4434,15 @@
       "RhSi"
     ],
     [
-      "entry_01123",
-      "RhSi"
-    ],
-    [
       "entry_00725",
       "RhSn"
     ],
     [
-      "entry_00849",
+      "entry_00823",
       "RhSn"
     ],
     [
-      "entry_00823",
+      "entry_00849",
       "RhSn"
     ],
     [
@@ -4453,7 +4454,7 @@
       "RhSn"
     ],
     [
-      "entry_01196",
+      "entry_00848",
       "RhTa"
     ],
     [
@@ -4461,7 +4462,7 @@
       "RhTa"
     ],
     [
-      "entry_00848",
+      "entry_01196",
       "RhTa"
     ],
     [
@@ -4469,20 +4470,24 @@
       "RhTi"
     ],
     [
+      "entry_00923",
+      "RhTi"
+    ],
+    [
       "entry_01268",
       "RhTi"
     ],
     [
-      "entry_00923",
-      "RhTi"
+      "entry_00936",
+      "RhV"
     ],
     [
       "entry_01011",
       "RhV"
     ],
     [
-      "entry_00936",
-      "RhV"
+      "entry_00610",
+      "RhY"
     ],
     [
       "entry_00970",
@@ -4493,35 +4498,11 @@
       "RhY"
     ],
     [
-      "entry_00610",
-      "RhY"
-    ],
-    [
-      "entry_01044",
-      "RhZn"
-    ],
-    [
-      "entry_01338",
-      "RhZn"
-    ],
-    [
       "entry_00548",
       "RhZn"
     ],
     [
-      "entry_01301",
-      "RhZn"
-    ],
-    [
-      "entry_01241",
-      "RhZn"
-    ],
-    [
-      "entry_01164",
-      "RhZn"
-    ],
-    [
-      "entry_01295",
+      "entry_01044",
       "RhZn"
     ],
     [
@@ -4529,15 +4510,35 @@
       "RhZn"
     ],
     [
+      "entry_01164",
+      "RhZn"
+    ],
+    [
+      "entry_01241",
+      "RhZn"
+    ],
+    [
+      "entry_01295",
+      "RhZn"
+    ],
+    [
+      "entry_01301",
+      "RhZn"
+    ],
+    [
+      "entry_01338",
+      "RhZn"
+    ],
+    [
       "elem_ru_67432",
       "Ru"
     ],
     [
-      "entry_00351",
+      "entry_00333",
       "Ru3Be"
     ],
     [
-      "entry_00333",
+      "entry_00351",
       "Ru3Be"
     ],
     [
@@ -4565,11 +4566,11 @@
       "Ru3In"
     ],
     [
-      "entry_00352",
+      "entry_00040",
       "Ru3Mg"
     ],
     [
-      "entry_00040",
+      "entry_00352",
       "Ru3Mg"
     ],
     [
@@ -4577,11 +4578,11 @@
       "Ru3Mn"
     ],
     [
-      "entry_00277",
+      "entry_00138",
       "Ru3Nb"
     ],
     [
-      "entry_00138",
+      "entry_00277",
       "Ru3Nb"
     ],
     [
@@ -4589,11 +4590,11 @@
       "Ru3Nb"
     ],
     [
-      "entry_00302",
+      "entry_00205",
       "Ru3Sb"
     ],
     [
-      "entry_00205",
+      "entry_00302",
       "Ru3Sb"
     ],
     [
@@ -4621,10 +4622,6 @@
       "RuAl"
     ],
     [
-      "entry_01299",
-      "RuAl"
-    ],
-    [
       "entry_00899",
       "RuAl"
     ],
@@ -4633,11 +4630,15 @@
       "RuAl"
     ],
     [
-      "entry_00644",
-      "RuBe"
+      "entry_01299",
+      "RuAl"
     ],
     [
       "entry_00570",
+      "RuBe"
+    ],
+    [
+      "entry_00644",
       "RuBe"
     ],
     [
@@ -4661,6 +4662,10 @@
       "RuFe"
     ],
     [
+      "entry_01065",
+      "RuGa"
+    ],
+    [
       "entry_01239",
       "RuGa"
     ],
@@ -4673,22 +4678,6 @@
       "RuGa"
     ],
     [
-      "entry_01065",
-      "RuGa"
-    ],
-    [
-      "entry_01062",
-      "RuGe"
-    ],
-    [
-      "entry_00822",
-      "RuGe"
-    ],
-    [
-      "entry_00681",
-      "RuGe"
-    ],
-    [
       "entry_00544",
       "RuGe"
     ],
@@ -4697,7 +4686,19 @@
       "RuGe"
     ],
     [
+      "entry_00681",
+      "RuGe"
+    ],
+    [
+      "entry_00822",
+      "RuGe"
+    ],
+    [
       "entry_00847",
+      "RuGe"
+    ],
+    [
+      "entry_01062",
       "RuGe"
     ],
     [
@@ -4705,15 +4706,15 @@
       "RuHf"
     ],
     [
+      "entry_00489",
+      "RuIn"
+    ],
+    [
       "entry_00534",
       "RuIn"
     ],
     [
       "entry_00607",
-      "RuIn"
-    ],
-    [
-      "entry_00489",
       "RuIn"
     ],
     [
@@ -4737,15 +4738,15 @@
       "RuMn"
     ],
     [
-      "entry_00762",
-      "RuMn"
-    ],
-    [
       "entry_00646",
       "RuMn"
     ],
     [
-      "entry_01261",
+      "entry_00762",
+      "RuMn"
+    ],
+    [
+      "entry_00714",
       "RuNb"
     ],
     [
@@ -4753,16 +4754,20 @@
       "RuNb"
     ],
     [
-      "entry_01374",
-      "RuNb"
-    ],
-    [
       "entry_01174",
       "RuNb"
     ],
     [
-      "entry_00714",
+      "entry_01261",
       "RuNb"
+    ],
+    [
+      "entry_01374",
+      "RuNb"
+    ],
+    [
+      "entry_00472",
+      "RuSb"
     ],
     [
       "entry_00640",
@@ -4777,14 +4782,6 @@
       "RuSb"
     ],
     [
-      "entry_00472",
-      "RuSb"
-    ],
-    [
-      "entry_01281",
-      "RuSc"
-    ],
-    [
       "entry_01000",
       "RuSc"
     ],
@@ -4793,15 +4790,19 @@
       "RuSc"
     ],
     [
+      "entry_01281",
+      "RuSc"
+    ],
+    [
       "entry_01340",
       "RuSc"
     ],
     [
-      "entry_01311",
+      "entry_00395",
       "RuSi"
     ],
     [
-      "entry_01449",
+      "entry_01311",
       "RuSi"
     ],
     [
@@ -4809,7 +4810,7 @@
       "RuSi"
     ],
     [
-      "entry_00395",
+      "entry_01449",
       "RuSi"
     ],
     [
@@ -4817,11 +4818,11 @@
       "RuSi3"
     ],
     [
-      "entry_00586",
+      "entry_00580",
       "RuSn"
     ],
     [
-      "entry_00580",
+      "entry_00586",
       "RuSn"
     ],
     [
@@ -4865,19 +4866,19 @@
       "RuSn"
     ],
     [
-      "entry_00764",
-      "RuTa"
-    ],
-    [
-      "entry_01208",
-      "RuTa"
-    ],
-    [
       "entry_00536",
       "RuTa"
     ],
     [
+      "entry_00764",
+      "RuTa"
+    ],
+    [
       "entry_01058",
+      "RuTa"
+    ],
+    [
+      "entry_01208",
       "RuTa"
     ],
     [
@@ -4889,16 +4890,12 @@
       "RuTi"
     ],
     [
-      "entry_01402",
-      "RuTi"
-    ],
-    [
       "entry_01272",
       "RuTi"
     ],
     [
-      "entry_00770",
-      "RuV"
+      "entry_01402",
+      "RuTi"
     ],
     [
       "entry_00433",
@@ -4909,16 +4906,8 @@
       "RuV"
     ],
     [
-      "entry_01309",
-      "RuY"
-    ],
-    [
-      "entry_01147",
-      "RuY"
-    ],
-    [
-      "entry_01312",
-      "RuY"
+      "entry_00770",
+      "RuV"
     ],
     [
       "entry_00757",
@@ -4930,6 +4919,18 @@
     ],
     [
       "entry_01076",
+      "RuY"
+    ],
+    [
+      "entry_01147",
+      "RuY"
+    ],
+    [
+      "entry_01309",
+      "RuY"
+    ],
+    [
+      "entry_01312",
       "RuY"
     ],
     [
@@ -4985,11 +4986,11 @@
       "Ta"
     ],
     [
-      "entry_00392",
+      "entry_00131",
       "Ta3Al"
     ],
     [
-      "entry_00131",
+      "entry_00392",
       "Ta3Al"
     ],
     [
@@ -4997,11 +4998,11 @@
       "Ta3Cu"
     ],
     [
-      "entry_00372",
+      "entry_00070",
       "Ta3Ga"
     ],
     [
-      "entry_00070",
+      "entry_00372",
       "Ta3Ga"
     ],
     [
@@ -5065,6 +5066,14 @@
       "TaGe"
     ],
     [
+      "entry_00461",
+      "TaHf"
+    ],
+    [
+      "entry_00739",
+      "TaHf"
+    ],
+    [
       "entry_00884",
       "TaHf"
     ],
@@ -5073,23 +5082,15 @@
       "TaHf"
     ],
     [
-      "entry_00739",
-      "TaHf"
-    ],
-    [
-      "entry_00461",
-      "TaHf"
-    ],
-    [
       "entry_00937",
       "TaIn"
     ],
     [
-      "entry_00498",
+      "entry_00493",
       "TaMn"
     ],
     [
-      "entry_00493",
+      "entry_00498",
       "TaMn"
     ],
     [
@@ -5109,11 +5110,11 @@
       "TaTi"
     ],
     [
-      "entry_00938",
+      "entry_00782",
       "TaV"
     ],
     [
-      "entry_00782",
+      "entry_00938",
       "TaV"
     ],
     [
@@ -5125,15 +5126,15 @@
       "TaZn"
     ],
     [
+      "entry_00458",
+      "TaZr"
+    ],
+    [
       "entry_00613",
       "TaZr"
     ],
     [
       "entry_00975",
-      "TaZr"
-    ],
-    [
-      "entry_00458",
       "TaZr"
     ],
     [
@@ -5229,10 +5230,6 @@
       "Ti3Zr"
     ],
     [
-      "entry_01224",
-      "TiAl"
-    ],
-    [
       "entry_00706",
       "TiAl"
     ],
@@ -5241,15 +5238,15 @@
       "TiAl"
     ],
     [
+      "entry_01224",
+      "TiAl"
+    ],
+    [
       "entry_00487",
       "TiBe"
     ],
     [
-      "entry_00978",
-      "TiFe"
-    ],
-    [
-      "entry_00795",
+      "entry_00522",
       "TiFe"
     ],
     [
@@ -5257,16 +5254,16 @@
       "TiFe"
     ],
     [
+      "entry_00795",
+      "TiFe"
+    ],
+    [
       "entry_00910",
       "TiFe"
     ],
     [
-      "entry_00522",
+      "entry_00978",
       "TiFe"
-    ],
-    [
-      "entry_01342",
-      "TiGa"
     ],
     [
       "entry_01171",
@@ -5277,8 +5274,8 @@
       "TiGa"
     ],
     [
-      "entry_01084",
-      "TiGe"
+      "entry_01342",
+      "TiGa"
     ],
     [
       "entry_00922",
@@ -5289,15 +5286,19 @@
       "TiGe"
     ],
     [
+      "entry_01084",
+      "TiGe"
+    ],
+    [
       "entry_01135",
       "TiGe"
     ],
     [
-      "entry_00943",
+      "entry_00611",
       "TiHf"
     ],
     [
-      "entry_01457",
+      "entry_00943",
       "TiHf"
     ],
     [
@@ -5305,7 +5306,7 @@
       "TiHf"
     ],
     [
-      "entry_00611",
+      "entry_01457",
       "TiHf"
     ],
     [
@@ -5317,6 +5318,10 @@
       "TiMn"
     ],
     [
+      "entry_01021",
+      "TiNb"
+    ],
+    [
       "entry_01251",
       "TiNb"
     ],
@@ -5325,8 +5330,8 @@
       "TiNb"
     ],
     [
-      "entry_01021",
-      "TiNb"
+      "entry_00439",
+      "TiSc"
     ],
     [
       "entry_01053",
@@ -5334,10 +5339,6 @@
     ],
     [
       "entry_01260",
-      "TiSc"
-    ],
-    [
-      "entry_00439",
       "TiSc"
     ],
     [
@@ -5349,6 +5350,10 @@
       "TiSi"
     ],
     [
+      "entry_01406",
+      "TiSi"
+    ],
+    [
       "entry_01412",
       "TiSi"
     ],
@@ -5357,15 +5362,15 @@
       "TiSi"
     ],
     [
-      "entry_01406",
-      "TiSi"
-    ],
-    [
       "entry_00958",
       "TiSn"
     ],
     [
-      "entry_01341",
+      "entry_00664",
+      "TiTa"
+    ],
+    [
+      "entry_01168",
       "TiTa"
     ],
     [
@@ -5377,7 +5382,7 @@
       "TiTa"
     ],
     [
-      "entry_01168",
+      "entry_01341",
       "TiTa"
     ],
     [
@@ -5385,19 +5390,11 @@
       "TiTa"
     ],
     [
-      "entry_00664",
-      "TiTa"
-    ],
-    [
       "entry_00542",
       "TiV"
     ],
     [
-      "entry_01422",
-      "TiY"
-    ],
-    [
-      "entry_01329",
+      "entry_01079",
       "TiY"
     ],
     [
@@ -5409,7 +5406,11 @@
       "TiY"
     ],
     [
-      "entry_01079",
+      "entry_01329",
+      "TiY"
+    ],
+    [
+      "entry_01422",
       "TiY"
     ],
     [
@@ -5477,15 +5478,15 @@
       "V3Hf"
     ],
     [
-      "entry_00223",
-      "V3In"
-    ],
-    [
       "entry_00078",
       "V3In"
     ],
     [
-      "entry_00256",
+      "entry_00223",
+      "V3In"
+    ],
+    [
+      "entry_00215",
       "V3Nb"
     ],
     [
@@ -5493,7 +5494,7 @@
       "V3Nb"
     ],
     [
-      "entry_00215",
+      "entry_00256",
       "V3Nb"
     ],
     [
@@ -5509,11 +5510,11 @@
       "V3Ti"
     ],
     [
-      "entry_00177",
+      "entry_00032",
       "V3Y"
     ],
     [
-      "entry_00032",
+      "entry_00177",
       "V3Y"
     ],
     [
@@ -5525,12 +5526,20 @@
       "V3Zn"
     ],
     [
+      "entry_00294",
+      "V3Zr"
+    ],
+    [
       "entry_00327",
       "V3Zr"
     ],
     [
-      "entry_00294",
-      "V3Zr"
+      "entry_00633",
+      "VAl"
+    ],
+    [
+      "entry_00692",
+      "VAl"
     ],
     [
       "entry_00979",
@@ -5541,19 +5550,11 @@
       "VAl"
     ],
     [
-      "entry_01315",
-      "VAl"
-    ],
-    [
-      "entry_00633",
-      "VAl"
-    ],
-    [
       "entry_01290",
       "VAl"
     ],
     [
-      "entry_00692",
+      "entry_01315",
       "VAl"
     ],
     [
@@ -5565,7 +5566,7 @@
       "VGa"
     ],
     [
-      "entry_01098",
+      "entry_00463",
       "VGe"
     ],
     [
@@ -5573,11 +5574,11 @@
       "VGe"
     ],
     [
-      "entry_01293",
+      "entry_01098",
       "VGe"
     ],
     [
-      "entry_00463",
+      "entry_01293",
       "VGe"
     ],
     [
@@ -5585,7 +5586,7 @@
       "VHf"
     ],
     [
-      "entry_01035",
+      "entry_00608",
       "VHf"
     ],
     [
@@ -5593,16 +5594,12 @@
       "VHf"
     ],
     [
-      "entry_00608",
+      "entry_01035",
       "VHf"
     ],
     [
       "entry_00882",
       "VIn"
-    ],
-    [
-      "entry_00553",
-      "VMg"
     ],
     [
       "entry_00405",
@@ -5613,15 +5610,19 @@
       "VMg"
     ],
     [
+      "entry_00553",
+      "VMg"
+    ],
+    [
       "entry_00833",
       "VMg"
     ],
     [
-      "entry_00805",
+      "entry_00588",
       "VMn"
     ],
     [
-      "entry_00588",
+      "entry_00805",
       "VMn"
     ],
     [
@@ -5629,15 +5630,11 @@
       "VMn"
     ],
     [
-      "entry_01339",
+      "entry_00637",
       "VNb"
     ],
     [
       "entry_01033",
-      "VNb"
-    ],
-    [
-      "entry_00637",
       "VNb"
     ],
     [
@@ -5649,15 +5646,19 @@
       "VNb"
     ],
     [
+      "entry_01339",
+      "VNb"
+    ],
+    [
+      "entry_00590",
+      "VSc"
+    ],
+    [
       "entry_01300",
       "VSc"
     ],
     [
       "entry_01344",
-      "VSc"
-    ],
-    [
-      "entry_00590",
       "VSc"
     ],
     [
@@ -5685,11 +5686,11 @@
       "VTi"
     ],
     [
-      "entry_00908",
+      "entry_00710",
       "VY"
     ],
     [
-      "entry_00710",
+      "entry_00908",
       "VY"
     ],
     [
@@ -5697,11 +5698,11 @@
       "VY"
     ],
     [
-      "entry_01153",
+      "entry_01004",
       "VZn"
     ],
     [
-      "entry_01004",
+      "entry_01153",
       "VZn"
     ],
     [
@@ -5745,23 +5746,23 @@
       "W3Sn"
     ],
     [
-      "entry_00279",
-      "W3Ta"
-    ],
-    [
       "entry_00048",
       "W3Ta"
     ],
     [
-      "entry_00218",
-      "W3Ti"
+      "entry_00279",
+      "W3Ta"
     ],
     [
       "entry_00017",
       "W3Ti"
     ],
     [
-      "entry_00315",
+      "entry_00218",
+      "W3Ti"
+    ],
+    [
+      "entry_00103",
       "W3V"
     ],
     [
@@ -5769,7 +5770,7 @@
       "W3V"
     ],
     [
-      "entry_00103",
+      "entry_00315",
       "W3V"
     ],
     [
@@ -5789,15 +5790,15 @@
       "WBe"
     ],
     [
-      "entry_00950",
-      "WCu"
-    ],
-    [
       "entry_00564",
       "WCu"
     ],
     [
       "entry_00705",
+      "WCu"
+    ],
+    [
+      "entry_00950",
       "WCu"
     ],
     [
@@ -5817,11 +5818,11 @@
       "WGa"
     ],
     [
-      "entry_00966",
+      "entry_00914",
       "WGe"
     ],
     [
-      "entry_00914",
+      "entry_00966",
       "WGe"
     ],
     [
@@ -5913,11 +5914,11 @@
       "Zr"
     ],
     [
-      "entry_00238",
+      "entry_00107",
       "Zr3Al"
     ],
     [
-      "entry_00107",
+      "entry_00238",
       "Zr3Al"
     ],
     [
@@ -5969,19 +5970,19 @@
       "Zr3Sc"
     ],
     [
-      "entry_00316",
-      "Zr3Si"
-    ],
-    [
       "entry_00052",
       "Zr3Si"
     ],
     [
-      "entry_00266",
-      "Zr3Ta"
+      "entry_00316",
+      "Zr3Si"
     ],
     [
       "entry_00097",
+      "Zr3Ta"
+    ],
+    [
+      "entry_00266",
       "Zr3Ta"
     ],
     [
@@ -5997,11 +5998,11 @@
       "ZrAl"
     ],
     [
-      "entry_01377",
+      "entry_01188",
       "ZrAl"
     ],
     [
-      "entry_01188",
+      "entry_01377",
       "ZrAl"
     ],
     [
@@ -6021,7 +6022,7 @@
       "ZrFe"
     ],
     [
-      "entry_00810",
+      "entry_00429",
       "ZrGa"
     ],
     [
@@ -6029,11 +6030,11 @@
       "ZrGa"
     ],
     [
-      "entry_00429",
+      "entry_00810",
       "ZrGa"
     ],
     [
-      "entry_01275",
+      "entry_00982",
       "ZrGe"
     ],
     [
@@ -6045,16 +6046,20 @@
       "ZrGe"
     ],
     [
-      "entry_00982",
+      "entry_01275",
       "ZrGe"
+    ],
+    [
+      "entry_00500",
+      "ZrHf"
     ],
     [
       "entry_01369",
       "ZrHf"
     ],
     [
-      "entry_00500",
-      "ZrHf"
+      "entry_00488",
+      "ZrIn"
     ],
     [
       "entry_00569",
@@ -6062,10 +6067,6 @@
     ],
     [
       "entry_00632",
-      "ZrIn"
-    ],
-    [
-      "entry_00488",
       "ZrIn"
     ],
     [
@@ -6077,7 +6078,7 @@
       "ZrNb"
     ],
     [
-      "entry_01367",
+      "entry_00926",
       "ZrNb"
     ],
     [
@@ -6085,35 +6086,19 @@
       "ZrNb"
     ],
     [
-      "entry_01077",
-      "ZrNb"
-    ],
-    [
-      "entry_00926",
-      "ZrNb"
-    ],
-    [
       "entry_01075",
       "ZrNb"
     ],
     [
-      "entry_01328",
-      "ZrSc"
+      "entry_01077",
+      "ZrNb"
+    ],
+    [
+      "entry_01367",
+      "ZrNb"
     ],
     [
       "entry_00438",
-      "ZrSc"
-    ],
-    [
-      "entry_01255",
-      "ZrSc"
-    ],
-    [
-      "entry_01283",
-      "ZrSc"
-    ],
-    [
-      "entry_01151",
       "ZrSc"
     ],
     [
@@ -6125,19 +6110,27 @@
       "ZrSc"
     ],
     [
+      "entry_01151",
+      "ZrSc"
+    ],
+    [
+      "entry_01255",
+      "ZrSc"
+    ],
+    [
+      "entry_01283",
+      "ZrSc"
+    ],
+    [
+      "entry_01328",
+      "ZrSc"
+    ],
+    [
+      "entry_00593",
+      "ZrSi"
+    ],
+    [
       "entry_00974",
-      "ZrSi"
-    ],
-    [
-      "entry_01187",
-      "ZrSi"
-    ],
-    [
-      "entry_01184",
-      "ZrSi"
-    ],
-    [
-      "entry_01206",
       "ZrSi"
     ],
     [
@@ -6145,19 +6138,23 @@
       "ZrSi"
     ],
     [
+      "entry_01184",
+      "ZrSi"
+    ],
+    [
+      "entry_01187",
+      "ZrSi"
+    ],
+    [
+      "entry_01206",
+      "ZrSi"
+    ],
+    [
       "entry_01297",
       "ZrSi"
     ],
     [
-      "entry_00593",
-      "ZrSi"
-    ],
-    [
-      "entry_01144",
-      "ZrSn"
-    ],
-    [
-      "entry_01333",
+      "entry_00620",
       "ZrSn"
     ],
     [
@@ -6165,7 +6162,7 @@
       "ZrSn"
     ],
     [
-      "entry_00620",
+      "entry_01144",
       "ZrSn"
     ],
     [
@@ -6173,15 +6170,19 @@
       "ZrSn"
     ],
     [
+      "entry_01333",
+      "ZrSn"
+    ],
+    [
+      "entry_00507",
+      "ZrTa"
+    ],
+    [
       "entry_00624",
       "ZrTa"
     ],
     [
       "entry_00747",
-      "ZrTa"
-    ],
-    [
-      "entry_00507",
       "ZrTa"
     ],
     [
@@ -6197,7 +6198,7 @@
       "ZrTi"
     ],
     [
-      "entry_00709",
+      "entry_00650",
       "ZrV"
     ],
     [
@@ -6205,11 +6206,11 @@
       "ZrV"
     ],
     [
-      "entry_00984",
+      "entry_00709",
       "ZrV"
     ],
     [
-      "entry_00650",
+      "entry_00984",
       "ZrV"
     ],
     [
@@ -6229,11 +6230,11 @@
       "ZrZn"
     ],
     [
-      "entry_01378",
+      "entry_01346",
       "ZrZn"
     ],
     [
-      "entry_01346",
+      "entry_01378",
       "ZrZn"
     ],
     [

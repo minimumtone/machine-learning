@@ -23,7 +23,7 @@ from scripts.eval_independent import load_dataset, summarize  # noqa: E402
 
 DB_NAME = "mp_transfer"
 DATASET = PROJECT / "evaluation" / "mp_transfer_evaluation_dataset.jsonl"
-RESULTS_DIR = PROJECT / "evaluation" / "expected_results"
+RESULTS_DIR = PROJECT / "evaluation" / "expected_results_mp_transfer"
 DEFAULT_OUTPUT = PROJECT / "evaluation" / "mp_transfer_eval_results.json"
 DIFFICULTY_ORDER = ["easy", "medium", "hard", "very_hard"]
 

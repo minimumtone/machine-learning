@@ -4,6 +4,7 @@
     "formula",
     "thermal_conductivity"
   ],
+  "ordered": true,
   "rows": [
     [
       "entry_00031",

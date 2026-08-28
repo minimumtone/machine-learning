@@ -3,8 +3,9 @@
     "composition_formula",
     "delta_e",
     "weighted_ref",
-    "corrected_enthalpy"
+    "enthalpy_vs_element_ground_states"
   ],
+  "ordered": false,
   "rows": [
     [
       "Co3Ti",
