@@ -49,6 +49,21 @@ SCHEMA_SQL = PROJECT / "db" / "transfer_schema.sql"
 INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
 
 
+def git_commit() -> str:
+    """Build provenance for the transfer marker (same convention as the
+    main 007 marker): the GIT_COMMIT env var, the package's GIT_COMMIT
+    file, or 'unknown'."""
+    env = os.getenv("GIT_COMMIT", "").strip()
+    if env:
+        return env
+    f = PROJECT / "GIT_COMMIT"
+    if f.is_file():
+        content = f.read_text().strip()
+        if content:
+            return content
+    return "unknown"
+
+
 def transfer_conninfo() -> str:
     """Connection string for the transfer database."""
     return make_conninfo(
@@ -185,9 +200,13 @@ def main() -> None:
     dst.commit()
 
     # Post-load cross-row assertions (ratio sums, reference coverage):
-    # installs validate_transfer_integrity(), runs it, and writes the
-    # transfer_initialization_status marker on success.
+    # installs validate_transfer_integrity() and
+    # compute_transfer_schema_fingerprint(), runs the validator, and
+    # writes the fingerprint-sealed transfer_initialization_status marker
+    # on success.
     with dst.cursor() as cur:
+        cur.execute("SELECT set_config('l12.git_commit', %s, false)",
+                    (git_commit(),))
         cur.execute(INTEGRITY_SQL.read_text())  # type: ignore[arg-type]
     dst.commit()
     assert_valid_transfer(dst)

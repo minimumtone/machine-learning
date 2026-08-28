@@ -18,12 +18,20 @@ CREATE TABLE oqmd_elements (
 CREATE TABLE oqmd_entries (
     entry_key           TEXT PRIMARY KEY,
     composition_formula TEXT NOT NULL,
-    prototype_label     TEXT,
-    spacegroup_number   INTEGER,
-    crystal_system      TEXT,
+    -- Same NULL contract as the main schema's structure table (prototype /
+    -- space_group_number / crystal_system / volume_per_atom are NOT NULL
+    -- there, and every entry has exactly one structure row): the transfer
+    -- DB must not admit an "unknown prototype/space group/system/volume"
+    -- state that the source fixture cannot produce — that would add a NULL
+    -- semantics axis the transfer evaluation is not meant to test.
+    prototype_label     TEXT NOT NULL,
+    spacegroup_number   INTEGER NOT NULL,
+    crystal_system      TEXT NOT NULL,
+    -- lattice_param_a stays nullable: the main schema's lattice_a is NULL
+    -- for pure-element ground-state rows outside the prototype system.
     lattice_param_a     DOUBLE PRECISION
         CHECK (lattice_param_a > 0 AND lattice_param_a < 'Infinity'),
-    cell_volume_pa      DOUBLE PRECISION
+    cell_volume_pa      DOUBLE PRECISION NOT NULL
         CHECK (cell_volume_pa > 0 AND cell_volume_pa < 'Infinity')
 );
 
