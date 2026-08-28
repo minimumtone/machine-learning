@@ -8,6 +8,8 @@ psycopg[binary]==3.3.4
 sqlglot==30.12.0
 # Graph helpers (graph/ join-path generation used by the audits/builders):
 networkx==3.4.2
+# Config loading (llm/ modules imported by some tests/scripts):
+PyYAML==6.0.3
 # Dev dependency (unit tests only):
 pytest==9.1.1
 # Optional: rebuilding the MP transfer DB from the Materials Project API
