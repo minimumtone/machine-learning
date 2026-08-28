@@ -175,4 +175,12 @@ def validate_expected_schema(expected: object) -> str | None:
         return "'ordered' key is missing"
     if not isinstance(expected["ordered"], bool):
         return "'ordered' is not a boolean"
+    # 'expected_empty' is a contract, not a comment: when present and true
+    # the stored rows must actually be empty (a self-contradictory
+    # expectation is malformed, never silently compared).
+    if "expected_empty" in expected:
+        if not isinstance(expected["expected_empty"], bool):
+            return "'expected_empty' is not a boolean"
+        if expected["expected_empty"] and rows:
+            return "'expected_empty' is true but 'rows' is non-empty"
     return None

@@ -10,7 +10,9 @@ actual top-level ORDER BY (an order-contract mismatch fails the run).
 Also reports orphan expected-results files that no longer have a gold SQL.
 
 All database connections are forced READ ONLY with a 30 s
-statement_timeout (--update only rewrites JSON files, never the DB).
+statement_timeout (--update only rewrites JSON files, never the DB), and
+each connection is pinned to a single REPEATABLE READ snapshot: the guard
+and every gold query of a suite see one and the same database state.
 Skipped transfer/obfuscated queries fail the run unless
 --allow-missing-transfer is given, so a partial run can never be mistaken
 for a full check.
@@ -52,9 +54,13 @@ OBF_RESULTS_DIR = PROJECT / "evaluation" / "expected_results_obfuscated"
 
 
 def _connect_readonly(conninfo: str) -> psycopg.Connection:
+    """READ ONLY + REPEATABLE READ: after the initial commit below, the
+    first statement (the suite guard) opens one snapshot that every
+    subsequent gold query shares until the run ends."""
     conn = psycopg.connect(conninfo)
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
     conn.commit()
     return conn
