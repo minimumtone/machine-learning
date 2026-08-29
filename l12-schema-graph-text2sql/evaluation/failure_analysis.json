@@ -1,23 +1,313 @@
 {
+  "provenance": {
+    "dataset_file": "main_evaluation_dataset.jsonl",
+    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_file": "sql_generation_prompt.md",
+    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
+    "generated_at": "2026-08-29T03:11:05+00:00"
+  },
   "failures": [
     {
-      "qid": "q_medium_026",
-      "difficulty": "medium",
-      "question": "Bサイト元素ごとの平均形成エネルギーを出して。",
+      "qid": "q_cte_007",
+      "difficulty": "very_hard",
+      "question": "多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
+      "recall": 0.2,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.5,
+      "gen_sql": "WITH top_elements AS (\n  SELECT\n    m.formula AS element_symbol,\n    COUNT(DISTINCT s.structure_id) AS polymorph_count\n  FROM material_entry m\n  JOIN structure s ON s.entry_id = m.entry_id\n  WHERE m.number_of_elements = 1\n  GROUP BY m.formula\n  ORDER BY COUNT(DISTINCT s.structure_id) DESC\n  LIMIT 5\n)\nSELECT\n  te.element_symbol,\n  te.polymorph_count,\n  COUNT(DISTINCT m.entry_id) AS l12_compound_count,\n  AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM top_elements te\nJOIN material_entry m ON (\n  m.chemical_system = te.element_symbol\n  OR m.chemical_system LIKE te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol\n)\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nGROUP BY te.element_symbol, te.polymorph_count\nORDER BY te.polymorph_count DESC\nLIMIT 10000;",
+      "gold_sql": "-- CTE G: CTE + 純物質参照テーブル集約\n-- 「多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して」\nWITH top_polymorph AS (\n    SELECT element_symbol, n_polymorphs\n    FROM pure_element_reference\n    WHERE reference_set = 'L12-FIXTURE-PBE-v1'\n    ORDER BY n_polymorphs DESC, element_symbol ASC\n    LIMIT 5\n)\nSELECT tp.element_symbol,\n       tp.n_polymorphs,\n       COUNT(DISTINCT m.entry_id) AS n_l12_compounds,\n       ROUND(AVG(ps.formation_energy_per_atom)::numeric, 4) AS avg_e_form\nFROM top_polymorph tp\nLEFT JOIN composition c ON c.element = tp.element_symbol\nLEFT JOIN material_entry m ON m.entry_id = c.entry_id\nLEFT JOIN structure s ON s.entry_id = m.entry_id\n    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id\nGROUP BY tp.element_symbol, tp.n_polymorphs\nORDER BY tp.n_polymorphs DESC, tp.element_symbol ASC;\n"
+    },
+    {
+      "qid": "q_cte_008",
+      "difficulty": "very_hard",
+      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
-      "join_match_rate": 0.75,
-      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    c.site_label = 'B-site'\n\nLIMIT 10000;",
-      "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT c.element AS b_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nHAVING AVG(ps.formation_energy_per_atom) < -0.4\nORDER BY avg_rebased_formation_energy_per_atom ASC\nLIMIT 10000;",
+      "gold_sql": "-- CTE H: CTE + HAVING（グループフィルタ）\n-- 「B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して」\nWITH l12_enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.energy_above_hull <= 0.001\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT cb.element AS b_site,\n       COUNT(*) AS n_compounds,\n       ROUND(AVG(le.formation_energy_per_atom - le.weighted_ref)::numeric, 4)\n           AS avg_enthalpy_vs_element_gs\nFROM l12_enthalpy le\nJOIN composition cb ON cb.entry_id = le.entry_id AND cb.site_label = 'B-site'\nGROUP BY cb.element\nHAVING AVG(le.formation_energy_per_atom - le.weighted_ref) < -0.4\nORDER BY avg_enthalpy_vs_element_gs ASC;\n"
+    },
+    {
+      "qid": "q_cte_011",
+      "difficulty": "very_hard",
+      "question": "デバイ温度が高い上位10件のL1₂化合物について純元素基底状態基準に再基準化した生成エネルギーも計算して出して。",
+      "recall": 0.7,
+      "select_col_prec": 0.3333333333333333,
+      "join_match_rate": 0.5555555555555556,
+      "gen_sql": "SELECT\n  m.formula,\n  tp.debye_temperature_k,\n  ps.formation_energy_per_atom AS rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND tp.debye_temperature_k IS NOT NULL\n  AND ps.formation_energy_per_atom IS NOT NULL\nORDER BY tp.debye_temperature_k DESC\nLIMIT 10;",
+      "gold_sql": "-- CTE K: CTE + 熱物性テーブル到達\n-- 「デバイ温度が高い上位10件のL1₂化合物について純元素基底状態基準に再基準化した生成エネルギーも計算して出して」\nWITH thermal_l12 AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           ps.reference_set,\n           tp.debye_temperature_k\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id AND cal_tp.calculation_type = 'relaxation'\nJOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id\n    AND tp.temperature_k = 300  -- benchmark convention: representative temperature\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND tp.debye_temperature_k IS NOT NULL\n),\nenthalpy AS (\n    SELECT tl.entry_id, tl.formula, tl.formation_energy_per_atom,\n           tl.debye_temperature_k,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM thermal_l12 tl\n    JOIN composition comp ON comp.entry_id = tl.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = tl.reference_set\n    GROUP BY tl.entry_id, tl.formula, tl.formation_energy_per_atom,\n             tl.debye_temperature_k\n)\nSELECT formula,\n       ROUND(debye_temperature_k::numeric, 1) AS debye_temperature_k,\n       ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4)\n           AS enthalpy_vs_element_ground_states\nFROM enthalpy\nORDER BY debye_temperature_k DESC, formula\nLIMIT 10;\n"
+    },
+    {
+      "qid": "q_cte_013",
+      "difficulty": "very_hard",
+      "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を出して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ABS(ps.formation_energy_per_atom - ps.energy_above_hull) DESC\nLIMIT 10;",
+      "gold_sql": "-- CTE M: CTE + 補正量ランキング\n-- 「形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT formula,\n       ROUND(formation_energy_per_atom::numeric, 4) AS e_form,\n       ROUND(weighted_ref::numeric, 4) AS correction,\n       ROUND(ABS(weighted_ref)::numeric, 4) AS abs_correction\nFROM enthalpy\nORDER BY ABS(weighted_ref) DESC, entry_id\nLIMIT 10;\n"
+    },
+    {
+      "qid": "q_cte_014",
+      "difficulty": "very_hard",
+      "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\n\nLIMIT 10000;",
+      "gold_sql": "-- CTE N: CTE + 割合計算（条件付き集約）\n-- 「元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT c.element,\n       COUNT(DISTINCT e.entry_id) AS n_total,\n       COUNT(DISTINCT e.entry_id) FILTER (\n           WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n       ) AS n_negative,\n       ROUND(\n           COUNT(DISTINCT e.entry_id) FILTER (\n               WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n           )::numeric / COUNT(DISTINCT e.entry_id), 3\n       ) AS negative_ratio\nFROM enthalpy e\nJOIN composition c ON c.entry_id = e.entry_id\nGROUP BY c.element\nHAVING COUNT(DISTINCT e.entry_id) >= 5\nORDER BY negative_ratio DESC, c.element ASC\nLIMIT 15;\n"
+    },
+    {
+      "qid": "q_cte_015",
+      "difficulty": "very_hard",
+      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
+      "recall": 0.0,
+      "select_col_prec": 0.5,
+      "join_match_rate": 0.5714285714285714,
+      "gen_sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\n  AND ps.is_stable = TRUE\n  AND ps.reference_set = 'pure_element_ground_state'\n  AND c.element IN (\n      SELECT DISTINCT cp.element\n      FROM material_entry mp\n      JOIN composition cp ON cp.entry_id = mp.entry_id\n      JOIN structure sp ON sp.entry_id = mp.entry_id\n      JOIN phase_stability psp ON psp.entry_id = mp.entry_id\n      WHERE mp.number_of_elements = 1\n        AND psp.is_stable = TRUE\n        AND sp.volume_per_atom >= 15\n  )\nGROUP BY c.element\nORDER BY c.element ASC\nLIMIT 10000;",
+      "gold_sql": "-- CTE O: 3段CTE（フィルタ → 計算 → 集約）\n-- 「純物質の原子あたり体積が15 Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して」\nWITH large_a_site AS (\n    SELECT c.entry_id, c.element AS a_site\n    FROM composition c\n    JOIN pure_element_reference per ON per.element_symbol = c.element\n    WHERE c.site_label = 'A-site'\n      AND per.reference_set = 'L12-FIXTURE-PBE-v1'\n      AND per.volume_per_atom >= 15\n),\nenthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.energy_above_hull <= 0.001\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT la.a_site,\n       COUNT(*) AS n_compounds,\n       ROUND(AVG(e.formation_energy_per_atom - e.weighted_ref)::numeric, 4)\n           AS avg_enthalpy_vs_element_gs\nFROM enthalpy e\nJOIN large_a_site la ON la.entry_id = e.entry_id\nGROUP BY la.a_site\nORDER BY avg_enthalpy_vs_element_gs ASC;\n"
+    },
+    {
+      "qid": "q_expert_017",
+      "difficulty": "easy",
+      "question": "データベース中に登場する元素を全て一覧にして。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.0,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n\nLIMIT 10000;",
+      "gold_sql": "SELECT DISTINCT element FROM composition ORDER BY element LIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_018",
+      "difficulty": "medium",
+      "question": "Mnを含む化合物はどのプロトタイプに多いか。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.6666666666666666,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Mn'\n\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype, COUNT(DISTINCT m.entry_id) AS cnt\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Mn'\nGROUP BY s.prototype\nORDER BY cnt DESC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_031",
+      "difficulty": "medium",
+      "question": "convex_hullを構成するL12化合物（完全安定）を全て出して。",
+      "recall": 0.2857142857142857,
+      "select_col_prec": 0.4,
+      "join_match_rate": 0.0,
+      "gen_sql": "SELECT m.formula, s.prototype, ps.energy_above_hull, ps.is_stable, pde.is_on_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND pde.is_on_hull = TRUE\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;",
+      "gold_sql": "-- Uses the formation_enthalpy view so the benchmark exercises the view's\n-- reference-set-safe derivation instead of re-implementing it by hand.\nSELECT fe.entry_id, fe.formula, fe.energy_above_hull,\n       fe.formation_enthalpy_ev_per_atom\nFROM formation_enthalpy fe\nWHERE (fe.prototype = 'L12' OR fe.strukturbericht = 'L12')\n  AND fe.energy_above_hull <= 0.001\nORDER BY fe.formation_enthalpy_ev_per_atom\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_035",
+      "difficulty": "hard",
+      "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を教えて。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) * 100.0 / NULLIF(COUNT(*), 0) AS nacl_unstable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\nLIMIT 10000;",
+      "gold_sql": "SELECT\n  COUNT(*) AS total,\n  SUM(CASE WHEN NOT ps.is_stable THEN 1 ELSE 0 END) AS not_stable,\n  ROUND(100.0 * SUM(CASE WHEN NOT ps.is_stable THEN 1 ELSE 0 END) / COUNT(*), 2) AS not_stable_pct\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'NaCl' OR s.strukturbericht = 'B1'\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_038",
+      "difficulty": "medium",
+      "question": "Ni-Al系の化合物を抽出してconvex_hullからの距離を全て表示して。",
+      "recall": 0.5,
+      "select_col_prec": 0.3333333333333333,
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT m.formula, m.chemical_system, pde.hull_distance\nFROM material_entry m\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nWHERE m.chemical_system = 'Al-Ni'\nORDER BY pde.hull_distance ASC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.chemical_system = 'Al-Ni'\nORDER BY ps.energy_above_hull\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_040",
+      "difficulty": "medium",
+      "question": "プロトタイプ別の平均energy_above_hullを比較して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.0,
+      "gen_sql": "SELECT\n    m.formula,\n    AVG(pde.hull_distance) AS avg_energy_above_hull\nFROM material_entry m\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nGROUP BY m.formula\nORDER BY avg_energy_above_hull ASC\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype, AVG(ps.energy_above_hull) AS avg_ehull, COUNT(*) AS cnt\nFROM structure s\nJOIN phase_stability ps ON ps.entry_id = s.entry_id\nGROUP BY s.prototype\nORDER BY avg_ehull, s.prototype\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_041",
+      "difficulty": "easy",
+      "question": "GGA-PBE以外の汎関数で計算されたエントリはあるか。",
+      "recall": 0.0,
+      "select_col_prec": 1.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT DISTINCT m.formula, calc.functional\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nWHERE calc.functional <> 'GGA-PBE'\nORDER BY calc.functional, m.formula\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula, ca.functional\nFROM material_entry m\nJOIN calculation ca ON ca.entry_id = m.entry_id\nWHERE ca.functional IS NOT NULL AND ca.functional != 'GGA-PBE' AND ca.functional != 'PBE'\nORDER BY m.formula\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_072",
+      "difficulty": "hard",
+      "question": "アーク溶解法で合成されたL12化合物を表示して。",
+      "recall": 0.7272727272727273,
+      "select_col_prec": 0.25,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht, sm.method_name\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND sm.method_name ILIKE '%arc%melting%'\n  AND ms.success = TRUE\nORDER BY m.formula\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND sm.method_name = 'Arc Melting'\nORDER BY m.formula\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_073",
+      "difficulty": "hard",
+      "question": "1000K以上の温度で合成されたL12化合物を出して。",
+      "recall": 0.7878787878787878,
+      "select_col_prec": 0.5,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT m.formula, ms.temperature_k, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.temperature_k >= 1000\n  AND ms.success = TRUE\nORDER BY ms.temperature_k DESC, m.formula\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula, ms.temperature_k\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.temperature_k >= 1000\nORDER BY ms.temperature_k DESC, m.entry_id ASC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_077",
+      "difficulty": "hard",
+      "question": "実験値と計算値の両方がある化合物を表示して。",
+      "recall": 0.4883720930232558,
+      "select_col_prec": 0.5,
+      "join_match_rate": 0.2,
+      "gen_sql": "SELECT DISTINCT m.formula, m.source_db\nFROM material_entry m\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE ms.success = TRUE\n  AND m.source_db IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;",
+      "gold_sql": "-- \"Both experimental and calculated values exist\": requires an actual\n-- measured_property row and an actual calculated_property row, deduplicated\n-- via EXISTS so multiple measurements/calculations cannot multiply rows.\nSELECT m.entry_id, m.formula\nFROM material_entry m\nWHERE EXISTS (\n    SELECT 1\n    FROM experimental_measurement em\n    JOIN measured_property mp ON mp.measurement_id = em.measurement_id\n    WHERE em.entry_id = m.entry_id\n)\nAND EXISTS (\n    SELECT 1\n    FROM calculation ca\n    JOIN calculated_property cp ON cp.calculation_id = ca.calculation_id\n    WHERE ca.entry_id = m.entry_id\n)\nORDER BY m.formula, m.entry_id ASC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_085",
+      "difficulty": "very_hard",
+      "question": "強磁性かつ弾性的に安定なL12化合物を全て表示して。",
+      "recall": 0.0,
+      "select_col_prec": 0.75,
+      "join_match_rate": 0.6,
+      "gen_sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable, mp.magnetic_ordering\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.magnetic_ordering = 'ferromagnetic'\n  AND ps.is_stable = TRUE\nORDER BY m.formula ASC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula, mp.magnetic_ordering, et.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nJOIN calculation cal_et ON cal_et.entry_id = m.entry_id AND cal_et.calculation_type = 'relaxation'\nJOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.magnetic_ordering = 'ferromagnetic'\n  AND et.is_stable = TRUE\nORDER BY m.formula\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_087",
+      "difficulty": "very_hard",
+      "question": "Ni3Alよりバルクモジュラスが高く、かつコンベックスハルからの距離が0.01以下の化合物を抽出して。",
+      "recall": 0.0,
+      "select_col_prec": 0.6666666666666666,
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT m.formula, cp_bm.value AS bulk_modulus, cp_hull.value AS energy_above_hull\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n  AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_hull ON cp_hull.calculation_id = calc.calculation_id\n  AND cp_hull.property_name = 'energy_above_hull'\nWHERE cp_bm.value > (\n    SELECT cp_ref.value\n    FROM material_entry m_ref\n    JOIN calculation calc_ref ON calc_ref.entry_id = m_ref.entry_id\n    JOIN calculated_property cp_ref ON cp_ref.calculation_id = calc_ref.calculation_id\n      AND cp_ref.property_name = 'bulk_modulus'\n    WHERE m_ref.formula = 'Ni3Al'\n    ORDER BY cp_ref.value DESC\n    LIMIT 1\n)\n  AND cp_hull.value <= 0.01\nORDER BY cp_bm.value DESC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.entry_id, m.formula, et.bulk_modulus_vrh, ps.energy_above_hull\nFROM material_entry m\nJOIN calculation cal_et ON cal_et.entry_id = m.entry_id AND cal_et.calculation_type = 'relaxation'\nJOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE et.bulk_modulus_vrh > (\n    SELECT et2.bulk_modulus_vrh FROM elastic_tensor et2\n    JOIN calculation cal_et2 ON cal_et2.calculation_id = et2.calculation_id\n    JOIN material_entry m2 ON m2.entry_id = cal_et2.entry_id\n    WHERE m2.formula = 'Ni3Al' LIMIT 1\n  )\n  AND ps.energy_above_hull <= 0.01\nORDER BY et.bulk_modulus_vrh DESC, m.entry_id ASC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_088",
+      "difficulty": "hard",
+      "question": "元素数が2の安定な化合物を、プロトタイプ別に件数を集計して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.6666666666666666,
+      "gen_sql": "SELECT COUNT(*) AS stable_binary_compound_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.number_of_elements = 2\n  AND ps.is_stable = TRUE\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype, COUNT(*) AS cnt\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.number_of_elements = 2\n  AND ps.energy_above_hull <= 0.001\nGROUP BY s.prototype\nORDER BY cnt DESC, s.prototype ASC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_091",
+      "difficulty": "hard",
+      "question": "L12とB2で、安定な化合物の割合を比較して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT\n  COUNT(*) FILTER (WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') AND ps.is_stable = TRUE) * 100.0\n    / NULLIF(COUNT(*) FILTER (WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')), 0) AS l12_stable_percentage,\n  COUNT(*) FILTER (WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2') AND ps.is_stable = TRUE) * 100.0\n    / NULLIF(COUNT(*) FILTER (WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')), 0) AS b2_stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12'\n   OR s.strukturbericht = 'L12'\n   OR s.prototype = 'B2'\n   OR s.strukturbericht = 'B2'\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype,\n  COUNT(*) AS total,\n  SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable,\n  ROUND(100.0 * SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) / COUNT(*), 2) AS stable_pct\nFROM structure s\nJOIN phase_stability ps ON ps.entry_id = s.entry_id\nWHERE s.prototype IN ('L12', 'B2')\nGROUP BY s.prototype\nORDER BY s.prototype\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_092",
+      "difficulty": "hard",
+      "question": "プロトタイプ別の平均バルクモジュラスを教えて。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.3333333333333333,
+      "gen_sql": "SELECT cp.property_name, AVG(cp.value) AS average_bulk_modulus\nFROM calculation calc\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE cp.property_name = 'bulk_modulus'\nGROUP BY cp.property_name\nORDER BY average_bulk_modulus DESC\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype, AVG(et.bulk_modulus_vrh) AS avg_bulk, COUNT(*) AS cnt\nFROM structure s\nJOIN calculation cal_et ON cal_et.entry_id = s.entry_id AND cal_et.calculation_type = 'relaxation'\nJOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id\nGROUP BY s.prototype\nORDER BY avg_bulk DESC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_093",
+      "difficulty": "hard",
+      "question": "Aサイト元素ごとのL12化合物数を集計して。どの元素が最多か。",
+      "recall": 0.045454545454545456,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT c.element AS a_site, COUNT(DISTINCT m.entry_id) AS l12_compound_count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY l12_compound_count DESC\nLIMIT 1;",
+      "gold_sql": "SELECT c.element, COUNT(DISTINCT m.entry_id) AS cnt\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY cnt DESC, c.element ASC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_098",
+      "difficulty": "hard",
+      "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けてほしい。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT m.formula,\n       ps.band_gap,\n       CASE\n         WHEN ps.band_gap = 0 THEN 'zero_band_gap'\n         ELSE 'nonzero_band_gap'\n       END AS band_gap_category\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.band_gap IS NOT NULL\nORDER BY band_gap_category, ps.band_gap ASC, m.formula\nLIMIT 10000;",
+      "gold_sql": "SELECT\n  CASE WHEN ps.band_gap = 0 OR ps.band_gap IS NULL THEN 'metallic (gap=0)' ELSE 'non-zero gap' END AS gap_category,\n  COUNT(*) AS cnt,\n  AVG(ps.band_gap) AS avg_gap\nFROM structure s\nJOIN phase_stability ps ON ps.entry_id = s.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nGROUP BY gap_category\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_099",
+      "difficulty": "hard",
+      "question": "格子定数aの分布を0.1Å刻みでヒストグラム的に表示するデータが欲しい。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT\n  FLOOR(s.lattice_a * 10.0) / 10.0 AS lattice_a_bin_start,\n  FLOOR(s.lattice_a * 10.0) / 10.0 + 0.1 AS lattice_a_bin_end,\n  COUNT(*) AS lattice_a_bin_count\nFROM structure s\nWHERE s.lattice_a IS NOT NULL\nGROUP BY FLOOR(s.lattice_a * 10.0) / 10.0\nORDER BY lattice_a_bin_start ASC\nLIMIT 10000;",
+      "gold_sql": "SELECT\n  FLOOR(lattice_a * 10) / 10.0 AS bin_start,\n  COUNT(*) AS cnt\nFROM structure\nWHERE lattice_a IS NOT NULL\nGROUP BY FLOOR(lattice_a * 10)\nORDER BY bin_start\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_100",
+      "difficulty": "hard",
+      "question": "全プロトタイプについて、安定/不安定/準安定の件数内訳を教えて。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.5,
+      "gen_sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.energy_above_hull <= 0.001) AS count,\n  COUNT(*) FILTER (WHERE ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05) AS metastable_count,\n  COUNT(*) FILTER (WHERE ps.energy_above_hull > 0.05) AS unstable_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nLIMIT 10000;",
+      "gold_sql": "SELECT s.prototype,\n  SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable,\n  SUM(CASE WHEN ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05 THEN 1 ELSE 0 END) AS metastable,\n  SUM(CASE WHEN ps.energy_above_hull > 0.05 THEN 1 ELSE 0 END) AS unstable,\n  COUNT(*) AS total\nFROM structure s\nJOIN phase_stability ps ON ps.entry_id = s.entry_id\nGROUP BY s.prototype\nORDER BY total DESC, s.prototype\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_106",
+      "difficulty": "very_hard",
+      "question": "磁性を持つ安定なL1₂化合物について、磁化とバルクモジュラスの関係を化学式とともに出して",
+      "recall": 0.0,
+      "select_col_prec": 0.75,
+      "join_match_rate": 0.8333333333333334,
+      "gen_sql": "SELECT m.formula,\n       ps.energy_above_hull,\n       cp_mag.value AS magnetization,\n       cp_bm.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_mag ON cp_mag.calculation_id = calc.calculation_id\n     AND cp_mag.property_name = 'magnetization'\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ABS(cp_mag.value) > 0\nORDER BY cp_mag.value DESC\nLIMIT 10000;",
+      "gold_sql": "-- VH: 磁性を持つ安定なL1₂化合物について、磁化とバルクモジュラスの関係を化学式とともに出して\n-- Tables: material_entry, structure, phase_stability, magnetic_property, calculation, calculated_property (6)\nSELECT m.formula, mp.total_magnetization, cp_bm.value AS bulk_modulus,\n       ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND mp.total_magnetization > 0\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY mp.total_magnetization DESC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_111",
+      "difficulty": "very_hard",
+      "question": "安定なL1₂化合物の弾性テンソルのVRHバルクモジュラスが200GPa以上かつ格子定数が3.5-4.0Åの範囲にあるものを出して",
+      "recall": 0.0,
+      "select_col_prec": 0.6,
+      "join_match_rate": 0.8,
+      "gen_sql": "SELECT m.formula,\n       ps.energy_above_hull,\n       ps.is_stable,\n       s.lattice_a,\n       cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND cp.property_name = 'bulk_modulus_vrh'\n  AND cp.unit = 'GPa'\n  AND cp.value >= 200\n  AND s.lattice_a BETWEEN 3.5 AND 4.0\nORDER BY cp.value DESC, s.lattice_a ASC\nLIMIT 10000;",
+      "gold_sql": "-- VH: 安定なL1₂化合物の弾性テンソルのVRHバルクモジュラスが200GPa以上かつ格子定数が3.5-4.0Åの範囲にあるものを出して\n-- Tables: material_entry, structure, phase_stability, elastic_tensor, calculation (5)\nSELECT m.formula, s.lattice_a, et.bulk_modulus_vrh, et.shear_modulus_vrh,\n       et.youngs_modulus, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation cal_et ON cal_et.entry_id = m.entry_id AND cal_et.calculation_type = 'relaxation'\nJOIN elastic_tensor et ON et.calculation_id = cal_et.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND et.bulk_modulus_vrh >= 200\n  AND s.lattice_a BETWEEN 3.5 AND 4.0\nORDER BY et.bulk_modulus_vrh DESC\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_113",
+      "difficulty": "very_hard",
+      "question": "融点が2000K以上の元素を、その元素を含む安定化合物の件数とともに一覧して",
+      "recall": 0.5,
+      "select_col_prec": 0.5,
+      "join_match_rate": 0.4,
+      "gen_sql": "SELECT stable_elements.element_symbol,\n       COUNT(*) AS stable_compound_count\nFROM (\n    SELECT regexp_split_to_table(m.chemical_system, '-') AS element_symbol\n    FROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE ps.is_stable = TRUE\n      AND m.number_of_elements > 1\n) AS stable_elements\nWHERE stable_elements.element_symbol IN ('B', 'C', 'V', 'Cr', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Th')\nGROUP BY stable_elements.element_symbol\nORDER BY stable_elements.element_symbol\nLIMIT 10000;",
+      "gold_sql": "-- VH: 融点が2000K以上の元素を、その元素を含む安定化合物の件数とともに一覧して\n-- Tables: element, element_property, composition, material_entry, phase_stability (5)\n-- Exercises the element_property dictionary (element-level measured data).\nSELECT e.symbol, ep.value AS melting_point_k,\n       COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable) AS stable_compound_count\nFROM element e\nJOIN element_property ep ON ep.element_id = e.element_id\nLEFT JOIN composition c ON c.element = e.symbol\nLEFT JOIN material_entry m ON m.entry_id = c.entry_id\nLEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ep.property_name = 'melting_point'\n  AND ep.value >= 2000\nGROUP BY e.symbol, ep.value\nORDER BY ep.value DESC, e.symbol\nLIMIT 10000;\n"
+    },
+    {
+      "qid": "q_expert_115",
+      "difficulty": "very_hard",
+      "question": "各材料ソース(source_db)が宣言を許可されているエネルギー規約(reference_set)と、その規約のmethod・functional・sourceを一覧して",
+      "recall": 0.3333333333333333,
+      "select_col_prec": 0.75,
+      "join_match_rate": 0.0,
+      "gen_sql": "SELECT DISTINCT m.source_db, calc.calculation_type, calc.method, calc.functional\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nORDER BY m.source_db, calc.calculation_type, calc.method, calc.functional\nLIMIT 10000;",
+      "gold_sql": "-- VH: 各材料ソース(source_db)が宣言を許可されているエネルギー規約(reference_set)と、その規約のmethod・functional・sourceを一覧して\n-- Tables: fixture_source_reference_set, reference_energy_set (2)\n-- Exercises the fixture_source_reference_set map and the reference_energy_set master.\nSELECT fsr.source_db, fsr.reference_set,\n       res.method, res.functional, res.source\nFROM fixture_source_reference_set fsr\nJOIN reference_energy_set res\n  ON res.reference_set = fsr.reference_set\nORDER BY fsr.source_db, fsr.reference_set\nLIMIT 10000;\n"
     },
     {
       "qid": "q_hard_001",
       "difficulty": "hard",
       "question": "Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。",
-      "recall": 0.06153846153846154,
+      "recall": 0.026455026455026454,
       "select_col_prec": 0.6666666666666666,
       "join_match_rate": 1.0,
-      "gen_sql": "SELECT m.formula, ps.is_stable, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Ni'\n  )\n  AND (\n    ps.is_stable = TRUE\n    OR (ps.is_stable = FALSE AND ps.energy_above_hull <= 0.05)\n  )\nORDER BY ps.is_stable DESC, ps.energy_above_hull ASC, m.formula\nLIMIT 10000;",
+      "gen_sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Ni'\n  )\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;",
       "gold_sql": "SELECT m.entry_id, m.formula, ps.energy_above_hull, ps.formation_energy_per_atom, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\nORDER BY ps.energy_above_hull ASC, ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
@@ -31,23 +321,13 @@
       "gold_sql": "SELECT c.element AS a_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_eform,\n       COUNT(DISTINCT m.entry_id) AS count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.001\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY avg_eform ASC\nLIMIT 10000;"
     },
     {
-      "qid": "q_hard_015",
-      "difficulty": "hard",
-      "question": "格子定数3.55Å付近でバルクモジュラスの高いL1₂化合物を探して。",
-      "recall": 0.5050505050505051,
-      "select_col_prec": 1.0,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT m.formula, s.lattice_a, cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND ABS(s.lattice_a - 3.55) <= 0.05\nORDER BY cp.value DESC, ABS(s.lattice_a - 3.55) ASC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, cp.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.55) AS lattice_diff\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND ABS(s.lattice_a - 3.55) <= 0.1\nORDER BY cp.value DESC\nLIMIT 10000;"
-    },
-    {
       "qid": "q_hard_018",
       "difficulty": "hard",
       "question": "Al系L1₂化合物のうち安定なものとそうでないものの数を出して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
-      "gen_sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS stable_l12_al_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_l12_al_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element = 'Al'\n  )\nLIMIT 10000;",
+      "gen_sql": "SELECT\n  COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = TRUE) AS stable_l12_count,\n  COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = FALSE) AS not_stable_l12_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Al'\nLIMIT 10000;",
       "gold_sql": "SELECT\n  CASE WHEN ps.energy_above_hull <= 0.001 THEN 'stable' ELSE 'not_stable' END AS stability,\n  COUNT(*) AS count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Al'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nGROUP BY CASE WHEN ps.energy_above_hull <= 0.001 THEN 'stable' ELSE 'not_stable' END\nORDER BY stability\nLIMIT 10000;"
     },
     {
@@ -58,98 +338,78 @@
       "select_col_prec": 0.8333333333333334,
       "join_match_rate": 1.0,
       "gen_sql": "SELECT m.formula,\n       ps.energy_above_hull,\n       ps.is_stable,\n       cp.property_name,\n       cp.value,\n       cp.unit\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name IN ('C11', 'C12', 'C44')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name\nLIMIT 10000;"
+      "gold_sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable,\n       cp.property_name, cp.value\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Fe'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula, cp.property_name, m.entry_id ASC\nLIMIT 10000;"
     },
     {
-      "qid": "q_vhard_001",
-      "difficulty": "very_hard",
-      "question": "L1₂型金属間化合物において、相安定性、格子ミスマッチ、弾性特性を同時に考慮した析出強化相候補を抽出して。",
+      "qid": "q_medium_026",
+      "difficulty": "medium",
+      "question": "Bサイト元素ごとの平均形成エネルギーを出して。",
       "recall": 0.0,
-      "select_col_prec": 0.375,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT\n  m.formula,\n  ps.is_stable,\n  ps.energy_above_hull,\n  s.lattice_a,\n  ABS(s.lattice_a - 3.57) AS lattice_diff,\n  cp_c11.value AS C11,\n  cp_c12.value AS C12,\n  cp_c44.value AS C44\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_c11 ON cp_c11.calculation_id = calc.calculation_id\n  AND cp_c11.tensor_component = 'C11'\nJOIN calculated_property cp_c12 ON cp_c12.calculation_id = calc.calculation_id\n  AND cp_c12.tensor_component = 'C12'\nJOIN calculated_property cp_c44 ON cp_c44.calculation_id = calc.calculation_id\n  AND cp_c44.tensor_component = 'C44'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.number_of_elements >= 2\n  AND ps.is_stable = TRUE\nORDER BY\n  ps.energy_above_hull ASC,\n  ABS(s.lattice_a - 3.57) ASC,\n  cp_c44.value DESC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull, ps.formation_energy_per_atom,\n       cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS lattice_mismatch\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY ps.energy_above_hull ASC, ABS(s.lattice_a - 3.57) ASC\nLIMIT 10000;"
+      "select_col_prec": 0.0,
+      "join_match_rate": 0.75,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    c.site_label = 'B-site'\n\nLIMIT 10000;",
+      "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
     },
     {
-      "qid": "q_vhard_002",
+      "qid": "q_proto_bif3_very_hard_001",
       "difficulty": "very_hard",
-      "question": "Ni₃Al代替またはCo基γ'相候補として有望なL1₂型金属間化合物を、形成エネルギー、格子定数、弾性率の観点から探索して。",
-      "recall": 0.010256410256410256,
-      "select_col_prec": 1.0,
-      "join_match_rate": 0.6,
-      "gen_sql": "SELECT m.formula, ps.formation_energy_per_atom, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < 0\n  AND m.formula <> 'Ni3Al'\n  AND EXISTS (\n      SELECT 1\n      FROM composition c\n      WHERE c.entry_id = m.entry_id\n        AND c.element IN ('Ni', 'Co')\n  )\nORDER BY ABS(s.lattice_a - 3.57) ASC, ps.formation_energy_per_atom ASC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom,\n       ps.energy_above_hull, cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS lattice_diff\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY ps.formation_energy_per_atom ASC, ABS(s.lattice_a - 3.57) ASC\nLIMIT 10000;"
+      "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'BiF3' OR s.strukturbericht = 'BiF3')\n    AND ps.is_stable = TRUE\n    AND (m.formula = 'BiF3' OR m.reduced_formula = 'BiF3')\n    AND c.site_label IN ('A-site', 'B-site')\n\nLIMIT 10000;",
+      "gold_sql": "SELECT ca.element AS a_site, cb.element AS b_site,\n       COUNT(*) AS total,\n       SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable_count,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'\nJOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3' OR s.strukturbericht = 'D03'\nGROUP BY ca.element, cb.element\nORDER BY avg_eform ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_l12_very_hard_001",
+      "difficulty": "very_hard",
+      "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.is_stable = TRUE\n    AND c.site_label IN ('A-site', 'B-site')\n\nLIMIT 10000;",
+      "gold_sql": "SELECT ca.element AS a_site, cb.element AS b_site,\n       COUNT(*) AS total,\n       SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable_count,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'\nJOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nGROUP BY ca.element, cb.element\nORDER BY avg_eform ASC, a_site, b_site\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_proto_nias_very_hard_001",
+      "difficulty": "very_hard",
+      "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "recall": 0.0,
+      "select_col_prec": 0.0,
+      "join_match_rate": 1.0,
+      "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'NiAs' OR s.strukturbericht = 'NiAs')\n    AND EXISTS (SELECT 1 FROM composition c_as WHERE c_as.entry_id = m.entry_id AND c_as.element = 'As')\n    AND EXISTS (SELECT 1 FROM composition c_ni WHERE c_ni.entry_id = m.entry_id AND c_ni.element = 'Ni')\n    AND ps.is_stable = TRUE\n    AND EXISTS (SELECT 1 FROM composition c_sl WHERE c_sl.entry_id = m.entry_id AND c_sl.site_label IN ('A-site', 'B-site'))\n\nLIMIT 10000;",
+      "gold_sql": "SELECT ca.element AS a_site, cb.element AS b_site,\n       COUNT(*) AS total,\n       SUM(CASE WHEN ps.energy_above_hull <= 0.001 THEN 1 ELSE 0 END) AS stable_count,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN composition ca ON ca.entry_id = m.entry_id AND ca.site_label = 'A-site'\nJOIN composition cb ON cb.entry_id = m.entry_id AND cb.site_label = 'B-site'\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'NiAs' OR s.strukturbericht = 'B81'\nGROUP BY ca.element, cb.element\nORDER BY avg_eform ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_vhard_003",
       "difficulty": "very_hard",
-      "question": "γ'相候補のランキングを安定性・格子整合性・バルクモジュラスの重み付きスコアで出して。",
-      "recall": 0.0,
-      "select_col_prec": 0.7142857142857143,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT\n    m.formula,\n    ps.is_stable,\n    ps.energy_above_hull,\n    s.lattice_a,\n    ABS(s.lattice_a - 3.57) AS lattice_diff,\n    cp_bm.value AS bulk_modulus,\n    (\n        0.4 * (1.0 / (1.0 + ps.energy_above_hull)) +\n        0.3 * (1.0 / (1.0 + ABS(s.lattice_a - 3.57))) +\n        0.3 * (cp_bm.value / 300.0)\n    ) AS weighted_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n    AND cp_bm.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY weighted_score DESC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       (1.0 - ps.energy_above_hull / 0.05) * 0.4\n       + (1.0 - ABS(s.lattice_a - 3.57) / 0.3) * 0.3\n       + (cp_bm.value / 300.0) * 0.3 AS weighted_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY weighted_score DESC\nLIMIT 10000;"
+      "question": "γ'相候補のランキングを重み付きスコア (1 − E_hull/0.05)×0.4 + (1 − |a − 3.57|/0.3)×0.3 + (B/300)×0.3（E_hull ≤ 0.05 eV/atomのL1₂のみ対象、a: 格子定数Å、B: 体積弾性率GPa）で出して。",
+      "recall": 0.41798941798941797,
+      "select_col_prec": 1.0,
+      "join_match_rate": 0.8,
+      "gen_sql": "SELECT\n  m.formula,\n  pde.hull_distance AS energy_above_hull,\n  s.lattice_a,\n  cp.value AS bulk_modulus,\n  ((1 - pde.hull_distance / 0.05) * 0.4\n   + (1 - ABS(s.lattice_a - 3.57) / 0.3) * 0.3\n   + (cp.value / 300) * 0.3) AS weighted_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND pde.hull_distance <= 0.05\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.unit = 'GPa'\nORDER BY weighted_score DESC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       (1.0 - ps.energy_above_hull / 0.05) * 0.4\n       + (1.0 - ABS(s.lattice_a - 3.57) / 0.3) * 0.3\n       + (cp_bm.value / 300.0) * 0.3 AS weighted_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY weighted_score DESC\nLIMIT 10000;"
     },
     {
-      "qid": "q_vhard_006",
+      "qid": "q_vhard_007",
       "difficulty": "very_hard",
-      "question": "Ni3Alの格子定数に近く、バルクモジュラスが高く、安定なL1₂候補を総合的にランキングして。",
-      "recall": 0.041025641025641026,
-      "select_col_prec": 0.5714285714285714,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT m.formula,\n       s.lattice_a,\n       ABS(s.lattice_a - 3.57) AS lattice_diff,\n       cp.value AS bulk_modulus,\n       ps.energy_above_hull,\n       ps.is_stable,\n       cp.value / (1.0 + ABS(s.lattice_a - 3.57)) AS ranking_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\n     AND cp.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\nORDER BY ranking_score DESC, ABS(s.lattice_a - 3.57) ASC, cp.value DESC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, cp_bm.value AS bulk_modulus,\n       ps.energy_above_hull,\n       ABS(s.lattice_a - 3.57) AS lattice_mismatch,\n       (1.0 - ps.energy_above_hull / 0.05) * 0.35\n       + (1.0 - ABS(s.lattice_a - 3.57) / 0.3) * 0.35\n       + (cp_bm.value / 300.0) * 0.30 AS composite_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY composite_score DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_vhard_008",
-      "difficulty": "very_hard",
-      "question": "Co基超合金のγ'相候補として、Co含有で安定なL1₂化合物をNi3Alとの比較で評価して。",
-      "recall": 0.05263157894736842,
-      "select_col_prec": 0.6,
-      "join_match_rate": 0.6666666666666666,
-      "gen_sql": "SELECT m.formula,\n       s.lattice_a,\n       ABS(s.lattice_a - 3.57) AS lattice_diff,\n       ps.energy_above_hull,\n       ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Co'\n  AND ps.is_stable = TRUE\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY lattice_diff ASC, ps.energy_above_hull ASC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS lattice_diff_ni3al\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE c.element = 'Co'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY ps.energy_above_hull ASC, ABS(s.lattice_a - 3.57) ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_vhard_011",
-      "difficulty": "very_hard",
-      "question": "高温安定性の観点で有望なL1₂型化合物を形成エネルギーの深さで評価して上位を出して。",
-      "recall": 0.02040816326530612,
-      "select_col_prec": 0.5,
-      "join_match_rate": 0.6,
-      "gen_sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC, ps.energy_above_hull ASC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       CASE WHEN ps.energy_above_hull <= 0.001 THEN 'stable'\n            WHEN ps.energy_above_hull <= 0.05 THEN 'metastable'\n            ELSE 'unstable' END AS stability_class\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY ps.energy_above_hull ASC\nLIMIT 10000;"
+      "question": "析出強化に適したL1₂化合物（E_hull ≤ 0.05 eV/atom）をスコア (1 − E_hull/0.05)×0.35 + (1 − min(|a − 3.57|, 0.3)/0.3)×0.35 + (min(B, 300)/300)×0.30 で評価して上位候補を出して。",
+      "recall": 0.41798941798941797,
+      "select_col_prec": 0.6666666666666666,
+      "join_match_rate": 0.8,
+      "gen_sql": "SELECT\n  m.formula,\n  phase_diagram_entry.hull_distance AS e_hull,\n  s.lattice_a,\n  ABS(s.lattice_a - 3.57) AS lattice_diff,\n  cp.value AS bulk_modulus,\n  ((1 - phase_diagram_entry.hull_distance / 0.05) * 0.35\n   + (1 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.35\n   + (LEAST(cp.value, 300) / 300) * 0.30) AS score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_diagram_entry ON phase_diagram_entry.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND phase_diagram_entry.hull_distance <= 0.05\n  AND cp.property_name = 'bulk_modulus'\nORDER BY score DESC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.formula, s.lattice_a, ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS mismatch,\n       (1.0 - ps.energy_above_hull / 0.05) * 0.35\n       + (1.0 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.35\n       + (LEAST(cp_bm.value, 300) / 300.0) * 0.30 AS score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY score DESC, m.entry_id ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_vhard_012",
       "difficulty": "very_hard",
-      "question": "Ni基超合金のγ'相代替候補として、Ni-Al系以外で安定なL1₂化合物を格子整合性で評価して。",
-      "recall": 0.035897435897435895,
-      "select_col_prec": 0.6,
+      "question": "Ni基超合金のγ'相代替候補として、Ni-Al系以外の安定（is_stable）なL1₂化合物を設計スコア (1 − min(E_hull, 0.05)/0.05)×0.30 + (1 − min(|a − 3.57|, 0.3)/0.3)×0.25 + (min(B, 300)/300)×0.25 + (形成エネルギー < −0.3 eV/atomなら0.20、それ以外は0.10) でランキングして。",
+      "recall": 0.0,
+      "select_col_prec": 0.7142857142857143,
       "join_match_rate": 0.6,
-      "gen_sql": "SELECT\n    m.formula,\n    s.lattice_a,\n    ABS(s.lattice_a - 3.57) AS lattice_diff,\n    ps.energy_above_hull,\n    ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND m.chemical_system != 'Al-Ni'\nORDER BY lattice_diff ASC, ps.energy_above_hull ASC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom,\n       ps.energy_above_hull, cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS mismatch,\n       (1.0 - LEAST(ps.energy_above_hull, 0.05) / 0.05) * 0.30\n       + (1.0 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.25\n       + (LEAST(cp_bm.value, 300) / 300.0) * 0.25\n       + (CASE WHEN ps.formation_energy_per_atom < -0.3 THEN 0.20 ELSE 0.10 END) AS design_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY design_score DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_vhard_015",
-      "difficulty": "very_hard",
-      "question": "L1₂化合物のうちNi3Alより安定でバルクモジュラスが高い候補を出して。",
-      "recall": 0.0,
-      "select_col_prec": 0.75,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT m.formula, ps.is_stable, ps.energy_above_hull, cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\n     AND cp.property_name = 'bulk_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull < (\n      SELECT ps_ref.energy_above_hull\n      FROM material_entry m_ref\n      JOIN phase_stability ps_ref ON ps_ref.entry_id = m_ref.entry_id\n      WHERE m_ref.formula = 'Ni3Al' OR m_ref.reduced_formula = 'Ni3Al'\n      ORDER BY ps_ref.energy_above_hull ASC\n      LIMIT 1\n  )\n  AND cp.value > (\n      SELECT cp_ref.value\n      FROM material_entry m_ref\n      JOIN calculation calc_ref ON calc_ref.entry_id = m_ref.entry_id\n      JOIN calculated_property cp_ref ON cp_ref.calculation_id = calc_ref.calculation_id\n           AND cp_ref.property_name = 'bulk_modulus'\n      WHERE m_ref.formula = 'Ni3Al' OR m_ref.reduced_formula = 'Ni3Al'\n      ORDER BY cp_ref.value DESC\n      LIMIT 1\n  )\n  AND NOT (m.formula = 'Ni3Al' OR m.reduced_formula = 'Ni3Al')\nORDER BY ps.energy_above_hull ASC, cp.value DESC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula,\n       s.lattice_a,\n       ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus,\n       cp_sm.value AS shear_modulus,\n       ABS(s.lattice_a - 3.57) AS mismatch\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n  AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id\n  AND cp_sm.property_name = 'shear_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\nORDER BY ps.energy_above_hull ASC, cp_bm.value DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_vhard_017",
-      "difficulty": "very_hard",
-      "question": "全L1₂化合物について、安定性スコア×格子整合性スコア×弾性スコアの複合スコアを計算してランキングして。",
-      "recall": 0.0,
-      "select_col_prec": 0.2727272727272727,
-      "join_match_rate": 1.0,
-      "gen_sql": "SELECT\n    m.formula,\n    ps.energy_above_hull,\n    s.lattice_a,\n    ABS(s.lattice_a - 3.57) AS lattice_diff,\n    cp_c11.value AS C11,\n    cp_c12.value AS C12,\n    cp_c44.value AS C44,\n    (1.0 / (1.0 + ps.energy_above_hull)) AS stability_score,\n    (1.0 / (1.0 + ABS(s.lattice_a - 3.57))) AS lattice_matching_score,\n    ((cp_c11.value + cp_c12.value + cp_c44.value) / 3.0) AS elastic_score,\n    (1.0 / (1.0 + ps.energy_above_hull))\n    * (1.0 / (1.0 + ABS(s.lattice_a - 3.57)))\n    * ((cp_c11.value + cp_c12.value + cp_c44.value) / 3.0) AS composite_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_c11 ON cp_c11.calculation_id = calc.calculation_id\n    AND cp_c11.property_name = 'elastic_constant'\n    AND cp_c11.tensor_component = 'C11'\nJOIN calculated_property cp_c12 ON cp_c12.calculation_id = calc.calculation_id\n    AND cp_c12.property_name = 'elastic_constant'\n    AND cp_c12.tensor_component = 'C12'\nJOIN calculated_property cp_c44 ON cp_c44.calculation_id = calc.calculation_id\n    AND cp_c44.property_name = 'elastic_constant'\n    AND cp_c44.tensor_component = 'C44'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY composite_score DESC\nLIMIT 10000;",
-      "gold_sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom,\n       ps.energy_above_hull, cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS mismatch,\n       (1.0 - LEAST(ps.energy_above_hull, 0.05) / 0.05) * 0.30\n       + (1.0 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.30\n       + (LEAST(cp_bm.value, 300) / 300.0) * 0.20\n       + (-ps.formation_energy_per_atom / 1.0) * 0.20 AS final_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY final_score DESC\nLIMIT 20;"
+      "gen_sql": "SELECT\n  m.formula,\n  ps.is_stable,\n  ps.energy_above_hull,\n  ps.formation_energy_per_atom,\n  s.lattice_a,\n  ABS(s.lattice_a - 3.57) AS lattice_diff,\n  (\n    (1 - LEAST(ps.energy_above_hull, 0.05) / 0.05) * 0.30\n    + (1 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.25\n    + CASE\n        WHEN ps.formation_energy_per_atom < -0.3 THEN 0.20\n        ELSE 0.10\n      END\n  ) AS design_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system != 'Al-Ni'\n  AND ps.is_stable = TRUE\nORDER BY design_score DESC\nLIMIT 10000;",
+      "gold_sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom,\n       ps.energy_above_hull, cp_bm.value AS bulk_modulus,\n       ABS(s.lattice_a - 3.57) AS mismatch,\n       (1.0 - LEAST(ps.energy_above_hull, 0.05) / 0.05) * 0.30\n       + (1.0 - LEAST(ABS(s.lattice_a - 3.57), 0.3) / 0.3) * 0.25\n       + (LEAST(cp_bm.value, 300) / 300.0) * 0.25\n       + (CASE WHEN ps.formation_energy_per_atom < -0.3 THEN 0.20 ELSE 0.10 END) AS design_score\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id AND calc.calculation_type = 'relaxation'\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system <> 'Al-Ni'\n  AND ps.is_stable = TRUE\n  AND cp_bm.property_name = 'bulk_modulus'\nORDER BY design_score DESC\nLIMIT 10000;"
     }
   ],
-  "n_total": 100
+  "n_total": 245
 }

@@ -50,6 +50,7 @@ import psycopg  # noqa: E402
 
 from evaluation.metrics import execution_accuracy_full  # noqa: E402
 from evaluation.metrics_strict import ScoringPolicy, score  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 EVAL = PROJECT / "evaluation"
 
@@ -315,6 +316,7 @@ def main() -> int:
                 print(f"          {rec['qid']}: {rec['n_common']}/{rec['n_gold_cols']} cols "
                       f"({', '.join(rec['common'])})")
 
+    report["provenance"] = build_provenance(EVAL / "main_evaluation_dataset.jsonl")
     Path(args.out).write_text(json.dumps(report, indent=2, ensure_ascii=False))
     print(f"\nWrote {args.out}")
     return 0 if bad == 0 else 2

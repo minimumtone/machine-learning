@@ -17,6 +17,8 @@ sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
 
+from scripts.provenance import build_provenance  # noqa: E402
+
 from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
@@ -249,6 +251,8 @@ def main():
     with open(out_path, "w") as f:
         json.dump({
             "model": model,
+            "provenance": build_provenance(
+                EVAL_DIR / "evaluation_dataset.jsonl"),
             "sample_size": len(results),
             "overall_reranker": total_reranker,
             "overall_baseline": total_baseline,

@@ -10,16 +10,20 @@ derived from a single stored run.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 EVAL = PROJECT / "evaluation"
+sys.path.insert(0, str(PROJECT))
+
+from scripts.provenance import build_provenance  # noqa: E402
 
 
 def main() -> None:
     data = json.load(open(EVAL / "multiaxis_results.json"))
     dataset = {}
-    for line in open(EVAL / "evaluation_dataset.jsonl"):
+    for line in open(EVAL / "main_evaluation_dataset.jsonl"):
         r = json.loads(line)
         dataset[r["id"]] = r
 
@@ -40,7 +44,12 @@ def main() -> None:
             "gold_sql": gold_sql,
         })
 
-    out = {"failures": failures, "n_total": len(data["results"])}
+    out = {
+        "provenance": build_provenance(
+            EVAL / "main_evaluation_dataset.jsonl"),
+        "failures": failures,
+        "n_total": len(data["results"]),
+    }
     (EVAL / "failure_analysis.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=2))
     print(f"{len(failures)} failures (recall<0.8) out of {len(data['results'])}")
