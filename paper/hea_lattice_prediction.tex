@@ -341,6 +341,87 @@ $\Omega_\text{sf}^{(\text{FCC})} = \Omega_\text{sf}^{\text{L1}_2}$。
 $q_s$は秩序構造の$\Omega_\text{sf}$をランダム固溶体の体積偏差に対応付ける校正定数であり、B2参照では$q_\text{BCC} = 0.49$、$q_\text{FCC} = 0.13$を得た。SQS参照では$q_\text{BCC} = 1$を採用でき、校正定数なしでの予測が可能となる（\ref{sec:sqs_improvement}節で詳述）。
 
 
+\subsection{二元系再現規格化と移行率$f$}
+\label{sec:transfer}
+
+式~\eqref{eq:scaled_eq10}に二元系参照構造の$\Omega_\text{sf}$を代入したとき、この式は\textbf{代入元の二元系自身の体積を再現しない}。この点は$q_s$の解釈に直接影響するため、ここで明示的に扱う。
+
+二元系$A_{1-x}B_x$（$c_A = 1-x$、$c_B = x$）では式~\eqref{eq:scaled_eq10}の補正項は
+\begin{equation}
+  \Delta V_\text{model}
+  = c_A c_B \left(V_A + V_B\right) \Omega_\text{sf},
+  \label{eq:excess_model_binary}
+\end{equation}
+一方、$\Omega_\text{sf}$の定義式~\eqref{eq:omega_def}から参照構造が実際に持つ超過体積は
+\begin{equation}
+  \Delta V_\text{true}
+  = \Omega_\text{sf}\left(c_A V_A + c_B V_B\right)
+  \label{eq:excess_true_binary}
+\end{equation}
+である。両者の比を
+\begin{equation}
+  \kappa
+  \equiv \frac{\Delta V_\text{model}}{\Delta V_\text{true}}
+  = \frac{c_A c_B \left(V_A + V_B\right)}
+         {c_A V_A + c_B V_B}
+  \label{eq:kappa}
+\end{equation}
+と定義すると、$\kappa$から$\Omega_\text{sf}$が完全に消えるため、$\kappa$は\textbf{参照構造の組成と端点体積のみで決まる幾何因子}である。50:50参照（BCC SQSおよびB2）では端点体積に依らず
+\begin{equation}
+  \kappa = \tfrac{1}{2},
+  \qquad
+  q_\text{exact} \equiv \kappa^{-1} = 2
+  \label{eq:qexact_5050}
+\end{equation}
+が厳密に成立する。L1$_2$参照（3:1）では$\kappa = 0.1875\,(V_A+V_B)/(0.75V_A+0.25V_B)$となり端点体積に依存する。
+
+$q_\text{exact}$は「二元系の超過体積が元素対ごとに加法的にHEAへ移行する」という仮定（超過体積の正則溶液型対和）に対応する校正定数である。したがって校正で得た$q_s$を
+\begin{equation}
+  f \equiv \frac{q_s}{q_\text{exact}}
+  \label{eq:transfer_fraction}
+\end{equation}
+と規格化した\textbf{移行率}で読むと、参照構造や参照組成の違いを跨いで比較できる。$f = 1$は対加法性が厳密に成り立つ場合、$f < 1$はHEAの超過体積が二元系の対和より小さい場合、$f > 1$は大きい場合を意味する。以降、$q_s$そのものと$f$を併記する。$f$は参照構造・参照組成・参照体積の選び方に依存する診断量であり、物理定数ではない点に注意する。
+
+
+\subsection{$\Omega_\text{sf}$の組成依存とRedlich--Kister拡張}
+\label{sec:rk_method}
+
+式~\eqref{eq:scaled_eq10}の$c_i c_j$形は、二元系極限で超過体積が$x(1-x)$に比例する対称形（正則溶液型）を仮定している。本研究のSQSデータベースは$x = 0.25$、$0.50$、$0.75$の3組成を含むため、この仮定を直接検証できる。超過体積を
+\begin{equation}
+  \Delta V(x) = V_\text{alloy}(x)
+  - \left[(1-x) V_A + x V_B\right]
+  \label{eq:dv_x}
+\end{equation}
+と定義し（$x$はアルファベット順第2元素の原子分率、$V_A$・$V_B$は\textbf{同一データセット・同一セルサイズ}の純元素端点）、対称形と Redlich--Kister 一次項による拡張形
+\begin{align}
+  \Delta V(x) &= x(1-x)\, a_0,
+  \label{eq:rk0} \\
+  \Delta V(x) &= x(1-x)
+  \left[a_0 + a_1 (1-2x)\right]
+  \label{eq:rk1}
+\end{align}
+を比較する。$a_0$は対称項、$a_1$は式~\eqref{eq:scaled_eq10}が表現できない非対称成分である。$a_0$は50:50データのみから$a_0^\text{mid} = \Delta V(0.5)/0.25$として、端組成のみからは$a_0^\text{ends} = [\Delta V(0.25)+\Delta V(0.75)]/(2 \times 0.1875)$として独立に推定できる。両者の比$a_0^\text{ends}/a_0^\text{mid}$は、50:50で校正した対称項を端組成へ外挿する際の誤差を直接与える。非対称項は3組成から
+\begin{equation}
+  a_1 = \frac{\Delta V(0.25) - \Delta V(0.75)}{0.1875}
+  \label{eq:a1}
+\end{equation}
+で決まる。3点で2係数を決めるため式~\eqref{eq:rk1}の残差は必然的に小さくなる。したがって本研究では残差ではなく$|a_1/a_0|$と端組成での外挿誤差を評価指標とする。
+
+HEA予測への拡張は、式~\eqref{eq:scaled_eq10}に非対称項を加えた
+\begin{equation}
+  V = n_\text{auc} \!\left[
+    \sum_i c_i V_i
+    + q_s \!\!\sum_{i \ne j}\!\! c_i c_j V_j \Omega_\text{sf}^{(s)}(i,j)
+    + q_1 \!\!\sum_{i<j}\!\! c_i c_j (c_i - c_j)
+      (V_i + V_j)\, \omega_1(i,j)
+  \right]
+  \label{eq:rk_hea}
+\end{equation}
+で行う。ここで$\omega_1(i,j) = a_1(i,j)/(V_A^\text{SQS} + V_B^\text{SQS})$は$a_1$を無次元化した量、$i$はアルファベット順先行元素であり、$q_1$は$q_s$と独立に校正する。等原子組成では$c_i - c_j = 0$のため第3項は恒等的に消える。すなわちこの拡張は\textbf{非等原子組成合金にのみ}効果を持つ。この構造的性質自体も定量する（\ref{sec:rk_results}節）。
+
+純元素端点の扱いは$a_1$の測定に直接影響する。端点$V_A$を$\delta V_A$だけ置換すると$\Delta V(x)$は$(1-x)\delta V_A + x\,\delta V_B$だけ変化し、これは$x(1-x)$形ではなく$x$の一次項として$a_0$と$a_1$の両方を汚染する。そのため組成依存解析では\textbf{同一データセットの生の純元素端点}（raw）を主とし、King/MP置換後の端点（curated、\ref{sec:omega}節の50:50 $\Omega_\text{sf}$データベースと同じ処理）を感度解析として併記する。
+
+
 \subsection{元素別加法分解}
 \label{sec:additive}
 
@@ -586,6 +667,18 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 
 テストセット中で最大の誤差を示すAlCoMnNiV（BCC）について補足する。この合金の実験格子定数$a = 2.900$~\AA{}に対し、Vegard予測は$a = 2.957$~\AA（誤差$+0.057$~\AA）、$\Omega_\text{sf}$予測は$a = 2.930$~\AA（誤差$+0.030$~\AA）であり、$\Omega_\text{sf}$補正が誤差を約半分に縮小する。Vegard誤差が大きい主因はAlのKing原子体積（$V_\text{Al} = 16.60$~\AA$^3$、等価BCC格子定数3.21~\AA）が本来のFCC構造から換算した値であり、BCC環境でのAlの実効体積を過大評価するためである。全10ペアの$\Omega_\text{sf}^\text{B2}$は$-0.021$\textasciitilde$-0.129$と全て負値（体積収縮側）であり、特にAl--Co（$-0.129$）、Al--Mn（$-0.115$）が補正に寄与している。なおSQS参照では未収束等により445ペア（全465中）にとどまり、欠損ペアは$\Omega_\text{sf} = 0$（Vegard縮退）にフォールバックする（Co--Mnは再計算により収束し$\Omega_\text{sf} = -0.022$として445ペアに含まれる）。B2/L1$_2$参照ではHEA予測に必要な全ペアをカバーしているが、SQS参照では一部のペアが欠損する点に注意が必要である。Chen~\cite{Chen2023}によるCALPHAD予測と実験の整合性は高いが、$a = 2.900$~\AA{}は3$d$遷移金属5元素としては異例に小さく、本モデルの二元系線形外挿の限界を示す事例である。
 
+残差の記述子依存を図~\ref{fig:indep_residual}に示す。残差（予測$-$実験）には構造依存の系統ズレがあり、BCC 17合金は中央値$+0.0054$~\AA{}と正側に、FCC 14合金は中央値$-0.0078$~\AA{}と負側に寄る（Mann--Whitney $U$検定で$p = 0.018$）。RMSE自体は両構造で同等（BCC 0.0157~\AA、FCC 0.0152~\AA）であるから、このズレは精度の違いでなく、構造ごとに別の参照（B2 + KingとL1$_2$ + King）と別の$q$を用いていることの帰結である可能性が高い。一方で、成分数（3--6）と絶対残差の間には有意な相関がなく（Spearman $\rho = 0.26$、$p = 0.16$）、構成ペアのSQS $\left|\Omega_\text{sf}\right|$（DFT Vegard基準）の中央値との間にも単調な関係は見えない。すなわち、成分数を増やしても二元系可加性モデルの誤差が累積的に増大する兆候は、本テストセットの範囲では検出されない。なお図~\ref{fig:indep_residual}(b)の横軸はSQS参照の$\Omega_\text{sf}$である一方、残差はB2/L1$_2$ + King参照の採用モデルのものであり、両者の参照は一致していない。ここではSQS $\Omega_\text{sf}$を「構成ペアの非Vegard性の大きさ」を表す独立な記述子として用いている。実験格子定数と残差の全体相関（Spearman $\rho = -0.53$、$p = 0.002$）は上記の構造ズレと交絡しており、構造別に見ると弱まる（BCC $\rho = -0.46$、$p = 0.066$、FCC $\rho = -0.20$、$p = 0.48$）ため、格子定数自体への依存として解釈することはできない。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_indep_residual_descriptors.png}
+\caption{独立テスト31 HEAの残差（予測$-$実験、\AA）の記述子依存。予測は採用モデル（BCC: B2 + King、$q_\text{BCC} = 0.486$、FCC: L1$_2$ + King、$q_\text{FCC} = 0.133$）。
+  (a)~成分数。(b)~構成ペアのSQS $\left|\Omega_\text{sf}\right|$（DFT Vegard基準）の中央値（\%）。残差側の参照とは異なる参照であることに注意。
+  (c)~実験格子定数（\AA）。(d)~構造別の箱ひげ図と各合金の値。
+  青丸がBCC 17合金、赤四角がFCC 14合金。}
+\label{fig:indep_residual}
+\end{figure*}
+
 \subsection{元素別加法分解パラメータ}
 \label{sec:delta_results}
 
@@ -726,6 +819,147 @@ L1$_2$のVegard偏差に対するVegard端点の影響を定量評価した。Ki
 \end{figure*}
 
 構造依存有効体積$V_\text{eff}$の効果を二元系レベルで検証すると、二元系ペア（B2: 465、L1$_2$: 441）に対するRMSE改善は0.222~\AA{}$\to$0.209~\AA（5.9\%）にとどまる（付録~\ref{sec:appendix_vegard_binary}、図~\ref{fig:vegard_absorbed}）。組成が$c = 25\%, 50\%, 75\%$に限定されるため、Vegard則からの偏差の大部分が線形補間の精度内に収まることが主因である。一方、多成分HEAでは$n(n-1)/2$ペアの$\Omega_\text{sf}$が非線形に寄与するため構造情報の価値が顕在化し、独立テスト31 HEAでは23.3\%改善（0.0202~\AA{}$\to$0.0155~\AA）を達成した。$V_\text{eff}$の有用性は成分数の増加に伴い増大し、二元系での限定的改善はHEAへの適用を否定するものではない。
+
+
+\subsection{$\Omega_\text{sf}$の組成依存の直接測定}
+\label{sec:comp_dep}
+
+\ref{sec:rk_method}節の枠組みで、BCC 16原子SQS（12:4、8:8、4:12）とFCC 32原子SQS（24:8、16:16、8:24）の3組成を同一の基準で解析した。収束判定と未緩和体積行の除外（\ref{sec:unrelaxed_screening}節の式~\eqref{eq:unrelaxed_rule}）を適用した後、BCCでは1,448行を採用し、非収束96行、未緩和97行、除外元素を含む469行を除いた。FCCでは792行を採用し、非収束694行、未緩和45行、除外元素177行を除いた。3組成が揃うペアはBCC 427ペア、FCC 73ペアであり、そのうち生の純元素端点が同一データセットに存在するのはBCC 350ペア、FCC 70ペアである。この抽出は既存の50:50 $\Omega_\text{sf}$データベースと数値的に整合する（重複BCC 375行で$\Omega_\text{sf}(0.5)$の最大差$5.6\times10^{-9}$、FCC 73行で差0）。
+
+表~\ref{tab:comp_dep}に主要統計を示す。第一の結果は、$\Omega_\text{sf}$の組成依存が\textbf{定性的には小さく、定量的には無視できない}ことである。$\Omega_\text{sf}(0.25)$と$\Omega_\text{sf}(0.50)$のPearson相関はBCC 0.954、FCC 0.970であり、符号が3組成で一致するペアはBCC 86.3\%、FCC 95.7\%である（いずれも生端点）。すなわち「どのペアが収縮しどのペアが膨張するか」という定性的順序は組成によらず保たれる。一方、50:50から得た対称項$a_0^\text{mid}$を端組成へ外挿したときの誤差（式~\eqref{eq:rk0}の形からのずれ）は$\Omega_\text{sf}$換算でBCC中央値0.564\%、90パーセンタイル2.51\%であり、$|\Omega_\text{sf}(0.5)|$の中央値2.668\%の約2割に達する。対称形が20\%以内で成立するペアはBCC 68.8\%、FCC 89.2\%にとどまる。
+
+\begin{table}[!t]
+\centering
+\caption{$\Omega_\text{sf}$の組成依存統計。生端点（raw、同一データセットの純元素体積）を主とし、括弧内はKing/MP置換後の端点（curated）。「対称形20\%以内」は$|a_0^\text{ends}/a_0^\text{mid} - 1| \le 0.2$を満たすペアの割合。}
+\label{tab:comp_dep}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcc}
+\toprule
+指標 & BCC SQS (16原子) & FCC SQS (32原子) \\
+\midrule
+3組成が揃うペア数 & 350 (427) & 70 (73) \\
+median $\Omega_\text{sf}(0.25)$ [\%] & $-0.822$ ($-0.443$) & $-1.100$ ($+0.069$) \\
+median $\Omega_\text{sf}(0.50)$ [\%] & $-1.007$ ($-0.937$) & $-1.481$ ($-0.121$) \\
+median $\Omega_\text{sf}(0.75)$ [\%] & $-0.719$ ($-0.585$) & $-1.174$ ($-0.220$) \\
+median $|\Omega_\text{sf}(0.50)|$ [\%] & 2.668 (4.075) & 1.734 (1.777) \\
+$r(\Omega_{0.25}, \Omega_{0.50})$ & 0.954 (0.931) & 0.970 (0.960) \\
+$r(\Omega_{0.75}, \Omega_{0.50})$ & 0.953 (0.935) & 0.966 (0.957) \\
+符号一致ペア & 86.3\% (82.9\%) & 95.7\% (84.9\%) \\
+median $a_0^\text{ends}/a_0^\text{mid}$ & 1.007 (1.046) & 1.075 (1.099) \\
+対称形20\%以内 & 68.8\% (51.7\%) & 89.2\% (57.7\%) \\
+median 外挿誤差 $x=0.25$ [\%] & 0.564 (1.312) & 0.166 (0.569) \\
+p90 外挿誤差 $x=0.25$ [\%] & 2.508 (3.674) & 0.694 (1.538) \\
+median $|a_1/a_0|$ & 0.441 (0.698) & 0.318 (0.592) \\
+p90 $|a_1/a_0|$ & 1.724 (3.004) & 0.588 (3.308) \\
+median $|\Omega_{0.25} - \Omega_{0.75}|$ [\%] & 0.869 (2.101) & 0.289 (1.032) \\
+max $|\Omega_{0.25} - \Omega_{0.75}|$ [\%] & 15.66 (18.15) & 2.26 (3.19) \\
+最大非対称ペア & Ca--Co (Mn--Sc) & Re--Zn (W--Zn) \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+第二の結果は、非対称項が系統的に存在することである。$|a_1/a_0|$の中央値はBCC 0.441、FCC 0.318であり、$a_1$は$a_0$の数分の一という無視できない大きさを持つ。$\Omega_\text{sf}(0.25)$と$\Omega_\text{sf}(0.75)$の差はBCC中央値0.869\%、90パーセンタイル4.51\%、最大15.66\%（Ca--Co）に達する。図~\ref{fig:omega_composition}に$\Omega_\text{sf}(x)$の曲線群、図~\ref{fig:quadratic_form}に$\Delta V(x)/[x(1-x)]$の一定性（対称形の妥当性）、図~\ref{fig:asymmetry}に端組成間の非対称性を示す。
+
+第三の結果は方法論上の注意である。純元素端点をKing/MP値へ置換すると（curated）、$\Delta V(x)$に$x$の一次項が混入するため見かけの非対称性が約2.4倍に増幅される（BCC中央値0.869\%$\to$2.101\%）。組成依存性の測定には同一データセット端点が必須であり、この点は50:50単独の$\Omega_\text{sf}$では現れない系統誤差である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_omega_composition.png}
+\caption{$\Omega_\text{sf}$の組成依存。
+  左: BCC SQS（16原子）、右: FCC SQS（32原子）。
+  灰色細線は全ペア、色付き太線は$|\Omega_\text{sf}(0.5)|$上位6ペア、
+  黒破線は全ペアの中央値。横軸はアルファベット順第2元素の原子分率$x$。
+  curated端点での集計（BCC 427ペア、FCC 73ペア）。}
+\label{fig:omega_composition}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_quadratic_form.png}
+\caption{対称形（正則溶液型）$\Delta V(x) = x(1-x) a_0$の検証。
+  左: BCC SQS、右: FCC SQS。
+  横軸は50:50から求めた$a_0^\text{mid}$、
+  縦軸は端組成（$x = 0.25$, $0.75$）から求めた$a_0^\text{ends}$（いずれも$\mathrm{\AA}^3$/atom）。
+  対称形が厳密なら$y = x$線上に乗る。
+  この図はcurated端点での集計（BCC 427ペア、FCC 73ペア）であり、本文の主集計はraw端点（BCC 350ペア、FCC 70ペア）である。}
+\label{fig:quadratic_form}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_asymmetry.png}
+\caption{組成非対称性。
+  左: BCC SQS、右: FCC SQS。
+  $\Omega_\text{sf}(0.25)$と$\Omega_\text{sf}(0.75)$のパリティプロット（\%）。
+  $y = x$線からのずれがRedlich--Kister一次項$a_1$に対応する。
+  curated端点での集計（BCC 427ペア、FCC 73ペア）であり、見かけの非対称性はraw端点より大きく出る。}
+\label{fig:asymmetry}
+\end{figure*}
+
+
+\subsection{移行率$f$から見た校正定数$q$}
+\label{sec:transfer_results}
+
+\ref{sec:transfer}節の規格化を適用した結果を表~\ref{tab:transfer}に示す。まず$q_\text{exact} = 2$が二元系を厳密に再現することを数値で確認した：BCC SQS 445ペアに対し$q = 2$では体積誤差の中央値0\%（最大$4.7\times10^{-14}$\%）、$q = 1$では中央値2.05\%（最大26.55\%）である。L1$_2$参照では$q_\text{exact}$の中央値2.652（範囲1.868--3.465、1,114行）となる。
+
+この規格化のもとで、採用モデル（BCC SQS + DFT Vegard、$q_\text{BCC} = 1$）の移行率は$f = 0.500$、校正最適値$q_\text{opt} = 1.110$では$f = 0.555$である。すなわち\textbf{HEAの超過体積は、二元系超過体積の対加法的な和の約55\%}である。従来「$q \approx 1$は二元系$\Omega_\text{sf}$がそのままHEAへ移行することを意味する」と読める表現を用いてきたが、これは$\Omega_\text{sf}$を式~\eqref{eq:scaled_eq10}へ代入する際の規約に依存した言明であり、対加法性の基準では$f \approx 0.5$、すなわち\textbf{対加法性からの系統的な減少}が本質である。秩序構造参照ではこの減少がさらに大きく、B2参照で$f = 0.243$、L1$_2$参照で$f = 0.050$である。一方FCC SQS参照は$f = 1.788$と1を超えるが、これは120ペアという小さな母集団と、FCC校正合金のペア被覆率の低さ（\ref{sec:rk_results}節）を反映した値であり、単独では物理的解釈に耐えない。
+
+\begin{table}[!t]
+\centering
+\caption{移行率$f = q_s/q_\text{exact}$による校正定数の再規格化。$q_\text{opt}$は校正64 HEAで最適化した値、RMSEは独立テスト31 HEA（BCC 17、FCC 14）の該当構造に対する値。Vegard基準はBCC 0.0226~\AA、FCC 0.0170~\AA。}
+\label{tab:transfer}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+参照（$\Omega_\text{sf}$源 + 参照体積） & 参照組成 & ペア数 & $q_\text{exact}$ & $q_\text{opt}$ & $f$ \\
+\midrule
+BCC SQS + DFT Vegard & 50:50 & 445 & 2.000 & 1.110 & 0.555 \\
+\quad（採用値 $q = 1$） & 50:50 & 445 & 2.000 & 1.000 & 0.500 \\
+BCC SQS + King & 50:50 & 445 & 2.000 & 0.626 & 0.313 \\
+BCC B2 + King & 50:50 & 465 & 2.000 & 0.486 & 0.243 \\
+FCC SQS + DFT Vegard & 50:50 & 120 & 2.000 & 3.577 & 1.788 \\
+FCC L1$_2$ + King & 3:1 & 441 & 2.652 & 0.133 & 0.050 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+$q$走査曲線（図~\ref{fig:q_scan}）は、いずれのモデルでも独立テストRMSEが$q_\text{exact}$より小さい$q$で最小になることを示す（最小の位置はBCC SQS + DFT Vegardで$q \approx 1.4$、B2 + Kingで$q \approx 0.9$、L1$_2$ + Kingで$q \approx 0.3$）。$q = q_\text{exact}$を強制した場合の独立テストRMSEはBCC SQS + DFT Vegardで0.0135~\AA（$q_\text{opt}$では0.0118~\AA）、B2 + Kingで0.0281~\AA（同0.0157~\AA）、L1$_2$ + Kingで0.0673~\AA（同0.0152~\AA）であり、秩序構造参照では対加法性をそのまま課すとVegard則（BCC 0.0226~\AA、FCC 0.0170~\AA）より悪化する。移行率の縮約（図~\ref{fig:transfer_fraction}）は経験的補正ではなく、モデルが成立するための必要条件である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_q_scan.png}
+\caption{校正定数$q$の走査。
+  実線は独立テストRMSE、破線は校正RMSE（\AA）。
+  縦線は$q = 1$、各曲線の最適値、および二元系を厳密に再現する
+  $q_\text{exact}$を示す。}
+\label{fig:q_scan}
+\end{figure*}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_transfer_fraction.png}
+\caption{移行率$f = q_\text{opt}/q_\text{exact}$の比較。
+  $f = 1$（縦線）は二元系超過体積の対加法性が厳密に成立する場合に対応する。}
+\label{fig:transfer_fraction}
+\end{figure}
+
+
+\subsection{Redlich--Kister拡張の効果: 否定的結果}
+\label{sec:rk_results}
+
+式~\eqref{eq:rk_hea}の非対称項をHEA予測に適用した結果は否定的である。BCC SQS（生端点、$\omega_1$が得られた350ペア）では、独立テスト17合金のペア被覆率は81.3\%（144ペア中117）だが、全ペアが被覆される合金は3件のみである。校正64 HEAで$q$と$q_1$を同時最適化すると$q = 1.115$、$q_1 = 21.2$となり、校正RMSEは0.0278~\AA{}$\to$0.0264~\AA（5.2\%改善）、独立テストRMSEは0.0118~\AA{}$\to$0.0114~\AA{}にとどまる。$q$を1に固定した場合は$q_1 = 21.2$、独立テスト0.0124~\AA{}$\to$0.0120~\AA{}である。FCC SQSでは被覆率が8.9\%しかなく、$q_1 = 160$、独立テストRMSEは0.0127~\AA{}$\to$0.0142~\AA{}と悪化する。
+
+この否定的結果には構造的な理由がある。第一に、非対称項の前因子$c_i c_j (c_i - c_j)$は近等原子組成HEAで消える。独立テスト17 BCC合金のうち、全成分が$1/n$から2\%以内という近等原子組成に該当するのは15合金であり、非等原子組成は2合金のみである。第二に、$q_1$を$q_s$と同じスケール（$q_1 = 1$）に置いたときの格子定数の変化量は中央値0~\AA、90パーセンタイル$1.3\times10^{-4}$~\AA、最大$5.5\times10^{-4}$~\AA{}であり、独立テストRMSE 0.0118~\AA{}の2桁下である。$q_1 \approx 21$という校正値は、この小さな前因子を補償しているだけであり、$\omega_1$の物理的スケール（$q_s$と同程度であるべき）から大きく外れる。非等原子組成の独立テスト2合金ではRMSEが0.0091~\AA{}$\to$0.0032~\AA{}と改善するが、$n = 2$では証拠にならない。
+
+したがって、\textbf{二元系の組成非対称性は実在し（\ref{sec:comp_dep}節）、かつ近等原子組成HEAの格子定数には構造上ほとんど伝わらない}。これは式~\eqref{eq:scaled_eq10}の対称形が近等原子組成HEAに対して十分であることの積極的な根拠であり、同時に非等原子組成HEA（例えばAl$_x$CoCrFeNiのような組成傾斜系）への外挿では検証されていない項が効きうることを意味する。
+
+
+\subsection{非等量組成でのセルサイズ検証}
+\label{sec:cellsize_x25}
+
+\ref{sec:sqs_cellsize}節の16原子対128原子の比較は50:50組成に限られていた。128原子SQSには96:32（$x = 0.25$）の結果が16件含まれるため、非等量組成でも同じ検証を行った。各セルサイズ自身の純元素端点（16原子: $A_8A_8$、128原子: $A_{64}A_{64}$）を用い、未緩和体積行を除外した結果、共通14組成で$|\Delta \Omega_\text{sf}|$の中央値は0.113\%、最大は1.143\%（Be$_{0.75}$Zn$_{0.25}$）であった。符号反転はAg$_{0.75}$Au$_{0.25}$とAl$_{0.75}$Zn$_{0.25}$の2件だが、いずれも両セルサイズで$|\Omega_\text{sf}| \le 0.10$\%であり、符号が意味を持たない大きさである。$|\Omega_\text{sf}|$が1\%を超える12組成では符号反転は生じない。50:50での結果（12ペア、中央値0.033\%、最大0.244\%）と比べて差はやや大きいが、$x = 0.25$でも16原子セルの$\Omega_\text{sf}$は0.2\%程度の精度で128原子セルを再現する。
 
 
 \subsection{機械学習残差解析}
@@ -870,6 +1104,17 @@ SQS計算の初期セルは、元素ごとの入力参照体積表（3桁丸め�
 であり、\texttt{paper/detect\_unrelaxed\_volumes.py}として実装して再現可能にした。全SQS計算行のうち176行が該当し（BCC 16原子103行、BCC 128原子12行、FCC 32原子61行）、緩和収束フラグが\texttt{yes}と記録された行を含む。
 
 該当行では合金体積が入力参照体積の組成加重平均そのものであるため、$\Omega_\text{sf}$は緩和による体積変化を含まず、参照端点（キュレーション後のSQS純元素体積）との差のみを反映する。実際、BCC 50:50で該当する11ペアの$\left|\Omega_\text{sf}\right|$中央値は1.31\%であり、該当しない434ペアの3.99\%より系統的に小さい。したがって該当行の$\Omega_\text{sf}$は物理量ではなく人工物として扱う。本稿の主要な検証結果はB2/L1$_2$＋King参照モデルであり、そこには化合物データベースのみを用いるため該当行は入らない。SQSモデルへの影響は感度として評価した。BCC SQS＋DFT Vegardの445ペアから該当11ペア（Nb--Ta, Nb--V, Mo--V, Cr--Ta, Nb--Pd, Nb--Sc, Ru--Ti, Ag--Ti, Au--Ru, Cu--Re, Fe--Mg）を除くと、校正最適値は$q_\text{opt} = 1.110 \to 1.126$、独立テストBCC RMSEは$q_\text{opt}$で0.0118~\AA{}$\to$0.0119~\AA{}、$q = 1$固定で0.0124~\AA{}$\to$0.0126~\AA{}となり、結論は変わらない。ただしChen統合スクリーニングでは、BCC 14,887件のうち4,617件（31.0\%）、FCC 1,555件のうち479件（30.8\%）が該当ペアを少なくとも1つ含むため、これらの予測値では当該ペアの補正が実質的に欠落している。該当行の再計算までは、本稿の表は全ペアを保持したままこの割合を明示する。次節のセルサイズ比較では、比較の目的が体積そのものの差であるため該当行を除外した集計を主とする。
+
+検出の全体像を図~\ref{fig:unrelaxed_diagnostic}に示す。(a)は全SQS計算行の記録体積を入力表の組成加重平均に対してプロットしたもので、該当176行が$y = x$線上に完全に乗る一方で、残る3,255行は線の両側に分布する。この分布の付き方自体が、該当行を「偶然の一致」として説明できないことの根拠である。(b)はBCC 50:50の$\left|\Omega_\text{sf}\right|$分布で、該当11ペアがすべて$\left|\Omega_\text{sf}\right| < 6$\%の領域に集まることを示す。なおこの診断は「記録値が入力表の加重平均と一致する」という算術的事実に基づくものであり、VASP側のどの抽出経路（ISIF設定、CONTCARの欠損など）で生じたかを特定するものではない。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_unrelaxed_diagnostic.png}
+\caption{体積が緩和されていない計算行の診断。
+  (a)~記録体積（\AA$^3$/atom）と入力表の組成加重平均の比較。赤点が式~\eqref{eq:unrelaxed_rule}で該当と判定された176行で、$y = x$線上に乗る。
+  (b)~BCC 50:50の$\left|\Omega_\text{sf}\right|$分布（\%）。該当11ペア（赤）と非該当434ペア（青）。}
+\label{fig:unrelaxed_diagnostic}
+\end{figure*}
 
 \subsubsection{16原子と128原子SQSのセルサイズ比較}
 \label{sec:sqs_cellsize}
@@ -1018,7 +1263,7 @@ LOO-DCV（$q$再最適化） & 全95 & +0.0020（9.1\%） & --- \\
 テストRMSEは$q = 1.0$--$1.6$で安定し（BCC: 0.0109--0.0124~\AA{}）、$q = 1.0$は追加パラメータなしで物理的に自然な選択である。$q_\text{opt} = 1.11$も同等以上のテスト精度を示すが、データセットや純元素参照の選択に敏感な経験的パラメータとなる。
 \end{sloppypar}
 
-セルサイズ比較は29純元素と11混合ペアに限られるため、16原子SQSの有限サイズ効果を全データへ一般化する検証ではない。本稿では、この限定された範囲で得られた定量値を提示するが、有限サイズ効果を$q \neq 1$の要因から排除する根拠や本稿の結論を単独で支える根拠としては用いない。
+セルサイズ比較は26純元素と12混合ペア（50:50）および14組成（$x=0.25$）に限られるため、16原子SQSの有限サイズ効果を全データへ一般化する検証ではない。本稿では、この限定された範囲で得られた定量値を提示するが、有限サイズ効果を$q \neq 1$の要因から排除する根拠や本稿の結論を単独で支える根拠としては用いない。
 
 \subsubsection{$\Omega_\text{sf}$分布の比較}
 \label{sec:omega_distribution}
@@ -1142,6 +1387,20 @@ King体積なし & 7,586 & 純元素King原子体積を用いた格子定数予�
 
 付与された格子定数はBCCで$a = 2.8648$--$3.5183$~\AA{}（平均$3.1300$~\AA{}）、FCCで$a = 3.5828$--$4.1584$~\AA{}（平均$3.8234$~\AA{}）である（図~\ref{fig:chen2023_screening}）。Vegard則からの補正量は、BCCで中央値$|\Delta a/a| = 0.3955$\%、平均$-0.1676$\%、範囲$-2.3038$--$+1.6947$\%であり、1,238件（8.3\%）が$|\Delta a/a| > 1$\%である。FCCでは中央値$0.0450$\%、平均$+0.0173$\%、範囲$-0.2248$--$+0.1557$\%で、1\%超の系は0件である。FCCの補正が小さいのは、L1$_2$ + King参照に対して$q_\text{FCC}=0.133399$を用いているためであり、ほぼVegard則となることは設計上の帰結である。最大の収縮補正はMg-Ni-Os-Re-Sc（BCC、$-2.3038$\%）、Mg-Ni-Os-Ru-Sc（BCC、$-2.2800$\%）、Co-Mg-Os-Ru-Sc（BCC、$-2.2798$\%）などに現れた。これらはサイズ差の大きい元素対と強い混合を併せ持つ系であり、Vegard則が最も破綻しやすい領域である。
 
+補正量の分布とサイズ差依存を図~\ref{fig:chen_screening_hist}に示す。BCCでは補正量$\Delta a/a$が原子サイズ差$\Delta r$と負の相関を示し（Pearson $r = -0.585$、$n = 14{,}887$）、$\Delta r$が大きい系で体積収縮側の補正が強くなる。これはVegard則からの乗り上げが大きい領域を$\Delta r$で事前に見分けられることを意味するが、相関は完全でなく（$|\Delta a/a|$とは$r = 0.346$）、同じ$\Delta r$でも補正量は1\%以上の幅を持つ。FCCでは$q_\text{FCC} = 0.133399$による補正自体が小さいため、$\Delta r$依存もほぼ消失する（$r = 0.122$、$n = 1{,}555$）。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_chen_screening_hist.png}
+\caption{Chen統合スクリーニング16,442件の分布。
+  (a)~予測格子定数（\AA）のヒストグラム。
+  (b)~補正量$\Delta a/a$（\%）のヒストグラム（度数軸は対数）。
+  (c)~原子サイズ差$\Delta r$（\%）と補正量の関係。
+  (d)~Vegard予測と補正後予測のパリティプロット（破線は$y=x$）。
+  いずれも青がBCC 14,887件（SQS + DFT Vegard、$q=1$）、赤がFCC 1,555件（L1$_2$ + King、$q_\text{FCC}=0.133399$）。}
+\label{fig:chen_screening_hist}
+\end{figure*}
+
 この統合表（\texttt{paper/results\_chen2023\_screening.csv}）は、相安定性のみでは絞り込めない格子整合性（基板・析出相との整合、耐火合金の$\delta$値設計など）を含めた探索に利用できる。ただし、(1)~$q$はAlonsoの64合金で校正した値をそのまま用いており、Chenらの予測合金群に対して再校正していない、(2)~予測はChenらが与えた相（BCCまたはFCC）が実現することを前提とする、(3)~独立テストRMSE（BCC 0.0124~\AA{}、FCC 0.0152~\AA{}、いずれも\S\ref{sec:sqs_improvement}の採用モデル）と同程度の不確かさが各値に付随する、という3点に留意が必要である。
 
 \begin{figure*}[!t]
@@ -1195,6 +1454,24 @@ BCC独立テスト17合金に対し$q = 1$固定で加法SQS $\delta$を用い�
 
 SQS参照での最良予測にはペアワイズ$\Omega_\text{sf}^\text{SQS}$が必要であり、B2/L1$_2$参照の加法$\delta^{(s)}$パラメータ（表~\ref{tab:delta_params}）が実用上の最良選択肢である。
 
+
+\subsection{対加法性の破れ: 移行率$f \approx 0.5$の意味}
+\label{sec:disc_transfer}
+
+\ref{sec:transfer_results}節の規格化は、本モデルの経験的成分の位置づけを変える。$q_s$を「秩序度の違いを吸収する係数」と読む従来の解釈では、$q_\text{BCC} \approx 1$は「補正が不要」を意味するように見える。しかし対加法性の基準（$q_\text{exact}$）で読むと、BCC SQS参照の$f = 0.50$--$0.56$は\textbf{HEAの超過体積が二元系超過体積の対和の約半分}であることを意味する。すなわち採用モデルは「二元系の情報をそのまま足す」モデルではなく、「二元系の情報を約半分に縮約して足す」モデルである。
+
+この縮約と整合する機構は複数あり、本データからは一意に同定できない。第一に、多成分系では1つの原子の第一近接殻に複数種の異種原子が同時に存在するため、二元系で測った局所緩和が互いに競合し、単純和より小さくなる（弾性的な緩和の飽和）。第二に、$\Omega_\text{sf}$は50:50という濃厚二元系で測っているのに対し、五元系では各ペアの実効濃度が$c_i c_j = 0.04$と希薄であり、超過体積の濃度依存が線形でない分だけ差が生じる。\ref{sec:comp_dep}節の$a_0^\text{ends}/a_0^\text{mid}$（BCC中央値1.007、IQR 0.907--1.124）は、二元系内部での濃度依存はこの縮約を説明するほど大きくないことを示す。したがって$f \approx 0.5$は主に多成分性（配位殻の競合）に由来する可能性が高いが、参照体積のDFT系統誤差、磁気状態、有限サイズ効果を分離できていないため、本データでは候補機構の提示にとどめる。第三に、$f$自体が参照構造・参照体積の選択に依存する（表~\ref{tab:transfer}で$f = 0.05$--$1.79$）という事実は、$f$を物理定数として解釈できないことを直接示している。
+
+実用上の含意は明確である。二元系の$\Omega_\text{sf}$をそのまま対加法的に足すモデル（$q = q_\text{exact}$）は、秩序構造参照ではVegard則より悪化する（L1$_2$ + Kingで0.0673~\AA{} vs Vegard 0.0170~\AA）。移行率の縮約は本モデルに不可欠であり、二元系データからHEA体積を予測する任意の枠組みで同種の縮約が必要になると予想される。
+
+\subsection{組成非対称性がHEA予測に伝わらない構造的理由}
+\label{sec:disc_asymmetry}
+
+\ref{sec:comp_dep}節と\ref{sec:rk_results}節の結果は一見矛盾する。二元系の超過体積には無視できない組成非対称性があり（BCC median $|a_1/a_0| = 0.441$、$|\Omega_{0.25}-\Omega_{0.75}|$の最大15.7\%）、対称形$x(1-x)$が20\%以内で成立するのはBCC 68.8\%のペアにすぎない。それにもかかわらず、Redlich--Kister一次項をHEA予測に加えても改善しない。
+
+理由は式~\eqref{eq:rk_hea}の前因子にある。非対称項は$c_i c_j (c_i - c_j)$に比例し、等原子組成では厳密に消える。等原子五元系では$c_i c_j = 0.04$に対し$|c_i - c_j| = 0$であり、独立テストBCC 17合金のうち15合金が近等原子組成である。$q_1$を$q_s$と同じスケールに置いたときの格子定数変化は最大$5.5\times10^{-4}$~\AA{}で、独立テストRMSE 0.0118~\AA{}の2桁下、実験値の報告精度（$\pm 0.001$~\AA{}程度）以下である。校正で$q_1 \approx 21$という大きな値が出るのは、この小さい前因子を補償する方向が校正データでほぼ縮退しているためであり、物理的な非対称性の大きさを反映した値ではない。
+
+したがって、本研究の対称形採用は「非対称性が存在しないから」ではなく「近等原子組成では非対称項が構造的に消えるから」正当化される。この区別は外挿範囲の判断に直接関わる：Al$_x$CoCrFeNiのような組成傾斜系、あるいは主要元素の一つが$c_i \ge 0.4$を占める非等原子HEAでは、$c_i - c_j$が0.3程度に達しうるため非対称項が$10^{-3}$~\AA{}のオーダーへ増大する。本研究の独立テストには非等原子組成が2合金しか含まれず、この領域は未検証である。
 
 \subsection{データソース間の一貫性}
 
@@ -1272,6 +1549,12 @@ B2+DFT: RMSE$_\text{FCC}$ = 0.0160。}
 
   \item \textbf{Chen安定quinaryへの統合}:
     Chenらの安定quinary 30,201件からHCP、4$f$/Y、King体積欠損、$\Omega_\text{sf}$欠損を順次除外し、16,442件（BCC 14,887、FCC 1,555）へ格子定数を付与した（表~\ref{tab:chen_screening_flow}）。これはBCC候補の65.8\%、FCC候補の93.5\%、BCC+FCC候補全体の67.7\%に相当する。ただし$q$はChen予測合金群で再校正しておらず、Chenが予測した相が実現することを仮定し、各予測値には独立テストRMSE相当（BCC 0.0124~\AA{}、FCC 0.0152~\AA{}）の不確かさが付随する。
+
+  \item \textbf{対加法性の破れ（移行率$f$）}:
+    二元系50:50の超過体積を厳密に再現する係数は$q_\text{exact} = 2$（L1$_2$の3:1参照では中央値2.652）であり、これを基準に規格化すると採用モデルの移行率は$f = q_\text{opt}/q_\text{exact} = 0.555$（BCC SQS + DFT Vegard、採用値$q=1$では0.500）、B2 + Kingで0.243、L1$_2$ + Kingで0.050である（表~\ref{tab:transfer}、図~\ref{fig:transfer_fraction}）。すなわちHEAの超過体積は二元系超過体積の対和より系統的に小さく、$q = q_\text{exact}$を課すと独立テストRMSEはL1$_2$ + Kingで0.0673~\AA{}まで悪化してVegard則（0.0170~\AA{}）を下回る。$q$は「あってもよい微調整」ではなく、二元系情報をHEAへ移す際に必要な縮約である。ただし$f$は参照構造・参照体積により0.05--1.79の幅を持ち、物理定数としては解釈できない。
+
+  \item \textbf{$\Omega_\text{sf}$の組成依存とRedlich--Kister拡張（否定的結果）}:
+    $x = 0.25$/$0.50$/$0.75$のSQSを直接解析し（BCC 350ペア、FCC 70ペア、同一データセットの純元素端点）、超過体積の組成非対称性を定量した。$\left|a_1/a_0\right|$の中央値はBCC 0.441、FCC 0.318であり、対称形$x(1-x)$が20\%以内で成立するのはBCCで68.8\%のペアにとどまる。しかしRedlich--Kister一次項をHEA予測に加えても独立テストRMSEは改善しない（BCC 0.0118$\to$0.0114~\AA{}、FCC 0.0127$\to$0.0142~\AA{}）。非対称項の前因子$c_ic_j(c_i-c_j)$が近等原子組成で消えるためであり（$q_1 = 1$での格子定数変化は最大$5.5\times10^{-4}$~\AA{}）、本研究の対称形採用は「非対称性がないから」ではなく「近等原子組成では寄与が構造的に消えるから」正当化される。非等原子HEAは独立テストに2合金しかなく未検証領域である。
 
   \item \textbf{パラメータ圧縮}:
     906ペアを31元素$\delta^{(s)}$に圧縮（97\%削減）。
@@ -1686,6 +1969,17 @@ DFTは0~K格子定数を与えるが実験値は室温測定である。King体�
 \subsection{$\Omega_\text{sf}$ヒートマップ}
 
 図~\ref{fig:vegard_heatmap_b2}・\ref{fig:vegard_heatmap_l12}に全ペアの$\Omega_\text{sf}$を元素$\times$元素の行列として示す。B2（図~\ref{fig:vegard_heatmap_b2}）では大半のペアが負の$\Omega_\text{sf}$（体積収縮）を示し、B2秩序構造における系統的なVegard過大評価が確認される。L1$_2$（図~\ref{fig:vegard_heatmap_l12}）ではB2より元素数が多く（39元素）、A$_3$B/B$_3$Aの非対称性が偏差の分散を広げる。4f希土類元素およびYは本解析から除外している。
+
+対応する不規則固溶体（SQS）側のヒートマップを図~\ref{fig:sqs_omega_heatmap}に示す。秩序構造（B2/L1$_2$）と異なり、ここでは同一データセットの純元素SQS体積を端点とするDFT Vegard基準で$\Omega_\text{sf}$を定義している。BCC（445ペア）では大半のペアが$\left|\Omega_\text{sf}\right| < 5$\%に入る一方で、Caを含む行・列が強い負値で孤立して分布を引き伸ばしている（この図ではBCCとFCCに独立のカラースケールを用いているため、両パネルの色の濃淡を直接比較できないことに注意が必要である）。CaはHEA検証対象の23元素に含まれないが、基礎DBの分布統計には強く影響する。FCC（120ペア）は元素数が限られ、マトリクスの充填率が低い（灰色セルが欠損ペア）。この欠損の大きさが、\ref{sec:rk_results}節でFCCのRedlich--Kister拡張がテストペア被覆率8.9\%となり否定的結果に終わった直接的な原因である。
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_sqs_omega_heatmap.png}
+\caption{SQS（13を含む不規則固溶体）の$\Omega_\text{sf}$ヒートマップ（\%、DFT Vegard基準、同一データセットの純元素端点）。
+  (a)~BCC 50:50（445ペア）。(b)~FCC 50:50（120ペア）。
+  灰色セルはデータがないペアである。カラースケールはパネルごとに独立で、各パネルの最大絶対値で対称に規格化している。}
+\label{fig:sqs_omega_heatmap}
+\end{figure*}
 
 \begin{figure*}[!t]
 \centering
