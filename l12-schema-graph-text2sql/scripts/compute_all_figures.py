@@ -226,6 +226,11 @@ def main():
     n_queries = len(queries)
     diff_counts = Counter(q["difficulty"] for q in queries)
 
+    # Full main evaluation dataset (245 queries incl. expert/CTE/prototype)
+    main_queries = load_jsonl("evaluation/main_evaluation_dataset.jsonl")
+    n_main_queries = len(main_queries)
+    main_diff_counts = Counter(q["difficulty"] for q in main_queries)
+
     cte_qids = {"q_vhard_009", "q_vhard_016", "q_vhard_018",
                 "q_vhard_019", "q_vhard_020"}
     n_cte_queries = sum(1 for q in queries if q["id"] in cte_qids)
@@ -310,8 +315,11 @@ def main():
         if cond_name in sig:
             s = sig[cond_name]
             ablation_table[cond_name]["p_value"] = s["p_value"]
-            ablation_table[cond_name]["significant"] = (
-                s["p_value"] is not None and s["p_value"] < 0.05
+            ablation_table[cond_name]["p_value_holm"] = s.get("p_value_holm")
+            ablation_table[cond_name]["n_nonzero"] = s.get("n_nonzero")
+            ablation_table[cond_name]["significant"] = s.get(
+                "significant",
+                s["p_value"] is not None and s["p_value"] < 0.05,
             )
         # Sign-flip permutation test + bootstrap CI (v2 statistics, used
         # in the manuscript's ablation table)
@@ -803,8 +811,15 @@ def main():
             ],
         },
         "dataset": {
-            "n_author_queries": n_queries,
-            "difficulty_distribution": {
+            "n_main_queries": n_main_queries,
+            "main_difficulty_distribution": {
+                "easy": main_diff_counts.get("easy", 0),
+                "medium": main_diff_counts.get("medium", 0),
+                "hard": main_diff_counts.get("hard", 0),
+                "very_hard": main_diff_counts.get("very_hard", 0),
+            },
+            "n_ablation_subset_queries": n_queries,
+            "ablation_subset_difficulty_distribution": {
                 "easy": diff_counts.get("easy", 0),
                 "medium": diff_counts.get("medium", 0),
                 "hard": diff_counts.get("hard", 0),

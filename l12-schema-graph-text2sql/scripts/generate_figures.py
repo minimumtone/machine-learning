@@ -326,7 +326,7 @@ def fig_error_distribution():
     colors = ["#F44336", "#FF9800", "#FFC107", "#9C27B0", "#607D8B"][:len(labels)]
 
     bars = ax.barh(labels, values, color=colors, edgecolor="black", linewidth=0.5)
-    ax.set_xlabel("Count (in 10 representative failures)")
+    ax.set_xlabel(f"Count (in {len(data['failures'])} failure cases; multi-label)")
     ax.set_title("Error Type Distribution in Failure Cases")
 
     for bar, val in zip(bars, values):
