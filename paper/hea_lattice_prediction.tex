@@ -1744,7 +1744,7 @@ DFT計算は生成時期と構造により複数のバッチに分かれてお�
 
 \begin{table*}[!t]
 \centering
-\caption{DFT計算バッチごとの設定。すべてPAW法、GGA-PBE（\texttt{GGA = PE}）、\texttt{IBRION = 2}、\texttt{ISIF = 3}、\texttt{ISPIN = 2}、\texttt{LORBIT = 11}、\texttt{ALGO = Normal}である。}
+\caption{DFT計算バッチごとの設定。共通条件はPAW法、GGA-PBE（\texttt{GGA = PE}）、\texttt{IBRION = 2}、\texttt{ISIF = 3}、\texttt{ISPIN = 2}、\texttt{ALGO = Normal}である。}
 \label{tab:dft_settings}
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -1764,11 +1764,11 @@ FCC SQS & \texttt{generate\_sqs\_recalc\_2x2x2.py}, \texttt{generate\_l12\_sqs\_
 }
 \par\smallskip
 {\scriptsize
-\textit{出典:} \texttt{generate\_all\_b2.py}、\texttt{generate\_magnetic\_b2\_recalc.py}、\texttt{generate\_vasp\_inputs.py}、\texttt{generate\_l12\_sqs\_recalc.py}、\texttt{generate\_refractory\_sqs.py}、\texttt{generate\_sqs\_recalc\_2x2x2.py}。明示MAGMOMはCr 1.5、Mn 3.0、Fe 2.5、Co 1.5、Ni 0.6~$\mu_\mathrm{B}$/原子であり、純Cr・純Mnには$+3.0/-3.0$のAF配列も用いて低エネルギー解を採用した。再計算バッチでは\texttt{POTIM = 0.02}を用いた。}
+\textit{出典:} \texttt{generate\_all\_b2.py}、\texttt{generate\_magnetic\_b2\_recalc.py}、\texttt{generate\_vasp\_inputs.py}、\texttt{generate\_l12\_sqs\_recalc.py}、\texttt{generate\_refractory\_sqs.py}、\texttt{generate\_sqs\_recalc\_2x2x2.py}。明示MAGMOMはCr 1.5、Mn 3.0、Fe 2.5、Co 1.5、Ni 0.6~$\mu_\mathrm{B}$/原子であり、純Cr・純Mnには$+3.0/-3.0$のAF配列も用いて低エネルギー解を採用した。\texttt{LORBIT = 11}はBCC SQS初回バッチ以外で指定されている。\texttt{POTIM = 0.02}はBCC SQS初回バッチおよび全再計算バッチで指定され、初回B2・初回L1$_2$バッチでは未指定（VASP既定）である。}
 \end{table*}
 
 \begin{sloppypar}
-PAWポテンシャルは、\texttt{Ca\_sv, Cr\_pv, Cu\_pv, Fe\_pv, Hf\_pv, Mg\_pv, Mn\_pv, Mo\_pv, Nb\_pv, Ni\_pv, Os\_pv, Pb\_d}、\texttt{Re\_pv, Rh\_pv, Ru\_pv, Sc\_sv, Sn\_d, Ta\_pv, Ti\_pv, V\_sv, W\_sv, Zr\_sv}を使用し、\texttt{Ag, Al, Au, Be, Co, Ir, Pd, Pt, Zn}は標準版（suffixなし）である。表の再構成可能なバッチでは$k$点$\times$原子数は2,048--27,648であり、1桁以上の幅を持つ。
+PAWポテンシャルは、\texttt{generate\_sqs\_recalc\_2x2x2.py}の指定を基準に、\texttt{Ca\_sv, Cr\_pv, Cu\_pv, Fe\_pv, Hf\_pv, Mg\_pv, Mn\_pv, Mo\_pv, Nb\_pv, Ni\_pv, Os\_pv, Pb\_d}、\texttt{Re\_pv, Rh\_pv, Ru\_pv, Sc\_sv, Sn\_d, Ta\_pv, Ti\_pv, V\_sv, W\_sv, Zr\_sv}を使用し、\texttt{Ag, Al, Au, Be, Co, Ir, Pd, Pt, Zn}は標準版（suffixなし）である。PAW variantはバッチ間でおおむね共通だが、\texttt{generate\_refractory\_sqs.py}（BCC SQS初回）のみCuに標準版\texttt{Cu}を用い、他のバッチは\texttt{Cu\_pv}を用いている。6つの生成スクリプトの指定を全元素で突き合わせた結果、variantが食い違う元素はCuのみである。Cuを含むペアのBCC SQS体積には、この半コア電子の扱いの差が混入しうる。表の再構成可能なバッチでは$k$点$\times$原子数は2,048--27,648であり、1桁以上の幅を持つ。
 \end{sloppypar}
 
 公開CSV \texttt{data/sqs\_results.csv}には行ごとの$k$点密度、ENCUT、MAGMOMが記録されていない。\texttt{note}列の\texttt{SRC:recalc2}により、16原子BCCの187行は$6^3$再計算由来と識別できるが、残る16原子BCCの1,933行と32原子FCCの1,700行については行単位でバッチを再構成できない。\texttt{generate\_refractory\_sqs.py}は\texttt{ISMEAR}/\texttt{SIGMA}を記録しておらず、VASP既定値（1 / 0.2）が適用された。また、このバッチは\texttt{PREC = high}、\texttt{NELM = 60}、\texttt{NSW = 120}であり、後続バッチより緩い。VASPのバージョン番号は生成スクリプトにも出力にも記録されていないため、本稿では特定しない。128原子BCC SQSの91行については入力生成スクリプト自体がリポジトリに含まれず、条件を再構成できない。したがってセルサイズに関する結論は、セルサイズ差だけでなく計算条件の不一致の可能性を含めて解釈する必要がある。今後はフェーズ2で状態方程式ベースの再計算を行い、数値条件を統一する必要がある。
