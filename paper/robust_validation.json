@@ -186,118 +186,34 @@
         },
         "folds": [
           {
-            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.18279670639646756
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 3,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.20140329027422244
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
-            "n_test": 1,
-            "q_BCC": 0.5466057125372872,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.5969139441062743,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
-            "n_test": 1,
-            "q_BCC": 0.5956707595349884,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.599306741189491,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 0.6240753606651085,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
             "q_FCC": 0.17757477516326553
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Pt'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.18214157451786503
+            "q_FCC": 0.1810175551824806
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
-            "n_test": 1,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.18389659854766555
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1809924706988038
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Pt', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
             "q_FCC": 0.18961095672385547
           },
           {
-            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
-            "n_test": 3,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1940442325184503
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 7,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.23694381954423177
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
-            "n_test": 5,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.18257550977668957
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.6124541256554222,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "group": "frozenset({'Cu', 'Pt', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.16861927527509987
+            "q_FCC": 0.18214157451786503
           },
           {
-            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
-            "n_test": 2,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1605918993116322
-          },
-          {
-            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Fe', 'Al', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 0.6377853629310309,
-            "q_FCC": 0.18654745701336886
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1774639018371914
           },
           {
             "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
@@ -306,129 +222,171 @@
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "group": "frozenset({'Fe', 'Cr', 'Al', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1774639018371914
+            "q_BCC": 0.5956707595349884,
+            "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Al'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1894419391800122
+            "q_FCC": 0.18279670639646756
           },
           {
-            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1940442325184503
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'V'})",
+            "n_test": 2,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1605918993116322
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni'})",
             "n_test": 17,
             "q_BCC": 0.6182328557310861,
             "q_FCC": 0.2173175869959436
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Mn', 'Co', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.23694381954423177
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Cu', 'Al'})",
             "n_test": 1,
-            "q_BCC": 0.6187160915025984,
+            "q_BCC": 0.5969139441062743,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 0.6493800912870327,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Mn'})",
             "n_test": 1,
-            "q_BCC": 0.7116930806698538,
-            "q_FCC": 0.18654745701336886
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1894419391800122
           },
           {
-            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "group": "frozenset({'Fe', 'Mn', 'Co', 'Ni', 'Al'})",
+            "n_test": 3,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.20140329027422244
+          },
+          {
+            "group": "frozenset({'Fe', 'Pd', 'Cr', 'Co', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18257550977668957
+          },
+          {
+            "group": "frozenset({'Fe', 'Ta', 'Cr', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 0.6288639473895065,
+            "q_BCC": 0.6616183650190701,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "group": "frozenset({'Fe', 'Zn', 'Mn', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 0.619452840729634,
-            "q_FCC": 0.18654745701336886
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.16861927527509987
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.6069555600636696,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.6206334025284682,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "group": "frozenset({'Mn', 'Co', 'Al', 'Ni', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.6468396984861472,
+            "q_BCC": 0.5466057125372872,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "group": "frozenset({'Nb', 'Hf', 'Zr'})",
             "n_test": 1,
             "q_BCC": 0.6229285800353368,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Nb', 'Ti', 'Cr', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.6182328557310861,
-            "q_FCC": 0.1810175551824806
+            "q_BCC": 0.6377853629310309,
+            "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "group": "frozenset({'Nb', 'Ti', 'Hf', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 0.6493800912870327,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Mo', 'V', 'W'})",
+            "n_test": 1,
+            "q_BCC": 0.6083864265405012,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6288639473895065,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6187160915025984,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Pd', 'Pt', 'Ni', 'Au', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1809924706988038
+          },
+          {
+            "group": "frozenset({'Pt', 'Pd', 'Ni', 'Au'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18389659854766555
+          },
+          {
+            "group": "frozenset({'Pt', 'Rh', 'Pd', 'Ir', 'Ru'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
             "q_FCC": 0.18485120357036644
           },
           {
-            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "group": "frozenset({'Rh', 'Pd', 'Pt', 'Ir', 'Os', 'Ru'})",
             "n_test": 1,
             "q_BCC": 0.6182328557310861,
             "q_FCC": 0.18804113137541048
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 0.5967263081984715,
+            "group": "frozenset({'Ta', 'Nb', 'Mo', 'V', 'W'})",
+            "n_test": 2,
+            "q_BCC": 0.6178016793724417,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Al', 'Zr'})",
             "n_test": 1,
-            "q_BCC": 0.6060250722007692,
+            "q_BCC": 0.6240753606651085,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Hf'})",
             "n_test": 1,
             "q_BCC": 0.6139660871457174,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 0.6131790288926044,
+            "q_BCC": 0.6316356964134379,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 0.6274776497308644,
-            "q_FCC": 0.18654745701336886
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.6133039386971498,
+            "q_BCC": 0.6104215691944879,
             "q_FCC": 0.18654745701336886
           },
           {
@@ -438,45 +396,87 @@
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 0.6104215691944879,
+            "q_BCC": 0.6131790288926044,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
-            "n_test": 1,
-            "q_BCC": 0.6616183650190701,
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 2,
+            "q_BCC": 0.6274776497308644,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6060250722007692,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'W', 'Mo'})",
             "n_test": 8,
             "q_BCC": 0.6328443928990558,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 0.6083864265405012,
+            "q_BCC": 0.5967263081984715,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6133039386971498,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ti', 'Hf', 'Mo', 'V', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.7116930806698538,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Al', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.599306741189491,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 0.6069555600636696,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6468396984861472,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'W', 'Mo'})",
             "n_test": 1,
             "q_BCC": 0.6177390202837438,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Mo'})",
             "n_test": 1,
-            "q_BCC": 0.6316356964134379,
+            "q_BCC": 0.619452840729634,
             "q_FCC": 0.18654745701336886
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Ti'})",
             "n_test": 2,
-            "q_BCC": 0.6178016793724417,
+            "q_BCC": 0.6206334025284682,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Zn', 'Cr', 'Co', 'Ni', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6124541256554222,
             "q_FCC": 0.18654745701336886
           }
         ],
@@ -510,118 +510,34 @@
         },
         "folds": [
           {
-            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.582302378903265
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 3,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.582302376811316
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
-            "n_test": 1,
-            "q_BCC": 1.2064312433682316,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 1.2390106670335497,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
-            "n_test": 1,
-            "q_BCC": 1.2561341959810306,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 1.2292362362162486,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 1.2336763515543385,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
             "q_FCC": 2.4940807687931215
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Pt'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.5499416636360297
+            "q_FCC": 2.9620156452121775
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
-            "n_test": 1,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 3.097203573433222
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.641268027128104
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Pt', 'Au'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
             "q_FCC": 2.614674777115702
           },
           {
-            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
-            "n_test": 3,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.5787587703208064
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 7,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.5823024521945466
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
-            "n_test": 5,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 1.9596283054575583
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 1.2418114499908783,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "group": "frozenset({'Cu', 'Pt', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.4657124794213283
+            "q_FCC": 2.5499416636360297
           },
           {
-            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
-            "n_test": 2,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.5094772064258772
-          },
-          {
-            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Fe', 'Al', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 1.2456008706824775,
-            "q_FCC": 2.5823023601329886
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5823024223744038
           },
           {
             "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
@@ -630,129 +546,171 @@
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "group": "frozenset({'Fe', 'Cr', 'Al', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.5823024223744038
+            "q_BCC": 1.2561341959810306,
+            "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Al'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.582302367510138
+            "q_FCC": 2.582302378903265
           },
           {
-            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5787587703208064
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'V'})",
+            "n_test": 2,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5094772064258772
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni'})",
             "n_test": 17,
             "q_BCC": 1.2304554736837106,
             "q_FCC": 2.582302387648449
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Mn', 'Co', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5823024521945466
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Cu', 'Al'})",
             "n_test": 1,
-            "q_BCC": 1.2307684524960194,
+            "q_BCC": 1.2390106670335497,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 1.2304674247280623,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Mn'})",
             "n_test": 1,
-            "q_BCC": 1.2370256504649253,
-            "q_FCC": 2.5823023601329886
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302367510138
           },
           {
-            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "group": "frozenset({'Fe', 'Mn', 'Co', 'Ni', 'Al'})",
+            "n_test": 3,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302376811316
+          },
+          {
+            "group": "frozenset({'Fe', 'Pd', 'Cr', 'Co', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 1.9596283054575583
+          },
+          {
+            "group": "frozenset({'Fe', 'Ta', 'Cr', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 1.231350132670792,
+            "q_BCC": 1.2672973550035003,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "group": "frozenset({'Fe', 'Zn', 'Mn', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 1.2349688114502115,
-            "q_FCC": 2.5823023601329886
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.4657124794213283
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 1.2160593147847194,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 1.2299791866643468,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "group": "frozenset({'Mn', 'Co', 'Al', 'Ni', 'V'})",
             "n_test": 1,
-            "q_BCC": 1.2386004058843862,
+            "q_BCC": 1.2064312433682316,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "group": "frozenset({'Nb', 'Hf', 'Zr'})",
             "n_test": 1,
             "q_BCC": 1.2338384132306808,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Nb', 'Ti', 'Cr', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 1.2304554736837106,
-            "q_FCC": 2.9620156452121775
+            "q_BCC": 1.2456008706824775,
+            "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "group": "frozenset({'Nb', 'Ti', 'Hf', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 1.2304674247280623,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Mo', 'V', 'W'})",
+            "n_test": 1,
+            "q_BCC": 1.2187885909025111,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 1.231350132670792,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 1.2307684524960194,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Pd', 'Pt', 'Ni', 'Au', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.641268027128104
+          },
+          {
+            "group": "frozenset({'Pt', 'Pd', 'Ni', 'Au'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 3.097203573433222
+          },
+          {
+            "group": "frozenset({'Pt', 'Rh', 'Pd', 'Ir', 'Ru'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
             "q_FCC": 2.5928014929900094
           },
           {
-            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "group": "frozenset({'Rh', 'Pd', 'Pt', 'Ir', 'Os', 'Ru'})",
             "n_test": 1,
             "q_BCC": 1.2304554736837106,
             "q_FCC": 2.6560296884562855
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 1.193327512169663,
+            "group": "frozenset({'Ta', 'Nb', 'Mo', 'V', 'W'})",
+            "n_test": 2,
+            "q_BCC": 1.2315156446104731,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Al', 'Zr'})",
             "n_test": 1,
-            "q_BCC": 1.2160314734104762,
+            "q_BCC": 1.2336763515543385,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Hf'})",
             "n_test": 1,
             "q_BCC": 1.2268404869572451,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 1.2308348001940161,
+            "q_BCC": 1.2446706631229145,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 1.232530581191848,
-            "q_FCC": 2.5823023601329886
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 1.225418547697682,
+            "q_BCC": 1.2221024970343173,
             "q_FCC": 2.5823023601329886
           },
           {
@@ -762,45 +720,87 @@
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 1.2221024970343173,
+            "q_BCC": 1.2308348001940161,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
-            "n_test": 1,
-            "q_BCC": 1.2672973550035003,
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 2,
+            "q_BCC": 1.232530581191848,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 1.2160314734104762,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'W', 'Mo'})",
             "n_test": 8,
             "q_BCC": 1.197749806951964,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 1.2187885909025111,
+            "q_BCC": 1.193327512169663,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 1.225418547697682,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ti', 'Hf', 'Mo', 'V', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2370256504649253,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Al', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 1.2292362362162486,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 1.2160593147847194,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2386004058843862,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'W', 'Mo'})",
             "n_test": 1,
             "q_BCC": 1.2305867332978724,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Mo'})",
             "n_test": 1,
-            "q_BCC": 1.2446706631229145,
+            "q_BCC": 1.2349688114502115,
             "q_FCC": 2.5823023601329886
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Ti'})",
             "n_test": 2,
-            "q_BCC": 1.2315156446104731,
+            "q_BCC": 1.2299791866643468,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Zn', 'Cr', 'Co', 'Ni', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2418114499908783,
             "q_FCC": 2.5823023601329886
           }
         ],
@@ -834,115 +834,31 @@
         },
         "folds": [
           {
-            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Au'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 3,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Pt'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
+            "group": "frozenset({'Cu', 'Pd', 'Pt', 'Au'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
+            "group": "frozenset({'Cu', 'Pt', 'Ni', 'Au'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
-            "n_test": 2,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
-            "n_test": 3,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 7,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
-            "n_test": 5,
-            "lam_BCC": 0.1,
-            "lam_FCC": 10.0
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
-            "n_test": 2,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Fe', 'Al', 'Co', 'Ni'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
@@ -954,127 +870,169 @@
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "group": "frozenset({'Fe', 'Cr', 'Al', 'Mo', 'V'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Al'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'V'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni'})",
             "n_test": 17,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Mn', 'Co', 'Ni'})",
+            "n_test": 7,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Cu', 'Al'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Mn'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Mn', 'Co', 'Ni', 'Al'})",
+            "n_test": 3,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Pd', 'Cr', 'Co', 'Ni'})",
+            "n_test": 5,
+            "lam_BCC": 0.1,
+            "lam_FCC": 10.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Ta', 'Cr', 'V', 'W'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Zn', 'Mn', 'Co', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Mn', 'Co', 'Al', 'Ni', 'V'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'Hf', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Cr', 'Mo', 'V'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Hf', 'V', 'Zr'})",
             "n_test": 2,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "group": "frozenset({'Nb', 'Ti', 'Mo', 'V', 'W'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
+            "group": "frozenset({'Pd', 'Pt', 'Ni', 'Au', 'Cu'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Pt', 'Pd', 'Ni', 'Au'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Pt', 'Rh', 'Pd', 'Ir', 'Ru'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Rh', 'Pd', 'Pt', 'Ir', 'Os', 'Ru'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Mo', 'V', 'W'})",
             "n_test": 2,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
-            "n_test": 2,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Al', 'Zr'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V', 'W'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
-            "n_test": 1,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 2,
-            "lam_BCC": 0.1,
-            "lam_FCC": 1.0
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
@@ -1086,44 +1044,86 @@
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "group": "frozenset({'Ta', 'Nb', 'W', 'Mo'})",
             "n_test": 8,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Ti', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ti', 'Hf', 'Mo', 'V', 'Zr'})",
             "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Nb', 'Al', 'Ti'})",
             "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'W', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Ti'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Zn', 'Cr', 'Co', 'Ni', 'Cu'})",
+            "n_test": 1,
             "lam_BCC": 0.1,
             "lam_FCC": 1.0
           }
@@ -1158,118 +1158,34 @@
         },
         "folds": [
           {
-            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5537684874301391
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 3,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5773279648272003
-          },
-          {
-            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
-            "n_test": 1,
-            "q_BCC": 0.5207065764464635,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.6543019852563949,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
-            "n_test": 1,
-            "q_BCC": 0.6174559398115677,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.6793354511822187,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 0.7128462938258099,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
             "q_FCC": -0.5096970762934316
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Ni', 'Pt'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5594772457927816
+            "q_FCC": -0.5313260318194634
           },
           {
-            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
-            "n_test": 1,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5588437755209616
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.541764518393934
-          },
-          {
-            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Cu', 'Pd', 'Pt', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
             "q_FCC": -0.5771988629640642
           },
           {
-            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
-            "n_test": 3,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5815260015842362
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
-            "n_test": 7,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5929796084512061
-          },
-          {
-            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
-            "n_test": 5,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.4457383926476714
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
-            "n_test": 1,
-            "q_BCC": 0.6961225023145201,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "group": "frozenset({'Cu', 'Pt', 'Ni', 'Au'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.6132009729101302
+            "q_FCC": -0.5594772457927816
           },
           {
-            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
-            "n_test": 2,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5394521940468823
-          },
-          {
-            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Fe', 'Al', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 0.755037548100987,
-            "q_FCC": -0.5653189164503948
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.593975964504157
           },
           {
             "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
@@ -1278,129 +1194,171 @@
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "group": "frozenset({'Fe', 'Cr', 'Al', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.593975964504157
+            "q_BCC": 0.6174559398115677,
+            "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Al'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5599689498155512
+            "q_FCC": -0.5537684874301391
           },
           {
-            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5815260015842362
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni', 'V'})",
+            "n_test": 2,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5394521940468823
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Co', 'Ni'})",
             "n_test": 17,
             "q_BCC": 0.7195675455477636,
             "q_FCC": -0.683365296048955
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Mn', 'Co', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5929796084512061
+          },
+          {
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Cu', 'Al'})",
             "n_test": 1,
-            "q_BCC": 0.6983269962291329,
+            "q_BCC": 0.6543019852563949,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 1.0367221784541374,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "group": "frozenset({'Fe', 'Cr', 'Ni', 'Mn'})",
             "n_test": 1,
-            "q_BCC": 1.2170371895757353,
-            "q_FCC": -0.5653189164503948
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5599689498155512
           },
           {
-            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "group": "frozenset({'Fe', 'Mn', 'Co', 'Ni', 'Al'})",
+            "n_test": 3,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5773279648272003
+          },
+          {
+            "group": "frozenset({'Fe', 'Pd', 'Cr', 'Co', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.4457383926476714
+          },
+          {
+            "group": "frozenset({'Fe', 'Ta', 'Cr', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 0.7365049832561856,
+            "q_BCC": 0.7107200086100408,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "group": "frozenset({'Fe', 'Zn', 'Mn', 'Co', 'Ni'})",
             "n_test": 1,
-            "q_BCC": 0.7415571537397996,
-            "q_FCC": -0.5653189164503948
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.6132009729101302
           },
           {
-            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.6732221072959556,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
-            "n_test": 2,
-            "q_BCC": 0.7136997331792492,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "group": "frozenset({'Mn', 'Co', 'Al', 'Ni', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.9692839927993774,
+            "q_BCC": 0.5207065764464635,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "group": "frozenset({'Nb', 'Hf', 'Zr'})",
             "n_test": 1,
             "q_BCC": 0.7299038127598224,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "group": "frozenset({'Nb', 'Ti', 'Cr', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.7195675455477636,
-            "q_FCC": -0.5313260318194634
+            "q_BCC": 0.755037548100987,
+            "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "group": "frozenset({'Nb', 'Ti', 'Hf', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 1.0367221784541374,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Mo', 'V', 'W'})",
+            "n_test": 1,
+            "q_BCC": 0.7040239475741993,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.7365049832561856,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6983269962291329,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Pd', 'Pt', 'Ni', 'Au', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.541764518393934
+          },
+          {
+            "group": "frozenset({'Pt', 'Pd', 'Ni', 'Au'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5588437755209616
+          },
+          {
+            "group": "frozenset({'Pt', 'Rh', 'Pd', 'Ir', 'Ru'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
             "q_FCC": -0.5992560862406439
           },
           {
-            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "group": "frozenset({'Rh', 'Pd', 'Pt', 'Ir', 'Os', 'Ru'})",
             "n_test": 1,
             "q_BCC": 0.7195675455477636,
             "q_FCC": -0.5863983403277354
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
-            "n_test": 1,
-            "q_BCC": 0.5911185200658037,
+            "group": "frozenset({'Ta', 'Nb', 'Mo', 'V', 'W'})",
+            "n_test": 2,
+            "q_BCC": 0.7166681023565148,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Al', 'Zr'})",
             "n_test": 1,
-            "q_BCC": 0.6614245523472726,
+            "q_BCC": 0.7128462938258099,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Hf'})",
             "n_test": 1,
             "q_BCC": 0.6994068168824783,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V', 'W'})",
             "n_test": 1,
-            "q_BCC": 0.6892118698337214,
+            "q_BCC": 0.7248776459787158,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
-            "n_test": 2,
-            "q_BCC": 0.7182719082337853,
-            "q_FCC": -0.5653189164503948
-          },
-          {
-            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'V'})",
             "n_test": 1,
-            "q_BCC": 0.6752719558638002,
+            "q_BCC": 0.7046396634212845,
             "q_FCC": -0.5653189164503948
           },
           {
@@ -1410,45 +1368,87 @@
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 0.7046396634212845,
+            "q_BCC": 0.6892118698337214,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
-            "n_test": 1,
-            "q_BCC": 0.7107200086100408,
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Hf'})",
+            "n_test": 2,
+            "q_BCC": 0.7182719082337853,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6614245523472726,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'W', 'Mo'})",
             "n_test": 8,
             "q_BCC": 0.7885313673843034,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Nb', 'Zr', 'Mo', 'Hf'})",
             "n_test": 1,
-            "q_BCC": 0.7040239475741993,
+            "q_BCC": 0.5911185200658037,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'Ta', 'Ti', 'Zr', 'Mo', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6752719558638002,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ti', 'Hf', 'Mo', 'V', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2170371895757353,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Al', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.6793354511822187,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 0.6732221072959556,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.9692839927993774,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'V', 'Nb', 'W', 'Mo'})",
             "n_test": 1,
             "q_BCC": 0.7167916678637817,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Mo'})",
             "n_test": 1,
-            "q_BCC": 0.7248776459787158,
+            "q_BCC": 0.7415571537397996,
             "q_FCC": -0.5653189164503948
           },
           {
-            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "group": "frozenset({'V', 'Ta', 'Nb', 'Ti'})",
             "n_test": 2,
-            "q_BCC": 0.7166681023565148,
+            "q_BCC": 0.7136997331792492,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Zn', 'Cr', 'Co', 'Ni', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6961225023145201,
             "q_FCC": -0.5653189164503948
           }
         ],
@@ -2293,14 +2293,17 @@
   },
   "noise_floor": {
     "n_duplicate_groups": 5,
-    "n_pairs": 7,
-    "sigma_est_A": 0.011470308492288583,
-    "sigma_rel_se": 0.2855561808108361,
-    "sigma_se_A": 0.003275417485780028,
+    "dof": 6,
+    "sigma_est_A": 0.010494575318282793,
+    "sigma_se_A": 0.0030295229425206867,
+    "sigma_rel_se": 0.28867513459481287,
     "sigma_ci95_A": [
-      0.005050490220159729,
-      0.01789012676441744
+      0.006762635154151206,
+      0.023109748676844052
     ],
+    "ci_method": "pooled within-group variance, chi-square interval",
+    "bartlett_stat": 5.400304598291088,
+    "bartlett_p": 0.24863276303820672,
     "duplicate_groups": [
       {
         "struct": "BCC",
@@ -2315,7 +2318,9 @@
           3.3663,
           3.377
         ],
-        "spread_A": 0.010699999999999932
+        "n": 2,
+        "spread_A": 0.010699999999999932,
+        "sd_A": 0.007566042558696011
       },
       {
         "struct": "BCC",
@@ -2329,7 +2334,9 @@
           3.2206,
           3.23
         ],
-        "spread_A": 0.009399999999999853
+        "n": 2,
+        "spread_A": 0.009399999999999853,
+        "sd_A": 0.006646803743153443
       },
       {
         "struct": "FCC",
@@ -2343,7 +2350,9 @@
           3.5723,
           3.575
         ],
-        "spread_A": 0.0027000000000003688
+        "n": 2,
+        "spread_A": 0.0027000000000003688,
+        "sd_A": 0.0019091883092039392
       },
       {
         "struct": "FCC",
@@ -2358,7 +2367,9 @@
           3.597,
           3.5988
         ],
-        "spread_A": 0.0018000000000002458
+        "n": 2,
+        "spread_A": 0.0018000000000002458,
+        "sd_A": 0.0012727922061359595
       },
       {
         "struct": "FCC",
@@ -2374,7 +2385,9 @@
           3.66,
           3.6803
         ],
-        "spread_A": 0.03299999999999992
+        "n": 3,
+        "spread_A": 0.03299999999999992,
+        "sd_A": 0.016645219533948222
       }
     ]
   }

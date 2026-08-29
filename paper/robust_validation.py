@@ -566,30 +566,39 @@ def main() -> None:
     for h in pool:
         groups[(h["struct"], comp_key(h["comp"]))].append(h["a_exp"])
     dups = [(k, v) for k, v in groups.items() if len(v) > 1]
-    # n=2 の |X1-X2| は half-normal: E|d| = sigma*2/sqrt(pi)
-    pair_sigmas = []
-    for _, v in dups:
-        v = sorted(v)
-        for i in range(len(v)):
-            for j in range(i + 1, len(v)):
-                pair_sigmas.append(abs(v[i] - v[j]) * np.sqrt(np.pi) / 2)
-    noise = {"n_duplicate_groups": len(dups), "n_pairs": len(pair_sigmas)}
-    if pair_sigmas:
-        ps = np.array(pair_sigmas)
-        m = float(ps.mean())
-        # 各 |d| の CV は sqrt(pi/2-1)=0.755、k組平均で 0.755/sqrt(k)
-        cv = np.sqrt(np.pi / 2 - 1) / np.sqrt(ps.size)
+    # 群内標本分散をプールする。ペア差を独立標本として数えると、3測定を
+    # 含む群の3差が互いに依存するため標準誤差を過小評価する。
+    # sigma_p^2 = sum (n_g-1) s_g^2 / sum (n_g-1)、自由度 nu = sum (n_g-1)。
+    # 区間は chi^2 分布から取る（群内依存を正しく扱う）。
+    noise = {"n_duplicate_groups": len(dups)}
+    num = sum((len(v) - 1) * float(np.var(v, ddof=1)) for _, v in dups)
+    nu = sum(len(v) - 1 for _, v in dups)
+    if nu > 0:
+        s2p = num / nu
+        sp = float(np.sqrt(s2p))
+        lo = float(np.sqrt(nu * s2p / stats.chi2.ppf(0.975, nu)))
+        hi = float(np.sqrt(nu * s2p / stats.chi2.ppf(0.025, nu)))
+        se = sp / np.sqrt(2 * nu)          # sigma_hat の漸近標準誤差
+        # 群間の分散均一性（プールの前提）を Bartlett 検定で確認する
+        bart = stats.bartlett(*[v for _, v in dups]) if len(dups) > 1 else None
         noise.update({
-            "sigma_est_A": m, "sigma_rel_se": float(cv),
-            "sigma_se_A": float(m * cv),
-            "sigma_ci95_A": [float(m * (1 - 1.96 * cv)), float(m * (1 + 1.96 * cv))],
+            "dof": int(nu),
+            "sigma_est_A": sp,
+            "sigma_se_A": float(se),
+            "sigma_rel_se": float(se / sp),
+            "sigma_ci95_A": [lo, hi],
+            "ci_method": "pooled within-group variance, chi-square interval",
+            "bartlett_stat": float(bart.statistic) if bart else None,
+            "bartlett_p": float(bart.pvalue) if bart else None,
             "duplicate_groups": [
                 {"struct": k[0], "comp": dict(k[1]), "a_exp": sorted(v),
-                 "spread_A": float(max(v) - min(v))} for k, v in dups],
+                 "n": len(v), "spread_A": float(max(v) - min(v)),
+                 "sd_A": float(np.std(v, ddof=1))} for k, v in dups],
         })
-        print(f"\n[noise floor] {len(dups)} duplicate groups, {ps.size} pairs: "
-              f"sigma = {m:.4f} +/- {m*cv:.4f} A, "
-              f"95%CI [{m*(1-1.96*cv):.4f}, {m*(1+1.96*cv):.4f}]")
+        print(f"\n[noise floor] {len(dups)} duplicate groups, dof={nu}: "
+              f"pooled sigma = {sp:.4f} +/- {se:.4f} A, "
+              f"chi2 95%CI [{lo:.4f}, {hi:.4f}]"
+              + (f", Bartlett p={bart.pvalue:.3f}" if bart else ""))
 
     # --- 出力 -----------------------------------------------------------
     out = {
