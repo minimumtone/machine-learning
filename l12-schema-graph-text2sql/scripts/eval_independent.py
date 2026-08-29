@@ -20,7 +20,6 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from evaluation.metrics import normalize_limit  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
@@ -28,7 +27,11 @@ from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.eval_ablation import CONNINFO, compute_metrics, execute_sql  # noqa: E402
-from scripts.provenance import build_provenance  # noqa: E402
+from scripts.provenance import (  # noqa: E402
+    assert_resumable,
+    build_provenance,
+)
+from scripts.eval_db import open_eval_connection  # noqa: E402
 
 DEFAULT_DATASET = PROJECT / "evaluation" / "expert_evaluation_dataset.jsonl"
 DEFAULT_OUTPUT = PROJECT / "evaluation" / "independent_eval_results.json"
@@ -70,12 +73,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--force-stale-resume", action="store_true",
+                        help="resume even if stored provenance differs "
+                             "from the current inputs/model/commit")
     args = parser.parse_args()
 
     model = os.getenv("LLM_MODEL", "gpt-5.5")
     print(f"Model: {model}")
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Loading schema...")
     tables = get_tables(conn)
@@ -103,6 +109,11 @@ def main() -> None:
     if args.output.exists():
         with open(args.output) as f:
             prev = json.load(f)
+        assert_resumable(
+            {**prev.get("provenance", {}), "model": prev.get("model", "")},
+            {**build_provenance(args.dataset), "model": model},
+            force=args.force_stale_resume,
+            what=args.output.name)
         results = prev.get("results", [])
         existing_ids = {r["qid"] for r in results}
         print(f"Resuming: {len(existing_ids)} queries already done")

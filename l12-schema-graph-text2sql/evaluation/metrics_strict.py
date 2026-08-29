@@ -46,7 +46,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Literal
 
-__all__ = ["ScoringPolicy", "score"]
+__all__ = ["ScoringPolicy", "exact_result_set_match", "score"]
 
 
 def _normalize_value(v: Any) -> str:
@@ -219,3 +219,36 @@ def score(
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
     exact = 1.0 if (recall == 1.0 and precision == 1.0) else 0.0
     return _result("scored", recall=recall, precision=precision, f1=f1, exact_match=exact)
+
+
+def exact_result_set_match(
+    result_rows: list[list[Any]],
+    expected_rows: list[list[Any]],
+    result_columns: list[str] | None,
+    expected_columns: list[str] | None,
+    *,
+    ordered: bool = False,
+) -> bool:
+    """Canonical exact result-set match.
+
+    True only when
+    - the result column names equal the gold column names exactly
+      (same names, same order, case-insensitive), and
+    - the rows agree as multisets of normalized value tuples, and
+    - when ``ordered`` is True (the gold query has a total ORDER BY),
+      the rows agree as an ordered sequence.
+
+    This is the single "exact" definition of the package.  The lenient
+    common-column variant reported historically is exposed separately
+    as ``common_column_exact_overlap`` by ``scripts/audit_scoring.py``.
+    """
+    if expected_columns is not None:
+        rc = [c.lower() for c in (result_columns or [])]
+        ec = [c.lower() for c in expected_columns]
+        if rc != ec:
+            return False
+    got = [tuple(_normalize_value(v) for v in r) for r in result_rows]
+    exp = [tuple(_normalize_value(v) for v in r) for r in expected_rows]
+    if ordered:
+        return got == exp
+    return Counter(got) == Counter(exp)

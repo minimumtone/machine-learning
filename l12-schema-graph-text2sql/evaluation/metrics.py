@@ -142,17 +142,20 @@ def execution_accuracy_full(
     return {"recall": recall, "precision": precision, "f1": f1}
 
 
-def exact_result_set_match(
+def common_column_exact_overlap(
     result_rows: list[list[Any]],
     expected_rows: list[list[Any]],
     result_columns: list[str] | None = None,
     expected_columns: list[str] | None = None,
 ) -> float:
-    """Return 1.0 only when precision and recall are both exactly 1.0.
+    """Diagnostic overlap metric: 1.0 when precision and recall are both 1.0
+    on the common-column projection used by execution_accuracy_full().
 
-    This complements row-level recall.  A generated query that returns every
-    gold row plus extra rows therefore receives recall=1.0 but exact_match=0.0.
-    Column alignment and value normalization follow execution_accuracy_full().
+    This is NOT an exact result-set match: a generated query that returns
+    only a subset of the gold columns can still score 1.0 here.  The
+    canonical exact metric is
+    evaluation.metrics_strict.exact_result_set_match (exact gold column
+    list + row multiset + row order when the gold query is ordered).
     """
     m = execution_accuracy_full(
         result_rows, expected_rows, result_columns, expected_columns,

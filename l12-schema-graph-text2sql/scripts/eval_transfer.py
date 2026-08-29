@@ -21,9 +21,9 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
-from evaluation.metrics import exact_result_set_match, execution_accuracy_full, normalize_limit  # noqa: E402
+from evaluation.metrics import common_column_exact_overlap, execution_accuracy_full, normalize_limit  # noqa: E402
+from evaluation.metrics_strict import exact_result_set_match  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
@@ -31,6 +31,7 @@ from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
 from scripts.eval_independent import load_dataset, summarize  # noqa: E402
 from scripts.provenance import build_provenance  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
 
 DATASET = PROJECT / "evaluation" / "transfer_evaluation_dataset.jsonl"
 RESULTS_DIR = PROJECT / "evaluation" / "expected_results"
@@ -40,18 +41,8 @@ DIFFICULTY_ORDER = ["easy", "medium", "hard", "very_hard"]
 
 def execute_sql(conn, sql: str) -> dict:
     """Execute SQL on the transfer DB and return rows or an error."""
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {"success": True, "columns": columns,
-                "rows": [list(r) for r in rows], "row_count": len(rows)}
-    except Exception as e:
-        conn.rollback()
-        return {"success": False, "error": str(e), "rows": [],
-                "row_count": 0, "columns": []}
+    return run_model_sql(conn, sql)
+
 
 
 def compute_metrics(conn, sql: str, qid: str) -> dict[str, float]:
@@ -69,10 +60,14 @@ def compute_metrics(conn, sql: str, qid: str) -> dict[str, float]:
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
     )
-    metrics["exact_match"] = exact_result_set_match(
+    metrics["common_column_exact_overlap"] = common_column_exact_overlap(
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
     )
+    metrics["exact_match"] = 1.0 if exact_result_set_match(
+        exec_result["rows"], expected_rows,
+        exec_result["columns"], expected_columns,
+    ) else 0.0
     return metrics
 
 
@@ -94,7 +89,7 @@ def main() -> None:
         str(PROJECT / "llm" / "prompt_templates"
             / "sql_generation_prompt_transfer.md"),
     )
-    conn = psycopg.connect(transfer_conninfo())
+    conn = open_eval_connection(transfer_conninfo(), suite="transfer")
 
     print("Loading transfer schema...")
     tables = get_tables(conn)

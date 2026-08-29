@@ -26,10 +26,13 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
-from evaluation.metrics import exact_result_set_match, execution_accuracy_full, normalize_limit  # noqa: E402
-from scripts.provenance import build_provenance  # noqa: E402
+from evaluation.metrics import common_column_exact_overlap, execution_accuracy_full, normalize_limit  # noqa: E402
+from evaluation.metrics_strict import exact_result_set_match  # noqa: E402
+from scripts.provenance import (  # noqa: E402
+    assert_resumable,
+    build_provenance,
+)
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
@@ -39,6 +42,7 @@ EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
 
 
 def load_queries():
@@ -60,16 +64,8 @@ def load_expected(qid):
 
 
 def execute_sql(conn, sql):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {"success": True, "columns": columns, "rows": [list(r) for r in rows], "row_count": len(rows)}
-    except Exception as e:
-        conn.rollback()
-        return {"success": False, "error": str(e), "rows": [], "row_count": 0, "columns": []}
+    return run_model_sql(conn, sql)
+
 
 
 def compute_metrics(conn, sql, qid):
@@ -84,10 +80,14 @@ def compute_metrics(conn, sql, qid):
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
     )
-    metrics["exact_match"] = exact_result_set_match(
+    metrics["common_column_exact_overlap"] = common_column_exact_overlap(
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
     )
+    metrics["exact_match"] = 1.0 if exact_result_set_match(
+        exec_result["rows"], expected_rows,
+        exec_result["columns"], expected_columns,
+    ) else 0.0
     return metrics
 
 
@@ -278,7 +278,7 @@ def main():
     print(f"Model: {model}")
     print(f"Conditions: {conditions}")
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
     
     print("Loading schema...")
     tables = get_tables(conn)
@@ -307,6 +307,13 @@ def main():
     if out_path.exists():
         with open(out_path) as f:
             existing = json.load(f)
+        assert_resumable(
+            {**existing.get("provenance", {}),
+             "model": existing.get("model", "")},
+            {**build_provenance(EVAL_DIR / "evaluation_dataset.jsonl"),
+             "model": model},
+            force="--force-stale-resume" in sys.argv,
+            what=out_path.name)
         all_results = existing.get("conditions", {})
         print(f"Loaded existing results: {list(all_results.keys())}")
     

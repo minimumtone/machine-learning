@@ -52,3 +52,5 @@ postgres_data/
 
 # Verification package (distributed separately)
 verification_package/
+GIT_COMMIT
+l12_sql_package_*.zip

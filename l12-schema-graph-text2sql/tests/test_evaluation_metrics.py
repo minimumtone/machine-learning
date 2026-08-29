@@ -141,3 +141,30 @@ def test_multi_hop_success():
     result = multi_hop_success(3, True)
     assert result["is_multi_hop"]
     assert result["correct"]
+
+
+def test_exact_result_set_match_canonical():
+    from evaluation.metrics_strict import exact_result_set_match
+
+    rows = [["Ni3Al", 1.0], ["Cu3Au", 2.0]]
+    cols = ["formula", "delta_e"]
+
+    # identical -> exact
+    assert exact_result_set_match(rows, rows, cols, cols)
+    # missing gold column -> not exact
+    assert not exact_result_set_match(
+        [["Ni3Al"], ["Cu3Au"]], rows, ["formula"], cols)
+    # extra column -> not exact
+    assert not exact_result_set_match(
+        [r + ["x"] for r in rows], rows, cols + ["extra"], cols)
+    # column order mismatch -> not exact
+    assert not exact_result_set_match(
+        [[r[1], r[0]] for r in rows], rows, ["delta_e", "formula"], cols)
+    # duplicate-row multiplicity mismatch -> not exact
+    assert not exact_result_set_match(rows + [rows[0]], rows, cols, cols)
+    # unordered: permutation is exact
+    assert exact_result_set_match(list(reversed(rows)), rows, cols, cols)
+    # ordered: permutation is NOT exact
+    assert not exact_result_set_match(
+        list(reversed(rows)), rows, cols, cols, ordered=True)
+    assert exact_result_set_match(rows, rows, cols, cols, ordered=True)
