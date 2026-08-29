@@ -32,6 +32,8 @@ def run_single(run_id: int, condition: str | None = None) -> dict:
     backup = RESULTS_FILE.with_suffix(f".backup_run{run_id}.json")
     if RESULTS_FILE.exists():
         shutil.copy2(RESULTS_FILE, backup)
+        # eval_ablation resumes from an existing results file
+        RESULTS_FILE.unlink()
 
     # Set environment to start from specific condition if requested
     env = os.environ.copy()
