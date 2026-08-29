@@ -1,0 +1,180 @@
+{
+  "source": "transfer",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "transfer_evaluation_dataset.jsonl",
+    "dataset_sha256": "f75491e6af60d36c59085cf939a894b6a04bc69a9b324a1a7ee73f17115efcda",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_file": "sql_generation_prompt_transfer.md",
+    "prompt_sha256": "a614ee7f0cc1cadd314af6566b6ba4091c156ff1e5d7eea27ab847b3b6c8a765",
+    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
+    "generated_at": "2026-08-29T01:14:57+00:00"
+  },
+  "source_result_file": "transfer_eval_results.json",
+  "source_result_sha256": "ac3c54959842d57dad3851c4908ed1b171126248a9ece064f7ce2e6e1194c494",
+  "n_queries": 20,
+  "eval_file": "transfer_eval_results.json",
+  "queries": [
+    {
+      "qid": "q_transfer_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 44.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_001.sql"
+    },
+    {
+      "qid": "q_transfer_002",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 36.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_002.sql"
+    },
+    {
+      "qid": "q_transfer_003",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 30.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_003.sql"
+    },
+    {
+      "qid": "q_transfer_004",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 29.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_004.sql"
+    },
+    {
+      "qid": "q_transfer_005",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_005.sql"
+    },
+    {
+      "qid": "q_transfer_006",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_006.sql"
+    },
+    {
+      "qid": "q_transfer_007",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 24.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_007.sql"
+    },
+    {
+      "qid": "q_transfer_008",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 25.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_008.sql"
+    },
+    {
+      "qid": "q_transfer_009",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 22.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_009.sql"
+    },
+    {
+      "qid": "q_transfer_010",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 39.1,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_010.sql"
+    },
+    {
+      "qid": "q_transfer_011",
+      "difficulty": "medium",
+      "accuracy": 0.0,
+      "latency_s": 27.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_011.sql"
+    },
+    {
+      "qid": "q_transfer_012",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_012.sql"
+    },
+    {
+      "qid": "q_transfer_013",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_013.sql"
+    },
+    {
+      "qid": "q_transfer_014",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 29.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_014.sql"
+    },
+    {
+      "qid": "q_transfer_015",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 32.3,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_015.sql"
+    },
+    {
+      "qid": "q_transfer_016",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 34.2,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_016.sql"
+    },
+    {
+      "qid": "q_transfer_017",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 29.3,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_017.sql"
+    },
+    {
+      "qid": "q_transfer_018",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 58.5,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_018.sql"
+    },
+    {
+      "qid": "q_transfer_019",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 71.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_019.sql"
+    },
+    {
+      "qid": "q_transfer_020",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 99.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_020.sql"
+    }
+  ]
+}

@@ -4526,8 +4526,10 @@
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
-    "generated_at": "2026-08-29T15:32:14+00:00"
+    "expected_dir": "expected_results",
+    "expected_sha256": "a5a8cd6a13d0c0eb8e48dc513c8784a1dbf091aa2f525e712194d94b4626a20e",
+    "git_commit": "e863b74768e52ee93c6ff6e038693300ba688b91",
+    "generated_at": "2026-08-29T16:05:30+00:00"
   },
   "sources": {
     "main": {

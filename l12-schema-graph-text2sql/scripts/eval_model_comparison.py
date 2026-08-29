@@ -12,6 +12,7 @@ Output: evaluation/model_comparison_results.json
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -48,6 +49,25 @@ CONNINFO = (
 MODELS = [
     {"name": "gpt-4o", "provider": "openai", "model_id": "gpt-4o"},
 ]
+
+
+def models_config_sha256(models: list[dict[str, str]]) -> str:
+    """Stable hash of the compared model conditions.
+
+    Covers every condition's name / provider / model_id so a stored
+    result produced under a different model configuration is rejected
+    as stale on resume instead of being silently skipped.
+    """
+    canon = sorted(
+        (m["name"], m["provider"], m["model_id"]) for m in models
+    )
+    return hashlib.sha256(json.dumps(canon).encode()).hexdigest()
+
+
+def _current_provenance() -> dict[str, str]:
+    prov = build_provenance(EVAL_DIR / "evaluation_dataset.jsonl")
+    prov["models_config_sha256"] = models_config_sha256(MODELS)
+    return prov
 
 
 def load_queries():
@@ -256,9 +276,10 @@ def main():
             existing = json.load(f)
         assert_resumable(
             existing.get("provenance", {}),
-            build_provenance(EVAL_DIR / "evaluation_dataset.jsonl"),
+            _current_provenance(),
             force="--force-stale-resume" in sys.argv,
-            what=out_path.name)
+            what=out_path.name,
+            extra_keys=("models_config_sha256",))
         all_results = existing.get("models", {})
         print(f"Loaded existing results: {list(all_results.keys())}")
 
@@ -305,7 +326,7 @@ def main():
         # Save after each model (incremental)
         with open(out_path, "w") as f:
             json.dump({
-                "provenance": build_provenance(EVAL_DIR / "evaluation_dataset.jsonl"),
+                "provenance": _current_provenance(),
                 "n_queries": len(all_queries),
                 "models": all_results,
             }, f, ensure_ascii=False, indent=2)

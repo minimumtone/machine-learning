@@ -59,8 +59,9 @@ def load_expected(qid):
     if path.exists():
         with open(path) as f:
             data = json.load(f)
-        return data.get("rows", []), data.get("columns", [])
-    return [], []
+        return (data.get("rows", []), data.get("columns", []),
+                bool(data.get("ordered")))
+    return [], [], False
 
 
 def execute_sql(conn, sql):
@@ -70,7 +71,7 @@ def execute_sql(conn, sql):
 
 def compute_metrics(conn, sql, qid):
     """Return recall, precision, F1 and exact result-set match."""
-    expected_rows, expected_columns = load_expected(qid)
+    expected_rows, expected_columns, expected_ordered = load_expected(qid)
     if not sql:
         return {"recall": 0.0, "precision": 0.0, "f1": 0.0, "exact_match": 0.0}
     exec_result = execute_sql(conn, sql)
@@ -87,6 +88,7 @@ def compute_metrics(conn, sql, qid):
     metrics["exact_match"] = 1.0 if exact_result_set_match(
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
+        ordered=expected_ordered,
     ) else 0.0
     return metrics
 

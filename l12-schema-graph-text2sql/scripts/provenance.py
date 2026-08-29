@@ -101,19 +101,21 @@ def _canon(prov: dict[str, str]) -> dict[str, str]:
 def assert_resumable(stored: dict[str, str] | None,
                      current: dict[str, str],
                      *, force: bool = False,
-                     what: str = "stored results") -> None:
+                     what: str = "stored results",
+                     extra_keys: tuple[str, ...] = ()) -> None:
     """Refuse to resume from stale results.
 
     Compares dataset / gold / prompt-template hashes plus model and
     git commit of a previously saved evaluation file against the
     current run and raises RuntimeError on any difference, unless
-    ``force`` is True.
+    ``force`` is True.  ``extra_keys`` adds run-specific keys to the
+    comparison (e.g. the model-comparison configuration hash).
     """
     stored_c = _canon(stored or {})
     current_c = _canon(current)
     diffs = [
         f"{k}: stored={stored_c.get(k, '<missing>')} current={current_c.get(k, '<missing>')}"
-        for k in _INPUT_HASH_KEYS
+        for k in _INPUT_HASH_KEYS + extra_keys
         if stored_c.get(k) != current_c.get(k)
     ]
     if not diffs:

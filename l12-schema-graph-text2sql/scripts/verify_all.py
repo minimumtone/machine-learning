@@ -138,6 +138,15 @@ def _sha256_gold_dir(path: Path) -> str:
     return h.hexdigest()
 
 
+def _sha256_json_dir(path: Path) -> str:
+    # Must stay byte-identical to scripts/provenance.py::_sha256_json_dir.
+    h = hashlib.sha256()
+    for p in sorted(path.glob("*.json")):
+        h.update(p.name.encode())
+        h.update(p.read_bytes())
+    return h.hexdigest()
+
+
 def _json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -496,13 +505,27 @@ def check_provenance() -> tuple[str, list[str]]:
             elif prov.get("gold_sha256") != _sha256_gold_dir(gold_dir):
                 errors.append(f"{p.name}: gold_sha256 mismatch")
 
-        prompt_file = prov.get("prompt_file")
+        prompt_file = prov.get("prompt_template_file")
+        prompt_hash_key = "prompt_template_sha256"
+        if not isinstance(prompt_file, str):
+            # Explicit backward-compatible branch for pre-R22 provenance.
+            prompt_file = prov.get("prompt_file")
+            prompt_hash_key = "prompt_sha256"
         if isinstance(prompt_file, str):
             prompt = _find_prompt(prompt_file)
             if prompt is None:
                 errors.append(f"{p.name}: provenance prompt missing: {prompt_file}")
-            elif prov.get("prompt_sha256") != _sha256_file(prompt):
-                errors.append(f"{p.name}: prompt_sha256 mismatch")
+            elif prov.get(prompt_hash_key) != _sha256_file(prompt):
+                errors.append(f"{p.name}: {prompt_hash_key} mismatch")
+
+        expected_dir_name = prov.get("expected_dir")
+        if isinstance(expected_dir_name, str):
+            expected_dir = EVAL / expected_dir_name
+            if not expected_dir.is_dir():
+                errors.append(
+                    f"{p.name}: provenance expected dir missing: {expected_dir_name}")
+            elif prov.get("expected_sha256") != _sha256_json_dir(expected_dir):
+                errors.append(f"{p.name}: expected_sha256 mismatch")
 
         stored_commit = prov.get("git_commit")
         if isinstance(stored_commit, str) and stored_commit not in ("", "unknown", package_commit):
@@ -529,6 +552,14 @@ def check_provenance() -> tuple[str, list[str]]:
     return f"{n_blocks} evaluation provenance blocks match current input hashes", warnings
 
 
+def _canonical_hash(prov: dict, key: str) -> str | None:
+    aliases = {"prompt_template_sha256": "prompt_sha256"}
+    v = prov.get(key)
+    if v is None and key in aliases:
+        v = prov.get(aliases[key])
+    return v
+
+
 def check_main_run_single_source() -> tuple[str, list[str]]:
     a_path = EVAL / "multiaxis_results.json"
     b_path = EVAL / "main_eval_with_sql.json"
@@ -541,8 +572,8 @@ def check_main_run_single_source() -> tuple[str, list[str]]:
     same_inputs = (
         a.get("model") == b.get("model")
         and isinstance(pa, dict) and isinstance(pb, dict)
-        and all(pa.get(k) == pb.get(k) for k in
-                ("dataset_sha256", "gold_sha256", "prompt_sha256"))
+        and all(_canonical_hash(pa, k) == _canonical_hash(pb, k) for k in
+                ("dataset_sha256", "gold_sha256", "prompt_template_sha256"))
     )
     if not same_inputs:
         return "main result artifacts identify different inputs; no single-run equivalence asserted", []
