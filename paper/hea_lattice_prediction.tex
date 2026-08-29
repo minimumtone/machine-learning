@@ -710,7 +710,7 @@ Al--Co--Mn--Ni--V & 1 & BCC & \texttt{Chen2023\_NatCommun} \\
 文献名は\texttt{robust\_validation.json}の\texttt{refs}を略記した。}
 \end{table}
 
-この構造化を反映し、構成選択を含むleave-one-family-out CVを行った。結果を、完全一致element-set（49群）によるCVと併せて表~\ref{tab:robust_cv}に示す。family CVでは、SQS＋DFT Vegardが全体で0.0189~\AA{}（Vegard比13.8\%改善）、BCCで0.0237~\AA{}（17.4\%改善）となった。一方、経験的$V_i^\mathrm{eff}$ベースラインは23元素を構造別に46パラメータでRidge回帰し、$\lambda$を訓練fold内の内側CVで選択したにもかかわらず、family CVでVegardより17.4\%悪化した。パラメータ数が46であるのに対し合金数は95に過ぎず、過学習が実測された結果である。「King体積を単に微調整すればよい」という仮説は、この化学系単位の評価では支持されない。
+この構造化を反映し、構成選択を含むleave-one-family-out CVを行った。結果を、完全一致element-set（49群）によるCVと併せて表~\ref{tab:robust_cv}に示す。family CVでは、SQS＋DFT Vegardが全体で0.0189~\AA{}（Vegard比13.8\%改善）、BCCで0.0237~\AA{}（17.4\%改善）となった。一方、経験的$V_i^\mathrm{eff}$ベースラインは、対象23元素のうち各構造の訓練foldに現れる元素のみをフィットし、プール全体ではBCC 46合金・16元素、FCC 49合金・17元素となる。$\lambda$を訓練fold内の内側CVで選択したにもかかわらず、family CVでVegardより17.4\%悪化した。family CVでは8群のうち2群が85.3\%を占めるため、小さい群を評価する際の訓練データが特定の化学空間に偏り、実効的な自由度に対して情報が不足する。「King体積を単に微調整すればよい」という仮説は、この化学系単位の評価では支持されない。
 
 \begin{table*}[!t]
 \centering
@@ -732,7 +732,7 @@ $|\Delta r|$代替 & 0.0285 ($-$30.0\%) & 0.0390 ($-$36.1\%) & 0.0119 (+5.4\%) &
 \end{tabular}
 }
 \par\smallskip
-{\scriptsize $V_i^\mathrm{eff}$は構造別23元素の46パラメータ、$|\Delta r|$は原子半径差の代替モデル。
+{\scriptsize $V_i^\mathrm{eff}$は各構造の訓練foldに現れる元素のみをフィット（プール全体でBCC 16元素・FCC 17元素）、$|\Delta r|$は原子半径差の代替モデル。
 改善率は$(\mathrm{RMSE}_\mathrm{Vegard}-\mathrm{RMSE})/\mathrm{RMSE}_\mathrm{Vegard}$。}
 \end{table*}
 
@@ -788,7 +788,7 @@ SQS + DFT FCC & 0.0128 & 0.0130 [0.0109, 0.0200] & 0.429 & $-$3.3\% \\
 \end{tabular}
 \end{table}
 
-null分布の中央値は、Vegard則に対して10--18\%悪い位置にある。この結果は、観測された改善がVegard則を一律に縮めるほぼ定数のバイアス補正だけでは説明できず、ペア固有のDFT情報が寄与している可能性を示す（BCCでは$ p=0.002$）。一方、FCCでは$p=0.214$--$0.429$であり、ペア固有情報の寄与は検出されなかった。このpermutation testは、加法分解が$\Omega_\text{sf}$分散の34--46\%を失ってもHEA予測RMSEがほぼ不変とする表~\ref{tab:pw_vs_add}の自己申告に対する直接の対照実験である。ただし結論は、このデータセット、対象範囲、検討した記述子・回帰形式の範囲に限定される。
+null分布の中央値は、Vegard則に対して10--18\%悪い位置にある。この結果は、観測された改善がVegard則を一律に縮めるほぼ定数のバイアス補正だけでは説明できず、ペア固有のDFT情報が寄与している可能性を示す（BCCでは$p = 0.002$）。一方、FCCでは$p=0.214$--$0.429$であり、ペア固有情報の寄与は検出されなかった。このpermutation testは、加法分解が$\Omega_\text{sf}$分散の34--46\%を失ってもHEA予測RMSEがほぼ不変とする表~\ref{tab:pw_vs_add}の自己申告に対する直接の対照実験である。ただし結論は、このデータセット、対象範囲、検討した記述子・回帰形式の範囲に限定される。
 
 \subsubsection{校正内で完結する入れ子プロトコル}
 \label{sec:nested_protocol}
