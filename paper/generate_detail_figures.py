@@ -102,27 +102,23 @@ def make_heatmap(sqs: dict) -> None:
         ("(a) BCC SQS 50:50", sqs["omega_dft"]),
         ("(b) FCC SQS 50:50", sqs["fcc_omega_dft"]),
     ]
-    all_values = np.concatenate([
-        matrix.compressed() for _, omega in matrices
-        for matrix in [omega_matrix(omega)[1]]
-    ])
-    limit = max(abs(all_values).max(), 1e-9)
     cmap = plt.get_cmap("RdBu_r").copy()
     cmap.set_bad("#eeeeee")
-    norm = TwoSlopeNorm(vmin=-limit, vcenter=0, vmax=limit)
-    fig, axes = plt.subplots(1, 2, figsize=(18, 9))
-    image = None
+    fig, axes = plt.subplots(1, 2, figsize=(20, 9))
     for ax, (title, omega) in zip(axes, matrices):
         elements, values = omega_matrix(omega)
+        finite_values = values.compressed()
+        limit = max(abs(finite_values).max(), 1e-9)
+        norm = TwoSlopeNorm(vmin=-limit, vcenter=0, vmax=limit)
         image = ax.imshow(values, cmap=cmap, norm=norm, interpolation="none")
         ax.set_title(title)
         ax.set_xlabel("Element")
         ax.set_ylabel("Element")
         ax.set_xticks(range(len(elements)), elements, rotation=90)
         ax.set_yticks(range(len(elements)), elements)
-    colorbar = fig.colorbar(image, ax=axes, fraction=0.035, pad=0.03)
-    colorbar.set_label(r"$\Omega_\mathrm{sf}$ (%)")
-    save_figure(fig, "heatmap", rect=[0, 0, 0.87, 1])
+        colorbar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+        colorbar.set_label(r"$\Omega_\mathrm{sf}$ (%)")
+    save_figure(fig, "heatmap")
 
 
 def rmse_curve(omega, heas, q_values):
@@ -194,7 +190,7 @@ def make_q_scan(sqs: dict, additivity: dict) -> None:
     )
     ax.set_xlim(0, 3)
     ax.set_xlabel("q (dimensionless)")
-    ax.set_ylabel("Independent-test RMSE (Å)")
+    ax.set_ylabel("RMSE (Å)")
     ax.set_title("RMSE scan for the structure-factor correction")
     ax.legend(loc="upper left", ncol=2)
     save_figure(fig, "q_scan")
@@ -254,8 +250,30 @@ def make_residual(sqs: dict) -> None:
         "BCC": sqs["omega_dft"],
         "FCC": sqs["fcc_omega_dft"],
     }
+    independent_by_alloy = {}
+    for hea in INDEPENDENT_TEST:
+        alloy = "-".join(sorted(hea["comp"]))
+        a_exp = float(hea["a_exp"])
+        if alloy not in independent_by_alloy:
+            independent_by_alloy[alloy] = {}
+        if a_exp in independent_by_alloy[alloy]:
+            raise ValueError(f"Duplicate independent-test key: {alloy}")
+        independent_by_alloy[alloy][a_exp] = hea
     records = []
-    for row, hea in zip(frame.to_dict("records"), INDEPENDENT_TEST):
+    for row in frame.to_dict("records"):
+        alloy = row["alloy"]
+        a_exp = float(row["a_exp"])
+        candidates = independent_by_alloy.get(alloy, {})
+        matches = [
+            hea for candidate_a_exp, hea in candidates.items()
+            if abs(candidate_a_exp - a_exp) <= 1e-9
+        ]
+        if len(matches) != 1:
+            raise ValueError(
+                f"Independent-test match is not unique for "
+                f"{alloy}, a_exp={a_exp}"
+            )
+        hea = matches[0]
         structure = row["struct"]
         records.append({
             "residual": row["a_dft_eq10_ss"] - row["a_exp"],
