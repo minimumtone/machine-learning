@@ -1,0 +1,2381 @@
+{
+  "config": {
+    "family_jaccard_threshold": 0.5,
+    "comp_eps": 0.02,
+    "n_permutations": 500,
+    "rng_seed": 20260602
+  },
+  "pool": {
+    "n_total": 95,
+    "n_calibration": 64,
+    "n_test": 31,
+    "n_element_set_groups": 49,
+    "n_family_groups": 8
+  },
+  "families": [
+    {
+      "family": "Al-Co-Cr-Fe-Mn-Mo-Ni-Pd-V-Zn",
+      "n_alloys": 41,
+      "structs": [
+        "FCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2",
+        "Chen2023_NatCommun",
+        "Niu2017_SciRep",
+        "Otto2013_ActaMat",
+        "Wang2019_ScriptaMat"
+      ]
+    },
+    {
+      "family": "Al-Cr-Hf-Mo-Nb-Ta-Ti-V-W-Zr",
+      "n_alloys": 40,
+      "structs": [
+        "BCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2",
+        "Chen2022_ActaMat",
+        "Dirras2016_MaterCharact",
+        "Kantelis2025_AIPAdv",
+        "Reget2020_Metals",
+        "Senkov2012_Intermet",
+        "Senkov2013_ActaMat",
+        "Stepanov2015_JAlloyCompd",
+        "Tseng2019_Entropy",
+        "Yao2016_Entropy"
+      ]
+    },
+    {
+      "family": "Au-Cu-Ni-Pd-Pt",
+      "n_alloys": 6,
+      "structs": [
+        "FCC"
+      ],
+      "refs": [
+        "Freudenberger2017_Metals"
+      ]
+    },
+    {
+      "family": "Al-Cr-Cu-Fe-Mo-Ni-V",
+      "n_alloys": 3,
+      "structs": [
+        "BCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2"
+      ]
+    },
+    {
+      "family": "Ir-Os-Pd-Pt-Rh-Ru",
+      "n_alloys": 2,
+      "structs": [
+        "FCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2"
+      ]
+    },
+    {
+      "family": "Cr-Fe-Ta-V-W",
+      "n_alloys": 1,
+      "structs": [
+        "BCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2"
+      ]
+    },
+    {
+      "family": "Co-Cr-Cu-Ni-Zn",
+      "n_alloys": 1,
+      "structs": [
+        "BCC"
+      ],
+      "refs": [
+        "Alonso2005_Table2"
+      ]
+    },
+    {
+      "family": "Al-Co-Mn-Ni-V",
+      "n_alloys": 1,
+      "structs": [
+        "BCC"
+      ],
+      "refs": [
+        "Chen2023_NatCommun"
+      ]
+    }
+  ],
+  "omega_sources": {
+    "B2_pairs": 465,
+    "L12_pairs": 441,
+    "SQS_BCC_pairs": 445,
+    "SQS_FCC_pairs": 120
+  },
+  "dr_surrogate_fit": {
+    "BCC": {
+      "n": 465,
+      "slope": -0.4211183170741272,
+      "intercept": 0.015292090216181949,
+      "r": -0.5454095805423623,
+      "R2": 0.2974716105473956,
+      "p_value": 2.1513038635867784e-37
+    },
+    "FCC": {
+      "n": 441,
+      "slope": -0.4329979100047195,
+      "intercept": 0.0168627035455952,
+      "r": -0.6629113023855797,
+      "R2": 0.4394513948305455,
+      "p_value": 3.787668235492037e-57
+    }
+  },
+  "cv": {
+    "element_set": {
+      "vegard": {
+        "n_groups": 49,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.02189377586019079,
+            "mae": 0.01456906053777528,
+            "median_signed": 0.003581647473680949
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.02864743074846708,
+            "mae": 0.020712723726201147,
+            "median_signed": 0.014420554970447252
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.012605466715034213,
+            "mae": 0.00880153999353875,
+            "median_signed": 0.0017743197705475389
+          }
+        },
+        "folds": [],
+        "improvement_vs_vegard_pct": {
+          "all": 0.0,
+          "BCC": 0.0,
+          "FCC": 0.0
+        }
+      },
+      "eq10_compound_king": {
+        "n_groups": 49,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.019908196396262158,
+            "mae": 0.012682871176182277,
+            "median_signed": -0.002643947340520203
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.025928390941873575,
+            "mae": 0.01744912416876907,
+            "median_signed": 0.004097890502724466
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.011716898612827592,
+            "mae": 0.008208429591304876,
+            "median_signed": -0.0033562769451775942
+          }
+        },
+        "folds": [
+          {
+            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18279670639646756
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 3,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.20140329027422244
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.5466057125372872,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.5969139441062743,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.5956707595349884,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.599306741189491,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6240753606651085,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.17757477516326553
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18214157451786503
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18389659854766555
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1809924706988038
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18961095672385547
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1940442325184503
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.23694381954423177
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18257550977668957
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6124541256554222,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.16861927527509987
+          },
+          {
+            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
+            "n_test": 2,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1605918993116322
+          },
+          {
+            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6377853629310309,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 0.6287507591047005,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1774639018371914
+          },
+          {
+            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1894419391800122
+          },
+          {
+            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "n_test": 17,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.2173175869959436
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6187160915025984,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 0.6493800912870327,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.7116930806698538,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 0.6288639473895065,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "n_test": 1,
+            "q_BCC": 0.619452840729634,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.6069555600636696,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.6206334025284682,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 0.6468396984861472,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.6229285800353368,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.1810175551824806
+          },
+          {
+            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18485120357036644
+          },
+          {
+            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "n_test": 1,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18804113137541048
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.5967263081984715,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6060250722007692,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6139660871457174,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.6131790288926044,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 0.6274776497308644,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6133039386971498,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 3,
+            "q_BCC": 0.5367917227753026,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6104215691944879,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.6616183650190701,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "n_test": 8,
+            "q_BCC": 0.6328443928990558,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6083864265405012,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6177390202837438,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6316356964134379,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 0.6178016793724417,
+            "q_FCC": 0.18654745701336886
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": 9.069150413378397,
+          "BCC": 9.491391498481944,
+          "FCC": 7.049069441806933
+        }
+      },
+      "eq10_sqs_dft": {
+        "n_groups": 49,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.01797424446658959,
+            "mae": 0.010847138811332566,
+            "median_signed": 0.002738461642086687
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.023326681004096628,
+            "mae": 0.014307557622129768,
+            "median_signed": 0.0009622171676879621
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.010749288488150177,
+            "mae": 0.007598582376706622,
+            "median_signed": 0.0028890811761859148
+          }
+        },
+        "folds": [
+          {
+            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302378903265
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 3,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302376811316
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
+            "n_test": 1,
+            "q_BCC": 1.2064312433682316,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 1.2390106670335497,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2561341959810306,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 1.2292362362162486,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2336763515543385,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.4940807687931215
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5499416636360297
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 3.097203573433222
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.641268027128104
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.614674777115702
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5787587703208064
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5823024521945466
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 1.9596283054575583
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 1.2418114499908783,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.4657124794213283
+          },
+          {
+            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
+            "n_test": 2,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5094772064258772
+          },
+          {
+            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2456008706824775,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 1.3300024148117024,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5823024223744038
+          },
+          {
+            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302367510138
+          },
+          {
+            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "n_test": 17,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.582302387648449
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2307684524960194,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 1.2304674247280623,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2370256504649253,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 1.231350132670792,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "n_test": 1,
+            "q_BCC": 1.2349688114502115,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 1.2160593147847194,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 1.2299791866643468,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 1.2386004058843862,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 1.2338384132306808,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.9620156452121775
+          },
+          {
+            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.5928014929900094
+          },
+          {
+            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "n_test": 1,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.6560296884562855
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.193327512169663,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2160314734104762,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2268404869572451,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "n_test": 1,
+            "q_BCC": 1.2308348001940161,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 1.232530581191848,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.225418547697682,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 3,
+            "q_BCC": 1.155169340091354,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2221024970343173,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
+            "n_test": 1,
+            "q_BCC": 1.2672973550035003,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "n_test": 8,
+            "q_BCC": 1.197749806951964,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2187885909025111,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2305867332978724,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 1.2446706631229145,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 1.2315156446104731,
+            "q_FCC": 2.5823023601329886
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": 17.90249164251307,
+          "BCC": 18.573217930390378,
+          "FCC": 14.725184468340393
+        }
+      },
+      "veff_empirical": {
+        "n_groups": 49,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.022023154172569583,
+            "mae": 0.013754976962351015,
+            "median_signed": 0.000927088711804025
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.02920748621964049,
+            "mae": 0.020082819951969366,
+            "median_signed": -0.0004708422481436436
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.011810823308400482,
+            "mae": 0.007814552931280727,
+            "median_signed": 0.0014732418648217838
+          }
+        },
+        "folds": [
+          {
+            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 3,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 7,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
+            "n_test": 5,
+            "lam_BCC": 0.1,
+            "lam_FCC": 10.0
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
+            "n_test": 1,
+            "lam_BCC": 0.001,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "n_test": 17,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 3,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "n_test": 8,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": -0.5909364981398186,
+          "BCC": -1.9549937168567133,
+          "FCC": 6.303958628409853
+        }
+      },
+      "eq10_dr_surrogate": {
+        "n_groups": 49,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.022104911847719587,
+            "mae": 0.014276571341356112,
+            "median_signed": -0.00045430048591965644
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.029284815495737956,
+            "mae": 0.020784229699684017,
+            "median_signed": 0.01041659534472883
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.01192661051810243,
+            "mae": 0.008167341045782974,
+            "median_signed": -0.0025037985582399003
+          }
+        },
+        "folds": [
+          {
+            "group": "frozenset({'Al', 'Co', 'Cr', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5537684874301391
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 3,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5773279648272003
+          },
+          {
+            "group": "frozenset({'Al', 'Co', 'Mn', 'Ni', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.5207065764464635,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Cu', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6543019852563949,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Al', 'Cr', 'Fe', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6174559398115677,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Al', 'Nb', 'V', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.6793354511822187,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Al', 'Ta', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.7128462938258099,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pd', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5096970762934316
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5594772457927816
+          },
+          {
+            "group": "frozenset({'Au', 'Ni', 'Pt', 'Pd'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5588437755209616
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Cu', 'Pt', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.541764518393934
+          },
+          {
+            "group": "frozenset({'Au', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5771988629640642
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Fe', 'Ni', 'Mo'})",
+            "n_test": 3,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5815260015842362
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 7,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5929796084512061
+          },
+          {
+            "group": "frozenset({'Co', 'Cr', 'Pd', 'Fe', 'Ni'})",
+            "n_test": 5,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.4457383926476714
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Cr', 'Cu', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.6961225023145201,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Co', 'Zn', 'Mn', 'Fe', 'Ni'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.6132009729101302
+          },
+          {
+            "group": "frozenset({'Cr', 'Fe', 'V', 'Ni', 'Co'})",
+            "n_test": 2,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5394521940468823
+          },
+          {
+            "group": "frozenset({'Cr', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.755037548100987,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Mo', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 0.6496938395685493,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Fe', 'Al', 'Ni', 'Co'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.593975964504157
+          },
+          {
+            "group": "frozenset({'Fe', 'Mn', 'Ni', 'Cr'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5599689498155512
+          },
+          {
+            "group": "frozenset({'Fe', 'Ni', 'Co', 'Cr'})",
+            "n_test": 17,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.683365296048955
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6983269962291329,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Hf', 'Nb', 'Ti', 'V', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 1.0367221784541374,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Hf', 'Ti', 'V', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 1.2170371895757353,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'Hf', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 0.7365049832561856,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ta'})",
+            "n_test": 1,
+            "q_BCC": 0.7415571537397996,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Mo', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.6732221072959556,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Ta', 'Ti'})",
+            "n_test": 2,
+            "q_BCC": 0.7136997331792492,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'V', 'Zr', 'Ti'})",
+            "n_test": 1,
+            "q_BCC": 0.9692839927993774,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Nb', 'Zr', 'Hf'})",
+            "n_test": 1,
+            "q_BCC": 0.7299038127598224,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ni', 'Pd', 'Pt', 'Cu'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5313260318194634
+          },
+          {
+            "group": "frozenset({'Rh', 'Ir', 'Ru', 'Pd', 'Pt'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5992560862406439
+          },
+          {
+            "group": "frozenset({'Rh', 'Ru', 'Ir', 'Pd', 'Pt', 'Os'})",
+            "n_test": 1,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.5863983403277354
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.5911185200658037,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6614245523472726,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.6994068168824783,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.6892118698337214,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Nb', 'Ti', 'Zr'})",
+            "n_test": 2,
+            "q_BCC": 0.7182719082337853,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Hf', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 1,
+            "q_BCC": 0.6752719558638002,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'Mo', 'Zr'})",
+            "n_test": 3,
+            "q_BCC": 0.49786325214100546,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.7046396634212845,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Cr', 'Ta', 'Fe', 'V'})",
+            "n_test": 1,
+            "q_BCC": 0.7107200086100408,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Mo', 'Ta'})",
+            "n_test": 8,
+            "q_BCC": 0.7885313673843034,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.7040239475741993,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Nb', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.7167916678637817,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'Ti', 'V', 'Mo'})",
+            "n_test": 1,
+            "q_BCC": 0.7248776459787158,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "frozenset({'W', 'Ta', 'Nb', 'V', 'Mo'})",
+            "n_test": 2,
+            "q_BCC": 0.7166681023565148,
+            "q_FCC": -0.5653189164503948
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": -0.9643653469235622,
+          "BCC": -2.224928137072052,
+          "FCC": 5.385411046479773
+        }
+      }
+    },
+    "family": {
+      "vegard": {
+        "n_groups": 8,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.02189377586019079,
+            "mae": 0.01456906053777528,
+            "median_signed": 0.003581647473680949
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.02864743074846708,
+            "mae": 0.020712723726201147,
+            "median_signed": 0.014420554970447252
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.012605466715034213,
+            "mae": 0.00880153999353875,
+            "median_signed": 0.0017743197705475389
+          }
+        },
+        "folds": [],
+        "improvement_vs_vegard_pct": {
+          "all": 0.0,
+          "BCC": 0.0,
+          "FCC": 0.0
+        }
+      },
+      "eq10_compound_king": {
+        "n_groups": 8,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.02024823473844565,
+            "mae": 0.013723830478843858,
+            "median_signed": -0.005738184255288381
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.02576308372953593,
+            "mae": 0.017293288032444044,
+            "median_signed": 0.0026430030052200237
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.013106524097866723,
+            "mae": 0.01037291114281103,
+            "median_signed": -0.007797535873614869
+          }
+        },
+        "folds": [
+          {
+            "group": "0",
+            "n_test": 40,
+            "q_BCC": 0.7282378897616524,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "1",
+            "n_test": 3,
+            "q_BCC": 0.5749360547761788,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "2",
+            "n_test": 1,
+            "q_BCC": 0.6616183650190701,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "3",
+            "n_test": 41,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.39525267048088536
+          },
+          {
+            "group": "4",
+            "n_test": 2,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.18634228348277374
+          },
+          {
+            "group": "5",
+            "n_test": 1,
+            "q_BCC": 0.6124541256554222,
+            "q_FCC": 0.18654745701336886
+          },
+          {
+            "group": "6",
+            "n_test": 6,
+            "q_BCC": 0.6182328557310861,
+            "q_FCC": 0.16035575150077036
+          },
+          {
+            "group": "7",
+            "n_test": 1,
+            "q_BCC": 0.5466057125372872,
+            "q_FCC": 0.18654745701336886
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": 7.516022509105938,
+          "BCC": 10.068431770571577,
+          "FCC": -3.974921311203111
+        }
+      },
+      "eq10_sqs_dft": {
+        "n_groups": 8,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.018870990007234384,
+            "mae": 0.011740178976633911,
+            "median_signed": 0.002772038959085954
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.023676593977293905,
+            "mae": 0.014943956654740088,
+            "median_signed": 0.0021649966677128596
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.012812720367227316,
+            "mae": 0.008732550952289336,
+            "median_signed": 0.0028890811761859148
+          }
+        },
+        "folds": [
+          {
+            "group": "0",
+            "n_test": 40,
+            "q_BCC": 1.0356206050199481,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "1",
+            "n_test": 3,
+            "q_BCC": 1.4219255749432473,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "2",
+            "n_test": 1,
+            "q_BCC": 1.2672973550035003,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "3",
+            "n_test": 41,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 1.627077075584997
+          },
+          {
+            "group": "4",
+            "n_test": 2,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 2.668944630209053
+          },
+          {
+            "group": "5",
+            "n_test": 1,
+            "q_BCC": 1.2418114499908783,
+            "q_FCC": 2.5823023601329886
+          },
+          {
+            "group": "6",
+            "n_test": 6,
+            "q_BCC": 1.2304554736837106,
+            "q_FCC": 4.683348656287696
+          },
+          {
+            "group": "7",
+            "n_test": 1,
+            "q_BCC": 1.2064312433682316,
+            "q_FCC": 2.5823023601329886
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": 13.806599063858622,
+          "BCC": 17.351771664337353,
+          "FCC": -1.6441569112702232
+        }
+      },
+      "veff_empirical": {
+        "n_groups": 8,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.02570613042228374,
+            "mae": 0.020377165212688245,
+            "median_signed": 0.013625791284846756
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.03135821700232896,
+            "mae": 0.023857047457449872,
+            "median_signed": -0.0004727228128602601
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.01892140071092799,
+            "mae": 0.017110336982912023,
+            "median_signed": 0.016810220531908726
+          }
+        },
+        "folds": [
+          {
+            "group": "0",
+            "n_test": 40,
+            "lam_BCC": 0.001,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "1",
+            "n_test": 3,
+            "lam_BCC": 1.0,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "2",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "3",
+            "n_test": 41,
+            "lam_BCC": 0.1,
+            "lam_FCC": 0.0
+          },
+          {
+            "group": "4",
+            "n_test": 2,
+            "lam_BCC": 0.1,
+            "lam_FCC": 0.0
+          },
+          {
+            "group": "5",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          },
+          {
+            "group": "6",
+            "n_test": 6,
+            "lam_BCC": 0.1,
+            "lam_FCC": 0.0
+          },
+          {
+            "group": "7",
+            "n_test": 1,
+            "lam_BCC": 0.1,
+            "lam_FCC": 1.0
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": -17.41296058952038,
+          "BCC": -9.462580702832938,
+          "FCC": -50.1047215361009
+        }
+      },
+      "eq10_dr_surrogate": {
+        "n_groups": 8,
+        "scores": {
+          "all": {
+            "n": 95,
+            "rmse": 0.02845496122189187,
+            "mae": 0.017859994005471204,
+            "median_signed": -0.003411840041945613
+          },
+          "BCC": {
+            "n": 46,
+            "rmse": 0.038997165684843516,
+            "mae": 0.028057887941739863,
+            "median_signed": -0.0043688958389882515
+          },
+          "FCC": {
+            "n": 49,
+            "rmse": 0.011921706216477469,
+            "mae": 0.008286460922443485,
+            "median_signed": -0.003089412713686901
+          }
+        },
+        "folds": [
+          {
+            "group": "0",
+            "n_test": 40,
+            "q_BCC": 3.717404106617806,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "1",
+            "n_test": 3,
+            "q_BCC": 0.466610238392511,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "2",
+            "n_test": 1,
+            "q_BCC": 0.7107200086100408,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "3",
+            "n_test": 41,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.6719625115605032
+          },
+          {
+            "group": "4",
+            "n_test": 2,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.6219794674462407
+          },
+          {
+            "group": "5",
+            "n_test": 1,
+            "q_BCC": 0.6961225023145201,
+            "q_FCC": -0.5653189164503948
+          },
+          {
+            "group": "6",
+            "n_test": 6,
+            "q_BCC": 0.7195675455477636,
+            "q_FCC": -0.38746062054877894
+          },
+          {
+            "group": "7",
+            "n_test": 1,
+            "q_BCC": 0.5207065764464635,
+            "q_FCC": -0.5653189164503948
+          }
+        ],
+        "improvement_vs_vegard_pct": {
+          "all": -29.96826771041906,
+          "BCC": -36.1279691266214,
+          "FCC": 5.424317195183589
+        }
+      }
+    }
+  },
+  "reference_holdout": {
+    "Freudenberger2017_Metals": {
+      "n_test": 6,
+      "vegard": {
+        "rmse": 0.013270640195641633,
+        "mae": 0.011884774365630438,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.010087697678937435,
+        "mae": 0.009101592493714858,
+        "params": {
+          "q_BCC": 0.6182328557310861,
+          "q_FCC": 0.16035575150077036
+        },
+        "improvement_vs_vegard_pct": 23.98484526578865
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.02173584816442739,
+        "mae": 0.016955023627212833,
+        "params": {
+          "q_BCC": 1.2304554736837106,
+          "q_FCC": 4.683348656287696
+        },
+        "improvement_vs_vegard_pct": -63.78899468290848
+      },
+      "veff_empirical": {
+        "rmse": 0.015705777358482543,
+        "mae": 0.014900403469530735,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 0.0
+        },
+        "improvement_vs_vegard_pct": -18.34980925517566
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.008039529709579319,
+        "mae": 0.007092131835793565,
+        "params": {
+          "q_BCC": 0.7195675455477636,
+          "q_FCC": -0.38746062054877894
+        },
+        "improvement_vs_vegard_pct": 39.41867467539603
+      }
+    },
+    "Tseng2019_Entropy": {
+      "n_test": 5,
+      "vegard": {
+        "rmse": 0.02479043334503059,
+        "mae": 0.022900707381046725,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.0160482476321809,
+        "mae": 0.011559464236064621,
+        "params": {
+          "q_BCC": 0.5718621253648302,
+          "q_FCC": 0.18654745701336886
+        },
+        "improvement_vs_vegard_pct": 35.26435214413919
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.012489435594475363,
+        "mae": 0.008996430574293867,
+        "params": {
+          "q_BCC": 1.1663782748289526,
+          "q_FCC": 2.5823023601329886
+        },
+        "improvement_vs_vegard_pct": 49.61993838248514
+      },
+      "veff_empirical": {
+        "rmse": 0.025051939864778383,
+        "mae": 0.022549777992905362,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 1.0
+        },
+        "improvement_vs_vegard_pct": -1.0548686911123009
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.020878907415083723,
+        "mae": 0.01872724969192232,
+        "params": {
+          "q_BCC": 0.3972325791757619,
+          "q_FCC": -0.5653189164503948
+        },
+        "improvement_vs_vegard_pct": 15.77836851622023
+      }
+    },
+    "Niu2017_SciRep": {
+      "n_test": 4,
+      "vegard": {
+        "rmse": 0.024260860727148264,
+        "mae": 0.019941946858262227,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.022994528780706885,
+        "mae": 0.018493771170043805,
+        "params": {
+          "q_BCC": 0.6182328557310861,
+          "q_FCC": 0.1730890969702413
+        },
+        "improvement_vs_vegard_pct": 5.219649709395243
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.0186281308152637,
+        "mae": 0.013928022560554698,
+        "params": {
+          "q_BCC": 1.2304554736837106,
+          "q_FCC": 2.1157672629804045
+        },
+        "improvement_vs_vegard_pct": 23.217353972859897
+      },
+      "veff_empirical": {
+        "rmse": 0.024236094251073502,
+        "mae": 0.0199793367407074,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 10.0
+        },
+        "improvement_vs_vegard_pct": 0.10208407835690625
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.022736723385355435,
+        "mae": 0.018869487024320786,
+        "params": {
+          "q_BCC": 0.7195675455477636,
+          "q_FCC": -0.47903916051323975
+        },
+        "improvement_vs_vegard_pct": 6.282288822866437
+      }
+    },
+    "Reget2020_Metals": {
+      "n_test": 4,
+      "vegard": {
+        "rmse": 0.016983415394043376,
+        "mae": 0.015717146180794228,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.008463801353027326,
+        "mae": 0.007636397926145677,
+        "params": {
+          "q_BCC": 0.5961209029622968,
+          "q_FCC": 0.18654745701336886
+        },
+        "improvement_vs_vegard_pct": 50.16431526490337
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.008535900766786293,
+        "mae": 0.007309815912302398,
+        "params": {
+          "q_BCC": 1.2041793494083042,
+          "q_FCC": 2.5823023601329886
+        },
+        "improvement_vs_vegard_pct": 49.739786911294026
+      },
+      "veff_empirical": {
+        "rmse": 0.020285509353048972,
+        "mae": 0.01830991245682423,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 1.0
+        },
+        "improvement_vs_vegard_pct": -19.443050072035252
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.014640045739860387,
+        "mae": 0.013187026001688085,
+        "params": {
+          "q_BCC": 0.6543137197150569,
+          "q_FCC": -0.5653189164503948
+        },
+        "improvement_vs_vegard_pct": 13.79798821269415
+      }
+    },
+    "Wang2019_ScriptaMat": {
+      "n_test": 2,
+      "vegard": {
+        "rmse": 0.004390129490722158,
+        "mae": 0.0041922525384265885,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.0014747273451498177,
+        "mae": 0.0013205436649863511,
+        "params": {
+          "q_BCC": 0.6182328557310861,
+          "q_FCC": 0.18737793570865244
+        },
+        "improvement_vs_vegard_pct": 66.40811282978281
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.004390129490722158,
+        "mae": 0.0041922525384265885,
+        "params": {
+          "q_BCC": 1.2304554736837106,
+          "q_FCC": 2.5823023663981286
+        },
+        "improvement_vs_vegard_pct": 0.0
+      },
+      "veff_empirical": {
+        "rmse": 0.0038991254645371876,
+        "mae": 0.003757602168794616,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 1.0
+        },
+        "improvement_vs_vegard_pct": 11.184272063560524
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.001207343045151389,
+        "mae": 0.0012037312267414446,
+        "params": {
+          "q_BCC": 0.7195675455477636,
+          "q_FCC": -0.565617067755926
+        },
+        "improvement_vs_vegard_pct": 72.49869171961973
+      }
+    },
+    "Chen2023_NatCommun": {
+      "n_test": 2,
+      "vegard": {
+        "rmse": 0.04369314037875146,
+        "mae": 0.040309188737903234,
+        "params": {}
+      },
+      "eq10_compound_king": {
+        "rmse": 0.02255128116352356,
+        "mae": 0.021650065831735565,
+        "params": {
+          "q_BCC": 0.5466057125372872,
+          "q_FCC": 0.16861927527509987
+        },
+        "improvement_vs_vegard_pct": 48.387135902709026
+      },
+      "eq10_sqs_dft": {
+        "rmse": 0.006113494077336854,
+        "mae": 0.005997514625150968,
+        "params": {
+          "q_BCC": 1.2064312433682316,
+          "q_FCC": 2.4657124794213283
+        },
+        "improvement_vs_vegard_pct": 86.00811471928456
+      },
+      "veff_empirical": {
+        "rmse": 0.04267504765828298,
+        "mae": 0.0392255478048138,
+        "params": {
+          "lam_BCC": 0.1,
+          "lam_FCC": 1.0
+        },
+        "improvement_vs_vegard_pct": 2.3300973828916938
+      },
+      "eq10_dr_surrogate": {
+        "rmse": 0.04069934563749558,
+        "mae": 0.038931017906971066,
+        "params": {
+          "q_BCC": 0.5207065764464635,
+          "q_FCC": -0.6132009729101302
+        },
+        "improvement_vs_vegard_pct": 6.851864423807355
+      }
+    }
+  },
+  "permutation_test": {
+    "eq10_compound_king": {
+      "observed": {
+        "all": 0.02024823473844565,
+        "BCC": 0.02576308372953593,
+        "FCC": 0.013106524097866723
+      },
+      "null": {
+        "all": {
+          "n": 500,
+          "rmse_mean": 0.02805849026566208,
+          "rmse_std": 0.007699982935025593,
+          "rmse_median": 0.0258981949918504,
+          "rmse_q025": 0.020735136554759018,
+          "rmse_q975": 0.04762300497218717,
+          "p_value": 0.011976047904191617,
+          "median_improvement_vs_vegard_pct": -18.290217079187332
+        },
+        "BCC": {
+          "n": 500,
+          "rmse_mean": 0.03661415178459359,
+          "rmse_std": 0.011344120548840661,
+          "rmse_median": 0.03355845760525779,
+          "rmse_q025": 0.02614094460890788,
+          "rmse_q975": 0.06550420861439529,
+          "p_value": 0.017964071856287425,
+          "median_improvement_vs_vegard_pct": -17.142992332928475
+        },
+        "FCC": {
+          "n": 500,
+          "rmse_mean": 0.015554131647216841,
+          "rmse_std": 0.00448313010971761,
+          "rmse_median": 0.014443122966978273,
+          "rmse_q025": 0.011934973476955166,
+          "rmse_q975": 0.025122905220219743,
+          "p_value": 0.21357285429141717,
+          "median_improvement_vs_vegard_pct": -14.578248417826007
+        }
+      }
+    },
+    "eq10_sqs_dft": {
+      "observed": {
+        "all": 0.018870990007234384,
+        "BCC": 0.023676593977293905,
+        "FCC": 0.012812720367227316
+      },
+      "null": {
+        "all": {
+          "n": 500,
+          "rmse_mean": 0.027404878063077554,
+          "rmse_std": 0.010361215712777615,
+          "rmse_median": 0.024398843959591944,
+          "rmse_q025": 0.020517555084863668,
+          "rmse_q975": 0.05531150338249459,
+          "p_value": 0.001996007984031936,
+          "median_improvement_vs_vegard_pct": -11.441918997426527
+        },
+        "BCC": {
+          "n": 500,
+          "rmse_mean": 0.036501720779508855,
+          "rmse_std": 0.015306821874917711,
+          "rmse_median": 0.031432542485750045,
+          "rmse_q025": 0.026170830610747712,
+          "rmse_q975": 0.07844446894924142,
+          "p_value": 0.001996007984031936,
+          "median_improvement_vs_vegard_pct": -9.722029740597224
+        },
+        "FCC": {
+          "n": 500,
+          "rmse_mean": 0.013678017968386946,
+          "rmse_std": 0.00253040469013235,
+          "rmse_median": 0.013015980817856473,
+          "rmse_q025": 0.010887064805029366,
+          "rmse_q975": 0.02001114476353821,
+          "p_value": 0.4291417165668663,
+          "median_improvement_vs_vegard_pct": -3.2566354907958353
+        }
+      }
+    }
+  },
+  "legacy_split": {
+    "eq10_compound_king": {
+      "params": {
+        "q_BCC": 0.4860687238190625,
+        "q_FCC": 0.13339949219488767
+      },
+      "calibration": {
+        "all": {
+          "n": 64,
+          "rmse_vegard": 0.02266047702304081,
+          "rmse_model": 0.02135152874812815,
+          "improvement_pct": 5.776349163266694
+        },
+        "BCC": {
+          "n": 29,
+          "rmse_vegard": 0.03167976809542832,
+          "rmse_model": 0.02991593682690451,
+          "improvement_pct": 5.5676899629146845
+        },
+        "FCC": {
+          "n": 35,
+          "rmse_vegard": 0.01036367077760336,
+          "rmse_model": 0.009595955847198247,
+          "improvement_pct": 7.407751045741443
+        }
+      },
+      "test": {
+        "all": {
+          "n": 31,
+          "rmse_vegard": 0.02021914856076692,
+          "rmse_model": 0.015505812101918202,
+          "improvement_pct": 23.31125093958921
+        },
+        "BCC": {
+          "n": 17,
+          "rmse_vegard": 0.022552474469210382,
+          "rmse_model": 0.015728249847714197,
+          "improvement_pct": 30.25931647018562
+        },
+        "FCC": {
+          "n": 14,
+          "rmse_vegard": 0.016959601672711818,
+          "rmse_model": 0.015231342548259107,
+          "improvement_pct": 10.190446437391858
+        }
+      }
+    },
+    "eq10_sqs_dft": {
+      "params": {
+        "q_BCC": 1.1096076792137077,
+        "q_FCC": 3.576707796248585
+      },
+      "calibration": {
+        "all": {
+          "n": 64,
+          "rmse_vegard": 0.02266047702304081,
+          "rmse_model": 0.02000540009841815,
+          "improvement_pct": 11.71677419642587
+        },
+        "BCC": {
+          "n": 29,
+          "rmse_vegard": 0.03167976809542832,
+          "rmse_model": 0.02781442226090237,
+          "improvement_pct": 12.201307228267734
+        },
+        "FCC": {
+          "n": 35,
+          "rmse_vegard": 0.01036367077760336,
+          "rmse_model": 0.009529211678881851,
+          "improvement_pct": 8.051771583914414
+        }
+      },
+      "test": {
+        "all": {
+          "n": 31,
+          "rmse_vegard": 0.02021914856076692,
+          "rmse_model": 0.012205239229016446,
+          "improvement_pct": 39.63524629964191
+        },
+        "BCC": {
+          "n": 17,
+          "rmse_vegard": 0.022552474469210382,
+          "rmse_model": 0.011760280435256251,
+          "improvement_pct": 47.853702478138715
+        },
+        "FCC": {
+          "n": 14,
+          "rmse_vegard": 0.016959601672711818,
+          "rmse_model": 0.012724645583594782,
+          "improvement_pct": 24.970846431677263
+        }
+      }
+    }
+  },
+  "nested_protocol": {
+    "selection": {
+      "BCC": {
+        "candidates_calibration_familyCV_rmse": {
+          "vegard": 0.03167976809542832,
+          "eq10_compound_king": 0.03060222859728645,
+          "eq10_sqs_dft": 0.028461827344030067,
+          "veff_empirical": 0.0309164136944709,
+          "eq10_dr_surrogate": 0.04161289587192039
+        },
+        "chosen": "eq10_sqs_dft"
+      },
+      "FCC": {
+        "candidates_calibration_familyCV_rmse": {
+          "vegard": 0.01036367077760336,
+          "eq10_compound_king": 0.009775746532733038,
+          "eq10_sqs_dft": 0.010400736421891765,
+          "veff_empirical": 0.010112095306654733,
+          "eq10_dr_surrogate": 0.011514897081330123
+        },
+        "chosen": "eq10_compound_king"
+      }
+    },
+    "evaluation": {
+      "BCC": {
+        "model": "eq10_sqs_dft",
+        "n_test": 17,
+        "params": {
+          "q_BCC": 1.1096076792137077,
+          "q_FCC": 3.576707796248585
+        },
+        "rmse_vegard": 0.022552474469210382,
+        "rmse_model": 0.011760280435256251,
+        "improvement_pct": 47.853702478138715
+      },
+      "FCC": {
+        "model": "eq10_compound_king",
+        "n_test": 14,
+        "params": {
+          "q_BCC": 0.4860687238190625,
+          "q_FCC": 0.13339949219488767
+        },
+        "rmse_vegard": 0.016959601672711818,
+        "rmse_model": 0.015231342548259107,
+        "improvement_pct": 10.190446437391858
+      }
+    }
+  },
+  "noise_floor": {
+    "n_duplicate_groups": 5,
+    "n_pairs": 7,
+    "sigma_est_A": 0.011470308492288583,
+    "sigma_rel_se": 0.2855561808108361,
+    "sigma_se_A": 0.003275417485780028,
+    "sigma_ci95_A": [
+      0.005050490220159729,
+      0.01789012676441744
+    ],
+    "duplicate_groups": [
+      {
+        "struct": "BCC",
+        "comp": {
+          "Hf": 0.2,
+          "Nb": 0.2,
+          "Ti": 0.2,
+          "V": 0.2,
+          "Zr": 0.2
+        },
+        "a_exp": [
+          3.3663,
+          3.377
+        ],
+        "spread_A": 0.010699999999999932
+      },
+      {
+        "struct": "BCC",
+        "comp": {
+          "Nb": 0.25,
+          "Ta": 0.25,
+          "Ti": 0.25,
+          "V": 0.25
+        },
+        "a_exp": [
+          3.2206,
+          3.23
+        ],
+        "spread_A": 0.009399999999999853
+      },
+      {
+        "struct": "FCC",
+        "comp": {
+          "Co": 0.25,
+          "Cr": 0.25,
+          "Fe": 0.25,
+          "Ni": 0.25
+        },
+        "a_exp": [
+          3.5723,
+          3.575
+        ],
+        "spread_A": 0.0027000000000003688
+      },
+      {
+        "struct": "FCC",
+        "comp": {
+          "Co": 0.2,
+          "Cr": 0.2,
+          "Fe": 0.2,
+          "Mn": 0.2,
+          "Ni": 0.2
+        },
+        "a_exp": [
+          3.597,
+          3.5988
+        ],
+        "spread_A": 0.0018000000000002458
+      },
+      {
+        "struct": "FCC",
+        "comp": {
+          "Co": 0.2,
+          "Cr": 0.2,
+          "Fe": 0.2,
+          "Ni": 0.2,
+          "Pd": 0.2
+        },
+        "a_exp": [
+          3.6473,
+          3.66,
+          3.6803
+        ],
+        "spread_A": 0.03299999999999992
+      }
+    ]
+  }
+}
