@@ -2,7 +2,8 @@
 """Multi-axis evaluation: compute EM, SELECT-column precision, JOIN accuracy,
 syntax validity, and execution validity for the full pipeline.
 
-Runs the pipeline once on all 100 queries, captures the generated SQL,
+Runs the pipeline once on all 245 main-corpus queries
+(evaluation/main_evaluation_dataset.jsonl), captures the generated SQL,
 and computes multiple metrics in a single pass.
 
 Output: evaluation/multiaxis_results.json
@@ -34,8 +35,10 @@ from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
+DATASET_PATH = EVAL_DIR / "main_evaluation_dataset.jsonl"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 GOLD_SQL_DIR = EVAL_DIR / "gold_sql"
 
@@ -50,7 +53,7 @@ CONNINFO = (
 
 def load_queries():
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(DATASET_PATH) as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -387,6 +390,7 @@ def main():
 
     output = {
         "model": os.getenv("LLM_MODEL", "gpt-5.5"),
+        "provenance": build_provenance(DATASET_PATH),
         "aggregate": agg,
         "by_difficulty": by_diff,
         "results": results,

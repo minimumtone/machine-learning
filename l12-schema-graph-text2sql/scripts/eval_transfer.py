@@ -30,6 +30,7 @@ from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noq
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
 from scripts.eval_independent import load_dataset, summarize  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 DATASET = PROJECT / "evaluation" / "transfer_evaluation_dataset.jsonl"
 RESULTS_DIR = PROJECT / "evaluation" / "expected_results"
@@ -148,6 +149,11 @@ def main() -> None:
         with open(args.output, "w") as f:
             json.dump({
                 "model": model,
+                "provenance": build_provenance(
+                    DATASET,
+                    gold_dir=PROJECT / "evaluation" / "gold_sql",
+                    prompt_path=PROJECT / "llm" / "prompt_templates"
+                    / "sql_generation_prompt_transfer.md"),
                 "n_queries": len(queries),
                 "summary": summarize(results),
                 "results": results,

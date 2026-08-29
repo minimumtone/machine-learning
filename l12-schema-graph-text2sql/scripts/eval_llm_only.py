@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """LLM-only baseline: raw single-shot SQL generation with no pipeline aids.
 
-The prompt contains only the raw schema (table.column listing plus FK
-pairs) and the natural-language question.  No term dictionary, no
+The prompt contains the raw schema (table.column listing plus FK
+pairs), the neutral semantic conventions of the fixture (stability
+thresholds, chemical_system ordering, controlled vocabularies — the
+same conventions given to the main pipeline prompt), and the
+natural-language question.  No term dictionary, no
 few-shot examples, no schema linking, no graph-constrained JOIN paths,
 no SQLGuard, no repair loop, no n-best generation, no reranker, and no
 literal/alias post-processing are applied.  The only post-processing is
@@ -39,8 +42,31 @@ from evaluation.metrics import (  # noqa: E402
     syntax_validity,
 )
 from llm.sql_generator import extract_sql_from_response  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
+
+# Neutral semantic conventions shared with the main pipeline prompt
+# (llm/prompt_templates/sql_generation_prompt.md).  These are domain/data
+# conventions of the fixture, not pipeline aids, so every method receives
+# the same information for a fair comparison.
+SEMANTIC_NOTE = (
+    "Semantic conventions of this database:\n"
+    "- For binary stable/not-stable checks, use is_stable = TRUE/FALSE "
+    "(a generated column equal to energy_above_hull <= 0.001).\n"
+    "- Three-way stability classes are defined on "
+    "phase_stability.energy_above_hull (eV/atom): stable = "
+    "energy_above_hull <= 0.001; metastable = 0.001 < energy_above_hull "
+    "<= 0.05; unstable = energy_above_hull > 0.05.\n"
+    "- material_entry.chemical_system joins element symbols in "
+    "alphabetical order with '-' (e.g. the Ni-Al system is stored as "
+    "chemical_system = 'Al-Ni').\n"
+    "- element.category is a controlled vocabulary: transition_metal, "
+    "post_transition_metal, lanthanide, actinide, alkali_metal, "
+    "alkaline_earth_metal, metalloid, nonmetal, halogen, noble_gas.\n"
+    "- composition.site_label uses the values 'A-site' and 'B-site'.\n"
+)
 
 EVAL_DIR = PROJECT / "evaluation"
+DATASET_PATH = EVAL_DIR / "main_evaluation_dataset.jsonl"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 GOLD_SQL_DIR = EVAL_DIR / "gold_sql"
 SQL_OUT_DIR = EVAL_DIR / "generated_sql" / "llm_only"
@@ -56,7 +82,7 @@ CONNINFO = (
 
 def load_queries() -> list[dict[str, Any]]:
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(DATASET_PATH) as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -144,6 +170,7 @@ def generate_sql_raw(question: str, schema_text: str, model: str) -> tuple[str, 
         "Given the following PostgreSQL database schema, write a single SQL "
         "query that answers the question. Output only the SQL query.\n\n"
         f"{schema_text}\n\n"
+        f"{SEMANTIC_NOTE}\n"
         f"Question: {question}\n"
     )
     create_kwargs: dict[str, Any] = dict(
@@ -338,7 +365,8 @@ def main() -> None:
 
     output = {
         "model": model,
-        "condition": "llm_only_raw_schema_single_shot",
+        "condition": "llm_only_raw_schema_semantic_note_single_shot",
+        "provenance": build_provenance(DATASET_PATH),
         "aggregate": agg,
         "by_difficulty": by_diff,
         "results": results,

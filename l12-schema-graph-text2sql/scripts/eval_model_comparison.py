@@ -25,6 +25,7 @@ sys.path.insert(0, str(PROJECT))
 import psycopg  # noqa: E402
 
 from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
@@ -310,6 +311,7 @@ def main():
         # Save after each model (incremental)
         with open(out_path, "w") as f:
             json.dump({
+                "provenance": build_provenance(EVAL_DIR / "evaluation_dataset.jsonl"),
                 "n_queries": len(all_queries),
                 "models": all_results,
             }, f, ensure_ascii=False, indent=2)

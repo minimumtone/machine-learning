@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Capture per-query generated SQL for the main 100-query evaluation set.
+"""Capture per-query generated SQL for the main 245-query evaluation corpus.
 
 This script runs the full pipeline (n_best=3, hybrid reranker, SQLGuard) over
-`evaluation/evaluation_dataset.jsonl` and writes:
+`evaluation/main_evaluation_dataset.jsonl` and writes:
   - evaluation/generated_sql/main/<qid>.sql
   - evaluation/main_eval_with_sql.json
 
@@ -29,6 +29,7 @@ from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
@@ -46,7 +47,7 @@ CONNINFO = (
 
 def load_queries(limit: int | None = None):
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(EVAL_DIR / "main_evaluation_dataset.jsonl") as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -82,7 +83,7 @@ def execute_sql(sql):
         return {"success": False, "error": str(e), "rows": [], "row_count": 0, "columns": []}
 
 
-def compute_accuracy(sql, qid):
+def compute_execution_recall(sql, qid):
     expected_rows, expected_columns = load_expected(qid)
     if not sql:
         return 0.0
@@ -145,8 +146,8 @@ def main():
             sql = pipe_result.get("sql", "")
             if sql:
                 sql = normalize_limit(sql)
-            acc = compute_accuracy(sql, qid)
-            print(f"acc={acc:.1%}  {elapsed:.1f}s")
+            acc = compute_execution_recall(sql, qid)
+            print(f"recall={acc:.1%}  {elapsed:.1f}s")
 
             sql_path = OUT_DIR / f"{qid}.sql"
             sql_path.write_text(sql.rstrip() + "\n", encoding="utf-8")
@@ -155,7 +156,7 @@ def main():
                 "qid": qid,
                 "difficulty": difficulty,
                 "question": question,
-                "accuracy": acc,
+                "execution_recall": acc,
                 "latency_s": round(elapsed, 1),
                 "sql": sql,
             })
@@ -166,7 +167,7 @@ def main():
                 "qid": qid,
                 "difficulty": difficulty,
                 "question": question,
-                "accuracy": 0.0,
+                "execution_recall": 0.0,
                 "latency_s": round(elapsed, 1),
                 "sql": "",
                 "error": f"{type(e).__name__}: {e!s}",
@@ -175,24 +176,29 @@ def main():
     conn.close()
 
     # Summary
-    total_acc = sum(r["accuracy"] for r in results) / len(results)
+    total_acc = sum(r["execution_recall"] for r in results) / len(results)
     by_diff = {}
     for r in results:
-        by_diff.setdefault(r["difficulty"], []).append(r["accuracy"])
+        by_diff.setdefault(r["difficulty"], []).append(r["execution_recall"])
     diff_summary = {d: sum(accs) / len(accs) for d, accs in by_diff.items()}
     avg_latency = sum(r["latency_s"] for r in results) / len(results)
 
     out_data = {
         "model": model,
+        "provenance": build_provenance(
+            EVAL_DIR / "main_evaluation_dataset.jsonl"),
+        "metric": "historical execution recall (row-set recall over "
+                  "common columns; see scripts/audit_scoring.py for the "
+                  "strict and exact-match co-metrics)",
         "n_queries": len(results),
-        "overall": total_acc,
+        "overall_execution_recall": total_acc,
         "by_difficulty": diff_summary,
         "avg_latency": avg_latency,
         "results": results,
     }
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(out_data, f, ensure_ascii=False, indent=2)
-    print(f"\nOverall: {total_acc:.1%}")
+    print(f"\nOverall historical execution recall: {total_acc:.1%}")
     for d in ["easy", "medium", "hard", "very_hard"]:
         if d in diff_summary:
             print(f"  {d:12s}: {diff_summary[d]:.1%}")

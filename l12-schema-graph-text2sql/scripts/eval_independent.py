@@ -28,6 +28,7 @@ from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.eval_ablation import CONNINFO, compute_metrics, execute_sql  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 DEFAULT_DATASET = PROJECT / "evaluation" / "expert_evaluation_dataset.jsonl"
 DEFAULT_OUTPUT = PROJECT / "evaluation" / "independent_eval_results.json"
@@ -143,6 +144,7 @@ def main() -> None:
         with open(args.output, "w") as f:
             json.dump({
                 "model": model,
+                "provenance": build_provenance(args.dataset),
                 "dataset": str(args.dataset.name),
                 "n_queries": len(queries),
                 "summary": summarize(results),

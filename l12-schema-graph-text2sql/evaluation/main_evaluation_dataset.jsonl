@@ -51,7 +51,7 @@
 {"id": "q_expert_021", "question": "格子定数aが3.50〜3.60Åの範囲にあるL12型化合物をリストして。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_021.sql", "expected_result_path": "expected_results/q_expert_021.json"}
 {"id": "q_expert_022", "question": "B2構造でcubic以外の結晶系を持つものはあるか。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_022.sql", "expected_result_path": "expected_results/q_expert_022.json"}
 {"id": "q_expert_023", "question": "体積が最小のL12化合物はどれか。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_023.sql", "expected_result_path": "expected_results/q_expert_023.json"}
-{"id": "q_expert_024", "question": "格子定数aとcが異なる化合物を表示して。（正方晶歪み）", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_024.sql", "expected_result_path": "expected_results/q_expert_024.json"}
+{"id": "q_expert_024", "question": "格子定数aとcの差が0.01Åを超える化合物を表示して。（正方晶歪み）", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_024.sql", "expected_result_path": "expected_results/q_expert_024.json"}
 {"id": "q_expert_025", "question": "Strukturbericht記号がL12の化合物をprototypeと共に表示して。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_expert_025.sql", "expected_result_path": "expected_results/q_expert_025.json"}
 {"id": "q_expert_026", "question": "空間群番号225の化合物は何件か。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_expert_026.sql", "expected_result_path": "expected_results/q_expert_026.json"}
 {"id": "q_expert_027", "question": "NiAs型構造でヘキサゴナルの結晶系のもののうち、格子定数cが最大のもの", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_027.sql", "expected_result_path": "expected_results/q_expert_027.json"}
@@ -66,7 +66,7 @@
 {"id": "q_expert_036", "question": "バンドギャップが0より大きいL12型化合物（半導体的なもの）はあるか。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_036.sql", "expected_result_path": "expected_results/q_expert_036.json"}
 {"id": "q_expert_037", "question": "安定なL12化合物のうち、バンドギャップが0のもの（金属的なもの）", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_037.sql", "expected_result_path": "expected_results/q_expert_037.json"}
 {"id": "q_expert_038", "question": "Ni-Al系の化合物を抽出してconvex_hullからの距離を全て表示して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_038.sql", "expected_result_path": "expected_results/q_expert_038.json", "semantic_contract": {"Ni-Al系": "chemical_system = 'Al-Ni'（元素記号をアルファベット順に'-'連結した正準形）"}}
-{"id": "q_expert_039", "question": "形成エネルギーが-0.5 eV/atom以下の極めて安定な化合物を表示して", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_039.sql", "expected_result_path": "expected_results/q_expert_039.json"}
+{"id": "q_expert_039", "question": "形成エネルギーが-0.5 eV/atom以下の化合物を表示して", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_039.sql", "expected_result_path": "expected_results/q_expert_039.json"}
 {"id": "q_expert_040", "question": "プロトタイプ別の平均energy_above_hullを比較して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_expert_040.sql", "expected_result_path": "expected_results/q_expert_040.json"}
 {"id": "q_expert_041", "question": "GGA-PBE以外の汎関数で計算されたエントリはあるか。", "difficulty": "easy", "gold_sql_path": "gold_sql/q_expert_041.sql", "expected_result_path": "expected_results/q_expert_041.json"}
 {"id": "q_expert_042", "question": "バルクモジュラスが200GPa以上のL12化合物を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_expert_042.sql", "expected_result_path": "expected_results/q_expert_042.json"}
@@ -145,7 +145,7 @@
 {"id": "q_expert_115", "question": "各材料ソース(source_db)が宣言を許可されているエネルギー規約(reference_set)と、その規約のmethod・functional・sourceを一覧して", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_expert_115.sql", "expected_result_path": "expected_results/q_expert_115.json"}
 {"id": "q_hard_001", "question": "Ni基超合金のγ'相候補として有望な、安定または準安定なL1₂型化合物を抽出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_001.sql", "expected_result_path": "expected_results/q_hard_001.json"}
 {"id": "q_hard_002", "question": "L1₂型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_002.sql", "expected_result_path": "expected_results/q_hard_002.json"}
-{"id": "q_hard_003", "question": "L1₂構造を持つ化合物のうち、格子定数がNi₃Alに近く、形成エネルギーが低い候補を抽出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_003.sql", "expected_result_path": "expected_results/q_hard_003.json"}
+{"id": "q_hard_003", "question": "L1₂構造を持つ化合物のうち、格子定数aがNi₃Al（3.57Å）との差0.1Å以内の候補を、形成エネルギーが低い順に抽出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_003.sql", "expected_result_path": "expected_results/q_hard_003.json"}
 {"id": "q_hard_004", "question": "安定なL1₂型化合物のバルクモジュラスを高い順に表示して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_004.sql", "expected_result_path": "expected_results/q_hard_004.json"}
 {"id": "q_hard_005", "question": "NiまたはCoを含む安定なL1₂化合物を形成エネルギー順に並べて。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_005.sql", "expected_result_path": "expected_results/q_hard_005.json"}
 {"id": "q_hard_006", "question": "Aサイト元素別にL1₂型化合物の平均格子定数を集計して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_006.sql", "expected_result_path": "expected_results/q_hard_006.json"}
@@ -157,7 +157,7 @@
 {"id": "q_hard_012", "question": "安定で形成エネルギーが最も低いL1₂化合物のトップ10を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_012.sql", "expected_result_path": "expected_results/q_hard_012.json"}
 {"id": "q_hard_013", "question": "Ni含有L1₂化合物のバルクモジュラスと形成エネルギーの関係を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_013.sql", "expected_result_path": "expected_results/q_hard_013.json"}
 {"id": "q_hard_014", "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_014.sql", "expected_result_path": "expected_results/q_hard_014.json"}
-{"id": "q_hard_015", "question": "格子定数3.55Å付近でバルクモジュラスの高いL1₂化合物を探して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_015.sql", "expected_result_path": "expected_results/q_hard_015.json"}
+{"id": "q_hard_015", "question": "格子定数aが3.55Å付近（|a−3.55|≤0.1Å）でバルクモジュラスの高いL1₂化合物を探して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_015.sql", "expected_result_path": "expected_results/q_hard_015.json"}
 {"id": "q_hard_016", "question": "L1₂型化合物の格子定数と形成エネルギーの相関を見たい。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_016.sql", "expected_result_path": "expected_results/q_hard_016.json"}
 {"id": "q_hard_017", "question": "Co3TiとNi3Alの格子定数差を計算して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_017.sql", "expected_result_path": "expected_results/q_hard_017.json"}
 {"id": "q_hard_018", "question": "Al系L1₂化合物のうち安定なものとそうでないものの数を出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_hard_018.sql", "expected_result_path": "expected_results/q_hard_018.json"}
@@ -223,8 +223,8 @@
 {"id": "q_proto_nias_hard_001", "question": "安定なNiAs型化合物を形成エネルギーが低い順に出して。", "difficulty": "hard", "gold_sql_path": "gold_sql/q_proto_nias_hard_001.sql", "expected_result_path": "expected_results/q_proto_nias_hard_001.json"}
 {"id": "q_proto_nias_medium_001", "question": "Tiを含むNiAs型化合物を抽出して。", "difficulty": "medium", "gold_sql_path": "gold_sql/q_proto_nias_medium_001.sql", "expected_result_path": "expected_results/q_proto_nias_medium_001.json"}
 {"id": "q_proto_nias_very_hard_001", "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_proto_nias_very_hard_001.sql", "expected_result_path": "expected_results/q_proto_nias_very_hard_001.json"}
-{"id": "q_vhard_001", "question": "L1₂型金属間化合物において、相安定性、格子ミスマッチ、弾性特性を同時に考慮した析出強化相候補を抽出して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_001.sql", "expected_result_path": "expected_results/q_vhard_001.json"}
-{"id": "q_vhard_002", "question": "Ni₃Al代替またはCo基γ'相候補として有望なL1₂型金属間化合物を、形成エネルギー、格子定数、弾性率の観点から探索して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_002.sql", "expected_result_path": "expected_results/q_vhard_002.json"}
+{"id": "q_vhard_001", "question": "L1₂型金属間化合物のうち、energy above hullが0.05 eV/atom以下でバルクモジュラスが計算されているものを、析出強化相候補としてenergy above hull昇順・Ni₃Al（3.57Å）との格子定数差昇順で抽出して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_001.sql", "expected_result_path": "expected_results/q_vhard_001.json"}
+{"id": "q_vhard_002", "question": "Ni₃Al代替またはCo基γ'相候補として、energy above hullが0.05 eV/atom以下でバルクモジュラスが計算されているL1₂型金属間化合物を、形成エネルギー昇順・Ni₃Al（3.57Å）との格子定数差昇順で探索して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_002.sql", "expected_result_path": "expected_results/q_vhard_002.json"}
 {"id": "q_vhard_003", "question": "γ'相候補のランキングを重み付きスコア (1 − E_hull/0.05)×0.4 + (1 − |a − 3.57|/0.3)×0.3 + (B/300)×0.3（E_hull ≤ 0.05 eV/atomのL1₂のみ対象、a: 格子定数Å、B: 体積弾性率GPa）で出して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_003.sql", "expected_result_path": "expected_results/q_vhard_003.json"}
 {"id": "q_vhard_004", "question": "NiまたはCo含有で安定かつバルクモジュラスが高いL1₂化合物トップ10を出して。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_004.sql", "expected_result_path": "expected_results/q_vhard_004.json"}
 {"id": "q_vhard_005", "question": "L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。", "difficulty": "very_hard", "gold_sql_path": "gold_sql/q_vhard_005.sql", "expected_result_path": "expected_results/q_vhard_005.json"}

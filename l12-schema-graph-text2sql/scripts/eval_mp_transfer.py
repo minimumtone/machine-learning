@@ -20,6 +20,7 @@ from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_columns, get_foreign_keys, get_tables  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
 from scripts.eval_independent import load_dataset, summarize  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 DB_NAME = "mp_transfer"
 DATASET = PROJECT / "evaluation" / "mp_transfer_evaluation_dataset.jsonl"
@@ -149,6 +150,11 @@ def main() -> None:
         with open(args.output, "w") as f:
             json.dump({
                 "model": model,
+                "provenance": build_provenance(
+                    DATASET,
+                    gold_dir=PROJECT / "evaluation" / "gold_sql_mp",
+                    prompt_path=PROJECT / "llm" / "prompt_templates"
+                    / "sql_generation_prompt_mp.md"),
                 "n_queries": len(queries),
                 "summary": summarize(results),
                 "results": results,

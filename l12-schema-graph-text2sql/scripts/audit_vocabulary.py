@@ -39,16 +39,19 @@ Before auditing, each suite's DB is guarded: the main suite requires
 the version='007' marker + unchanged schema fingerprint + a fresh pass
 of validate_fixture_integrity(); the transfer and obfuscated suites
 require the transfer_initialization_status marker + a fresh pass of
-validate_transfer_integrity().
+validate_transfer_integrity(); the MP suite requires
+assert_valid_mp_transfer() (pinned snapshot digest + schema
+fingerprint).
 
 Exit 0 when every audited literal is backed by a stored value and
 every reference resolved (unresolved=0), 1 otherwise.
 
 Usage:
-    L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... \
+    L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... MP_DSN=... \
         python scripts/audit_vocabulary.py
-    (main suite falls back to the local CONNINFO defaults; a missing
-    transfer-suite DSN is a failure unless --allow-skip is given)
+    (main and MP suites fall back to the local conninfo defaults; a
+    missing transfer-suite DSN is a failure unless --allow-skip is
+    given)
 """
 from __future__ import annotations
 
@@ -66,8 +69,9 @@ from sqlglot.optimizer.scope import Scope, build_scope
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.db_conninfo import CONNINFO, mp_conninfo  # noqa: E402
 from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.mp_guard import assert_valid_mp_transfer  # noqa: E402
 from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SUITES = [
@@ -79,6 +83,8 @@ SUITES = [
      lambda qid: qid.startswith("q_transfer"), assert_valid_transfer),
     ("obfuscated", "gold_sql_obfuscated", "OBF_TRANSFER_DSN",
      lambda qid: True, assert_valid_transfer),
+    ("mp", "gold_sql_mp", "MP_DSN",
+     lambda qid: True, assert_valid_mp_transfer),
 ]
 
 # (suite, table, column, literal) equality literals that intentionally
@@ -409,6 +415,8 @@ def main() -> int:
         dsn = os.environ.get(env_var)
         if not dsn and name == "main":
             dsn = CONNINFO
+        if not dsn and name == "mp":
+            dsn = mp_conninfo()
         if not dsn:
             msg = f"suite {name}: DSN {env_var} not set"
             if args.allow_skip:

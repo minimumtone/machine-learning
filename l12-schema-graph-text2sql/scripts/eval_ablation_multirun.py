@@ -20,6 +20,8 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
+from scripts.provenance import build_provenance  # noqa: E402
+
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_FILE = EVAL_DIR / "ablation_results.json"
 
@@ -218,7 +220,10 @@ def main():
         significance = compute_significance(stats)
         stats_file = EVAL_DIR / "ablation_multirun_stats.json"
         with open(stats_file, "w") as f:
-            json.dump({"n_runs": len(runs), "conditions": stats,
+            json.dump({"n_runs": len(runs),
+                       "provenance": build_provenance(
+                           EVAL_DIR / "evaluation_dataset.jsonl"),
+                       "conditions": stats,
                        "significance_tests": significance}, f,
                       ensure_ascii=False, indent=2)
         print(f"\nStatistics saved to {stats_file}")

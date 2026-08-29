@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Prepare queries, gold SQL, expected results, and prompt assets for MP transfer test.
 
-A gold SQL that fails to execute deletes any stale expected-results file
-for that query and makes the script exit non-zero, so a broken gold SQL
-can never leave behind a plausible-looking expected result (nor a
-success exit code).
+Before anything is generated the connection must pass
+``assert_valid_mp_transfer()`` (snapshot digest + schema fingerprint),
+so expected results can only be produced from the pinned fixture.
+
+Expected results are written to a temporary directory and atomically
+swapped into ``expected_results_mp_transfer/`` only after every gold
+SQL succeeds; any failure leaves the previous expected results
+untouched and makes the script exit non-zero, so a broken gold SQL can
+never leave behind a mixed-revision or fabricated expected result (nor
+a success exit code).
 
 The whole generation run executes on a single REPEATABLE READ READ
 ONLY snapshot; a failing query rolls back to a savepoint so the
@@ -13,6 +19,7 @@ remaining expected results still reflect the same DB state.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -25,6 +32,7 @@ sys.path.insert(0, str(PROJECT))
 
 from scripts.db_conninfo import mp_conninfo  # noqa: E402
 from scripts.gold_compare import sql_is_ordered  # noqa: E402
+from scripts.mp_guard import assert_valid_mp_transfer  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 EXPECTED_DIR = EVAL_DIR / "expected_results_mp_transfer"
@@ -85,7 +93,7 @@ QUERIES: list[dict[str, Any]] = [
     {
         "id": "q_mp_008",
         "difficulty": "medium",
-        "question": "バンドギャップを持つ材料（band_gap > 0）の割合を教えてください。",
+        "question": "バンドギャップを持つ材料（band_gap > 0）の割合（%）を教えてください。",
         "gold_sql": (
             "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) "
             "FROM mp_entries;"
@@ -195,7 +203,7 @@ FEW_SHOT: list[dict[str, str]] = [
         ),
     },
     {
-        "question": "バンドギャップがある材料の割合。",
+        "question": "バンドギャップがある材料の割合（%）。",
         "sql": (
             "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) "
             "FROM mp_entries;"
@@ -282,8 +290,13 @@ def main() -> None:
     conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
         cur.execute("SET statement_timeout = '30s'")
+    # The snapshot used for generation must be the pinned fixture.
+    assert_valid_mp_transfer(conn)
 
-    EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
+    tmp_dir = EXPECTED_DIR.with_name(EXPECTED_DIR.name + ".tmp")
+    if tmp_dir.exists():
+        shutil.rmtree(tmp_dir)
+    tmp_dir.mkdir(parents=True)
     GOLD_DIR.mkdir(parents=True, exist_ok=True)
     for q in QUERIES:
         (GOLD_DIR / f"{q['id']}.sql").write_text(q["gold_sql"] + "\n",
@@ -295,17 +308,13 @@ def main() -> None:
 
     n_failed = 0
     for q in QUERIES:
-        expected_path = EXPECTED_DIR / f"{q['id']}.json"
         try:
             result = execute_gold(conn, q["gold_sql"])
         except Exception as exc:
-            # Never leave a stale or fabricated expected result behind
-            # for a gold SQL that no longer executes.
-            expected_path.unlink(missing_ok=True)
             n_failed += 1
             print(f"ERROR {q['id']}: {exc}")
             continue
-        with open(expected_path, "w", encoding="utf-8") as f:
+        with open(tmp_dir / f"{q['id']}.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"{q['id']}: rows={len(result['rows'])}")
 
@@ -318,9 +327,15 @@ def main() -> None:
 
     conn.close()
     if n_failed:
+        shutil.rmtree(tmp_dir)
         print(f"FAILED: {n_failed} gold SQL queries did not execute; "
-              "their expected results were removed", file=sys.stderr)
+              "the existing expected results were left untouched",
+              file=sys.stderr)
         raise SystemExit(1)
+    # All queries succeeded on the same snapshot: swap into place.
+    if EXPECTED_DIR.exists():
+        shutil.rmtree(EXPECTED_DIR)
+    tmp_dir.rename(EXPECTED_DIR)
     print("Prepared MP transfer assets.")
 
 

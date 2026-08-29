@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Audit how much of the reported accuracy comes from metric leniency.
+"""Audit how much of the reported score comes from metric leniency.
+
+Naming note: the shipped headline number is the mean of the
+"historical" policy below.  It is a row-set RECALL over the common
+columns (superset answers still score 1.0), NOT a strict execution
+accuracy, and must be reported as "historical execution recall"
+alongside the strict score and the exact-match rate.
 
 Re-executes the packaged generated-SQL logs against the verification database
 and re-scores them under several policies.  No LLM and no API key are needed:
@@ -8,7 +14,8 @@ everything required is already in the reproduction package.
 The script first reproduces the shipped numbers exactly (self-check), then
 reports what the same runs score once each leniency is removed:
 
-  historical        the metric used for the reported numbers
+  historical        historical execution recall — the metric used for
+                    the reported numbers
   +exact_match      superset answers no longer count as correct
   require_all_cols  every gold column must be present in the result
   no_positional     no positional fallback when column names do not overlap
@@ -48,7 +55,8 @@ EVAL = PROJECT / "evaluation"
 
 # name -> (dataset file, generated-SQL subdir, database, shipped result file)
 DATASETS: dict[str, tuple[str, str, str, str | None]] = {
-    "main": ("evaluation_dataset.jsonl", "main", "l12_materials", "main_eval_with_sql.json"),
+    "main": ("main_evaluation_dataset.jsonl", "main", "l12_materials",
+             "main_eval_with_sql.json"),
     "independent": ("expert_evaluation_dataset.jsonl", "independent", "l12_materials",
                     "independent_eval_results.json"),
     "transfer": ("transfer_evaluation_dataset.jsonl", "transfer", "oqmd_transfer",
@@ -106,7 +114,10 @@ def shipped_per_query(name: str) -> dict[str, float]:
     data = json.load(open(EVAL / resf))
     for value in data.values():
         if isinstance(value, list) and value and isinstance(value[0], dict) and "qid" in value[0]:
-            return {r["qid"]: float(r.get("accuracy", 0.0)) for r in value}
+            return {
+                r["qid"]: float(
+                    r.get("execution_recall", r.get("accuracy", 0.0)))
+                for r in value}
     return {}
 
 
@@ -206,6 +217,11 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
     conn.close()
     n = len(rows)
     out: dict[str, Any] = {
+        "metric_naming": (
+            "the 'historical' policy is a historical execution recall "
+            "(row-set recall over common columns), not a strict "
+            "execution accuracy; report it together with 'strict' and "
+            "'exact_match_pct'"),
         "n_queries": n,
         "policies": {
             p: {
