@@ -3,24 +3,31 @@
     "dataset_file": "main_evaluation_dataset.jsonl",
     "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
-    "generated_at": "2026-08-29T15:32:11+00:00"
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-30T02:25:16+00:00",
+    "rescore_note": "derived deterministically from the canonical stored run multiaxis_results.json by scripts/build_failure_analysis.py; no LLM call is involved"
   },
   "source_result_file": "multiaxis_results.json",
-  "source_result_sha256": "24614b8de5f68fc5fb0145882d0575aab614914bbfab5dd9f300653ea5208697",
+  "source_result_sha256": "1a6b846b6435d5ae879d0fda86a9530518a592e8d58a88d9d9b71ceffb09616a",
   "source_provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
     "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T03:08:25+00:00"
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-29T03:08:25+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:24+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "failures": [
     {
@@ -32,16 +39,6 @@
       "join_match_rate": 0.5,
       "gen_sql": "WITH top_elements AS (\n  SELECT\n    m.formula AS element_symbol,\n    COUNT(DISTINCT s.structure_id) AS polymorph_count\n  FROM material_entry m\n  JOIN structure s ON s.entry_id = m.entry_id\n  WHERE m.number_of_elements = 1\n  GROUP BY m.formula\n  ORDER BY COUNT(DISTINCT s.structure_id) DESC\n  LIMIT 5\n)\nSELECT\n  te.element_symbol,\n  te.polymorph_count,\n  COUNT(DISTINCT m.entry_id) AS l12_compound_count,\n  AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM top_elements te\nJOIN material_entry m ON (\n  m.chemical_system = te.element_symbol\n  OR m.chemical_system LIKE te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol\n)\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nGROUP BY te.element_symbol, te.polymorph_count\nORDER BY te.polymorph_count DESC\nLIMIT 10000;",
       "gold_sql": "-- CTE G: CTE + 純物質参照テーブル集約\n-- 「多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して」\nWITH top_polymorph AS (\n    SELECT element_symbol, n_polymorphs\n    FROM pure_element_reference\n    WHERE reference_set = 'L12-FIXTURE-PBE-v1'\n    ORDER BY n_polymorphs DESC, element_symbol ASC\n    LIMIT 5\n)\nSELECT tp.element_symbol,\n       tp.n_polymorphs,\n       COUNT(DISTINCT m.entry_id) AS n_l12_compounds,\n       ROUND(AVG(ps.formation_energy_per_atom)::numeric, 4) AS avg_e_form\nFROM top_polymorph tp\nLEFT JOIN composition c ON c.element = tp.element_symbol\nLEFT JOIN material_entry m ON m.entry_id = c.entry_id\nLEFT JOIN structure s ON s.entry_id = m.entry_id\n    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id\nGROUP BY tp.element_symbol, tp.n_polymorphs\nORDER BY tp.n_polymorphs DESC, tp.element_symbol ASC;\n"
-    },
-    {
-      "qid": "q_cte_008",
-      "difficulty": "very_hard",
-      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
-      "recall": 0.0,
-      "select_col_prec": 0.0,
-      "join_match_rate": 0.5,
-      "gen_sql": "SELECT c.element AS b_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nHAVING AVG(ps.formation_energy_per_atom) < -0.4\nORDER BY avg_rebased_formation_energy_per_atom ASC\nLIMIT 10000;",
-      "gold_sql": "-- CTE H: CTE + HAVING（グループフィルタ）\n-- 「B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して」\nWITH l12_enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.energy_above_hull <= 0.001\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT cb.element AS b_site,\n       COUNT(*) AS n_compounds,\n       ROUND(AVG(le.formation_energy_per_atom - le.weighted_ref)::numeric, 4)\n           AS avg_enthalpy_vs_element_gs\nFROM l12_enthalpy le\nJOIN composition cb ON cb.entry_id = le.entry_id AND cb.site_label = 'B-site'\nGROUP BY cb.element\nHAVING AVG(le.formation_energy_per_atom - le.weighted_ref) < -0.4\nORDER BY avg_enthalpy_vs_element_gs ASC;\n"
     },
     {
       "qid": "q_cte_011",
@@ -71,7 +68,7 @@
       "select_col_prec": 0.0,
       "join_match_rate": 0.5,
       "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\n\nLIMIT 10000;",
-      "gold_sql": "-- CTE N: CTE + 割合計算（条件付き集約）\n-- 「元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT c.element,\n       COUNT(DISTINCT e.entry_id) AS n_total,\n       COUNT(DISTINCT e.entry_id) FILTER (\n           WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n       ) AS n_negative,\n       ROUND(\n           COUNT(DISTINCT e.entry_id) FILTER (\n               WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n           )::numeric / COUNT(DISTINCT e.entry_id), 3\n       ) AS negative_ratio\nFROM enthalpy e\nJOIN composition c ON c.entry_id = e.entry_id\nGROUP BY c.element\nHAVING COUNT(DISTINCT e.entry_id) >= 5\nORDER BY negative_ratio DESC, c.element ASC\nLIMIT 15;\n"
+      "gold_sql": "-- CTE N: CTE + 割合計算（条件付き集約）\n-- 「元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT c.element,\n       COUNT(DISTINCT e.entry_id) AS n_total,\n       COUNT(DISTINCT e.entry_id) FILTER (\n           WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n       ) AS n_negative,\n       ROUND(\n           COUNT(DISTINCT e.entry_id) FILTER (\n               WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n           )::numeric / COUNT(DISTINCT e.entry_id), 3\n       ) AS negative_ratio\nFROM enthalpy e\nJOIN composition c ON c.entry_id = e.entry_id\nGROUP BY c.element\nORDER BY negative_ratio DESC, c.element ASC;\n"
     },
     {
       "qid": "q_cte_015",
@@ -361,7 +358,7 @@
       "select_col_prec": 0.0,
       "join_match_rate": 0.75,
       "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    c.site_label = 'B-site'\n\nLIMIT 10000;",
-      "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
+      "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_proto_bif3_very_hard_001",

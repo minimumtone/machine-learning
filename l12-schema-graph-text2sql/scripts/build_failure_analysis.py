@@ -48,7 +48,11 @@ def main() -> None:
 
     out = {
         "provenance": build_provenance(
-            EVAL / "main_evaluation_dataset.jsonl"),
+            EVAL / "main_evaluation_dataset.jsonl",
+            rescore_note=(
+                "derived deterministically from the canonical stored run "
+                "multiaxis_results.json by scripts/build_failure_analysis.py; "
+                "no LLM call is involved")),
         "source_result_file": CANONICAL.name,
         "source_result_sha256": sha256_file(CANONICAL),
         "source_provenance": data.get("provenance"),

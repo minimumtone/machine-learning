@@ -4,11 +4,15 @@
     "dataset_file": "transfer_evaluation_dataset.jsonl",
     "dataset_sha256": "f75491e6af60d36c59085cf939a894b6a04bc69a9b324a1a7ee73f17115efcda",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt_transfer.md",
     "prompt_sha256": "a614ee7f0cc1cadd314af6566b6ba4091c156ff1e5d7eea27ab847b3b6c8a765",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T01:14:57+00:00"
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-29T01:14:57+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "n_queries": 20,
   "summary": {
@@ -23,7 +27,7 @@
     "avg_latency": 37.37,
     "overall_precision": 0.85,
     "overall_f1": 0.85,
-    "overall_exact_match": 0.85
+    "overall_exact_match": 0.15
   },
   "results": [
     {
@@ -44,7 +48,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 36.8,
       "sql": "SELECT composition_formula, prototype_label\nFROM oqmd_entries\nWHERE prototype_label ILIKE '%L12%'\n   OR prototype_label ILIKE '%L1₂%'\n   OR prototype_label ILIKE '%L1\\_2%' ESCAPE '\\'\nORDER BY composition_formula, prototype_label\nLIMIT 10000;"
     },
@@ -55,7 +59,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 30.8,
       "sql": "SELECT e.composition_formula\nFROM oqmd_entries e\nWHERE EXISTS (\n  SELECT 1\n  FROM oqmd_element_ratios r\n  WHERE r.entry_key = e.entry_key\n    AND r.symbol = 'Ni'\n)\nORDER BY e.composition_formula\nLIMIT 10000;"
     },
@@ -77,7 +81,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 23.4,
       "sql": "SELECT COUNT(*) AS element_count\nFROM oqmd_elements\nLIMIT 10000;"
     },
@@ -99,7 +103,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 24.9,
       "sql": "SELECT COUNT(DISTINCT entry_key) AS on_hull_compound_count\nFROM oqmd_formation_energies\nWHERE on_hull = TRUE\nLIMIT 10000;"
     },
@@ -110,7 +114,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 25.9,
       "sql": "SELECT e.composition_formula, fe.delta_e\nFROM oqmd_entries e\nJOIN oqmd_formation_energies fe ON fe.entry_key = e.entry_key\nWHERE fe.delta_e < -0.5\nORDER BY fe.delta_e ASC\nLIMIT 10000;"
     },
@@ -121,7 +125,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 22.7,
       "sql": "SELECT\n  symbol,\n  COUNT(DISTINCT entry_key) AS entry_count\nFROM oqmd_element_ratios\nGROUP BY symbol\nORDER BY entry_count DESC\nLIMIT 10;"
     },
@@ -132,7 +136,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 39.1,
       "sql": "SELECT\n  e.composition_formula,\n  fe.delta_e,\n  fe.hull_distance,\n  fe.on_hull\nFROM oqmd_entries e\nJOIN oqmd_formation_energies fe\n  ON fe.entry_key = e.entry_key\nWHERE fe.on_hull = TRUE\n  AND EXISTS (\n    SELECT 1\n    FROM oqmd_element_ratios er\n    WHERE er.entry_key = e.entry_key\n      AND er.symbol = 'Al'\n  )\nORDER BY fe.delta_e ASC\nLIMIT 10000;"
     },
@@ -154,7 +158,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 31.4,
       "sql": "SELECT COUNT(*) AS metastable_compound_count\nFROM oqmd_formation_energies\nWHERE on_hull = false\n  AND hull_distance < 0.05\nLIMIT 10000;"
     },
@@ -165,7 +169,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 31.4,
       "sql": "SELECT e.composition_formula\nFROM oqmd_entries e\nWHERE EXISTS (\n    SELECT 1\n    FROM oqmd_element_ratios r_ni\n    WHERE r_ni.entry_key = e.entry_key\n      AND r_ni.symbol = 'Ni'\n)\nAND EXISTS (\n    SELECT 1\n    FROM oqmd_element_ratios r_al\n    WHERE r_al.entry_key = e.entry_key\n      AND r_al.symbol = 'Al'\n)\nORDER BY e.composition_formula\nLIMIT 10000;"
     },
@@ -176,7 +180,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 29.9,
       "sql": "SELECT\n  oqmd_entries.composition_formula,\n  oqmd_element_ratios.symbol,\n  oqmd_element_ratios.wyckoff_site,\n  oqmd_formation_energies.delta_e\nFROM oqmd_element_ratios\nJOIN oqmd_entries\n  ON oqmd_element_ratios.entry_key = oqmd_entries.entry_key\nJOIN oqmd_formation_energies\n  ON oqmd_formation_energies.entry_key = oqmd_entries.entry_key\nWHERE oqmd_element_ratios.symbol = 'Co'\n  AND oqmd_element_ratios.wyckoff_site = 'A-site'\nORDER BY oqmd_formation_energies.delta_e ASC\nLIMIT 5;"
     },
@@ -187,7 +191,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 32.3,
       "sql": "SELECT\n  oqmd_entries.composition_formula,\n  oqmd_entries.spacegroup_number,\n  oqmd_formation_energies.gap_ev\nFROM oqmd_entries\nJOIN oqmd_formation_energies\n  ON oqmd_formation_energies.entry_key = oqmd_entries.entry_key\nWHERE oqmd_entries.spacegroup_number = 221\n  AND oqmd_formation_energies.gap_ev > 0\nORDER BY oqmd_formation_energies.gap_ev DESC\nLIMIT 10000;"
     },
@@ -198,7 +202,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 34.2,
       "sql": "SELECT\n  oqmd_reference_states.symbol,\n  oqmd_elements.element_name,\n  oqmd_reference_states.polymorph_count,\n  oqmd_reference_states.gs_spacegroup\nFROM oqmd_reference_states\nJOIN oqmd_elements\n  ON oqmd_elements.symbol = oqmd_reference_states.symbol\nORDER BY oqmd_reference_states.polymorph_count DESC\nLIMIT 5;"
     },
@@ -220,7 +224,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 58.5,
       "sql": "WITH ref_energy AS (\n    SELECT\n        oqmd_entries.entry_key,\n        oqmd_entries.composition_formula,\n        oqmd_formation_energies.delta_e,\n        SUM(oqmd_element_ratios.atomic_ratio * oqmd_reference_states.reference_delta_e) AS weighted_ref_energy\n    FROM oqmd_entries\n    JOIN oqmd_formation_energies\n        ON oqmd_formation_energies.entry_key = oqmd_entries.entry_key\n    JOIN oqmd_element_ratios\n        ON oqmd_element_ratios.entry_key = oqmd_entries.entry_key\n    JOIN oqmd_elements\n        ON oqmd_elements.symbol = oqmd_element_ratios.symbol\n    JOIN oqmd_reference_states\n        ON oqmd_reference_states.symbol = oqmd_elements.symbol\n    WHERE oqmd_entries.composition_formula = 'Co3Ti'\n    GROUP BY\n        oqmd_entries.entry_key,\n        oqmd_entries.composition_formula,\n        oqmd_formation_energies.delta_e\n)\nSELECT\n    composition_formula,\n    delta_e,\n    weighted_ref_energy,\n    delta_e - weighted_ref_energy AS formation_enthalpy_from_pure_reference\nFROM ref_energy\nORDER BY formation_enthalpy_from_pure_reference ASC\nLIMIT 10000;"
     },
@@ -231,7 +235,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 71.7,
       "sql": "WITH corrected_rows AS (\n    SELECT\n        e.entry_key,\n        fe.fe_key,\n        e.composition_formula,\n        fe.delta_e,\n        fe.delta_e - (\n            SUM(er.atomic_ratio * rs.reference_delta_e) OVER (PARTITION BY e.entry_key, fe.fe_key)\n            / NULLIF(SUM(er.atomic_ratio) OVER (PARTITION BY e.entry_key, fe.fe_key), 0)\n        ) AS rebased_delta_e\n    FROM oqmd_entries e\n    JOIN oqmd_formation_energies fe ON fe.entry_key = e.entry_key\n    JOIN oqmd_element_ratios er ON er.entry_key = e.entry_key\n    JOIN oqmd_elements el ON el.symbol = er.symbol\n    JOIN oqmd_reference_states rs ON rs.symbol = el.symbol\n    WHERE fe.on_hull = TRUE\n      AND e.prototype_label IN ('L12', 'L1_2', 'L1₂')\n),\nper_entry AS (\n    SELECT DISTINCT ON (entry_key, fe_key)\n        entry_key,\n        fe_key,\n        composition_formula,\n        delta_e,\n        rebased_delta_e\n    FROM corrected_rows\n    WHERE rebased_delta_e < -0.3\n    ORDER BY entry_key, fe_key\n)\nSELECT\n    composition_formula,\n    delta_e,\n    rebased_delta_e\nFROM per_entry\nORDER BY rebased_delta_e ASC\nLIMIT 10000;"
     },

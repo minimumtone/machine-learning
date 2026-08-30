@@ -36,6 +36,10 @@ EXCLUDE_SCRIPTS = {
     "verify_paper_numbers.py",
     "generate_figures.py",
     "compute_all_figures.py",
+    # Writes paper/jp_reranker_vh_results.json (a paper-figure input that
+    # predates the R22A gold fixes and stores no per-query SQL, so it cannot
+    # be deterministically re-scored without new inference).
+    "eval_jp_reranker_vh.py",
 }
 
 EXCLUDE_DIR_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache"}

@@ -16,5 +16,4 @@ FROM enthalpy en
 JOIN tbl_juliet ra
     ON ra.col_rhea = en.col_rhea AND ra.col_zulu = 'A-site'
 GROUP BY ra.col_papa
-HAVING COUNT(*) >= 2
 ORDER BY avg_enthalpy ASC;

@@ -222,7 +222,12 @@ def main() -> int:
             "correction": "Holm-Bonferroni across the ablated conditions",
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },
-        "provenance": build_provenance(EVAL / "evaluation_dataset.jsonl"),
+        "provenance": build_provenance(
+            EVAL / "evaluation_dataset.jsonl",
+            rescore_note=(
+                "statistics recomputed deterministically from stored "
+                "ablation_run_*.json by scripts/recompute_significance.py; "
+                "no LLM call is involved")),
         "conditions": detail,
     }
     Path(args.out).write_text(json.dumps(payload, indent=2))

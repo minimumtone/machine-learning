@@ -5,16 +5,20 @@
     "dataset_file": "cte15_dataset.jsonl",
     "dataset_sha256": "307a9b9a45e811df1a28f2e83b01cd19c332c32f444a550a198fb8c05612f5fe",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
-    "generated_at": "2026-08-29T15:30:05+00:00",
-    "annotated_post_hoc": "the source result file has no embedded provenance; these hashes were computed from the current packaged inputs at manifest-generation time, not at inference time"
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-29T15:46:57+00:00",
+    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "source_result_file": "cte_eval_results.json",
-  "source_result_sha256": "4b5cefd275cfbd183f2f08c4c2f10ffc1e6829d7a278eff1281c425648510217",
+  "source_result_sha256": "88514592106bd682be1544d8f1933fa80066acd777c5db853a7abd84cfea5922",
   "n_queries": 15,
   "eval_file": "cte_eval_results.json",
   "queries": [
@@ -77,7 +81,7 @@
     {
       "qid": "q_cte_008",
       "difficulty": "very_hard",
-      "accuracy": 0.0,
+      "accuracy": 1.0,
       "latency_s": 37.1,
       "source_file": "cte_eval_results.json",
       "sql_path": "evaluation/generated_sql/cte/q_cte_008.sql"

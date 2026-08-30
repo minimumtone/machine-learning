@@ -4,9 +4,18 @@
 
 ## 一括検証（唯一の正式エントリポイント）
 
-- `python scripts/verify_all.py` — package構造・Python構文・canonical 300問カタログ・expected JSON契約・generated SQL/manifest/source整合・provenance・main run一意性の静的検査に加え、DB接続時は 4 suite gold再実行・expected照合・ORDER BY total-order・semantic/vocabulary監査・scoring self-check・`FULL_DB_TEST=1` pytest まで実行し、全PASSで exit 0
+- `python scripts/verify_all.py` — package構造・Python構文・canonical 300問カタログ・expected JSON契約・question↔gold hidden-constraint lint・generated SQL/manifest/source hash/provenance整合・provenance・main run一意性の静的検査に加え、DB接続時は 4 suite gold再実行・expected照合・ORDER BY total-order・semantic/vocabulary監査・scoring self-check・`FULL_DB_TEST=1` pytest まで実行し、全PASSで exit 0
 - DB未構築の段階では `python scripts/verify_all.py --static-only`
 - 本パッケージは verify_all.py の完全PASSを提出条件とする
+
+## R22A 静的semantic patch（査読最終化）
+
+- 質問文に存在しない `L12/stable` フィルタ、`LIMIT 15/20`、`HAVING COUNT >= 2/5` を canonical gold 12件から除去した。対象と旧/新expected件数は `evaluation/gold_change_manifest_r22a.json` に固定している。
+- `scripts/verify_all.py --static-only` に question↔gold hidden-constraint lint を追加した。現在は canonical 300問すべてがこのlintを通過する。
+- generated-SQL manifest は `source_result_file` の SHA-256 と provenance 本体まで検証するよう強化した。CTE/prototype manifest の stale source hash も現 source JSON に合わせて修正した。
+- **重要:** canonical gold / expected を変更したため、hashだけを書き換えてはいけない（本patch段階では provenance check を意図的にFAILさせていた）。
+- **DB再採点済み（本版）:** `python scripts/check_expected_results.py` で全300 expected をPostgreSQL 15上で再確認（ok=285 stale=0 errors=0、DML由来のexpected再計算を含む）した上で、`scripts/rescore_stored_results.py` により**LLM再推論なしで保存済みgenerated SQL 6,020本を現行gold/expectedに対して再実行・再採点**し、全評価JSON・派生成果物（main_eval_with_sql / generated_sql manifest / failure_analysis / scoring_audit / ablation統計 / significance）を決定的に再生成した。再採点後の主要値: main 245問 historical execution recall 86.1%（canonical exact result-set match 4.1%）/ LLM-only 78.3% / transfer 85.0% / 難読化 80.0% / MP 93.3% / 独立 81.5% / CTE 72.7% / ablation 5run full 92.5%±0.4（Holm補正後有意は no_fewshot・no_dict のみ）。再採点を経た評価JSONの provenance には `rescored_at` / `rescore_note` を記録している。
+- `paper/` 専用の figure 入力 `jp_reranker_vh_results.json`（per-query SQL を保存しておらず再採点不能な R22A 以前の比較実験）は SQL パッケージから除外し、`scripts/eval_jp_reranker_vh.py` も paper 専用スクリプトとして除外した。
 
 ## 依存関係（最初に読むこと）
 

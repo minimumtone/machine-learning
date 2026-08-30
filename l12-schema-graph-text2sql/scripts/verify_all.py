@@ -42,6 +42,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -403,6 +404,33 @@ def check_generated_sql_consistency() -> tuple[str, list[str]]:
             errors.append(
                 f"{subdir}: manifest eval_file={manifest.get('eval_file')!r} "
                 f"but canonical source is {eval_name!r}")
+
+        source_result_file = manifest.get("source_result_file")
+        if isinstance(source_result_file, str):
+            source_result_path = EVAL / source_result_file
+            if not source_result_path.is_file():
+                errors.append(
+                    f"{subdir}: manifest source_result_file missing: "
+                    f"{source_result_file}")
+            else:
+                actual_source_sha = _sha256_file(source_result_path)
+                if manifest.get("source_result_sha256") != actual_source_sha:
+                    errors.append(
+                        f"{subdir}: source_result_sha256 mismatch "
+                        f"(stored={manifest.get('source_result_sha256')}, "
+                        f"actual={actual_source_sha})")
+                source_result_obj = _json(source_result_path)
+                source_prov = (
+                    source_result_obj.get("provenance")
+                    if isinstance(source_result_obj, dict) else None
+                )
+                manifest_prov = manifest.get("provenance")
+                if (isinstance(source_prov, dict)
+                        and isinstance(manifest_prov, dict)
+                        and source_prov != manifest_prov):
+                    errors.append(
+                        f"{subdir}: manifest provenance differs from "
+                        f"{source_result_file}")
         manifest_ids = [str(r.get("qid")) for r in manifest_rows if r.get("qid") is not None]
         manifest_set, dup = _dedupe(manifest_ids)
         if dup:
@@ -529,9 +557,19 @@ def check_provenance() -> tuple[str, list[str]]:
 
         stored_commit = prov.get("git_commit")
         if isinstance(stored_commit, str) and stored_commit not in ("", "unknown", package_commit):
-            warnings.append(
-                f"{p.name}: evaluation git_commit {stored_commit[:12]}... "
-                f"differs from package GIT_COMMIT {package_commit[:12]}...")
+            # A tracked artifact can never embed the commit that will later
+            # contain it (the commit hash covers the artifact's own bytes),
+            # so after a deterministic re-scoring pass
+            # (scripts/rescore_stored_results.py) the input identity is
+            # pinned by the dataset/gold/expected/prompt SHA-256 checks
+            # above -- which are hard errors -- and the commit label is
+            # informational only.  Without a rescore_note the difference
+            # still warns, because then nothing ties the stored scores to
+            # the packaged inputs' revision.
+            if not isinstance(prov.get("rescore_note"), str):
+                warnings.append(
+                    f"{p.name}: evaluation git_commit {stored_commit[:12]}... "
+                    f"differs from package GIT_COMMIT {package_commit[:12]}...")
 
     # Every generated-SQL manifest must carry provenance as README claims.
     for directory in sorted((EVAL / "generated_sql").iterdir()):
@@ -602,6 +640,97 @@ def check_main_run_single_source() -> tuple[str, list[str]]:
             f"score_diff={len(score_diff)}: {score_diff[:20]}\n"
             "Choose one canonical inference run and regenerate all derivatives from it.")
     return f"duplicate main artifacts agree on {len(ar)} query outputs", []
+
+
+
+def check_question_gold_contract() -> tuple[str, list[str]]:
+    """Conservative static lint for common hidden gold constraints.
+
+    This is intentionally not a complete natural-language semantic parser.
+    It only rejects patterns that previously caused concrete benchmark
+    inconsistencies: unstated top-N caps, unstated minimum group sizes,
+    unstated stable/on-hull filters, and L12-only filters hidden behind
+    A/B-site questions.
+    """
+    suites, _ = _canonical_dataset_rows()
+    problems: list[str] = []
+    checked = 0
+
+    stable_question_re = re.compile(
+        r"安定|凸包上|stable|on[- ]?hull|ハル上", re.IGNORECASE)
+    l12_question_re = re.compile(r"L12|L1[₂2]", re.IGNORECASE)
+    site_question_re = re.compile(
+        r"(?:A|B)[-\s]?site|(?:A|B)サイト", re.IGNORECASE)
+
+    for suite_name, rows in suites.items():
+        spec = CANONICAL_SUITES[suite_name]
+        for row in rows:
+            qid = _qid(row)
+            if qid is None:
+                continue
+            question = str(row.get("question", ""))
+            gold_rel = row.get("gold_sql_path")
+            if not isinstance(gold_rel, str):
+                gold_rel = f"{spec['gold_dir']}/{qid}.sql"
+            sql_path = EVAL / gold_rel
+            sql = sql_path.read_text(encoding="utf-8")
+            checked += 1
+
+            # LIMIT 1 is often a harmless uniqueness guard. LIMIT 10000 is
+            # the package-wide safety cap. Any other small cap must be
+            # visible in the question as the same integer.
+            for raw_n in re.findall(r"\bLIMIT\s+(\d+)\b", sql, re.IGNORECASE):
+                n = int(raw_n)
+                if n in (1, 10000) or n >= 10000:
+                    continue
+                if re.search(rf"(?<!\d){n}(?!\d)", question) is None:
+                    problems.append(
+                        f"{qid}: gold has LIMIT {n}, but the question does "
+                        f"not state {n}")
+
+            # Hidden minimum group-size thresholds are not allowed.
+            for raw_n in re.findall(
+                    r"\bHAVING\b[^\n;]*\bCOUNT\s*\([^;]*?"
+                    r"\)\s*>=\s*(\d+)",
+                    sql, re.IGNORECASE):
+                n = int(raw_n)
+                if n <= 1:
+                    continue
+                if re.search(rf"(?<!\d){n}(?!\d)", question) is None:
+                    problems.append(
+                        f"{qid}: gold has HAVING COUNT >= {n}, but the "
+                        f"question does not state {n}")
+
+            # Stable/on-hull filters must be explicit in the question.
+            stable_filter = any(re.search(pat, sql, re.IGNORECASE) for pat in (
+                r"(?:WHERE|AND)\s+[^\n;]*energy_above_hull\s*<=\s*0\.001",
+                r"(?:WHERE|AND)\s+[^\n;]*\bis_stable\s*=\s*(?:TRUE|1)",
+                r"(?:WHERE|AND)\s+[^\n;]*\bon_hull\s*=\s*(?:TRUE|1)",
+            ))
+            if stable_filter and not stable_question_re.search(question):
+                problems.append(
+                    f"{qid}: gold applies a stable/on-hull filter that is "
+                    f"not stated in the question")
+
+            # Site terminology does not imply an L12-only scope. If the gold
+            # makes that restriction, the question must say L12/L1₂.
+            l12_filter = bool(re.search(
+                r"prototype\s*=\s*'L12'|strukturbericht\s*=\s*'L12'",
+                sql, re.IGNORECASE))
+            if (l12_filter and site_question_re.search(question)
+                    and not l12_question_re.search(question)):
+                problems.append(
+                    f"{qid}: gold restricts an A/B-site question to L12, "
+                    f"but the question does not state L12")
+
+    if problems:
+        raise VerifyError(
+            f"question/gold contract lint found {len(problems)} issue(s)\n"
+            + "\n".join(problems[:80]))
+    return (
+        f"{checked} canonical question/gold pairs passed hidden-constraint lint",
+        [],
+    )
 
 
 def check_dependencies() -> tuple[str, list[str]]:
@@ -784,6 +913,7 @@ def main() -> int:
         ("python_syntax", check_python_syntax),
         ("canonical_catalog", check_canonical_catalog),
         ("expected_json_schema", check_expected_json_schema),
+        ("question_gold_contract", check_question_gold_contract),
         ("generated_sql_consistency", check_generated_sql_consistency),
         ("provenance", check_provenance),
         ("main_run_single_source", check_main_run_single_source),

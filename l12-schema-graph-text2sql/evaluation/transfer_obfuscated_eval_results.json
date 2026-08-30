@@ -4,11 +4,15 @@
     "dataset_file": "transfer_obfuscated_evaluation_dataset.jsonl",
     "dataset_sha256": "9c8d7a93264595c81a6f4a9fc8c0ad2c3bcc25838e0f51e865f271a98310eefb",
     "gold_dir": "gold_sql_obfuscated",
-    "gold_sha256": "2533c25f06fc9a2270e7f28c2153f817489c5df39a47501b989948be218c9d9d",
+    "gold_sha256": "77b3c4d3273e0579bb877a34631499de03f38b627b0f6a3c263fb68ec92f6d30",
     "prompt_file": "sql_generation_prompt_transfer_obfuscated.md",
     "prompt_sha256": "5ef2ab2bfdcd640e1bfc2478d843d46c4e17a0694f165cce1b0ae8df034bed71",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T01:13:55+00:00"
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-29T01:13:55+00:00",
+    "expected_dir": "expected_results_obfuscated",
+    "expected_sha256": "5d06dbef58941759f4d70b36ca6bfa2bedacdddb1a0dde6d7954391be53b1fd2",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "n_queries": 20,
   "summary": {
@@ -23,7 +27,7 @@
     "avg_latency": 34.27500000000001,
     "overall_precision": 0.8,
     "overall_f1": 0.8,
-    "overall_exact_match": 0.8
+    "overall_exact_match": 0.2
   },
   "results": [
     {
@@ -44,7 +48,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 23.3,
       "sql": "SELECT col_quebec, col_delta\nFROM tbl_zulu\nWHERE col_delta IN ('L12', 'L1₂')\nORDER BY col_quebec\nLIMIT 10000;"
     },
@@ -55,7 +59,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 31.1,
       "sql": "SELECT DISTINCT tbl_zulu.col_quebec\nFROM tbl_zulu\nJOIN tbl_juliet ON tbl_juliet.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_juliet.col_papa = 'Ni'\nORDER BY tbl_zulu.col_quebec\nLIMIT 10000;"
     },
@@ -66,7 +70,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 30.4,
       "sql": "SELECT col_quebec, col_falcon\nFROM tbl_zulu\nWHERE col_falcon < 4\nORDER BY col_falcon ASC\nLIMIT 10000;"
     },
@@ -77,7 +81,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 26.9,
       "sql": "SELECT COUNT(*) AS element_count\nFROM tbl_xray\nLIMIT 10000;"
     },
@@ -99,7 +103,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 22.7,
       "sql": "SELECT COUNT(*) AS convex_hull_compound_count\nFROM tbl_delta\nWHERE col_hotel = TRUE\nLIMIT 10000;"
     },
@@ -110,7 +114,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 24.9,
       "sql": "SELECT tbl_zulu.col_quebec, tbl_delta.col_luna\nFROM tbl_delta\nJOIN tbl_zulu ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_delta.col_luna < -0.5\nORDER BY tbl_delta.col_luna ASC\nLIMIT 10000;"
     },
@@ -121,7 +125,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 21.2,
       "sql": "SELECT\n  col_papa AS element,\n  COUNT(DISTINCT col_rhea) AS entry_count\nFROM tbl_juliet\nGROUP BY col_papa\nORDER BY entry_count DESC\nLIMIT 10;"
     },
@@ -154,7 +158,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 26.8,
       "sql": "SELECT COUNT(*) AS metastable_compound_count\nFROM tbl_delta\nWHERE col_hotel = false\n  AND col_xenon < 0.05\nLIMIT 10000;"
     },
@@ -165,7 +169,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 37.2,
       "sql": "SELECT z.col_quebec\nFROM tbl_zulu z\nWHERE EXISTS (\n    SELECT 1\n    FROM tbl_juliet j_ni\n    WHERE j_ni.col_rhea = z.col_rhea\n      AND j_ni.col_papa = 'Ni'\n)\nAND EXISTS (\n    SELECT 1\n    FROM tbl_juliet j_al\n    WHERE j_al.col_rhea = z.col_rhea\n      AND j_al.col_papa = 'Al'\n)\nORDER BY z.col_quebec\nLIMIT 10000;"
     },
@@ -187,7 +191,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 31.1,
       "sql": "SELECT\n  tbl_zulu.col_quebec,\n  tbl_zulu.col_apollo,\n  tbl_delta.col_iris\nFROM tbl_zulu\nJOIN tbl_delta ON tbl_delta.col_rhea = tbl_zulu.col_rhea\nWHERE tbl_zulu.col_apollo = 221\n  AND tbl_delta.col_iris > 0\nORDER BY tbl_delta.col_iris DESC\nLIMIT 10000;"
     },
@@ -220,7 +224,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 49.2,
       "sql": "WITH ref_energies AS (\n    SELECT\n        z.col_rhea,\n        SUM(j.col_juliet * v.col_tango) AS weighted_ref_energy\n    FROM tbl_zulu z\n    JOIN tbl_juliet j ON j.col_rhea = z.col_rhea\n    JOIN tbl_xray x ON j.col_papa = x.col_papa\n    JOIN tbl_victor v ON v.col_papa = x.col_papa\n    WHERE z.col_quebec = 'Co3Ti'\n    GROUP BY z.col_rhea\n)\nSELECT\n    z.col_quebec,\n    d.col_luna,\n    r.weighted_ref_energy,\n    d.col_luna - r.weighted_ref_energy AS formation_enthalpy_from_pure_elements\nFROM tbl_zulu z\nJOIN tbl_delta d ON d.col_rhea = z.col_rhea\nJOIN ref_energies r ON r.col_rhea = z.col_rhea\nWHERE z.col_quebec = 'Co3Ti'\nORDER BY formation_enthalpy_from_pure_elements ASC\nLIMIT 10000;"
     },
@@ -231,7 +235,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 62.2,
       "sql": "WITH corrected AS (\n    SELECT\n        z.col_quebec,\n        d.col_luna - SUM(j.col_juliet * v.col_tango) AS corrected_formation_energy\n    FROM tbl_zulu z\n    JOIN tbl_delta d ON d.col_rhea = z.col_rhea\n    JOIN tbl_juliet j ON j.col_rhea = z.col_rhea\n    JOIN tbl_xray x ON j.col_papa = x.col_papa\n    JOIN tbl_victor v ON v.col_papa = x.col_papa\n    WHERE d.col_hotel = TRUE\n      AND z.col_delta = 'L12'\n    GROUP BY z.col_rhea, z.col_quebec, d.col_luna\n)\nSELECT\n    col_quebec,\n    ROUND(corrected_formation_energy::numeric, 4) AS corrected_formation_energy\nFROM corrected\nWHERE corrected_formation_energy < -0.3\nORDER BY corrected_formation_energy ASC\nLIMIT 10000;"
     },

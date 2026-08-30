@@ -13,5 +13,4 @@ SELECT composition_formula,
        ROUND((delta_e - weighted_ref)::numeric, 4) AS enthalpy_vs_element_ground_states
 FROM enthalpy
 WHERE delta_e - weighted_ref < -0.3
-ORDER BY enthalpy_vs_element_ground_states ASC
-LIMIT 20;
+ORDER BY enthalpy_vs_element_ground_states ASC;

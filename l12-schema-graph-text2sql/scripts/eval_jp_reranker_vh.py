@@ -125,7 +125,7 @@ def main():
         }
 
     # Save
-    out_path = PROJECT / "evaluation" / "jp_reranker_vh_results.json"
+    out_path = PROJECT / "paper" / "jp_reranker_vh_results.json"
     all_results["provenance"] = build_provenance(
         PROJECT / "evaluation" / "evaluation_dataset.jsonl")
     with open(out_path, "w") as f:

@@ -5,26 +5,7 @@
     "avg_enthalpy_vs_element_gs"
   ],
   "ordered": true,
-  "rows": [
-    [
-      "Sc",
-      1,
-      -0.501
-    ],
-    [
-      "Al",
-      2,
-      -0.4849
-    ],
-    [
-      "Fe",
-      1,
-      -0.44
-    ],
-    [
-      "Ti",
-      1,
-      -0.438
-    ]
-  ]
+  "rows": [],
+  "expected_empty": true,
+  "purpose": "Question-literal result: no B-site element group has average ground-state-referenced formation energy below -0.4 eV/atom when no unstated prototype/stability filter is imposed."
 }

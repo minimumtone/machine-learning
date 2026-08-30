@@ -12,7 +12,7 @@
       "evaluation/ablation_run_4.json",
       "evaluation/ablation_run_5.json",
       "evaluation/ablation_results.json",
-      "evaluation/jp_reranker_vh_results.json",
+      "paper/jp_reranker_vh_results.json",
       "evaluation/reranker_eval_results.json",
       "evaluation/evaluation_dataset.jsonl",
       "evaluation/expert_evaluation_dataset.jsonl",

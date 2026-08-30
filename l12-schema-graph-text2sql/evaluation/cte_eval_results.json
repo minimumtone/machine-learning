@@ -3,15 +3,15 @@
   "dataset": "cte15_dataset.jsonl",
   "n_queries": 15,
   "summary": {
-    "overall": 0.66,
-    "overall_recall": 0.66,
+    "overall": 0.7266666666666666,
+    "overall_recall": 0.7266666666666666,
     "by_difficulty": {
-      "very_hard": 0.66
+      "very_hard": 0.7266666666666666
     },
     "avg_latency": 54.14,
-    "overall_precision": 0.4975357919885656,
-    "overall_f1": 0.4998125836370082,
-    "overall_exact_match": 0.3333333333333333
+    "overall_precision": 0.7415458937198067,
+    "overall_f1": 0.725140056022409,
+    "overall_exact_match": 0.0
   },
   "results": [
     {
@@ -21,7 +21,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 53.5,
       "sql": "WITH compound AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom, ps.reference_set\n    FROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    WHERE m.formula = 'Co3Ti'\n    LIMIT 1\n),\nref_energies AS (\n    SELECT compound.entry_id,\n           SUM(c.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM compound\n    JOIN composition c ON c.entry_id = compound.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = c.element\n        AND per.reference_set = compound.reference_set\n    GROUP BY compound.entry_id\n)\nSELECT compound.formula,\n       compound.formation_energy_per_atom,\n       ref_energies.weighted_ref AS ref_energy,\n       compound.formation_energy_per_atom - ref_energies.weighted_ref AS corrected_enthalpy\nFROM compound\nJOIN ref_energies ON ref_energies.entry_id = compound.entry_id\nLIMIT 10000;"
     },
@@ -32,7 +32,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 39.1,
       "sql": "SELECT m.formula,\n       ps.formation_energy_per_atom AS rebased_formation_energy_per_atom,\n       s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < -0.3\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -41,8 +41,8 @@
       "difficulty": "very_hard",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 0.16666666666666666,
-      "f1": 0.2857142857142857,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
       "latency_s": 45.3,
       "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rereferenced_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY avg_rereferenced_formation_energy_per_atom ASC\nLIMIT 10000;"
@@ -54,7 +54,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 47.6,
       "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom AS re_referenced_formation_energy,\n  ps.energy_above_hull,\n  ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.element = 'Ni'\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 5;"
     },
@@ -63,8 +63,8 @@
       "difficulty": "very_hard",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 0.09852216748768473,
-      "f1": 0.17937219730941703,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
       "latency_s": 21.0,
       "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom <= -0.1\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
@@ -76,7 +76,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 45.5,
       "sql": "SELECT DISTINCT ON (c.element)\n       c.element AS a_site,\n       m.formula,\n       ps.formation_energy_per_atom AS rebaselined_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nORDER BY c.element, ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -94,10 +94,10 @@
     {
       "qid": "q_cte_008",
       "difficulty": "very_hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
       "latency_s": 37.1,
       "sql": "SELECT c.element AS b_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nHAVING AVG(ps.formation_energy_per_atom) < -0.4\nORDER BY avg_rebased_formation_energy_per_atom ASC\nLIMIT 10000;"
@@ -118,8 +118,8 @@
       "difficulty": "very_hard",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 0.09178743961352658,
-      "f1": 0.168141592920354,
+      "precision": 0.6231884057971014,
+      "f1": 0.7678571428571428,
       "exact_match": 0.0,
       "latency_s": 46.7,
       "sql": "SELECT\n  m.formula,\n  cp.value AS bulk_modulus,\n  ps.formation_energy_per_atom AS renormalized_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.unit = 'GPa'\n  AND cp.value >= 150\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
@@ -140,8 +140,8 @@
       "difficulty": "very_hard",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 0.6060606060606061,
-      "f1": 0.7547169811320755,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
       "latency_s": 47.5,
       "sql": "SELECT DISTINCT\n    m.formula,\n    ps.formation_energy_per_atom AS renormalized_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (mp.magnetic_ordering = 'FM' OR mp.magnetic_ordering ILIKE 'ferromagnetic%')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
@@ -175,7 +175,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 69.4,
       "sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\n  AND ps.is_stable = TRUE\n  AND c.element IN (\n      SELECT cp.element\n      FROM material_entry mp\n      JOIN composition cp ON cp.entry_id = mp.entry_id\n      JOIN structure sp ON sp.entry_id = mp.entry_id\n      JOIN phase_stability psp ON psp.entry_id = mp.entry_id\n      WHERE mp.number_of_elements = 1\n        AND cp.atomic_fraction = 1\n        AND sp.volume_per_atom >= 15\n        AND psp.is_stable = TRUE\n  )\nGROUP BY c.element\nORDER BY c.element ASC\nLIMIT 10000;"
     }
@@ -184,12 +184,16 @@
     "dataset_file": "cte15_dataset.jsonl",
     "dataset_sha256": "307a9b9a45e811df1a28f2e83b01cd19c332c32f444a550a198fb8c05612f5fe",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
     "generated_at": "2026-08-29T15:46:57+00:00",
-    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit"
+    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   }
 }

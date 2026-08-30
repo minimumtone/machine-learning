@@ -224,7 +224,12 @@ def main():
         with open(stats_file, "w") as f:
             json.dump({"n_runs": len(runs),
                        "provenance": build_provenance(
-                           EVAL_DIR / "evaluation_dataset.jsonl"),
+                           EVAL_DIR / "evaluation_dataset.jsonl",
+                           rescore_note=(
+                               "aggregated deterministically from stored "
+                               "ablation_run_*.json; the per-run provenance "
+                               "in those files identifies the inference "
+                               "revision")),
                        "conditions": stats,
                        "significance_tests": significance}, f,
                       ensure_ascii=False, indent=2)

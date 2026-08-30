@@ -14,11 +14,15 @@
     "dataset_file": "evaluation_dataset.jsonl",
     "dataset_sha256": "ce9c646852410a1a4a70449099d8bc2159cab8b68d32e712bd6dfa60a2215b67",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
-    "prompt_file": "sql_generation_prompt.md",
-    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T10:30:20+00:00"
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-30T02:25:16+00:00",
+    "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
     "no_graph": {
@@ -106,23 +110,23 @@
       "stars_holm": "***"
     },
     "no_fewshot": {
-      "delta_pp": 17.07674207512917,
+      "delta_pp": 16.122196620583715,
       "n_queries": 100,
       "n_nonzero": 55,
-      "p_value_exact": 9.089696993684971e-11,
-      "p_value_approx_legacy": 9.089696993684971e-11,
+      "p_value_exact": 1.426901054601353e-09,
+      "p_value_approx_legacy": 1.426901054601353e-09,
       "run_level": {
         "n_runs": 5,
-        "delta_pp": 17.076742075129168,
+        "delta_pp": 16.122196620583715,
         "p_wilcoxon": 0.0625,
         "p_sign_test": 0.0625
       },
       "bootstrap_ci95_pp": [
-        12.87400547331999,
-        21.603334997439827
+        11.271199735449734,
+        20.958201954258403
       ],
-      "legacy_p_value": 9.089696993684971e-11,
-      "p_value_holm": 5.453818196210982e-10,
+      "legacy_p_value": 1.426901054601353e-09,
+      "p_value_holm": 8.561406327608118e-09,
       "significant_holm": true,
       "stars_holm": "***"
     },

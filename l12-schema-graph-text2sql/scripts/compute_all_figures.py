@@ -7,7 +7,7 @@ of this script.  No hand-typed numbers allowed.
 Reads:
   evaluation/ablation_multirun_stats.json — 5-run ablation statistics
   evaluation/ablation_results.json   — latest single-run (for per-query CTE/error)
-  evaluation/jp_reranker_vh_results.json — JP reranker VH comparison
+  paper/jp_reranker_vh_results.json — JP reranker VH comparison
   evaluation/reranker_eval_results.json  — 90-query reranker A/B eval
   evaluation/evaluation_dataset.jsonl    — author query set metadata
   evaluation/expert_evaluation_dataset.jsonl — independent query set
@@ -412,7 +412,7 @@ def main():
     # ==================================================================
     # JP reranker VH comparison
     # ==================================================================
-    jp = load_json("evaluation/jp_reranker_vh_results.json")
+    jp = load_json("paper/jp_reranker_vh_results.json")
     jp_marco = jp["ms-marco (current)"]
     jp_xsmall = jp["japanese-xsmall"]
     jp_reranker = {
@@ -794,7 +794,7 @@ def main():
                 "evaluation/ablation_run_4.json",
                 "evaluation/ablation_run_5.json",
                 "evaluation/ablation_results.json",
-                "evaluation/jp_reranker_vh_results.json",
+                "paper/jp_reranker_vh_results.json",
                 "evaluation/reranker_eval_results.json",
                 "evaluation/evaluation_dataset.jsonl",
                 "evaluation/expert_evaluation_dataset.jsonl",

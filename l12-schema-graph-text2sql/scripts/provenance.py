@@ -55,8 +55,15 @@ def _git_commit() -> str:
 def build_provenance(dataset_path: Path,
                      gold_dir: Path | None = None,
                      prompt_path: Path | None = None,
-                     expected_dir: Path | None = None) -> dict[str, str]:
-    """Provenance block to embed in an evaluation result JSON."""
+                     expected_dir: Path | None = None,
+                     rescore_note: str | None = None) -> dict[str, str]:
+    """Provenance block to embed in an evaluation result JSON.
+
+    ``rescore_note`` marks an artifact that was derived/re-scored
+    deterministically from stored model output (no LLM call); for such
+    artifacts the input identity is pinned by the embedded hashes and
+    the git_commit label is informational.
+    """
     if gold_dir is None:
         gold_dir = PROJECT / "evaluation" / "gold_sql"
     if prompt_path is None:
@@ -80,6 +87,7 @@ def build_provenance(dataset_path: Path,
         "git_commit": _git_commit(),
         "generated_at": datetime.datetime.now(datetime.timezone.utc)
         .isoformat(timespec="seconds"),
+        **({"rescore_note": rescore_note} if rescore_note else {}),
     }
 
 

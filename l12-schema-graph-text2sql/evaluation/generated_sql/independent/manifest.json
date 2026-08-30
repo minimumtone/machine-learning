@@ -5,14 +5,18 @@
     "dataset_file": "expert_evaluation_dataset.jsonl",
     "dataset_sha256": "a177fee2dfa2018e1b4d629bc00eaf25afd16f35fa21b6a16bb3edb863e628d0",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T02:35:53+00:00"
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-29T02:35:53+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "source_result_file": "independent_eval_results.json",
-  "source_result_sha256": "d5d14afae4a5b1b82137320f4fa8c57dc576636c0e4fb26339193c4878c4264c",
+  "source_result_sha256": "34634d414e6e5371dd96838477eadeb3b3287099684424d530b35485aeeda252",
   "n_queries": 100,
   "eval_file": "independent_eval_results.json",
   "queries": [

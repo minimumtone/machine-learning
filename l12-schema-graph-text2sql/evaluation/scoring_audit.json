@@ -4,42 +4,43 @@
     "n_queries": 245,
     "policies": {
       "historical": {
-        "mean_recall_pct": 85.7,
+        "mean_recall_pct": 86.1,
         "n_scored": 245
       },
       "require_all_cols": {
-        "mean_recall_pct": 25.9,
+        "mean_recall_pct": 26.3,
         "n_scored": 245
       },
       "no_positional": {
-        "mean_recall_pct": 82.4,
+        "mean_recall_pct": 82.8,
         "n_scored": 245
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 85.9,
-        "n_scored": 242
+        "mean_recall_pct": 86.3,
+        "n_scored": 241
       },
       "multiset": {
-        "mean_recall_pct": 83.5,
+        "mean_recall_pct": 83.9,
         "n_scored": 245
       },
       "strict": {
-        "mean_recall_pct": 25.4,
-        "n_scored": 242
+        "mean_recall_pct": 25.5,
+        "n_scored": 241
       }
     },
     "exact_result_set_match_pct": 4.1,
-    "common_column_exact_overlap_pct": 76.3,
+    "common_column_exact_overlap_pct": 78.0,
     "ordered": {
-      "mean_recall_pct": 53.7,
+      "mean_recall_pct": 54.3,
       "n_gold_with_order_by": 234
     },
     "diagnostics": {
       "empty_gold_credited": [
+        "q_cte_008",
         "q_expert_003",
         "q_expert_022"
       ],
-      "n_excluded_empty_gold": 3,
+      "n_excluded_empty_gold": 4,
       "queries_missing_gold_columns": [
         "q_cte_006",
         "q_cte_007",
@@ -242,6 +243,14 @@
         "q_proto_nias_very_hard_001"
       ],
       "credited_on_single_column": [
+        {
+          "qid": "q_cte_008",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "b_site"
+          ]
+        },
         {
           "qid": "q_cte_009",
           "n_common": 1,
@@ -581,13 +590,11 @@
         "ordered": 0.0
       },
       "q_cte_008": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "multiset": 1.0,
+        "ordered": 1.0
       },
       "q_cte_009": {
         "historical": 1.0,
@@ -605,7 +612,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.05
+        "ordered": 0.006535947712418301
       },
       "q_cte_011": {
         "historical": 0.7,
@@ -623,7 +630,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.9090909090909091
       },
       "q_cte_013": {
         "historical": 0.0,
@@ -2730,7 +2737,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.6666666666666666
       },
       "q_vhard_019": {
         "historical": 1.0,
@@ -2748,7 +2755,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.75
+        "ordered": 0.5927272727272728
       }
     }
   },
@@ -4522,31 +4529,32 @@
     "dataset_file": "main_evaluation_dataset.jsonl",
     "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
-    "expected_sha256": "a5a8cd6a13d0c0eb8e48dc513c8784a1dbf091aa2f525e712194d94b4626a20e",
-    "git_commit": "e863b74768e52ee93c6ff6e038693300ba688b91",
-    "generated_at": "2026-08-29T16:05:30+00:00"
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "generated_at": "2026-08-30T02:25:19+00:00",
+    "rescore_note": "audit recomputed deterministically from stored generated SQL and shipped result JSONs by scripts/audit_scoring.py; no LLM call is involved"
   },
   "sources": {
     "main": {
       "source_result_file": "main_eval_with_sql.json",
-      "source_result_sha256": "5b6ccefa541da0d0d8fea2464fbfef2448d9903e8adc40b24a3cfefca422a2a0"
+      "source_result_sha256": "a6d5403a2239ef5327df6aadf7ef5cb2a2153f224b886223a1ef4e8d51173273"
     },
     "independent": {
       "source_result_file": "independent_eval_results.json",
-      "source_result_sha256": "d5d14afae4a5b1b82137320f4fa8c57dc576636c0e4fb26339193c4878c4264c"
+      "source_result_sha256": "34634d414e6e5371dd96838477eadeb3b3287099684424d530b35485aeeda252"
     },
     "transfer": {
       "source_result_file": "transfer_eval_results.json",
-      "source_result_sha256": "ac3c54959842d57dad3851c4908ed1b171126248a9ece064f7ce2e6e1194c494"
+      "source_result_sha256": "e39d88ca4429bfc30320aaf238cb26e08c7e0ff89fe9cfb136bf8e1b267b7298"
     },
     "transfer_obfuscated": {
       "source_result_file": "transfer_obfuscated_eval_results.json",
-      "source_result_sha256": "8f2d5be12f2c65d37adc1416f28d39ab56ebcb26dcfe6d721ceeb6badd99f248"
+      "source_result_sha256": "b3645dcf113d8a31397bc7094a9fbd299e2177c6a6df8efc7836a0eece0c4992"
     }
   }
 }

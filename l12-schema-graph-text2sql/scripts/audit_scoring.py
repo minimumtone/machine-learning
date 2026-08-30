@@ -342,7 +342,12 @@ def main() -> int:
                 print(f"          {rec['qid']}: {rec['n_common']}/{rec['n_gold_cols']} cols "
                       f"({', '.join(rec['common'])})")
 
-    report["provenance"] = build_provenance(EVAL / "main_evaluation_dataset.jsonl")
+    report["provenance"] = build_provenance(
+        EVAL / "main_evaluation_dataset.jsonl",
+        rescore_note=(
+            "audit recomputed deterministically from stored generated SQL and "
+            "shipped result JSONs by scripts/audit_scoring.py; no LLM call is "
+            "involved"))
     report["sources"] = {
         name: {
             "source_result_file": DATASETS[name][3],

@@ -5,16 +5,16 @@
   },
   "conditions": {
     "no_fewshot": {
-      "delta_pp": 17.07674207512917,
+      "delta_pp": 16.122196620583715,
       "n_eff": 55,
       "p_exact_sign_flip": 4.9999750001249995e-06,
       "p_method": "monte_carlo_200k",
       "min_attainable_p": 5.551115123125783e-17,
       "test_powered_at_0.05": true,
-      "rank_biserial": 0.990909090909091,
+      "rank_biserial": 0.9253246753246753,
       "bootstrap_ci95_pp": [
-        12.910803472513148,
-        21.615385091312508
+        11.205259941969619,
+        21.101587301587298
       ],
       "n_bootstrap": 20000,
       "seed": 20260602

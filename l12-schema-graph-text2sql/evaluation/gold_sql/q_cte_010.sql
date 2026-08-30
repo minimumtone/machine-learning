@@ -28,5 +28,4 @@ SELECT formula,
        ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4)
            AS enthalpy_vs_element_ground_states
 FROM enthalpy
-ORDER BY enthalpy_vs_element_ground_states ASC, entry_id
-LIMIT 20;
+ORDER BY enthalpy_vs_element_ground_states ASC, entry_id;

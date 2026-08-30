@@ -14,7 +14,7 @@
     "avg_latency": 30.544999999999998,
     "overall_precision": 1.0,
     "overall_f1": 1.0,
-    "overall_exact_match": 1.0
+    "overall_exact_match": 0.05
   },
   "results": [
     {
@@ -24,7 +24,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 29.2,
       "sql": "SELECT m.formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12'\n   OR s.strukturbericht = 'L12'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -35,7 +35,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 24.8,
       "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Ni'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -46,7 +46,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 19.4,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -57,7 +57,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 44.4,
       "sql": "SELECT ca.element AS a_site,\n       cb.element AS b_site,\n       COUNT(DISTINCT m.entry_id) AS l12_compound_count,\n       COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = TRUE) AS count,\n       COUNT(DISTINCT m.entry_id) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(DISTINCT m.entry_id) AS stable_percentage,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition ca ON ca.entry_id = m.entry_id\nJOIN composition cb ON cb.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ca.site_label = 'A-site'\n  AND cb.site_label = 'B-site'\nGROUP BY ca.element, cb.element\nORDER BY l12_compound_count DESC, stable_percentage DESC\nLIMIT 10000;"
     },
@@ -68,7 +68,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 23.6,
       "sql": "SELECT m.formula, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'B2' OR s.strukturbericht = 'B2'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -79,7 +79,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 21.1,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n    AND c.element = 'Zr'\n\nLIMIT 10000;"
     },
@@ -101,7 +101,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 38.8,
       "sql": "SELECT\n  ca.element AS a_site,\n  cb.element AS b_site,\n  COUNT(*) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition ca ON ca.entry_id = m.entry_id\nJOIN composition cb ON cb.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ca.site_label = 'A-site'\n  AND cb.site_label = 'B-site'\nGROUP BY ca.element, cb.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
     },
@@ -112,7 +112,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 21.1,
       "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.space_group_number\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'NaCl'\n   OR s.strukturbericht = 'B1'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -123,7 +123,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 35.9,
       "sql": "SELECT m.formula, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Sc'\n  AND (s.prototype = 'NaCl' OR s.prototype = 'B1' OR s.strukturbericht = 'B1')\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -134,7 +134,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 27.5,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.prototype = 'B1' OR s.strukturbericht = 'B1' OR s.strukturbericht = 'NaCl')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -145,7 +145,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 54.0,
       "sql": "SELECT\n  c_a.element AS a_site,\n  c_b.element AS b_site,\n  COUNT(*) AS nacl_compound_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull,\n  AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
     },
@@ -156,7 +156,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 32.4,
       "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.space_group_number\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'NiAs'\n   OR s.strukturbericht = 'B81'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -167,7 +167,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 34.7,
       "sql": "SELECT m.formula, c.element, c.atomic_fraction, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Ti'\n  AND (s.prototype = 'NiAs' OR s.strukturbericht = 'B81')\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -178,7 +178,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 27.5,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NiAs' OR s.strukturbericht = 'NiAs' OR s.strukturbericht = 'B81')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -189,7 +189,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 38.7,
       "sql": "SELECT c_a.element AS a_site,\n       c_b.element AS b_site,\n       COUNT(*) AS nias_compound_count,\n       AVG(ps.energy_above_hull) AS avg_energy_above_hull,\n       SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) AS count,\n       SUM(CASE WHEN ps.is_stable = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE (s.prototype = 'NiAs' OR s.strukturbericht = 'NiAs')\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC, nias_compound_count DESC\nLIMIT 10000;"
     },
@@ -200,7 +200,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 14.5,
       "sql": "SELECT m.formula, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -211,7 +211,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 36.7,
       "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Si'\n  AND (s.prototype = 'BiF3' OR s.formula_type = 'BiF3')\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -222,7 +222,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 24.0,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'BiF3' OR s.strukturbericht = 'BiF3')\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -233,7 +233,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
+      "exact_match": 0.0,
       "latency_s": 39.7,
       "sql": "SELECT\n  c_a.element AS a_site,\n  c_b.element AS b_site,\n  COUNT(*) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3'\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
     }
@@ -242,12 +242,16 @@
     "dataset_file": "prototype_evaluation_dataset.jsonl",
     "dataset_sha256": "8571146811c5f9f918a71c18751591a09f504b98e5382b674670721d718b4a78",
     "gold_dir": "gold_sql",
-    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
+    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
     "generated_at": "2026-08-29T15:47:12+00:00",
-    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit"
+    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit",
+    "expected_dir": "expected_results",
+    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
+    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   }
 }

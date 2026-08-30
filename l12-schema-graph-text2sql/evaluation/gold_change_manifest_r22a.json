@@ -1,0 +1,129 @@
+{
+  "patch_id": "R22A-static-semantic-fix",
+  "source_package": "l12_sql_package_r22.zip",
+  "method": "Gold SQL was aligned to the literal natural-language question by removing unstated filters/LIMIT/HAVING constraints. For affected main queries, expected rows were recomputed from the package DML in a lightweight SQLite mirror after first verifying that the same mirror reproduced the pre-patch shipped expected rows for those queries. Transfer q20 rows were derived from the same stable L12 source data; q19 row sets are unchanged after LIMIT removal. PostgreSQL-backed check_expected_results.py must still validate the patched expected files before submission.",
+  "requires_db_rescoring": true,
+  "do_not_repair_by_hash_only": true,
+  "changes": [
+    {
+      "qid": "q_cte_008",
+      "change": "removed hidden L12 + stable-only filters",
+      "gold_path": "evaluation/gold_sql/q_cte_008.sql",
+      "expected_path": "evaluation/expected_results/q_cte_008.json",
+      "old_expected_rows": 4,
+      "new_expected_rows": 0,
+      "gold_sha256": "a6a025d7c42720dc1dbcd7c8eaeba28a5b1f115c883225130de5b69e0fb7802e",
+      "expected_sha256": "6560201ae5cdc473ca37cbb5f82c6a446fd26bc7ed0dbbc4b59d50ac6201146d"
+    },
+    {
+      "qid": "q_medium_026",
+      "change": "removed hidden L12 filter",
+      "gold_path": "evaluation/gold_sql/q_medium_026.sql",
+      "expected_path": "evaluation/expected_results/q_medium_026.json",
+      "old_expected_rows": 22,
+      "new_expected_rows": 23,
+      "gold_sha256": "95287de2c7b1c025b3278dd542e0e9c271cc7c48fce61bd135e6a812555d80c0",
+      "expected_sha256": "708ff2a05d7959c984a9b1776f08b85907a6cb6c13d985922f1c5eb09fa86b14"
+    },
+    {
+      "qid": "q_cte_010",
+      "change": "removed unasked LIMIT 20",
+      "gold_path": "evaluation/gold_sql/q_cte_010.sql",
+      "expected_path": "evaluation/expected_results/q_cte_010.json",
+      "old_expected_rows": 20,
+      "new_expected_rows": 153,
+      "gold_sha256": "69c10f966c514eb685437e4467ffcd0d03aa3ba039121d24b9e8b6dae9be72fd",
+      "expected_sha256": "7c4b939ee773d2ef1a54f7bb10d96802b306322037f6a7d415b154f663a2ef7b"
+    },
+    {
+      "qid": "q_cte_012",
+      "change": "removed unasked LIMIT 20",
+      "gold_path": "evaluation/gold_sql/q_cte_012.sql",
+      "expected_path": "evaluation/expected_results/q_cte_012.json",
+      "old_expected_rows": 20,
+      "new_expected_rows": 33,
+      "gold_sha256": "3b1e4ccbe0d99ee0e1fbb1c4681a34ba3f3d9b9917748440963eba85e00cc958",
+      "expected_sha256": "e2327d3b159a68efc6f3ddeda7d5812a26d886ff645535b5258047d5063d67c2"
+    },
+    {
+      "qid": "q_cte_014",
+      "change": "removed unasked HAVING count>=5 + LIMIT 15",
+      "gold_path": "evaluation/gold_sql/q_cte_014.sql",
+      "expected_path": "evaluation/expected_results/q_cte_014.json",
+      "old_expected_rows": 15,
+      "new_expected_rows": 33,
+      "gold_sha256": "6e9b74ed8dde83baf8b12f8dfa2266485fff0e9988eb3f26823fb33d6ec9b652",
+      "expected_sha256": "b5f5961e6c2716fcead7403da6cf8892fa498e813b7e13c82402fa9fdbf0b689"
+    },
+    {
+      "qid": "q_vhard_016",
+      "change": "removed unasked LIMIT 20 (row set unchanged)",
+      "gold_path": "evaluation/gold_sql/q_vhard_016.sql",
+      "expected_path": "evaluation/expected_results/q_vhard_016.json",
+      "old_expected_rows": 5,
+      "new_expected_rows": 5,
+      "gold_sha256": "3cf009e76b167d860edc9c70e5226ce95996add1d540069129b14fafc91a6d29",
+      "expected_sha256": "192a626ec5051b65c3f68420cf89609c943d697cd57be5422a5a9578cbdfd642"
+    },
+    {
+      "qid": "q_vhard_018",
+      "change": "removed unasked HAVING count>=2",
+      "gold_path": "evaluation/gold_sql/q_vhard_018.sql",
+      "expected_path": "evaluation/expected_results/q_vhard_018.json",
+      "old_expected_rows": 1,
+      "new_expected_rows": 6,
+      "gold_sha256": "8841b36a57245e1f24d88cd6c4544f88e91db474a8b475219dff5da7b9b98ca5",
+      "expected_sha256": "0cd0869eec285ed579d0d08dfedf98005221f4a4e9820b6a94090798fdabd3fc"
+    },
+    {
+      "qid": "q_vhard_020",
+      "change": "removed unasked LIMIT 20",
+      "gold_path": "evaluation/gold_sql/q_vhard_020.sql",
+      "expected_path": "evaluation/expected_results/q_vhard_020.json",
+      "old_expected_rows": 20,
+      "new_expected_rows": 275,
+      "gold_sha256": "8a5a055377b50ac8cf996d0f7832a948a6874c386e120f04354afbe2f16bdf8d",
+      "expected_sha256": "4cf8b45a9f2fe850da5c15f644e7f62db2837292cb77432aecc5202af502a161"
+    },
+    {
+      "qid": "q_transfer_019",
+      "change": "removed unasked LIMIT 20 (row set unchanged)",
+      "gold_path": "evaluation/gold_sql/q_transfer_019.sql",
+      "expected_path": "evaluation/expected_results/q_transfer_019.json",
+      "old_expected_rows": 5,
+      "new_expected_rows": 5,
+      "gold_sha256": "47d230e065b44fc8d1dc096aba896adab9312eda1b3336b1d8b60d159d31c6aa",
+      "expected_sha256": "9d208832297c5c2b3f4645d349da12bd47abd3a9f59d733a20f6cbee75e1752e"
+    },
+    {
+      "qid": "q_transfer_020",
+      "change": "removed unasked HAVING count>=2",
+      "gold_path": "evaluation/gold_sql/q_transfer_020.sql",
+      "expected_path": "evaluation/expected_results/q_transfer_020.json",
+      "old_expected_rows": 1,
+      "new_expected_rows": 6,
+      "gold_sha256": "2f0166fdf5bf2bbd5da6e8daa16ed2561893144fefc51f981ffc79d133032105",
+      "expected_sha256": "0ca3b29da0a68a4edd9e96fe056673f4752b8c48c5b7fc09cbfbf5d18c22fb95"
+    },
+    {
+      "qid": "q_transfer_obf_019",
+      "change": "removed unasked LIMIT 20 (row set unchanged)",
+      "gold_path": "evaluation/gold_sql_obfuscated/q_transfer_obf_019.sql",
+      "expected_path": "evaluation/expected_results_obfuscated/q_transfer_obf_019.json",
+      "old_expected_rows": 5,
+      "new_expected_rows": 5,
+      "gold_sha256": "ebefdbe54a80bae6c12a6e74c2f39cab4d8cdd80fb6514583438aaf07e262e11",
+      "expected_sha256": "b31b4897f17db38fc1d6ef841aaf1d85d4e6ffb5386af3f02a1674ae93c03ee2"
+    },
+    {
+      "qid": "q_transfer_obf_020",
+      "change": "removed unasked HAVING count>=2",
+      "gold_path": "evaluation/gold_sql_obfuscated/q_transfer_obf_020.sql",
+      "expected_path": "evaluation/expected_results_obfuscated/q_transfer_obf_020.json",
+      "old_expected_rows": 1,
+      "new_expected_rows": 6,
+      "gold_sha256": "eaeeb2ccef27b8da3a72c607b39ed9ee487ccf7d5b6544e70f201317fbc92b6d",
+      "expected_sha256": "0ca3b29da0a68a4edd9e96fe056673f4752b8c48c5b7fc09cbfbf5d18c22fb95"
+    }
+  ]
+}
