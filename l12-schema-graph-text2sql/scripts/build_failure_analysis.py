@@ -17,11 +17,13 @@ PROJECT = Path(__file__).resolve().parent.parent
 EVAL = PROJECT / "evaluation"
 sys.path.insert(0, str(PROJECT))
 
-from scripts.provenance import build_provenance  # noqa: E402
+from scripts.provenance import build_provenance, sha256_file  # noqa: E402
+
+CANONICAL = EVAL / "multiaxis_results.json"
 
 
 def main() -> None:
-    data = json.load(open(EVAL / "multiaxis_results.json"))
+    data = json.load(open(CANONICAL))
     dataset = {}
     for line in open(EVAL / "main_evaluation_dataset.jsonl"):
         r = json.loads(line)
@@ -47,6 +49,9 @@ def main() -> None:
     out = {
         "provenance": build_provenance(
             EVAL / "main_evaluation_dataset.jsonl"),
+        "source_result_file": CANONICAL.name,
+        "source_result_sha256": sha256_file(CANONICAL),
+        "source_provenance": data.get("provenance"),
         "failures": failures,
         "n_total": len(data["results"]),
     }

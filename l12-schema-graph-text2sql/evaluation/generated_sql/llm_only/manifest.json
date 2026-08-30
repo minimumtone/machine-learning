@@ -1,0 +1,1735 @@
+{
+  "source": "llm_only",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "main_evaluation_dataset.jsonl",
+    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_file": "sql_generation_prompt.md",
+    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
+    "generated_at": "2026-08-29T01:45:32+00:00"
+  },
+  "eval_file": "llm_only_results.json",
+  "source_result_file": "llm_only_results.json",
+  "source_result_sha256": "ce8f7fba7e2ab8ea1cd98b431b25e7e00a33dcbf010bc74cbbb0b602dc9875a5",
+  "n_queries": 245,
+  "queries": [
+    {
+      "qid": "q_cte_006",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_006.sql"
+    },
+    {
+      "qid": "q_cte_007",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 21.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_007.sql"
+    },
+    {
+      "qid": "q_cte_008",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 6.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_008.sql"
+    },
+    {
+      "qid": "q_cte_009",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_009.sql"
+    },
+    {
+      "qid": "q_cte_010",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 44.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_010.sql"
+    },
+    {
+      "qid": "q_cte_011",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 34.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_011.sql"
+    },
+    {
+      "qid": "q_cte_012",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 46.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_012.sql"
+    },
+    {
+      "qid": "q_cte_013",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_013.sql"
+    },
+    {
+      "qid": "q_cte_014",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_014.sql"
+    },
+    {
+      "qid": "q_cte_015",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_cte_015.sql"
+    },
+    {
+      "qid": "q_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_001.sql"
+    },
+    {
+      "qid": "q_easy_002",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_002.sql"
+    },
+    {
+      "qid": "q_easy_003",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 4.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_003.sql"
+    },
+    {
+      "qid": "q_easy_004",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_004.sql"
+    },
+    {
+      "qid": "q_easy_005",
+      "difficulty": "easy",
+      "recall": 0.989247311827957,
+      "latency_s": 3.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_005.sql"
+    },
+    {
+      "qid": "q_easy_006",
+      "difficulty": "easy",
+      "recall": 0.9775910364145658,
+      "latency_s": 4.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_006.sql"
+    },
+    {
+      "qid": "q_easy_007",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 13.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_007.sql"
+    },
+    {
+      "qid": "q_easy_008",
+      "difficulty": "easy",
+      "recall": 0.9891304347826086,
+      "latency_s": 2.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_008.sql"
+    },
+    {
+      "qid": "q_easy_009",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_009.sql"
+    },
+    {
+      "qid": "q_easy_010",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_010.sql"
+    },
+    {
+      "qid": "q_easy_011",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 5.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_011.sql"
+    },
+    {
+      "qid": "q_easy_012",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 15.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_012.sql"
+    },
+    {
+      "qid": "q_easy_013",
+      "difficulty": "easy",
+      "recall": 0.9880952380952381,
+      "latency_s": 3.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_013.sql"
+    },
+    {
+      "qid": "q_easy_014",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 3.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_014.sql"
+    },
+    {
+      "qid": "q_easy_015",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 14.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_015.sql"
+    },
+    {
+      "qid": "q_easy_016",
+      "difficulty": "easy",
+      "recall": 0.9921259842519685,
+      "latency_s": 3.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_016.sql"
+    },
+    {
+      "qid": "q_easy_017",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 3.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_017.sql"
+    },
+    {
+      "qid": "q_easy_018",
+      "difficulty": "easy",
+      "recall": 0.8086021505376344,
+      "latency_s": 2.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_018.sql"
+    },
+    {
+      "qid": "q_easy_019",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_019.sql"
+    },
+    {
+      "qid": "q_easy_020",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_easy_020.sql"
+    },
+    {
+      "qid": "q_expert_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 4.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_001.sql"
+    },
+    {
+      "qid": "q_expert_002",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_002.sql"
+    },
+    {
+      "qid": "q_expert_003",
+      "difficulty": "easy",
+      "recall": 0.0,
+      "latency_s": 2.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_003.sql"
+    },
+    {
+      "qid": "q_expert_004",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_004.sql"
+    },
+    {
+      "qid": "q_expert_005",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_005.sql"
+    },
+    {
+      "qid": "q_expert_006",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_006.sql"
+    },
+    {
+      "qid": "q_expert_007",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 5.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_007.sql"
+    },
+    {
+      "qid": "q_expert_008",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_008.sql"
+    },
+    {
+      "qid": "q_expert_009",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 4.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_009.sql"
+    },
+    {
+      "qid": "q_expert_010",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 6.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_010.sql"
+    },
+    {
+      "qid": "q_expert_011",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_011.sql"
+    },
+    {
+      "qid": "q_expert_012",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_012.sql"
+    },
+    {
+      "qid": "q_expert_013",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_013.sql"
+    },
+    {
+      "qid": "q_expert_014",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_014.sql"
+    },
+    {
+      "qid": "q_expert_015",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_015.sql"
+    },
+    {
+      "qid": "q_expert_016",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 15.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_016.sql"
+    },
+    {
+      "qid": "q_expert_017",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 6.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_017.sql"
+    },
+    {
+      "qid": "q_expert_018",
+      "difficulty": "medium",
+      "recall": 0.6666666666666666,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_018.sql"
+    },
+    {
+      "qid": "q_expert_019",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_019.sql"
+    },
+    {
+      "qid": "q_expert_020",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_020.sql"
+    },
+    {
+      "qid": "q_expert_021",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_021.sql"
+    },
+    {
+      "qid": "q_expert_022",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 5.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_022.sql"
+    },
+    {
+      "qid": "q_expert_023",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_023.sql"
+    },
+    {
+      "qid": "q_expert_024",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 3.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_024.sql"
+    },
+    {
+      "qid": "q_expert_025",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 6.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_025.sql"
+    },
+    {
+      "qid": "q_expert_026",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 1.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_026.sql"
+    },
+    {
+      "qid": "q_expert_027",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_027.sql"
+    },
+    {
+      "qid": "q_expert_028",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 3.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_028.sql"
+    },
+    {
+      "qid": "q_expert_029",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 5.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_029.sql"
+    },
+    {
+      "qid": "q_expert_030",
+      "difficulty": "easy",
+      "recall": 0.0,
+      "latency_s": 4.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_030.sql"
+    },
+    {
+      "qid": "q_expert_031",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_031.sql"
+    },
+    {
+      "qid": "q_expert_032",
+      "difficulty": "medium",
+      "recall": 0.8004866180048662,
+      "latency_s": 4.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_032.sql"
+    },
+    {
+      "qid": "q_expert_033",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_033.sql"
+    },
+    {
+      "qid": "q_expert_034",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_034.sql"
+    },
+    {
+      "qid": "q_expert_035",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_035.sql"
+    },
+    {
+      "qid": "q_expert_036",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_036.sql"
+    },
+    {
+      "qid": "q_expert_037",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_037.sql"
+    },
+    {
+      "qid": "q_expert_038",
+      "difficulty": "medium",
+      "recall": 0.4,
+      "latency_s": 5.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_038.sql"
+    },
+    {
+      "qid": "q_expert_039",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 3.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_039.sql"
+    },
+    {
+      "qid": "q_expert_040",
+      "difficulty": "medium",
+      "recall": 0.05319148936170213,
+      "latency_s": 4.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_040.sql"
+    },
+    {
+      "qid": "q_expert_041",
+      "difficulty": "easy",
+      "recall": 0.0,
+      "latency_s": 4.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_041.sql"
+    },
+    {
+      "qid": "q_expert_042",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_042.sql"
+    },
+    {
+      "qid": "q_expert_043",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_043.sql"
+    },
+    {
+      "qid": "q_expert_044",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_044.sql"
+    },
+    {
+      "qid": "q_expert_045",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 4.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_045.sql"
+    },
+    {
+      "qid": "q_expert_046",
+      "difficulty": "very_hard",
+      "recall": 0.022900763358778626,
+      "latency_s": 8.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_046.sql"
+    },
+    {
+      "qid": "q_expert_047",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_047.sql"
+    },
+    {
+      "qid": "q_expert_048",
+      "difficulty": "medium",
+      "recall": 0.023809523809523808,
+      "latency_s": 6.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_048.sql"
+    },
+    {
+      "qid": "q_expert_049",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_049.sql"
+    },
+    {
+      "qid": "q_expert_050",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_050.sql"
+    },
+    {
+      "qid": "q_expert_051",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_051.sql"
+    },
+    {
+      "qid": "q_expert_052",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 6.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_052.sql"
+    },
+    {
+      "qid": "q_expert_053",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 5.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_053.sql"
+    },
+    {
+      "qid": "q_expert_054",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_054.sql"
+    },
+    {
+      "qid": "q_expert_055",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_055.sql"
+    },
+    {
+      "qid": "q_expert_056",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 3.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_056.sql"
+    },
+    {
+      "qid": "q_expert_057",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_057.sql"
+    },
+    {
+      "qid": "q_expert_058",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 4.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_058.sql"
+    },
+    {
+      "qid": "q_expert_059",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_059.sql"
+    },
+    {
+      "qid": "q_expert_060",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_060.sql"
+    },
+    {
+      "qid": "q_expert_061",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_061.sql"
+    },
+    {
+      "qid": "q_expert_062",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_062.sql"
+    },
+    {
+      "qid": "q_expert_063",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 5.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_063.sql"
+    },
+    {
+      "qid": "q_expert_064",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 2.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_064.sql"
+    },
+    {
+      "qid": "q_expert_065",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_065.sql"
+    },
+    {
+      "qid": "q_expert_066",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_066.sql"
+    },
+    {
+      "qid": "q_expert_067",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 3.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_067.sql"
+    },
+    {
+      "qid": "q_expert_068",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 4.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_068.sql"
+    },
+    {
+      "qid": "q_expert_069",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_069.sql"
+    },
+    {
+      "qid": "q_expert_070",
+      "difficulty": "very_hard",
+      "recall": 0.048638132295719845,
+      "latency_s": 56.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_070.sql"
+    },
+    {
+      "qid": "q_expert_071",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_071.sql"
+    },
+    {
+      "qid": "q_expert_072",
+      "difficulty": "hard",
+      "recall": 0.7272727272727273,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_072.sql"
+    },
+    {
+      "qid": "q_expert_073",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_073.sql"
+    },
+    {
+      "qid": "q_expert_074",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 13.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_074.sql"
+    },
+    {
+      "qid": "q_expert_075",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_075.sql"
+    },
+    {
+      "qid": "q_expert_076",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 13.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_076.sql"
+    },
+    {
+      "qid": "q_expert_077",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_077.sql"
+    },
+    {
+      "qid": "q_expert_078",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 4.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_078.sql"
+    },
+    {
+      "qid": "q_expert_079",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_079.sql"
+    },
+    {
+      "qid": "q_expert_080",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_080.sql"
+    },
+    {
+      "qid": "q_expert_081",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 13.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_081.sql"
+    },
+    {
+      "qid": "q_expert_082",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 43.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_082.sql"
+    },
+    {
+      "qid": "q_expert_083",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_083.sql"
+    },
+    {
+      "qid": "q_expert_084",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_084.sql"
+    },
+    {
+      "qid": "q_expert_085",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_085.sql"
+    },
+    {
+      "qid": "q_expert_086",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_086.sql"
+    },
+    {
+      "qid": "q_expert_087",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_087.sql"
+    },
+    {
+      "qid": "q_expert_088",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_088.sql"
+    },
+    {
+      "qid": "q_expert_089",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_089.sql"
+    },
+    {
+      "qid": "q_expert_090",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_090.sql"
+    },
+    {
+      "qid": "q_expert_091",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_091.sql"
+    },
+    {
+      "qid": "q_expert_092",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 4.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_092.sql"
+    },
+    {
+      "qid": "q_expert_093",
+      "difficulty": "hard",
+      "recall": 0.045454545454545456,
+      "latency_s": 12.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_093.sql"
+    },
+    {
+      "qid": "q_expert_094",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 18.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_094.sql"
+    },
+    {
+      "qid": "q_expert_095",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 9.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_095.sql"
+    },
+    {
+      "qid": "q_expert_096",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_096.sql"
+    },
+    {
+      "qid": "q_expert_097",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 2.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_097.sql"
+    },
+    {
+      "qid": "q_expert_098",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 10.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_098.sql"
+    },
+    {
+      "qid": "q_expert_099",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 5.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_099.sql"
+    },
+    {
+      "qid": "q_expert_100",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_100.sql"
+    },
+    {
+      "qid": "q_expert_101",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 17.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_101.sql"
+    },
+    {
+      "qid": "q_expert_102",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_102.sql"
+    },
+    {
+      "qid": "q_expert_103",
+      "difficulty": "very_hard",
+      "recall": 0.01568627450980392,
+      "latency_s": 9.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_103.sql"
+    },
+    {
+      "qid": "q_expert_104",
+      "difficulty": "very_hard",
+      "recall": 0.7,
+      "latency_s": 8.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_104.sql"
+    },
+    {
+      "qid": "q_expert_105",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_105.sql"
+    },
+    {
+      "qid": "q_expert_106",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 8.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_106.sql"
+    },
+    {
+      "qid": "q_expert_107",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_107.sql"
+    },
+    {
+      "qid": "q_expert_108",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_108.sql"
+    },
+    {
+      "qid": "q_expert_109",
+      "difficulty": "very_hard",
+      "recall": 0.5,
+      "latency_s": 14.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_109.sql"
+    },
+    {
+      "qid": "q_expert_110",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 48.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_110.sql"
+    },
+    {
+      "qid": "q_expert_111",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_111.sql"
+    },
+    {
+      "qid": "q_expert_112",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 14.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_112.sql"
+    },
+    {
+      "qid": "q_expert_113",
+      "difficulty": "very_hard",
+      "recall": 0.125,
+      "latency_s": 8.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_113.sql"
+    },
+    {
+      "qid": "q_expert_114",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 2.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_114.sql"
+    },
+    {
+      "qid": "q_expert_115",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 2.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_expert_115.sql"
+    },
+    {
+      "qid": "q_hard_001",
+      "difficulty": "hard",
+      "recall": 0.026455026455026454,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_001.sql"
+    },
+    {
+      "qid": "q_hard_002",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 10.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_002.sql"
+    },
+    {
+      "qid": "q_hard_003",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 11.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_003.sql"
+    },
+    {
+      "qid": "q_hard_004",
+      "difficulty": "hard",
+      "recall": 0.7142857142857143,
+      "latency_s": 13.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_004.sql"
+    },
+    {
+      "qid": "q_hard_005",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_005.sql"
+    },
+    {
+      "qid": "q_hard_006",
+      "difficulty": "hard",
+      "recall": 0.9090909090909091,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_006.sql"
+    },
+    {
+      "qid": "q_hard_007",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_007.sql"
+    },
+    {
+      "qid": "q_hard_008",
+      "difficulty": "hard",
+      "recall": 0.6075949367088608,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_008.sql"
+    },
+    {
+      "qid": "q_hard_009",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 9.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_009.sql"
+    },
+    {
+      "qid": "q_hard_010",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_010.sql"
+    },
+    {
+      "qid": "q_hard_011",
+      "difficulty": "hard",
+      "recall": 0.5688775510204082,
+      "latency_s": 7.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_011.sql"
+    },
+    {
+      "qid": "q_hard_012",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 14.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_012.sql"
+    },
+    {
+      "qid": "q_hard_013",
+      "difficulty": "hard",
+      "recall": 0.8,
+      "latency_s": 10.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_013.sql"
+    },
+    {
+      "qid": "q_hard_014",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_014.sql"
+    },
+    {
+      "qid": "q_hard_015",
+      "difficulty": "hard",
+      "recall": 0.2247191011235955,
+      "latency_s": 19.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_015.sql"
+    },
+    {
+      "qid": "q_hard_016",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 11.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_016.sql"
+    },
+    {
+      "qid": "q_hard_017",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 28.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_017.sql"
+    },
+    {
+      "qid": "q_hard_018",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 9.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_018.sql"
+    },
+    {
+      "qid": "q_hard_019",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 17.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_019.sql"
+    },
+    {
+      "qid": "q_hard_020",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 9.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_020.sql"
+    },
+    {
+      "qid": "q_hard_021",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 26.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_021.sql"
+    },
+    {
+      "qid": "q_hard_022",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_022.sql"
+    },
+    {
+      "qid": "q_hard_023",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 15.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_023.sql"
+    },
+    {
+      "qid": "q_hard_024",
+      "difficulty": "hard",
+      "recall": 0.631578947368421,
+      "latency_s": 12.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_024.sql"
+    },
+    {
+      "qid": "q_hard_025",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_025.sql"
+    },
+    {
+      "qid": "q_hard_026",
+      "difficulty": "hard",
+      "recall": 0.10582010582010581,
+      "latency_s": 49.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_026.sql"
+    },
+    {
+      "qid": "q_hard_027",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 9.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_027.sql"
+    },
+    {
+      "qid": "q_hard_028",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_028.sql"
+    },
+    {
+      "qid": "q_hard_029",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_029.sql"
+    },
+    {
+      "qid": "q_hard_030",
+      "difficulty": "hard",
+      "recall": 0.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_hard_030.sql"
+    },
+    {
+      "qid": "q_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 9.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_001.sql"
+    },
+    {
+      "qid": "q_medium_002",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 30.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_002.sql"
+    },
+    {
+      "qid": "q_medium_003",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 26.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_003.sql"
+    },
+    {
+      "qid": "q_medium_004",
+      "difficulty": "medium",
+      "recall": 0.06377551020408163,
+      "latency_s": 10.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_004.sql"
+    },
+    {
+      "qid": "q_medium_005",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_005.sql"
+    },
+    {
+      "qid": "q_medium_006",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 21.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_006.sql"
+    },
+    {
+      "qid": "q_medium_007",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 16.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_007.sql"
+    },
+    {
+      "qid": "q_medium_008",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_008.sql"
+    },
+    {
+      "qid": "q_medium_009",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_009.sql"
+    },
+    {
+      "qid": "q_medium_010",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_010.sql"
+    },
+    {
+      "qid": "q_medium_011",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_011.sql"
+    },
+    {
+      "qid": "q_medium_012",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_012.sql"
+    },
+    {
+      "qid": "q_medium_013",
+      "difficulty": "medium",
+      "recall": 0.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_013.sql"
+    },
+    {
+      "qid": "q_medium_014",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 9.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_014.sql"
+    },
+    {
+      "qid": "q_medium_015",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_015.sql"
+    },
+    {
+      "qid": "q_medium_016",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_016.sql"
+    },
+    {
+      "qid": "q_medium_017",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_017.sql"
+    },
+    {
+      "qid": "q_medium_018",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_018.sql"
+    },
+    {
+      "qid": "q_medium_019",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 16.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_019.sql"
+    },
+    {
+      "qid": "q_medium_020",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_020.sql"
+    },
+    {
+      "qid": "q_medium_021",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_021.sql"
+    },
+    {
+      "qid": "q_medium_022",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_022.sql"
+    },
+    {
+      "qid": "q_medium_023",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_023.sql"
+    },
+    {
+      "qid": "q_medium_024",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_024.sql"
+    },
+    {
+      "qid": "q_medium_025",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_025.sql"
+    },
+    {
+      "qid": "q_medium_026",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 6.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_026.sql"
+    },
+    {
+      "qid": "q_medium_027",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_027.sql"
+    },
+    {
+      "qid": "q_medium_028",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 14.2,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_028.sql"
+    },
+    {
+      "qid": "q_medium_029",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 9.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_029.sql"
+    },
+    {
+      "qid": "q_medium_030",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_medium_030.sql"
+    },
+    {
+      "qid": "q_proto_b2_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 6.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_b2_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_hard_001",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_b2_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 5.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_b2_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_very_hard_001",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_b2_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_bif3_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_hard_001",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_bif3_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_bif3_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_very_hard_001",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 25.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_bif3_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_l12_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_hard_001",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 8.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_l12_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_l12_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_very_hard_001",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 27.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_l12_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nacl_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_hard_001",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 6.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nacl_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nacl_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_very_hard_001",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 20.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nacl_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_easy_001",
+      "difficulty": "easy",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nias_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_hard_001",
+      "difficulty": "hard",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nias_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_medium_001",
+      "difficulty": "medium",
+      "recall": 1.0,
+      "latency_s": 8.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nias_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_very_hard_001",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 11.0,
+      "sql_path": "evaluation/generated_sql/llm_only/q_proto_nias_very_hard_001.sql"
+    },
+    {
+      "qid": "q_vhard_001",
+      "difficulty": "very_hard",
+      "recall": 0.5608465608465608,
+      "latency_s": 20.5,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_001.sql"
+    },
+    {
+      "qid": "q_vhard_002",
+      "difficulty": "very_hard",
+      "recall": 0.6242038216560509,
+      "latency_s": 66.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_002.sql"
+    },
+    {
+      "qid": "q_vhard_003",
+      "difficulty": "very_hard",
+      "recall": 0.5608465608465608,
+      "latency_s": 10.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_003.sql"
+    },
+    {
+      "qid": "q_vhard_004",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 9.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_004.sql"
+    },
+    {
+      "qid": "q_vhard_005",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 50.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_005.sql"
+    },
+    {
+      "qid": "q_vhard_006",
+      "difficulty": "very_hard",
+      "recall": 0.7142857142857143,
+      "latency_s": 11.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_006.sql"
+    },
+    {
+      "qid": "q_vhard_007",
+      "difficulty": "very_hard",
+      "recall": 0.10582010582010581,
+      "latency_s": 11.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_007.sql"
+    },
+    {
+      "qid": "q_vhard_008",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 54.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_008.sql"
+    },
+    {
+      "qid": "q_vhard_009",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 41.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_009.sql"
+    },
+    {
+      "qid": "q_vhard_010",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_010.sql"
+    },
+    {
+      "qid": "q_vhard_011",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_011.sql"
+    },
+    {
+      "qid": "q_vhard_012",
+      "difficulty": "very_hard",
+      "recall": 0.6666666666666666,
+      "latency_s": 16.6,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_012.sql"
+    },
+    {
+      "qid": "q_vhard_013",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 8.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_013.sql"
+    },
+    {
+      "qid": "q_vhard_014",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 38.1,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_014.sql"
+    },
+    {
+      "qid": "q_vhard_015",
+      "difficulty": "very_hard",
+      "recall": 0.6046511627906976,
+      "latency_s": 27.9,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_015.sql"
+    },
+    {
+      "qid": "q_vhard_016",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 59.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_016.sql"
+    },
+    {
+      "qid": "q_vhard_017",
+      "difficulty": "very_hard",
+      "recall": 0.5,
+      "latency_s": 48.7,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_017.sql"
+    },
+    {
+      "qid": "q_vhard_018",
+      "difficulty": "very_hard",
+      "recall": 0.0,
+      "latency_s": 7.8,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_018.sql"
+    },
+    {
+      "qid": "q_vhard_019",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 44.3,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_019.sql"
+    },
+    {
+      "qid": "q_vhard_020",
+      "difficulty": "very_hard",
+      "recall": 1.0,
+      "latency_s": 7.4,
+      "sql_path": "evaluation/generated_sql/llm_only/q_vhard_020.sql"
+    }
+  ]
+}

@@ -7,7 +7,8 @@
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T09:51:56+00:00"
+    "generated_at": "2026-08-29T09:51:56+00:00",
+    "models_config_sha256": "0652add1711934dc817234558c587d2e1a690e7a803ee98a1dfa3de9a2522222"
   },
   "n_queries": 100,
   "models": {

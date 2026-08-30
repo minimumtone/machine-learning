@@ -1,10 +1,10 @@
 {
   "main": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; report it together with 'strict' and 'exact_match_pct'",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 245,
     "policies": {
       "historical": {
-        "mean_recall_pct": 85.3,
+        "mean_recall_pct": 85.7,
         "n_scored": 245
       },
       "require_all_cols": {
@@ -12,15 +12,15 @@
         "n_scored": 245
       },
       "no_positional": {
-        "mean_recall_pct": 82.1,
+        "mean_recall_pct": 82.4,
         "n_scored": 245
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 85.6,
+        "mean_recall_pct": 85.9,
         "n_scored": 242
       },
       "multiset": {
-        "mean_recall_pct": 83.7,
+        "mean_recall_pct": 83.5,
         "n_scored": 245
       },
       "strict": {
@@ -28,9 +28,10 @@
         "n_scored": 242
       }
     },
-    "exact_match_pct": 75.9,
+    "exact_result_set_match_pct": 4.1,
+    "common_column_exact_overlap_pct": 76.3,
     "ordered": {
-      "mean_recall_pct": 53.9,
+      "mean_recall_pct": 53.7,
       "n_gold_with_order_by": 234
     },
     "diagnostics": {
@@ -48,15 +49,12 @@
         "q_cte_012",
         "q_cte_013",
         "q_cte_014",
-        "q_cte_015",
         "q_easy_001",
-        "q_easy_002",
         "q_easy_003",
         "q_easy_004",
         "q_easy_006",
         "q_easy_007",
         "q_easy_009",
-        "q_easy_010",
         "q_easy_011",
         "q_easy_012",
         "q_easy_019",
@@ -75,6 +73,7 @@
         "q_expert_014",
         "q_expert_015",
         "q_expert_016",
+        "q_expert_017",
         "q_expert_018",
         "q_expert_019",
         "q_expert_020",
@@ -146,21 +145,24 @@
         "q_expert_091",
         "q_expert_092",
         "q_expert_093",
+        "q_expert_094",
         "q_expert_095",
         "q_expert_096",
+        "q_expert_097",
         "q_expert_098",
         "q_expert_099",
         "q_expert_100",
         "q_expert_101",
         "q_expert_103",
         "q_expert_104",
+        "q_expert_110",
         "q_expert_113",
         "q_expert_115",
         "q_hard_001",
         "q_hard_002",
         "q_hard_005",
         "q_hard_006",
-        "q_hard_008",
+        "q_hard_009",
         "q_hard_014",
         "q_hard_015",
         "q_hard_018",
@@ -171,6 +173,7 @@
         "q_medium_001",
         "q_medium_002",
         "q_medium_003",
+        "q_medium_004",
         "q_medium_006",
         "q_medium_008",
         "q_medium_010",
@@ -185,14 +188,12 @@
         "q_proto_bif3_easy_001",
         "q_proto_bif3_medium_001",
         "q_proto_l12_easy_001",
-        "q_proto_l12_hard_001",
-        "q_proto_l12_medium_001",
         "q_proto_l12_very_hard_001",
         "q_proto_nacl_easy_001",
+        "q_proto_nacl_hard_001",
         "q_proto_nacl_medium_001",
         "q_proto_nacl_very_hard_001",
         "q_proto_nias_easy_001",
-        "q_proto_nias_hard_001",
         "q_proto_nias_medium_001",
         "q_proto_nias_very_hard_001",
         "q_vhard_001",
@@ -214,12 +215,12 @@
         "q_vhard_020"
       ],
       "queries_no_column_overlap": [
-        "q_cte_009",
         "q_cte_014",
         "q_easy_012",
         "q_expert_001",
         "q_expert_005",
         "q_expert_008",
+        "q_expert_017",
         "q_expert_018",
         "q_expert_026",
         "q_expert_029",
@@ -237,9 +238,18 @@
         "q_hard_020",
         "q_medium_021",
         "q_medium_026",
-        "q_proto_l12_very_hard_001"
+        "q_proto_l12_very_hard_001",
+        "q_proto_nias_very_hard_001"
       ],
       "credited_on_single_column": [
+        {
+          "qid": "q_cte_009",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "element"
+          ]
+        },
         {
           "qid": "q_cte_010",
           "n_common": 1,
@@ -257,23 +267,7 @@
           ]
         },
         {
-          "qid": "q_cte_015",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "a_site"
-          ]
-        },
-        {
           "qid": "q_easy_003",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_easy_010",
           "n_common": 1,
           "n_gold_cols": 3,
           "common": [
@@ -284,14 +278,6 @@
           "qid": "q_easy_011",
           "n_common": 1,
           "n_gold_cols": 2,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_expert_003",
-          "n_common": 1,
-          "n_gold_cols": 3,
           "common": [
             "formula"
           ]
@@ -433,11 +419,19 @@
           ]
         },
         {
-          "qid": "q_hard_008",
+          "qid": "q_expert_097",
           "n_common": 1,
           "n_gold_cols": 2,
           "common": [
-            "formula"
+            "method"
+          ]
+        },
+        {
+          "qid": "q_hard_006",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "avg_lattice_a"
           ]
         },
         {
@@ -462,14 +456,6 @@
           "n_gold_cols": 2,
           "common": [
             "chemical_system"
-          ]
-        },
-        {
-          "qid": "q_proto_l12_medium_001",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
           ]
         },
         {
@@ -542,15 +528,6 @@
           ]
         },
         {
-          "qid": "q_proto_nias_very_hard_001",
-          "n_common": 2,
-          "n_gold_cols": 5,
-          "common": [
-            "a_site",
-            "b_site"
-          ]
-        },
-        {
           "qid": "q_vhard_005",
           "n_common": 2,
           "n_gold_cols": 5,
@@ -595,11 +572,11 @@
         "ordered": 0.045454545454545456
       },
       "q_cte_007": {
-        "historical": 0.0,
+        "historical": 0.2,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 0.2,
+        "drop_empty_gold": 0.2,
+        "multiset": 0.2,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -613,13 +590,13 @@
         "ordered": 0.0
       },
       "q_cte_009": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.2
       },
       "q_cte_010": {
         "historical": 1.0,
@@ -667,11 +644,11 @@
         "ordered": 0.0
       },
       "q_cte_015": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -686,21 +663,21 @@
       },
       "q_easy_002": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
+        "strict": 1.0,
+        "ordered": 0.21428571428571427
       },
       "q_easy_003": {
         "historical": 1.0,
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.6505102040816326,
         "strict": 0.0,
-        "ordered": 0.01020408163265306
+        "ordered": 0.002551020408163265
       },
       "q_easy_004": {
         "historical": 1.0,
@@ -725,9 +702,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.46638655462184875,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.0007002801120448179
       },
       "q_easy_007": {
         "historical": 1.0,
@@ -758,11 +735,11 @@
       },
       "q_easy_010": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6097560975609756,
-        "strict": 0.0,
+        "multiset": 1.0,
+        "strict": 1.0,
         "ordered": 0.024390243902439025
       },
       "q_easy_011": {
@@ -988,18 +965,18 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.58,
         "strict": 0.0,
-        "ordered": 0.02
+        "ordered": 0.0
       },
       "q_expert_017": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
       },
       "q_expert_018": {
         "historical": 0.0,
@@ -1069,7 +1046,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.01020408163265306
+        "ordered": 1.0
       },
       "q_expert_026": {
         "historical": 1.0,
@@ -1288,7 +1265,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.017241379310344827
+        "ordered": 1.0
       },
       "q_expert_051": {
         "historical": 1.0,
@@ -1304,9 +1281,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.9719101123595506,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.011235955056179775
+        "ordered": 0.0
       },
       "q_expert_053": {
         "historical": 1.0,
@@ -1363,13 +1340,13 @@
         "ordered": 0.009708737864077669
       },
       "q_expert_059": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_expert_060": {
         "historical": 1.0,
@@ -1459,7 +1436,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.006493506493506494
       },
       "q_expert_070": {
         "historical": 1.0,
@@ -1468,7 +1445,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.0009727626459143969
       },
       "q_expert_071": {
         "historical": 1.0,
@@ -1679,12 +1656,12 @@
       },
       "q_expert_094": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
+        "strict": 0.0,
+        "ordered": 0.9846938775510204
       },
       "q_expert_095": {
         "historical": 1.0,
@@ -1705,13 +1682,13 @@
         "ordered": 0.6
       },
       "q_expert_097": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_expert_098": {
         "historical": 0.0,
@@ -1782,7 +1759,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 1.0
+        "ordered": 0.3333333333333333
       },
       "q_expert_106": {
         "historical": 0.0,
@@ -1822,11 +1799,11 @@
       },
       "q_expert_110": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_expert_111": {
@@ -1848,13 +1825,13 @@
         "ordered": 1.0
       },
       "q_expert_113": {
-        "historical": 0.0,
+        "historical": 0.5,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 0.5,
+        "drop_empty_gold": 0.5,
+        "multiset": 0.375,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.25
       },
       "q_expert_114": {
         "historical": 1.0,
@@ -1920,13 +1897,13 @@
         "ordered": 1.0
       },
       "q_hard_006": {
-        "historical": 0.9090909090909091,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.9090909090909091,
-        "drop_empty_gold": 0.9090909090909091,
-        "multiset": 0.9090909090909091,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.9090909090909091
+        "ordered": 0.045454545454545456
       },
       "q_hard_007": {
         "historical": 1.0,
@@ -1939,20 +1916,20 @@
       },
       "q_hard_008": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.010416666666666666
-      },
-      "q_hard_009": {
-        "historical": 1.0,
         "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
+        "ordered": 0.9791666666666666
+      },
+      "q_hard_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_hard_010": {
@@ -2173,11 +2150,11 @@
       },
       "q_medium_004": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 1.0,
+        "strict": 0.0,
         "ordered": 0.9948979591836735
       },
       "q_medium_005": {
@@ -2349,7 +2326,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 0.00980392156862745
       },
       "q_medium_024": {
         "historical": 1.0,
@@ -2497,21 +2474,21 @@
       },
       "q_proto_l12_hard_001": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
+        "strict": 1.0,
         "ordered": 1.0
       },
       "q_proto_l12_medium_001": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.7142857142857143,
-        "strict": 0.0,
-        "ordered": 0.2857142857142857
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.21428571428571427
       },
       "q_proto_l12_very_hard_001": {
         "historical": 0.0,
@@ -2527,17 +2504,17 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.4394366197183099,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.0028169014084507044
       },
       "q_proto_nacl_hard_001": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_proto_nacl_medium_001": {
@@ -2569,11 +2546,11 @@
       },
       "q_proto_nias_hard_001": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
+        "strict": 1.0,
         "ordered": 1.0
       },
       "q_proto_nias_medium_001": {
@@ -2586,13 +2563,13 @@
         "ordered": 1.0
       },
       "q_proto_nias_very_hard_001": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 0.018518518518518517
+        "ordered": 0.0
       },
       "q_vhard_001": {
         "historical": 1.0,
@@ -2708,7 +2685,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.25
+        "ordered": 0.0
       },
       "q_vhard_014": {
         "historical": 1.0,
@@ -2776,7 +2753,7 @@
     }
   },
   "independent": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; report it together with 'strict' and 'exact_match_pct'",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 100,
     "policies": {
       "historical": {
@@ -2804,7 +2781,8 @@
         "n_scored": 97
       }
     },
-    "exact_match_pct": 71.0,
+    "exact_result_set_match_pct": 0.0,
+    "common_column_exact_overlap_pct": 71.0,
     "ordered": {
       "mean_recall_pct": 50.4,
       "n_gold_with_order_by": 91
@@ -3989,7 +3967,7 @@
     }
   },
   "transfer": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; report it together with 'strict' and 'exact_match_pct'",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
@@ -4017,7 +3995,8 @@
         "n_scored": 20
       }
     },
-    "exact_match_pct": 85.0,
+    "exact_result_set_match_pct": 15.0,
+    "common_column_exact_overlap_pct": 85.0,
     "ordered": {
       "mean_recall_pct": 66.5,
       "n_gold_with_order_by": 11
@@ -4266,7 +4245,7 @@
     }
   },
   "transfer_obfuscated": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; report it together with 'strict' and 'exact_match_pct'",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
@@ -4294,7 +4273,8 @@
         "n_scored": 20
       }
     },
-    "exact_match_pct": 80.0,
+    "exact_result_set_match_pct": 20.0,
+    "common_column_exact_overlap_pct": 80.0,
     "ordered": {
       "mean_recall_pct": 57.4,
       "n_gold_with_order_by": 11
@@ -4543,9 +4523,30 @@
     "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
     "gold_dir": "gold_sql",
     "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
-    "prompt_file": "sql_generation_prompt.md",
-    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-    "generated_at": "2026-08-29T10:31:56+00:00"
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "expected_dir": "expected_results",
+    "expected_sha256": "a5a8cd6a13d0c0eb8e48dc513c8784a1dbf091aa2f525e712194d94b4626a20e",
+    "git_commit": "e863b74768e52ee93c6ff6e038693300ba688b91",
+    "generated_at": "2026-08-29T16:05:30+00:00"
+  },
+  "sources": {
+    "main": {
+      "source_result_file": "main_eval_with_sql.json",
+      "source_result_sha256": "5b6ccefa541da0d0d8fea2464fbfef2448d9903e8adc40b24a3cfefca422a2a0"
+    },
+    "independent": {
+      "source_result_file": "independent_eval_results.json",
+      "source_result_sha256": "d5d14afae4a5b1b82137320f4fa8c57dc576636c0e4fb26339193c4878c4264c"
+    },
+    "transfer": {
+      "source_result_file": "transfer_eval_results.json",
+      "source_result_sha256": "ac3c54959842d57dad3851c4908ed1b171126248a9ece064f7ce2e6e1194c494"
+    },
+    "transfer_obfuscated": {
+      "source_result_file": "transfer_obfuscated_eval_results.json",
+      "source_result_sha256": "8f2d5be12f2c65d37adc1416f28d39ab56ebcb26dcfe6d721ceeb6badd99f248"
+    }
   }
 }

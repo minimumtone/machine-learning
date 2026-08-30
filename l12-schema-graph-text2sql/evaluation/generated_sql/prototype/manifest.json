@@ -1,0 +1,182 @@
+{
+  "source": "prototype",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "prototype_evaluation_dataset.jsonl",
+    "dataset_sha256": "8571146811c5f9f918a71c18751591a09f504b98e5382b674670721d718b4a78",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
+    "generated_at": "2026-08-29T15:30:05+00:00",
+    "annotated_post_hoc": "the source result file has no embedded provenance; these hashes were computed from the current packaged inputs at manifest-generation time, not at inference time"
+  },
+  "source_result_file": "prototype_eval_results.json",
+  "source_result_sha256": "3e5d64ebb56e78eaf721b1be4ca8ea527b90762b04459a5966e41854a4863aad",
+  "n_queries": 20,
+  "eval_file": "prototype_eval_results.json",
+  "queries": [
+    {
+      "qid": "q_proto_l12_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 29.2,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_l12_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 24.8,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_l12_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 19.4,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_l12_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_l12_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 44.4,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_l12_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.6,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_b2_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 21.1,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_b2_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 22.9,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_b2_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_b2_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 38.8,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_b2_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 21.1,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nacl_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 35.9,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nacl_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 27.5,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nacl_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nacl_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 54.0,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nacl_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 32.4,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nias_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 34.7,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nias_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 27.5,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nias_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_nias_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 38.7,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_nias_very_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_easy_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 14.5,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_bif3_easy_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_medium_001",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 36.7,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_bif3_medium_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_hard_001",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 24.0,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_bif3_hard_001.sql"
+    },
+    {
+      "qid": "q_proto_bif3_very_hard_001",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 39.7,
+      "source_file": "prototype_eval_results.json",
+      "sql_path": "evaluation/generated_sql/prototype/q_proto_bif3_very_hard_001.sql"
+    }
+  ]
+}

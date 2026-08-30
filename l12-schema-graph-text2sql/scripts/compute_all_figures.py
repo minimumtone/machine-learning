@@ -283,7 +283,7 @@ def main():
     n_runs = multirun["n_runs"]
     mrc = multirun["conditions"]  # per-condition stats
     sig = multirun["significance_tests"]  # Wilcoxon p-values (legacy)
-    sig_v2 = load_json("evaluation/ablation_significance_v2.json")
+    sig_v2 = load_json("evaluation/ablation_significance_v2.json")["conditions"]
 
     # Also load latest single-run for per-query CTE/error analysis
     abl = load_json("evaluation/ablation_results.json")

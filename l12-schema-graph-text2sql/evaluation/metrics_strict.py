@@ -44,9 +44,10 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Literal
 
-__all__ = ["ScoringPolicy", "score"]
+__all__ = ["ScoringPolicy", "exact_result_set_match", "score"]
 
 
 def _normalize_value(v: Any) -> str:
@@ -219,3 +220,67 @@ def score(
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
     exact = 1.0 if (recall == 1.0 and precision == 1.0) else 0.0
     return _result("scored", recall=recall, precision=precision, f1=f1, exact_match=exact)
+
+
+def exact_result_set_match(
+    result_rows: list[list[Any]],
+    expected_rows: list[list[Any]],
+    result_columns: list[str] | None,
+    expected_columns: list[str] | None,
+    *,
+    ordered: bool = False,
+) -> bool:
+    """Canonical exact result-set match.
+
+    True only when
+    - the result column names equal the gold column names exactly
+      (same names, same order, case-insensitive), and
+    - the rows agree as multisets of type-tagged value tuples, and
+    - when ``ordered`` is True (the gold query has a total ORDER BY),
+      the rows agree as an ordered sequence.
+
+    Only *column names* are compared case-insensitively.  Cell values
+    are compared with type discrimination (``_strict_value``): NULL,
+    booleans, numbers and strings never collide, and string case is
+    significant.  Numbers are unified across int/float/Decimal (JSON
+    round-trip vs driver types) at 6 significant digits — the same
+    tolerance the historical metric uses.
+
+    This is the single "exact" definition of the package.  The lenient
+    common-column variant reported historically is exposed separately
+    as ``common_column_exact_overlap`` by ``scripts/audit_scoring.py``.
+    """
+    if expected_columns is not None:
+        rc = [c.lower() for c in (result_columns or [])]
+        ec = [c.lower() for c in expected_columns]
+        if rc != ec:
+            return False
+    got = [tuple(_strict_value(v) for v in r) for r in result_rows]
+    exp = [tuple(_strict_value(v) for v in r) for r in expected_rows]
+    if ordered:
+        return got == exp
+    return Counter(got) == Counter(exp)
+
+
+def _strict_value(v: Any) -> tuple[str, Any]:
+    """Type-tagged cell normalization for ``exact_result_set_match``.
+
+    Unlike the lenient historical ``_normalize_value`` (which
+    stringifies and lowercases everything), this keeps NULL / bool /
+    number / string apart and preserves string case.  Numeric values
+    are unified across int / float / Decimal at 6 significant digits.
+    """
+    if v is None:
+        return ("null", "")
+    if isinstance(v, bool):
+        return ("bool", v)
+    if isinstance(v, (int, float, Decimal)):
+        f = float(v)
+        if f != f or f in (float("inf"), float("-inf")):
+            return ("num", repr(f))
+        if f == int(f):
+            return ("num", str(int(f)))
+        return ("num", f"{f:.6g}")
+    if isinstance(v, str):
+        return ("str", v)
+    return ("other", str(v))

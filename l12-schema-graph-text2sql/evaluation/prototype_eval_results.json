@@ -237,5 +237,17 @@
       "latency_s": 39.7,
       "sql": "SELECT\n  c_a.element AS a_site,\n  c_b.element AS b_site,\n  COUNT(*) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) AS unstable_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 100.0 / COUNT(*) AS stable_percentage,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c_a ON c_a.entry_id = m.entry_id\nJOIN composition c_b ON c_b.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3'\n  AND c_a.site_label = 'A-site'\n  AND c_b.site_label = 'B-site'\nGROUP BY c_a.element, c_b.element\nORDER BY stable_percentage DESC, avg_energy_above_hull ASC\nLIMIT 10000;"
     }
-  ]
+  ],
+  "provenance": {
+    "dataset_file": "prototype_evaluation_dataset.jsonl",
+    "dataset_sha256": "8571146811c5f9f918a71c18751591a09f504b98e5382b674670721d718b4a78",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
+    "generated_at": "2026-08-29T15:47:12+00:00",
+    "post_hoc_note": "provenance was not captured at inference time for this legacy result file; these hashes were computed post hoc against the current repository inputs and the git_commit is the annotation commit, not the inference commit"
+  }
 }

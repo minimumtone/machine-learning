@@ -1,0 +1,142 @@
+{
+  "source": "cte",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "cte15_dataset.jsonl",
+    "dataset_sha256": "307a9b9a45e811df1a28f2e83b01cd19c332c32f444a550a198fb8c05612f5fe",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "git_commit": "03e4b514fe486807e8da145144d226301714a0fe",
+    "generated_at": "2026-08-29T15:30:05+00:00",
+    "annotated_post_hoc": "the source result file has no embedded provenance; these hashes were computed from the current packaged inputs at manifest-generation time, not at inference time"
+  },
+  "source_result_file": "cte_eval_results.json",
+  "source_result_sha256": "4b5cefd275cfbd183f2f08c4c2f10ffc1e6829d7a278eff1281c425648510217",
+  "n_queries": 15,
+  "eval_file": "cte_eval_results.json",
+  "queries": [
+    {
+      "qid": "q_vhard_009",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 53.5,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_vhard_009.sql"
+    },
+    {
+      "qid": "q_vhard_016",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 39.1,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_vhard_016.sql"
+    },
+    {
+      "qid": "q_vhard_018",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 45.3,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_vhard_018.sql"
+    },
+    {
+      "qid": "q_vhard_019",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 47.6,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_vhard_019.sql"
+    },
+    {
+      "qid": "q_vhard_020",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 21.0,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_vhard_020.sql"
+    },
+    {
+      "qid": "q_cte_006",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 45.5,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_006.sql"
+    },
+    {
+      "qid": "q_cte_007",
+      "difficulty": "very_hard",
+      "accuracy": 0.2,
+      "latency_s": 127.9,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_007.sql"
+    },
+    {
+      "qid": "q_cte_008",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 37.1,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_008.sql"
+    },
+    {
+      "qid": "q_cte_009",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 61.9,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_009.sql"
+    },
+    {
+      "qid": "q_cte_010",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 46.7,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_010.sql"
+    },
+    {
+      "qid": "q_cte_011",
+      "difficulty": "very_hard",
+      "accuracy": 0.7,
+      "latency_s": 58.6,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_011.sql"
+    },
+    {
+      "qid": "q_cte_012",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 47.5,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_012.sql"
+    },
+    {
+      "qid": "q_cte_013",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 38.7,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_013.sql"
+    },
+    {
+      "qid": "q_cte_014",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 72.3,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_014.sql"
+    },
+    {
+      "qid": "q_cte_015",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 69.4,
+      "source_file": "cte_eval_results.json",
+      "sql_path": "evaluation/generated_sql/cte/q_cte_015.sql"
+    }
+  ]
+}

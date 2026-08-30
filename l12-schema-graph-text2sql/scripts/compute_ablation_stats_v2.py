@@ -108,8 +108,19 @@ def main() -> None:
             "n_bootstrap": 20_000,
             "seed": 20260602,
         }
+    doc = {
+        "_meta": {
+            "generated_by": "scripts/compute_ablation_stats_v2.py",
+            "status": (
+                "alternative-method statistics (exact sign-flip test + "
+                "rank-biserial) used only by the paper figure pipeline; "
+                "the canonical significance results are "
+                "evaluation/significance_recomputed.json"),
+        },
+        "conditions": out,
+    }
     (EVAL / "ablation_significance_v2.json").write_text(
-        json.dumps(out, indent=2) + "\n"
+        json.dumps(doc, indent=2) + "\n"
     )
     for cond, s in out.items():
         print(

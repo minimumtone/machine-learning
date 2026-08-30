@@ -32,7 +32,6 @@ from typing import Any
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from evaluation.metrics import (  # noqa: E402
     execution_accuracy_full,
@@ -42,7 +41,11 @@ from evaluation.metrics import (  # noqa: E402
     syntax_validity,
 )
 from llm.sql_generator import extract_sql_from_response  # noqa: E402
-from scripts.provenance import build_provenance  # noqa: E402
+from scripts.provenance import (  # noqa: E402
+    assert_resumable,
+    build_provenance,
+)
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
 
 # Neutral semantic conventions shared with the main pipeline prompt
 # (llm/prompt_templates/sql_generation_prompt.md).  These are domain/data
@@ -102,22 +105,8 @@ def load_expected(qid: str) -> dict[str, Any]:
 
 
 def execute_sql(conn: Any, sql: str) -> dict[str, Any]:
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {
-            "success": True, "columns": columns,
-            "rows": [list(r) for r in rows], "row_count": len(rows),
-        }
-    except Exception as e:
-        conn.rollback()
-        return {
-            "success": False, "error": str(e),
-            "rows": [], "row_count": 0, "columns": [],
-        }
+    return run_model_sql(conn, sql)
+
 
 
 def build_raw_schema_text(conn: Any) -> tuple[str, list[str], list[str], list[str]]:
@@ -211,6 +200,9 @@ def main() -> None:
     parser.add_argument("--only", default="",
                         help="comma-separated qids to (re)run; merge into "
                              "existing results")
+    parser.add_argument("--force-stale-resume", action="store_true",
+                        help="resume even if stored provenance differs "
+                             "from the current inputs/model/commit")
     args = parser.parse_args()
     only_qids = {q for q in args.only.split(",") if q}
 
@@ -219,7 +211,7 @@ def main() -> None:
     model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Serializing raw schema...")
     schema_text, allowed_tables, allowed_columns, allowed_joins = (
@@ -231,10 +223,18 @@ def main() -> None:
     all_queries = load_queries()
     print(f"Total queries: {len(all_queries)}")
 
+    current_prov = {**build_provenance(DATASET_PATH), "model": model}
+
     prior: dict[str, dict[str, Any]] = {}
     if only_qids:
         with open(out_path) as f:
-            prior = {r["qid"]: r for r in json.load(f)["results"]}
+            saved_doc = json.load(f)
+        assert_resumable(
+            {**saved_doc.get("provenance", {}),
+             "model": saved_doc.get("model", "")},
+            current_prov, force=args.force_stale_resume,
+            what=out_path.name)
+        prior = {r["qid"]: r for r in saved_doc["results"]}
         all_queries = [q for q in all_queries if q["id"] in only_qids]
         print(f"Rerunning {len(all_queries)} queries: "
               f"{sorted(only_qids)}")
@@ -242,7 +242,13 @@ def main() -> None:
     results = []
     if not only_qids and out_path.exists():
         with open(out_path) as f:
-            saved = json.load(f).get("results", [])
+            saved_doc = json.load(f)
+        assert_resumable(
+            {**saved_doc.get("provenance", {}),
+             "model": saved_doc.get("model", "")},
+            current_prov, force=args.force_stale_resume,
+            what=out_path.name)
+        saved = saved_doc.get("results", [])
         done = {r["qid"] for r in saved}
         results = [r for r in saved if r["qid"] in done]
         all_queries = [q for q in all_queries if q["id"] not in done]

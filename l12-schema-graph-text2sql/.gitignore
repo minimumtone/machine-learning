@@ -16,8 +16,6 @@ venv/
 *.pdf
 *.html
 few_shot_examples.lock
-evaluation/generated_sql/
-evaluation/main_eval_with_sql.json
 
 # LaTeX build artifacts
 *.aux
@@ -52,3 +50,5 @@ postgres_data/
 
 # Verification package (distributed separately)
 verification_package/
+GIT_COMMIT
+l12_sql_package_*.zip

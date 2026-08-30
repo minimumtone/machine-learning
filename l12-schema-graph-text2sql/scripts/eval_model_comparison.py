@@ -12,6 +12,7 @@ Output: evaluation/model_comparison_results.json
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -22,13 +23,16 @@ from typing import Any
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
-from scripts.provenance import build_provenance  # noqa: E402
+from scripts.provenance import (  # noqa: E402
+    assert_resumable,
+    build_provenance,
+)
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
@@ -45,6 +49,25 @@ CONNINFO = (
 MODELS = [
     {"name": "gpt-4o", "provider": "openai", "model_id": "gpt-4o"},
 ]
+
+
+def models_config_sha256(models: list[dict[str, str]]) -> str:
+    """Stable hash of the compared model conditions.
+
+    Covers every condition's name / provider / model_id so a stored
+    result produced under a different model configuration is rejected
+    as stale on resume instead of being silently skipped.
+    """
+    canon = sorted(
+        (m["name"], m["provider"], m["model_id"]) for m in models
+    )
+    return hashlib.sha256(json.dumps(canon).encode()).hexdigest()
+
+
+def _current_provenance() -> dict[str, str]:
+    prov = build_provenance(EVAL_DIR / "evaluation_dataset.jsonl")
+    prov["models_config_sha256"] = models_config_sha256(MODELS)
+    return prov
 
 
 def load_queries():
@@ -66,22 +89,8 @@ def load_expected(qid):
 
 
 def execute_sql(conn, sql):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {
-            "success": True, "columns": columns,
-            "rows": [list(r) for r in rows], "row_count": len(rows),
-        }
-    except Exception as e:
-        conn.rollback()
-        return {
-            "success": False, "error": str(e),
-            "rows": [], "row_count": 0, "columns": [],
-        }
+    return run_model_sql(conn, sql)
+
 
 
 def compute_accuracy(conn, sql, qid):
@@ -234,7 +243,7 @@ def main():
 
     print(f"Models: {[m['name'] for m in models]}")
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Loading schema...")
     tables = get_tables(conn)
@@ -265,6 +274,12 @@ def main():
     if out_path.exists():
         with open(out_path) as f:
             existing = json.load(f)
+        assert_resumable(
+            existing.get("provenance", {}),
+            _current_provenance(),
+            force="--force-stale-resume" in sys.argv,
+            what=out_path.name,
+            extra_keys=("models_config_sha256",))
         all_results = existing.get("models", {})
         print(f"Loaded existing results: {list(all_results.keys())}")
 
@@ -311,7 +326,7 @@ def main():
         # Save after each model (incremental)
         with open(out_path, "w") as f:
             json.dump({
-                "provenance": build_provenance(EVAL_DIR / "evaluation_dataset.jsonl"),
+                "provenance": _current_provenance(),
                 "n_queries": len(all_queries),
                 "models": all_results,
             }, f, ensure_ascii=False, indent=2)

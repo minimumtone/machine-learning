@@ -18,6 +18,11 @@ CONNINFO = make_conninfo(
 )
 
 
+def main_conninfo() -> str:
+    """Connection string for the main fixture DB."""
+    return os.getenv("CONNINFO", CONNINFO)
+
+
 def mp_conninfo(db: str = "mp_transfer") -> str:
     """Connection string for the Materials Project transfer DB."""
     base = os.getenv("CONNINFO", CONNINFO)
