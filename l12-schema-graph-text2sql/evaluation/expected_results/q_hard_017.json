@@ -4,6 +4,7 @@
     "lattice_a"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Co3Ti",

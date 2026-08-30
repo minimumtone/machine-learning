@@ -191,7 +191,7 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
             hist["recall"] == 1.0 and hist["precision"] == 1.0) else 0.0
         canonical_exact_sum += 1.0 if exact_result_set_match(
             got, exp_rows, cols, exp_cols,
-            ordered=bool(exp.get("ordered")) if isinstance(exp, dict) else False,
+            ordered=bool(exp.get("semantic_ordered")) if isinstance(exp, dict) else False,
         ) else 0.0
         q_scores: dict[str, float] = {}
 

@@ -6,6 +6,7 @@
     "min_enthalpy_vs_element_gs"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Pt",

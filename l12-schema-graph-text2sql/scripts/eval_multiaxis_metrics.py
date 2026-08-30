@@ -261,7 +261,7 @@ def main():
             em = exact_result_set_match(
                 gen_result.get("rows", []), expected_rows,
                 gen_result.get("columns", []), expected_columns,
-                ordered=bool(expected.get("ordered")),
+                ordered=bool(expected.get("semantic_ordered")),
             )
 
             # Metric 3: SELECT column precision

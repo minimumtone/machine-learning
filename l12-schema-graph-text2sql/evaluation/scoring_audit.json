@@ -28,7 +28,7 @@
         "n_scored": 241
       }
     },
-    "exact_result_set_match_pct": 4.1,
+    "exact_result_set_match_pct": 10.6,
     "common_column_exact_overlap_pct": 78.0,
     "ordered": {
       "mean_recall_pct": 54.3,
@@ -2788,7 +2788,7 @@
         "n_scored": 97
       }
     },
-    "exact_result_set_match_pct": 0.0,
+    "exact_result_set_match_pct": 1.0,
     "common_column_exact_overlap_pct": 71.0,
     "ordered": {
       "mean_recall_pct": 50.4,
@@ -4527,34 +4527,34 @@
   },
   "provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
-    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
-    "generated_at": "2026-08-30T02:25:19+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-30T10:32:19+00:00",
     "rescore_note": "audit recomputed deterministically from stored generated SQL and shipped result JSONs by scripts/audit_scoring.py; no LLM call is involved"
   },
   "sources": {
     "main": {
       "source_result_file": "main_eval_with_sql.json",
-      "source_result_sha256": "a6d5403a2239ef5327df6aadf7ef5cb2a2153f224b886223a1ef4e8d51173273"
+      "source_result_sha256": "82e5ba4e417e450548d7be45548a9cac14671d99a3d8eca33934caf1d2b93c57"
     },
     "independent": {
       "source_result_file": "independent_eval_results.json",
-      "source_result_sha256": "34634d414e6e5371dd96838477eadeb3b3287099684424d530b35485aeeda252"
+      "source_result_sha256": "0975ff3cef8b1d25ce44890bf8e6e36992b9ac92c5b1d58f22b20ffc9e090d2c"
     },
     "transfer": {
       "source_result_file": "transfer_eval_results.json",
-      "source_result_sha256": "e39d88ca4429bfc30320aaf238cb26e08c7e0ff89fe9cfb136bf8e1b267b7298"
+      "source_result_sha256": "106801746e2cf2bf07ecc784e9dcf7cc0ef7c7a98e1cee979e538ef49cc7ae01"
     },
     "transfer_obfuscated": {
       "source_result_file": "transfer_obfuscated_eval_results.json",
-      "source_result_sha256": "b3645dcf113d8a31397bc7094a9fbd299e2177c6a6df8efc7836a0eece0c4992"
+      "source_result_sha256": "717cbf0743eb86ee56adcb3877bb18e857014d811ca5f74232a387d2e54dd3e9"
     }
   }
 }

@@ -197,10 +197,17 @@ def test_eval_ablation_load_expected_returns_ordered(tmp_path, monkeypatch):
     import scripts.eval_ablation as ea
 
     monkeypatch.setattr(ea, "RESULTS_DIR", tmp_path)
+    # Model scoring follows semantic_ordered (the question's own ordering
+    # requirement), not the gold-storage ordered flag.
     (tmp_path / "q_x.json").write_text(json.dumps(
-        {"rows": [[1], [2]], "columns": ["v"], "ordered": True}))
+        {"rows": [[1], [2]], "columns": ["v"], "ordered": True,
+         "semantic_ordered": True}))
     rows, columns, ordered = ea.load_expected("q_x")
     assert (rows, columns, ordered) == ([[1], [2]], ["v"], True)
+    (tmp_path / "q_y.json").write_text(json.dumps(
+        {"rows": [[1], [2]], "columns": ["v"], "ordered": True,
+         "semantic_ordered": False}))
+    assert ea.load_expected("q_y") == ([[1], [2]], ["v"], False)
     assert ea.load_expected("q_missing") == ([], [], False)
 
     # ordered=true: same row set in a different order must not be exact

@@ -106,7 +106,7 @@ class Rescorer:
         exact = exact_result_set_match(
             got.get("rows", []), exp.get("rows", []),
             got.get("columns", []), exp.get("columns", []),
-            ordered=bool(exp.get("ordered")))
+            ordered=bool(exp.get("semantic_ordered")))
         self.n_queries += 1
         return {"recall": m["recall"], "precision": m["precision"],
                 "f1": m["f1"], "exact": exact,

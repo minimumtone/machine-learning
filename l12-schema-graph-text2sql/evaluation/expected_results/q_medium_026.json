@@ -4,6 +4,7 @@
     "avg_formation_energy"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "W",

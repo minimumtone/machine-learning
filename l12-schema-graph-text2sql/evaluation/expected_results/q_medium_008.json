@@ -6,6 +6,7 @@
     "formation_energy_per_atom"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "entry_00004",

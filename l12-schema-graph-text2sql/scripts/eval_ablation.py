@@ -60,7 +60,7 @@ def load_expected(qid):
         with open(path) as f:
             data = json.load(f)
         return (data.get("rows", []), data.get("columns", []),
-                bool(data.get("ordered")))
+                bool(data.get("semantic_ordered")))
     return [], [], False
 
 

@@ -358,6 +358,13 @@ def check_expected_json_schema() -> tuple[str, list[str]]:
                 continue
             if not isinstance(ordered, bool):
                 errors.append(f"{rel}: ordered must be bool")
+            sem = data.get("semantic_ordered")
+            if not isinstance(sem, bool):
+                errors.append(f"{rel}: semantic_ordered must be bool")
+            elif sem and ordered is not True:
+                errors.append(
+                    f"{rel}: semantic_ordered=true requires ordered=true "
+                    f"(gold must store the required order deterministically)")
             if not isinstance(rows, list) or not all(isinstance(r, list) for r in rows):
                 errors.append(f"{rel}: rows must be list[list]")
                 continue
@@ -661,6 +668,9 @@ def check_question_gold_contract() -> tuple[str, list[str]]:
     l12_question_re = re.compile(r"L12|L1[₂2]", re.IGNORECASE)
     site_question_re = re.compile(
         r"(?:A|B)[-\s]?site|(?:A|B)サイト", re.IGNORECASE)
+    order_request_re = re.compile(
+        r"順|上位|下位|トップ|ワースト|ランキング|ランク|昇順|降順|TOP\s*\d",
+        re.IGNORECASE)
 
     for suite_name, rows in suites.items():
         spec = CANONICAL_SUITES[suite_name]
@@ -722,6 +732,20 @@ def check_question_gold_contract() -> tuple[str, list[str]]:
                 problems.append(
                     f"{qid}: gold restricts an A/B-site question to L12, "
                     f"but the question does not state L12")
+
+            # If the question explicitly asks for an ordered answer, the
+            # expected result must be annotated semantic_ordered=true so the
+            # canonical exact metric enforces the sequence.
+            exp_rel = row.get("expected_result_path")
+            if not isinstance(exp_rel, str):
+                exp_rel = f"{spec['expected_dir']}/{qid}.json"
+            expected = _json(EVAL / exp_rel)
+            sem = (bool(expected.get("semantic_ordered"))
+                   if isinstance(expected, dict) else False)
+            if order_request_re.search(question) and not sem:
+                problems.append(
+                    f"{qid}: question requests an explicit order but "
+                    f"expected semantic_ordered is false")
 
     if problems:
         raise VerifyError(

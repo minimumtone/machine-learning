@@ -118,7 +118,7 @@ QUERIES: list[dict[str, Any]] = [
     {
         "id": "q_mp_011",
         "difficulty": "hard",
-        "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。",
+        "question": "各元素系（chemsys）ごとに最も安定な材料の式を、そのenergy_above_hullとentry_idとともに教えてください。",
         "gold_sql": (
             "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull, entry_id "
             "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula, entry_id;"
@@ -280,6 +280,12 @@ def execute_gold(conn, sql: str) -> dict[str, Any]:
     return {"columns": columns, "ordered": sql_is_ordered(sql), "rows": rows}
 
 
+# Questions whose text itself asks for an ordered answer (e.g. "大きい順").
+# All other gold ORDER BY clauses exist only to make the stored expected
+# result deterministic and are NOT part of the semantic answer contract.
+SEMANTIC_ORDERED_QIDS = {"q_mp_015"}
+
+
 def main() -> None:
     conn = psycopg.connect(mp_conninfo())
     # One REPEATABLE READ READ ONLY snapshot for the whole generation
@@ -310,6 +316,7 @@ def main() -> None:
     for q in QUERIES:
         try:
             result = execute_gold(conn, q["gold_sql"])
+            result["semantic_ordered"] = q["id"] in SEMANTIC_ORDERED_QIDS
         except Exception as exc:
             n_failed += 1
             print(f"ERROR {q['id']}: {exc}")

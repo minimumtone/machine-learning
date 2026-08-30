@@ -3,21 +3,21 @@
   "model": "gpt-5.5",
   "provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
-    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
     "generated_at": "2026-08-29T01:45:32+00:00",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:50+00:00",
     "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "eval_file": "llm_only_results.json",
   "source_result_file": "llm_only_results.json",
-  "source_result_sha256": "ddb64b9bf76d0c855d6905ac3408a51c5338e0ca8557af8d39c22409996c6511",
+  "source_result_sha256": "0270670534b30990844c41bbfd8bf2be583395e858eef875fc0b4cc8fcd9a36c",
   "n_queries": 245,
   "queries": [
     {

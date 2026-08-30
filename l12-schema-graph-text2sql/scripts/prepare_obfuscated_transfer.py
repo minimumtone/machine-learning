@@ -94,7 +94,7 @@ def translate_sql(sql: str, translation: dict[str, str]) -> str:
 
 
 def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path,
-                     ordered: bool) -> dict[str, Any]:
+                     ordered: bool, semantic_ordered: bool) -> dict[str, Any]:
     with conn.cursor() as cur:
         cur.execute("SAVEPOINT obf_gold")
         try:
@@ -117,7 +117,12 @@ def execute_and_save(sql: str, conn: psycopg.Connection, out_path: Path,
             else:
                 record.append(val)
         data.append(record)
-    payload = {"columns": cols, "ordered": ordered, "rows": data}
+    payload = {
+        "columns": cols,
+        "ordered": ordered,
+        "semantic_ordered": semantic_ordered,
+        "rows": data,
+    }
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     return payload
 
@@ -240,9 +245,13 @@ def main() -> int:
         # JSON behind: remove any stale file, roll back the aborted
         # transaction, and fail the whole run at the end.
         expected_path = EXPECTED_DIR / f"{new_id}.json"
+        src_expected = json.loads(
+            (PROJECT / "evaluation" / item["expected_result_path"]).read_text())
         try:
             execute_and_save(gold_obf, conn, expected_path,
-                             ordered=sql_is_ordered(gold_obf))
+                             ordered=sql_is_ordered(gold_obf),
+                             semantic_ordered=bool(
+                                 src_expected.get("semantic_ordered")))
         except Exception as exc:
             print(f"FAILED {new_id}: {exc}")
             n_failed += 1

@@ -5,6 +5,7 @@
     "avg_hull_distance"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Al",

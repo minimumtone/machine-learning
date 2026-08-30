@@ -5,6 +5,7 @@
     "enthalpy_vs_element_ground_states"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Nb3Ge",

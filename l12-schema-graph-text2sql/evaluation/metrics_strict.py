@@ -236,8 +236,14 @@ def exact_result_set_match(
     - the result column names equal the gold column names exactly
       (same names, same order, case-insensitive), and
     - the rows agree as multisets of type-tagged value tuples, and
-    - when ``ordered`` is True (the gold query has a total ORDER BY),
-      the rows agree as an ordered sequence.
+    - when ``ordered`` is True, the rows agree as an ordered sequence.
+
+    Callers scoring model output pass the expected result's
+    ``semantic_ordered`` flag here: it is true only when the question
+    itself requests an ordered answer.  The separate ``ordered`` flag in
+    the expected JSON records that the gold SQL has a total ORDER BY for
+    deterministic storage and is used only by gold/expected reproducibility
+    checks, never to penalize model row order.
 
     Only *column names* are compared case-insensitively.  Cell values
     are compared with type discrimination (``_strict_value``): NULL,

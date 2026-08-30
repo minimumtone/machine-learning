@@ -5,6 +5,7 @@
     "is_stable"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Cu3Ge",

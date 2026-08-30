@@ -127,7 +127,7 @@ def main() -> int:
         exact = exact_result_set_match(
             got.get("rows", []), exp.get("rows", []),
             got.get("columns", []), exp.get("columns", []),
-            ordered=bool(exp.get("ordered")))
+            ordered=bool(exp.get("semantic_ordered")))
         derived.append({
             "qid": qid,
             "difficulty": r["difficulty"],

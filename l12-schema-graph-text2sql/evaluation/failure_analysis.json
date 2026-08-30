@@ -1,39 +1,39 @@
 {
   "provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
-    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
-    "generated_at": "2026-08-30T02:25:16+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-30T10:32:11+00:00",
     "rescore_note": "derived deterministically from the canonical stored run multiaxis_results.json by scripts/build_failure_analysis.py; no LLM call is involved"
   },
   "source_result_file": "multiaxis_results.json",
-  "source_result_sha256": "1a6b846b6435d5ae879d0fda86a9530518a592e8d58a88d9d9b71ceffb09616a",
+  "source_result_sha256": "98d104f30a711e556f678b670ccec22d3c9b5081b97dcdf9ccaee349efc337f7",
   "source_provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
-    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
     "generated_at": "2026-08-29T03:08:25+00:00",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "rescored_at": "2026-08-30T02:20:24+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:49+00:00",
     "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "failures": [
     {
       "qid": "q_cte_007",
       "difficulty": "very_hard",
-      "question": "多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
+      "question": "多形数が多い純物質元素上位5つについて、その元素の多形数、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
       "recall": 0.2,
       "select_col_prec": 0.0,
       "join_match_rate": 0.5,
@@ -53,7 +53,7 @@
     {
       "qid": "q_cte_013",
       "difficulty": "very_hard",
-      "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を出して。",
+      "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を、形成エネルギー・加重純物質基準補正量・補正量の絶対値とともに出して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 0.5,
@@ -63,7 +63,7 @@
     {
       "qid": "q_cte_014",
       "difficulty": "very_hard",
-      "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
+      "question": "元素ごとに、その元素を含むL1₂化合物の総数と、純元素基底状態基準に再基準化した生成エネルギーが負である件数、負である割合を出して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 0.5,
@@ -73,7 +73,7 @@
     {
       "qid": "q_cte_015",
       "difficulty": "very_hard",
-      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
+      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均を、A-site元素ごとに化合物数とともに出して。",
       "recall": 0.0,
       "select_col_prec": 0.5,
       "join_match_rate": 0.5714285714285714,
@@ -113,7 +113,7 @@
     {
       "qid": "q_expert_035",
       "difficulty": "hard",
-      "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を教えて。",
+      "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を、総数と該当件数とともに教えて。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -133,7 +133,7 @@
     {
       "qid": "q_expert_040",
       "difficulty": "medium",
-      "question": "プロトタイプ別の平均energy_above_hullを比較して。",
+      "question": "プロトタイプ別の平均energy_above_hullを件数とともに比較して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 0.0,
@@ -213,7 +213,7 @@
     {
       "qid": "q_expert_091",
       "difficulty": "hard",
-      "question": "L12とB2で、安定な化合物の割合を比較して。",
+      "question": "L12とB2で、化合物総数・安定件数・安定な化合物の割合を比較して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -223,7 +223,7 @@
     {
       "qid": "q_expert_092",
       "difficulty": "hard",
-      "question": "プロトタイプ別の平均バルクモジュラスを教えて。",
+      "question": "プロトタイプ別の平均バルクモジュラスを件数とともに教えて。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 0.3333333333333333,
@@ -243,7 +243,7 @@
     {
       "qid": "q_expert_098",
       "difficulty": "hard",
-      "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けてほしい。",
+      "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けて、各カテゴリの件数と平均バンドギャップが欲しい。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -323,7 +323,7 @@
     {
       "qid": "q_hard_014",
       "difficulty": "hard",
-      "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。",
+      "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーと件数を出して。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -363,7 +363,7 @@
     {
       "qid": "q_proto_bif3_very_hard_001",
       "difficulty": "very_hard",
-      "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -373,7 +373,7 @@
     {
       "qid": "q_proto_l12_very_hard_001",
       "difficulty": "very_hard",
-      "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,
@@ -383,7 +383,7 @@
     {
       "qid": "q_proto_nias_very_hard_001",
       "difficulty": "very_hard",
-      "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "recall": 0.0,
       "select_col_prec": 0.0,
       "join_match_rate": 1.0,

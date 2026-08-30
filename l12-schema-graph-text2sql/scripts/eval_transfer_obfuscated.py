@@ -67,7 +67,7 @@ def compute_metrics(conn, sql: str, qid: str) -> dict[str, float]:
     metrics["exact_match"] = 1.0 if exact_result_set_match(
         exec_result["rows"], expected_rows,
         exec_result["columns"], expected_columns,
-        ordered=bool(data.get("ordered")),
+        ordered=bool(data.get("semantic_ordered")),
     ) else 0.0
     return metrics
 

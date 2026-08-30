@@ -4,6 +4,7 @@
     "delta_e"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Co3Mg",

@@ -2,16 +2,16 @@
   "model": "gpt-5.5",
   "provenance": {
     "dataset_file": "expert_evaluation_dataset.jsonl",
-    "dataset_sha256": "a177fee2dfa2018e1b4d629bc00eaf25afd16f35fa21b6a16bb3edb863e628d0",
+    "dataset_sha256": "9f4d6f71cfca4ec57c230b516cc2b4ff7f2240293d9d07ec7b206bd3c607f4d9",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
     "generated_at": "2026-08-29T02:35:53+00:00",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "rescored_at": "2026-08-30T02:20:25+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:51+00:00",
     "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "dataset": "expert_evaluation_dataset.jsonl",
@@ -28,7 +28,7 @@
     "avg_latency": 29.92699999999999,
     "overall_precision": 0.8121437137466307,
     "overall_f1": 0.798010232501749,
-    "overall_exact_match": 0.0
+    "overall_exact_match": 0.01
   },
   "results": [
     {
@@ -643,7 +643,7 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 0.0,
+      "exact_match": 1.0,
       "latency_s": 28.2,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, tp.debye_temperature_k\nFROM material_entry m\n    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\n    JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id\nWHERE\n    tp.debye_temperature_k >= 500.0\n\nLIMIT 10000;"
     },

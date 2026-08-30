@@ -4,6 +4,7 @@
     "avg"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Hexagonal",

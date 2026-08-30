@@ -5,6 +5,7 @@
     "avg_enthalpy"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Pt",

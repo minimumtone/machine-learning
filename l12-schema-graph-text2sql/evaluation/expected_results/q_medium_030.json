@@ -5,6 +5,7 @@
     "energy_above_hull"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Al3Sc",

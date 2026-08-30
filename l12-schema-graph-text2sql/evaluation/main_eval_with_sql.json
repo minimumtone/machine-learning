@@ -2,26 +2,26 @@
   "model": "gpt-5.5",
   "provenance": {
     "dataset_file": "main_evaluation_dataset.jsonl",
-    "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
     "gold_dir": "gold_sql",
     "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
     "prompt_file": "sql_generation_prompt.md",
     "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-    "git_commit": "71a6cca01afda521c1393f058c0718af556809f9",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
     "generated_at": "2026-08-29T03:08:25+00:00",
     "expected_dir": "expected_results",
-    "expected_sha256": "c9c8b11894e0f9aac91d28a5d4ca2ce1072bc7b3e2511b48895a75e8b705da24",
-    "rescored_at": "2026-08-30T02:20:24+00:00",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:49+00:00",
     "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "derived_from": "multiaxis_results.json",
-  "source_result_sha256": "1a6b846b6435d5ae879d0fda86a9530518a592e8d58a88d9d9b71ceffb09616a",
+  "source_result_sha256": "98d104f30a711e556f678b670ccec22d3c9b5081b97dcdf9ccaee349efc337f7",
   "derivation": "re-scored deterministically from the generated SQL stored in the canonical run by scripts/derive_main_artifacts.py; no LLM call is involved",
   "metric": "historical execution recall (row-set recall over common columns; see scripts/audit_scoring.py for the strict and exact-match co-metrics)",
   "exact_metric": "exact_result_set_match = exact gold column list + row multiset match + row order when the gold query is ordered (evaluation.metrics_strict.exact_result_set_match)",
   "n_queries": 245,
   "overall_execution_recall": 0.8607400676050935,
-  "exact_result_set_match_rate": 0.04081632653061224,
+  "exact_result_set_match_rate": 0.10612244897959183,
   "by_difficulty": {
     "very_hard": 0.7721154781356987,
     "easy": 0.9488372093023255,
@@ -30,9 +30,9 @@
   },
   "exact_by_difficulty": {
     "very_hard": 0.015625,
-    "easy": 0.046511627906976744,
-    "medium": 0.043478260869565216,
-    "hard": 0.057971014492753624
+    "easy": 0.13953488372093023,
+    "medium": 0.14492753623188406,
+    "hard": 0.13043478260869565
   },
   "avg_latency": 31.83265306122448,
   "results": [
@@ -48,7 +48,7 @@
     {
       "qid": "q_cte_007",
       "difficulty": "very_hard",
-      "question": "多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
+      "question": "多形数が多い純物質元素上位5つについて、その元素の多形数、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
       "execution_recall": 0.2,
       "exact_result_set_match": false,
       "latency_s": 59.8,
@@ -57,7 +57,7 @@
     {
       "qid": "q_cte_008",
       "difficulty": "very_hard",
-      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
+      "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを、化合物数と平均値とともに出して。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 39.0,
@@ -102,7 +102,7 @@
     {
       "qid": "q_cte_013",
       "difficulty": "very_hard",
-      "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を出して。",
+      "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を、形成エネルギー・加重純物質基準補正量・補正量の絶対値とともに出して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 49.7,
@@ -111,7 +111,7 @@
     {
       "qid": "q_cte_014",
       "difficulty": "very_hard",
-      "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
+      "question": "元素ごとに、その元素を含むL1₂化合物の総数と、純元素基底状態基準に再基準化した生成エネルギーが負である件数、負である割合を出して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 59.8,
@@ -120,7 +120,7 @@
     {
       "qid": "q_cte_015",
       "difficulty": "very_hard",
-      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
+      "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均を、A-site元素ごとに化合物数とともに出して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 61.8,
@@ -167,7 +167,7 @@
       "difficulty": "easy",
       "question": "Coを含む化合物を表示して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 22.0,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Co'\n\nLIMIT 10000;"
     },
@@ -194,7 +194,7 @@
       "difficulty": "easy",
       "question": "Alを含む化合物を抽出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 26.6,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Al'\n\nLIMIT 10000;"
     },
@@ -239,7 +239,7 @@
       "difficulty": "easy",
       "question": "Ptを含む化合物を表示して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 22.5,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Pt'\n\nLIMIT 10000;"
     },
@@ -266,7 +266,7 @@
       "difficulty": "easy",
       "question": "Feを含む化合物を一覧にして。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 24.3,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Fe'\n\nLIMIT 10000;"
     },
@@ -615,7 +615,7 @@
     {
       "qid": "q_expert_035",
       "difficulty": "hard",
-      "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を教えて。",
+      "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を、総数と該当件数とともに教えて。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 36.8,
@@ -660,7 +660,7 @@
     {
       "qid": "q_expert_040",
       "difficulty": "medium",
-      "question": "プロトタイプ別の平均energy_above_hullを比較して。",
+      "question": "プロトタイプ別の平均energy_above_hullを件数とともに比較して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 37.5,
@@ -806,7 +806,7 @@
       "difficulty": "medium",
       "question": "デバイ温度が500K以上の化合物を教えて。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 23.9,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, tp.debye_temperature_k\nFROM material_entry m\n    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\n    JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id\nWHERE\n    tp.debye_temperature_k >= 500.0\n\nLIMIT 10000;"
     },
@@ -1119,7 +1119,7 @@
     {
       "qid": "q_expert_091",
       "difficulty": "hard",
-      "question": "L12とB2で、安定な化合物の割合を比較して。",
+      "question": "L12とB2で、化合物総数・安定件数・安定な化合物の割合を比較して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 35.7,
@@ -1128,7 +1128,7 @@
     {
       "qid": "q_expert_092",
       "difficulty": "hard",
-      "question": "プロトタイプ別の平均バルクモジュラスを教えて。",
+      "question": "プロトタイプ別の平均バルクモジュラスを件数とともに教えて。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 39.1,
@@ -1182,7 +1182,7 @@
     {
       "qid": "q_expert_098",
       "difficulty": "hard",
-      "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けてほしい。",
+      "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けて、各カテゴリの件数と平均バンドギャップが欲しい。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 28.9,
@@ -1227,7 +1227,7 @@
     {
       "qid": "q_expert_103",
       "difficulty": "very_hard",
-      "question": "L1₂型化合物をA-site元素とB-site元素で分類し、各組合せの平均バルクモジュラスと安定相の数を集計して",
+      "question": "L1₂型化合物をA-site元素とB-site元素で分類し、各組合せの平均バルクモジュラス・化合物総数・安定相の数を集計して",
       "execution_recall": 0.996078431372549,
       "exact_result_set_match": false,
       "latency_s": 41.5,
@@ -1409,7 +1409,7 @@
       "difficulty": "hard",
       "question": "L1₂型化合物でバルクモジュラスが180GPa以上のものを抽出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 32.1,
       "sql": "SELECT m.formula, cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.value >= 180\nORDER BY cp.value DESC\nLIMIT 10000;"
     },
@@ -1454,14 +1454,14 @@
       "difficulty": "hard",
       "question": "Ni含有L1₂化合物のバルクモジュラスと形成エネルギーの関係を出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 37.9,
       "sql": "SELECT m.formula, cp.value AS bulk_modulus, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE c.element = 'Ni'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\nORDER BY ps.formation_energy_per_atom ASC, cp.value ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_hard_014",
       "difficulty": "hard",
-      "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。",
+      "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーと件数を出して。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 30.5,
@@ -1481,7 +1481,7 @@
       "difficulty": "hard",
       "question": "L1₂型化合物の格子定数と形成エネルギーの相関を見たい。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 22.0,
       "sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.lattice_a ASC\nLIMIT 10000;"
     },
@@ -1535,7 +1535,7 @@
       "difficulty": "hard",
       "question": "PBE汎関数で計算されたL1₂化合物のバルクモジュラスを表示して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 23.9,
       "sql": "SELECT m.formula, cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND calc.functional = 'GGA-PBE'\n  AND cp.property_name = 'bulk_modulus'\nORDER BY m.formula ASC\nLIMIT 10000;"
     },
@@ -1589,7 +1589,7 @@
       "difficulty": "hard",
       "question": "L1₂型化合物の体積あたり原子数と格子定数の関係を出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 13.7,
       "sql": "SELECT m.formula, s.volume_per_atom, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.volume_per_atom ASC\nLIMIT 10000;"
     },
@@ -1670,7 +1670,7 @@
       "difficulty": "medium",
       "question": "L1₂型化合物の形成エネルギー分布を教えて。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 23.9,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -1688,7 +1688,7 @@
       "difficulty": "medium",
       "question": "格子定数が3.5Å以上のL1₂化合物を出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 20.1,
       "sql": "SELECT m.formula, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND s.lattice_a >= 3.5\nORDER BY s.lattice_a ASC\nLIMIT 10000;"
     },
@@ -1706,7 +1706,7 @@
       "difficulty": "medium",
       "question": "形成エネルギーが-0.4以下のL1₂型化合物を出して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 26.1,
       "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom <= -0.4\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
@@ -1724,7 +1724,7 @@
       "difficulty": "medium",
       "question": "Ti含有L1₂型化合物の格子定数と形成エネルギーを表示して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 23.2,
       "sql": "SELECT m.formula, s.lattice_a, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.element = 'Ti'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -1769,7 +1769,7 @@
       "difficulty": "medium",
       "question": "Scを含むL1₂型化合物を格子定数と共に表示して。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 24.2,
       "sql": "SELECT m.formula, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.element = 'Sc'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -1787,7 +1787,7 @@
       "difficulty": "medium",
       "question": "Ni-Al系以外のL1₂型化合物を一覧にして。",
       "execution_recall": 1.0,
-      "exact_result_set_match": false,
+      "exact_result_set_match": true,
       "latency_s": 18.6,
       "sql": "SELECT m.formula, m.chemical_system, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system != 'Al-Ni'\nORDER BY m.formula\nLIMIT 10000;"
     },
@@ -1911,7 +1911,7 @@
     {
       "qid": "q_proto_b2_very_hard_001",
       "difficulty": "very_hard",
-      "question": "B2型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "B2型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 45.9,
@@ -1947,7 +1947,7 @@
     {
       "qid": "q_proto_bif3_very_hard_001",
       "difficulty": "very_hard",
-      "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 48.9,
@@ -1983,7 +1983,7 @@
     {
       "qid": "q_proto_l12_very_hard_001",
       "difficulty": "very_hard",
-      "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 48.7,
@@ -2019,7 +2019,7 @@
     {
       "qid": "q_proto_nacl_very_hard_001",
       "difficulty": "very_hard",
-      "question": "NaCl型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "NaCl型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 47.0,
@@ -2055,7 +2055,7 @@
     {
       "qid": "q_proto_nias_very_hard_001",
       "difficulty": "very_hard",
-      "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+      "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
       "execution_recall": 0.0,
       "exact_result_set_match": false,
       "latency_s": 57.0,
@@ -2100,7 +2100,7 @@
     {
       "qid": "q_vhard_005",
       "difficulty": "very_hard",
-      "question": "L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。",
+      "question": "L1₂型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）、材料設計の指針を得たい。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 46.0,
@@ -2136,7 +2136,7 @@
     {
       "qid": "q_vhard_009",
       "difficulty": "very_hard",
-      "question": "Co3Tiの生成エンタルピーを純物質基準エネルギーから計算して。",
+      "question": "Co3Tiの生成エンタルピーを純物質基準エネルギーから計算して、形成エネルギーと加重純物質基準エネルギーも併記して。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 34.0,
@@ -2199,7 +2199,7 @@
     {
       "qid": "q_vhard_016",
       "difficulty": "very_hard",
-      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。",
+      "question": "安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数・形成エネルギー・加重純元素基準エネルギーつきで出して。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 41.4,
@@ -2217,7 +2217,7 @@
     {
       "qid": "q_vhard_018",
       "difficulty": "very_hard",
-      "question": "安定なL1₂化合物のA-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーの平均を計算して。",
+      "question": "安定なL1₂化合物のA-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーの平均を、化合物数・最小値とともに計算して。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 36.8,
@@ -2235,7 +2235,7 @@
     {
       "qid": "q_vhard_020",
       "difficulty": "very_hard",
-      "question": "L1₂化合物の形成エネルギーが加重純物質基準より0.1 eV/atom以上低い化合物を出して。",
+      "question": "L1₂化合物の形成エネルギーが加重純物質基準より0.1 eV/atom以上低い化合物を、形成エネルギー・加重純物質基準・その差とともに出して。",
       "execution_recall": 1.0,
       "exact_result_set_match": false,
       "latency_s": 28.9,
