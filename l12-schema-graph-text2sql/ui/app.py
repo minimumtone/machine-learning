@@ -9,6 +9,7 @@ Environment variables (same as the evaluation scripts):
 """
 from __future__ import annotations
 
+import logging
 import sys
 import time
 from pathlib import Path
@@ -33,6 +34,8 @@ from safety.sql_validator import validate_sql  # noqa: E402
 
 st.set_page_config(page_title="L1\u2082 Text-to-SQL", layout="wide")
 
+logger = logging.getLogger(__name__)
+
 
 @st.cache_resource
 def load_schema_context() -> dict:
@@ -55,6 +58,13 @@ def main() -> None:
         st.header("\u8a2d\u5b9a")
         n_best = st.slider("n-best \u5019\u88dc\u6570", 1, 5, 3)
         auto_execute = st.checkbox("\u691c\u67fb\u5f8c\u306b\u81ea\u52d5\u5b9f\u884c", value=True)
+        st.caption(
+            "\u30aa\u30d5\u306b\u3059\u308b\u3068n-best\u5019\u88dc\u306e"
+            "\u5b9f\u884c\u63a1\u70b9\u3082\u884c\u308f\u305a\u3001"
+            "DB\u3078\u306e\u554f\u3044\u5408\u308f\u305b\u306f"
+            "\u5b9f\u884c\u30dc\u30bf\u30f3\u62bc\u4e0b\u6642\u306e\u307f\u3068"
+            "\u306a\u308a\u307e\u3059\u3002"
+        )
         row_limit = st.number_input(
             "\u8868\u793a\u884c\u6570\u4e0a\u9650", min_value=10, max_value=1000, value=100
         )
@@ -66,8 +76,14 @@ def main() -> None:
             f"{len(ctx['all_tables'])} \u30c6\u30fc\u30d6\u30eb / "
             f"{len(ctx['join_list'])} FK"
         )
-    except Exception as exc:  # pragma: no cover - UI feedback path
-        st.error(f"DB\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f: {exc}")
+    except Exception:  # pragma: no cover - UI feedback path
+        logger.exception("schema context load failed")
+        st.error(
+            "DB\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+            "\u63a5\u7d9a\u8a2d\u5b9a\u3092\u78ba\u8a8d\u306e\u3046\u3048\u3001"
+            "\u8a73\u7d30\u306f\u30b5\u30fc\u30d0\u30fc\u30ed\u30b0\u3092"
+            "\u53c2\u7167\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        )
         st.stop()
 
     examples = [
@@ -98,7 +114,9 @@ def main() -> None:
                 join_list=ctx["join_list"],
                 all_columns=ctx["all_columns"],
                 n_best=n_best,
-                execute_fn=execute_sql if n_best > 1 else None,
+                execute_fn=(
+                    execute_sql if (n_best > 1 and auto_execute) else None
+                ),
                 table_graph=ctx["table_graph"],
             )
         gen_sec = time.perf_counter() - t0
@@ -147,7 +165,13 @@ def main() -> None:
     if exec_result is None:
         return
     if not exec_result.get("success"):
-        st.error(f"\u5b9f\u884c\u30a8\u30e9\u30fc: {exec_result.get('errors')}")
+        logger.error("SQL execution failed: %s", exec_result.get("errors"))
+        st.error(
+            "SQL\u306e\u5b9f\u884c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+            "\u8cea\u554f\u3092\u8a00\u3044\u63db\u3048\u3066\u518d\u751f\u6210\u3059\u308b\u304b\u3001"
+            "\u8a73\u7d30\u306f\u30b5\u30fc\u30d0\u30fc\u30ed\u30b0\u3092"
+            "\u53c2\u7167\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        )
         return
     rows = exec_result.get("rows", [])
     cols = exec_result.get("columns", [])
