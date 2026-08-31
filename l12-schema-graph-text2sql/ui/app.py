@@ -25,9 +25,11 @@ from llm.sql_generator import (  # noqa: E402
     build_schema_context_from_db,
     pipeline,
 )
-from safety.sql_guard import execute_sql  # noqa: E402
+from safety.sql_guard import (  # noqa: E402
+    execute_sql,
+    get_readonly_connection_string,
+)
 from safety.sql_validator import validate_sql  # noqa: E402
-from scripts.db_conninfo import main_conninfo  # noqa: E402
 
 st.set_page_config(page_title="L1\u2082 Text-to-SQL", layout="wide")
 
@@ -35,7 +37,7 @@ st.set_page_config(page_title="L1\u2082 Text-to-SQL", layout="wide")
 @st.cache_resource
 def load_schema_context() -> dict:
     """Build the schema graph context once per server process."""
-    with psycopg.connect(main_conninfo()) as conn:
+    with psycopg.connect(get_readonly_connection_string()) as conn:
         ctx = build_schema_context_from_db(conn)
         fks = get_foreign_keys(conn)
     ctx["table_graph"] = build_table_graph(fks)
@@ -73,9 +75,20 @@ def main() -> None:
         "Ni\u3092\u542b\u3080\u5b89\u5b9a\u306a\u5316\u5408\u7269\u3092\u62bd\u51fa\u3057\u3066\u3002",
         "\u4f53\u7a4d\u5f3e\u6027\u7387\u304c150 GPa\u4ee5\u4e0a\u306e\u5316\u5408\u7269\u3092\u8868\u793a\u3057\u3066\u3002",
     ]
-    example = st.selectbox("\u8cea\u554f\u4f8b", ["(\u81ea\u7531\u5165\u529b)"] + examples)
-    default_q = "" if example == "(\u81ea\u7531\u5165\u529b)" else example
-    question = st.text_area("\u8cea\u554f\uff08\u65e5\u672c\u8a9e\uff09", value=default_q, height=80)
+    def _apply_example() -> None:
+        chosen = st.session_state["example_select"]
+        if chosen != "(\u81ea\u7531\u5165\u529b)":
+            st.session_state["question_input"] = chosen
+
+    st.selectbox(
+        "\u8cea\u554f\u4f8b",
+        ["(\u81ea\u7531\u5165\u529b)"] + examples,
+        key="example_select",
+        on_change=_apply_example,
+    )
+    question = st.text_area(
+        "\u8cea\u554f\uff08\u65e5\u672c\u8a9e\uff09", key="question_input", height=80
+    )
 
     if st.button("SQL\u3092\u751f\u6210", type="primary") and question.strip():
         t0 = time.perf_counter()
@@ -89,43 +102,64 @@ def main() -> None:
                 table_graph=ctx["table_graph"],
             )
         gen_sec = time.perf_counter() - t0
-        st.session_state["gen"] = (question.strip(), result, gen_sec)
+        st.session_state["gen"] = {
+            "question": question.strip(),
+            "result": result,
+            "gen_sec": gen_sec,
+            "exec_result": None,
+            "auto_exec_done": False,
+        }
 
-    if "gen" in st.session_state:
-        question, result, gen_sec = st.session_state["gen"]
-        if result.get("mode") == "rejected":
-            st.warning(f"\u5165\u529b\u304c\u62d2\u5426\u3055\u308c\u307e\u3057\u305f: {result.get('reason')}")
-            return
+    gen = st.session_state.get("gen")
+    if gen is None:
+        return
+    if gen["question"] != question.strip():
+        # Question changed since generation: stale results are dropped.
+        del st.session_state["gen"]
+        return
 
-        sql = result.get("sql", "")
-        st.subheader("\u751f\u6210SQL")
-        st.code(sql, language="sql")
-        st.caption(f"\u751f\u6210\u6642\u9593: {gen_sec:.1f} \u79d2")
+    result = gen["result"]
+    if result.get("mode") == "rejected":
+        st.warning(f"\u5165\u529b\u304c\u62d2\u5426\u3055\u308c\u307e\u3057\u305f: {result.get('reason')}")
+        return
 
-        validation = validate_sql(sql)
-        if validation["valid"]:
-            st.success("SQLGuard\u691c\u67fb: OK")
-        else:
-            st.error(f"SQLGuard\u691c\u67fb: NG \u2014 {validation['errors']}")
-            return
+    sql = result.get("sql", "")
+    st.subheader("\u751f\u6210SQL")
+    st.code(sql, language="sql")
+    st.caption(f"\u751f\u6210\u6642\u9593: {gen['gen_sec']:.1f} \u79d2")
 
-        if auto_execute or st.button("\u5b9f\u884c\uff08read-only\uff09"):
-            with st.spinner("\u5b9f\u884c\u4e2d\uff08read-only\uff09\u2026"):
-                exec_result = execute_sql(sql)
-            if not exec_result.get("success"):
-                st.error(f"\u5b9f\u884c\u30a8\u30e9\u30fc: {exec_result.get('errors')}")
-                return
-            rows = exec_result.get("rows", [])
-            cols = exec_result.get("columns", [])
-            st.subheader(f"\u5b9f\u884c\u7d50\u679c\uff08{len(rows)} \u884c\uff09")
-            if rows:
-                st.dataframe(
-                    pd.DataFrame(rows, columns=cols).head(int(row_limit)),
-                    use_container_width=True,
-                )
-            else:
-                diag = exec_result.get("empty_diagnosis")
-                st.info(f"0\u4ef6\u3067\u3057\u305f\u3002\u8a3a\u65ad: {diag}")
+    validation = validate_sql(sql)
+    if validation["valid"]:
+        st.success("SQLGuard\u691c\u67fb: OK")
+    else:
+        st.error(f"SQLGuard\u691c\u67fb: NG \u2014 {validation['errors']}")
+        return
+
+    run_now = (auto_execute and not gen["auto_exec_done"]) or st.button(
+        "\u5b9f\u884c\uff08read-only\uff09"
+    )
+    if run_now:
+        with st.spinner("\u5b9f\u884c\u4e2d\uff08read-only\uff09\u2026"):
+            gen["exec_result"] = execute_sql(sql)
+        gen["auto_exec_done"] = True
+
+    exec_result = gen["exec_result"]
+    if exec_result is None:
+        return
+    if not exec_result.get("success"):
+        st.error(f"\u5b9f\u884c\u30a8\u30e9\u30fc: {exec_result.get('errors')}")
+        return
+    rows = exec_result.get("rows", [])
+    cols = exec_result.get("columns", [])
+    st.subheader(f"\u5b9f\u884c\u7d50\u679c\uff08{len(rows)} \u884c\uff09")
+    if rows:
+        st.dataframe(
+            pd.DataFrame(rows, columns=cols).head(int(row_limit)),
+            use_container_width=True,
+        )
+    else:
+        diag = exec_result.get("empty_diagnosis")
+        st.info(f"0\u4ef6\u3067\u3057\u305f\u3002\u8a3a\u65ad: {diag}")
 
 
 main()
