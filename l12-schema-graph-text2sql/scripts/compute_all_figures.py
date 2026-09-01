@@ -946,10 +946,12 @@ def main():
             "_note": "Paired ja/en robustness test: English translations of "
                      "the 100-query ablation set evaluated with identical "
                      "gold SQL, expected results, database, and pipeline "
-                     "(full condition, 3 runs per language); plus an "
-                     "independently authored 25-query English validation "
-                     "set (independent_en_dataset.jsonl) with its own gold "
-                     "SQL and expected results",
+                     "(full condition, 3 runs per language); plus a "
+                     "non-translated 25-query English validation set "
+                     "(independent_en_dataset.jsonl), newly authored in "
+                     "English without reference to the existing query sets, "
+                     "with its own gold SQL and expected results created "
+                     "after authoring and verified against the database",
             **language_eval,
         },
         "independent_evaluation": {
