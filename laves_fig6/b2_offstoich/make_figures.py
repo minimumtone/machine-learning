@@ -77,6 +77,7 @@ def mark_perfect_b2(ax, x, y, label="完全B2 (MLIP)"):
 # --- load data ---------------------------------------------------------------
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
 for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_vac.csv",
+              "b2_offstoich_volumes_alrich_vac_extra.csv",
               "b2_offstoich_volumes_antisite_extra.csv",
               "b2_offstoich_volumes_50competition.csv",
               "b2_offstoich_volumes_antisite_alrich_dense.csv"):
@@ -284,7 +285,7 @@ ax.plot(_x_end, V_bcc_veg, "--", color="tab:gray", lw=1.8,
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 平均原子体積と Vegard 線")
-ax.set_xlim(0.40, 0.68)
+ax.set_xlim(0.40, 0.82)
 ax.legend(fontsize=11)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)

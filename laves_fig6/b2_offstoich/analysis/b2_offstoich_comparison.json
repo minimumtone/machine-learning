@@ -132,6 +132,48 @@
       "G_atom_eV": -0.560982,
       "Omega_total_eV": -54.41526,
       "dG_eV": null
+    },
+    "0.68": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.535041,
+      "Omega_total_eV": -50.293865,
+      "dG_eV": null
+    },
+    "0.70": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.494544,
+      "Omega_total_eV": -45.003515,
+      "dG_eV": -0.047233
+    },
+    "0.72": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.472281,
+      "Omega_total_eV": -42.032981,
+      "dG_eV": null
+    },
+    "0.74": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.42939,
+      "Omega_total_eV": -36.927555,
+      "dG_eV": null
+    },
+    "0.76": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.41334,
+      "Omega_total_eV": -34.72057,
+      "dG_eV": null
+    },
+    "0.78": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.37221,
+      "Omega_total_eV": -30.521233,
+      "dG_eV": null
+    },
+    "0.80": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.334334,
+      "Omega_total_eV": -26.746695,
+      "dG_eV": -0.008127
     }
   }
 }
