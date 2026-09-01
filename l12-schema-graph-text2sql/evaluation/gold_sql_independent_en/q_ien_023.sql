@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, mp.total_magnetization, et.bulk_modulus_vrh, mp.total_magnetization * et.bulk_modulus_vrh / 300 AS score FROM material_entry me JOIN magnetic_property mp ON mp.entry_id = me.entry_id JOIN calculation c ON c.entry_id = me.entry_id JOIN elastic_tensor et ON et.calculation_id = c.calculation_id ORDER BY score DESC, me.entry_id LIMIT 10;

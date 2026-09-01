@@ -1,0 +1,22 @@
+{
+  "columns": [
+    "source_db",
+    "n_entries"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "AFLOW",
+      355
+    ],
+    [
+      "Materials Project",
+      649
+    ],
+    [
+      "OQMD",
+      555
+    ]
+  ]
+}

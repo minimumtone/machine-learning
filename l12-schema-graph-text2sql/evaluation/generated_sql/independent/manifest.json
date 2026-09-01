@@ -1,0 +1,824 @@
+{
+  "source": "independent",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "expert_evaluation_dataset.jsonl",
+    "dataset_sha256": "9f4d6f71cfca4ec57c230b516cc2b4ff7f2240293d9d07ec7b206bd3c607f4d9",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_file": "sql_generation_prompt.md",
+    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-29T02:35:53+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:51+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
+  },
+  "source_result_file": "independent_eval_results.json",
+  "source_result_sha256": "0975ff3cef8b1d25ce44890bf8e6e36992b9ac92c5b1d58f22b20ffc9e090d2c",
+  "n_queries": 100,
+  "eval_file": "independent_eval_results.json",
+  "queries": [
+    {
+      "qid": "q_expert_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 32.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_001.sql"
+    },
+    {
+      "qid": "q_expert_002",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 32.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_002.sql"
+    },
+    {
+      "qid": "q_expert_003",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 19.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_003.sql"
+    },
+    {
+      "qid": "q_expert_004",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 20.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_004.sql"
+    },
+    {
+      "qid": "q_expert_005",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 20.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_005.sql"
+    },
+    {
+      "qid": "q_expert_006",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 27.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_006.sql"
+    },
+    {
+      "qid": "q_expert_007",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 19.2,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_007.sql"
+    },
+    {
+      "qid": "q_expert_008",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 13.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_008.sql"
+    },
+    {
+      "qid": "q_expert_009",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 26.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_009.sql"
+    },
+    {
+      "qid": "q_expert_010",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 33.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_010.sql"
+    },
+    {
+      "qid": "q_expert_011",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 28.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_011.sql"
+    },
+    {
+      "qid": "q_expert_012",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 42.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_012.sql"
+    },
+    {
+      "qid": "q_expert_013",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 35.9,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_013.sql"
+    },
+    {
+      "qid": "q_expert_014",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 48.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_014.sql"
+    },
+    {
+      "qid": "q_expert_015",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 28.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_015.sql"
+    },
+    {
+      "qid": "q_expert_016",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 34.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_016.sql"
+    },
+    {
+      "qid": "q_expert_017",
+      "difficulty": "easy",
+      "accuracy": 0.0,
+      "latency_s": 30.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_017.sql"
+    },
+    {
+      "qid": "q_expert_018",
+      "difficulty": "medium",
+      "accuracy": 0.0,
+      "latency_s": 30.9,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_018.sql"
+    },
+    {
+      "qid": "q_expert_019",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 33.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_019.sql"
+    },
+    {
+      "qid": "q_expert_020",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 27.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_020.sql"
+    },
+    {
+      "qid": "q_expert_021",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 17.9,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_021.sql"
+    },
+    {
+      "qid": "q_expert_022",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 25.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_022.sql"
+    },
+    {
+      "qid": "q_expert_023",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 25.9,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_023.sql"
+    },
+    {
+      "qid": "q_expert_024",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 27.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_024.sql"
+    },
+    {
+      "qid": "q_expert_025",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_025.sql"
+    },
+    {
+      "qid": "q_expert_026",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 11.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_026.sql"
+    },
+    {
+      "qid": "q_expert_027",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_027.sql"
+    },
+    {
+      "qid": "q_expert_028",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 21.2,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_028.sql"
+    },
+    {
+      "qid": "q_expert_029",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 23.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_029.sql"
+    },
+    {
+      "qid": "q_expert_030",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_030.sql"
+    },
+    {
+      "qid": "q_expert_031",
+      "difficulty": "medium",
+      "accuracy": 0.2857142857142857,
+      "latency_s": 39.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_031.sql"
+    },
+    {
+      "qid": "q_expert_032",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 23.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_032.sql"
+    },
+    {
+      "qid": "q_expert_033",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_033.sql"
+    },
+    {
+      "qid": "q_expert_034",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 26.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_034.sql"
+    },
+    {
+      "qid": "q_expert_035",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 46.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_035.sql"
+    },
+    {
+      "qid": "q_expert_036",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 30.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_036.sql"
+    },
+    {
+      "qid": "q_expert_037",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 38.2,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_037.sql"
+    },
+    {
+      "qid": "q_expert_038",
+      "difficulty": "medium",
+      "accuracy": 0.5,
+      "latency_s": 29.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_038.sql"
+    },
+    {
+      "qid": "q_expert_039",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 19.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_039.sql"
+    },
+    {
+      "qid": "q_expert_040",
+      "difficulty": "medium",
+      "accuracy": 0.0,
+      "latency_s": 31.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_040.sql"
+    },
+    {
+      "qid": "q_expert_041",
+      "difficulty": "easy",
+      "accuracy": 0.0,
+      "latency_s": 27.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_041.sql"
+    },
+    {
+      "qid": "q_expert_042",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 29.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_042.sql"
+    },
+    {
+      "qid": "q_expert_043",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 28.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_043.sql"
+    },
+    {
+      "qid": "q_expert_044",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 27.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_044.sql"
+    },
+    {
+      "qid": "q_expert_045",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 36.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_045.sql"
+    },
+    {
+      "qid": "q_expert_046",
+      "difficulty": "very_hard",
+      "accuracy": 0.022900763358778626,
+      "latency_s": 34.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_046.sql"
+    },
+    {
+      "qid": "q_expert_047",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 30.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_047.sql"
+    },
+    {
+      "qid": "q_expert_048",
+      "difficulty": "medium",
+      "accuracy": 0.9755102040816327,
+      "latency_s": 24.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_048.sql"
+    },
+    {
+      "qid": "q_expert_049",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 29.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_049.sql"
+    },
+    {
+      "qid": "q_expert_050",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 25.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_050.sql"
+    },
+    {
+      "qid": "q_expert_051",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 33.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_051.sql"
+    },
+    {
+      "qid": "q_expert_052",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 40.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_052.sql"
+    },
+    {
+      "qid": "q_expert_053",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_053.sql"
+    },
+    {
+      "qid": "q_expert_054",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 23.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_054.sql"
+    },
+    {
+      "qid": "q_expert_055",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 17.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_055.sql"
+    },
+    {
+      "qid": "q_expert_056",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 28.2,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_056.sql"
+    },
+    {
+      "qid": "q_expert_057",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 36.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_057.sql"
+    },
+    {
+      "qid": "q_expert_058",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 37.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_058.sql"
+    },
+    {
+      "qid": "q_expert_059",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 23.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_059.sql"
+    },
+    {
+      "qid": "q_expert_060",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 40.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_060.sql"
+    },
+    {
+      "qid": "q_expert_061",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 26.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_061.sql"
+    },
+    {
+      "qid": "q_expert_062",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 26.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_062.sql"
+    },
+    {
+      "qid": "q_expert_063",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 19.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_063.sql"
+    },
+    {
+      "qid": "q_expert_064",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 23.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_064.sql"
+    },
+    {
+      "qid": "q_expert_065",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 35.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_065.sql"
+    },
+    {
+      "qid": "q_expert_066",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 37.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_066.sql"
+    },
+    {
+      "qid": "q_expert_067",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 26.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_067.sql"
+    },
+    {
+      "qid": "q_expert_068",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 26.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_068.sql"
+    },
+    {
+      "qid": "q_expert_069",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 23.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_069.sql"
+    },
+    {
+      "qid": "q_expert_070",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 40.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_070.sql"
+    },
+    {
+      "qid": "q_expert_071",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 34.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_071.sql"
+    },
+    {
+      "qid": "q_expert_072",
+      "difficulty": "hard",
+      "accuracy": 0.7272727272727273,
+      "latency_s": 33.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_072.sql"
+    },
+    {
+      "qid": "q_expert_073",
+      "difficulty": "hard",
+      "accuracy": 0.7878787878787878,
+      "latency_s": 31.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_073.sql"
+    },
+    {
+      "qid": "q_expert_074",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 43.4,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_074.sql"
+    },
+    {
+      "qid": "q_expert_075",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 38.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_075.sql"
+    },
+    {
+      "qid": "q_expert_076",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 28.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_076.sql"
+    },
+    {
+      "qid": "q_expert_077",
+      "difficulty": "hard",
+      "accuracy": 0.4883720930232558,
+      "latency_s": 39.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_077.sql"
+    },
+    {
+      "qid": "q_expert_078",
+      "difficulty": "hard",
+      "accuracy": 0.8292682926829268,
+      "latency_s": 29.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_078.sql"
+    },
+    {
+      "qid": "q_expert_079",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 40.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_079.sql"
+    },
+    {
+      "qid": "q_expert_080",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 18.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_080.sql"
+    },
+    {
+      "qid": "q_expert_081",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 34.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_081.sql"
+    },
+    {
+      "qid": "q_expert_082",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 32.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_082.sql"
+    },
+    {
+      "qid": "q_expert_083",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 45.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_083.sql"
+    },
+    {
+      "qid": "q_expert_084",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 32.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_084.sql"
+    },
+    {
+      "qid": "q_expert_085",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 38.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_085.sql"
+    },
+    {
+      "qid": "q_expert_086",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 30.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_086.sql"
+    },
+    {
+      "qid": "q_expert_087",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 34.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_087.sql"
+    },
+    {
+      "qid": "q_expert_088",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 26.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_088.sql"
+    },
+    {
+      "qid": "q_expert_089",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 37.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_089.sql"
+    },
+    {
+      "qid": "q_expert_090",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 28.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_090.sql"
+    },
+    {
+      "qid": "q_expert_091",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 36.5,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_091.sql"
+    },
+    {
+      "qid": "q_expert_092",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 36.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_092.sql"
+    },
+    {
+      "qid": "q_expert_093",
+      "difficulty": "hard",
+      "accuracy": 0.045454545454545456,
+      "latency_s": 29.3,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_093.sql"
+    },
+    {
+      "qid": "q_expert_094",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 21.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_094.sql"
+    },
+    {
+      "qid": "q_expert_095",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 40.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_095.sql"
+    },
+    {
+      "qid": "q_expert_096",
+      "difficulty": "easy",
+      "accuracy": 0.8,
+      "latency_s": 23.0,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_096.sql"
+    },
+    {
+      "qid": "q_expert_097",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 22.7,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_097.sql"
+    },
+    {
+      "qid": "q_expert_098",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 25.8,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_098.sql"
+    },
+    {
+      "qid": "q_expert_099",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 30.6,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_099.sql"
+    },
+    {
+      "qid": "q_expert_100",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 29.1,
+      "source_file": "independent_eval_results.json",
+      "sql_path": "evaluation/generated_sql/independent/q_expert_100.sql"
+    }
+  ]
+}

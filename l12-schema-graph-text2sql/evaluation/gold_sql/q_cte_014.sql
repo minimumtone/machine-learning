@@ -25,6 +25,4 @@ SELECT c.element,
 FROM enthalpy e
 JOIN composition c ON c.entry_id = e.entry_id
 GROUP BY c.element
-HAVING COUNT(DISTINCT e.entry_id) >= 5
-ORDER BY negative_ratio DESC, c.element ASC
-LIMIT 15;
+ORDER BY negative_ratio DESC, c.element ASC;

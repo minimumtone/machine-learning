@@ -1,0 +1,184 @@
+{
+  "source": "transfer",
+  "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "transfer_evaluation_dataset.jsonl",
+    "dataset_sha256": "d1cb6767b635b55a3dc595242459ca511d32158def0e6acd057acd199b9ace11",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_file": "sql_generation_prompt_transfer.md",
+    "prompt_sha256": "a614ee7f0cc1cadd314af6566b6ba4091c156ff1e5d7eea27ab847b3b6c8a765",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-29T01:14:57+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:51+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
+  },
+  "source_result_file": "transfer_eval_results.json",
+  "source_result_sha256": "106801746e2cf2bf07ecc784e9dcf7cc0ef7c7a98e1cee979e538ef49cc7ae01",
+  "n_queries": 20,
+  "eval_file": "transfer_eval_results.json",
+  "queries": [
+    {
+      "qid": "q_transfer_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 44.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_001.sql"
+    },
+    {
+      "qid": "q_transfer_002",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 36.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_002.sql"
+    },
+    {
+      "qid": "q_transfer_003",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 30.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_003.sql"
+    },
+    {
+      "qid": "q_transfer_004",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 29.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_004.sql"
+    },
+    {
+      "qid": "q_transfer_005",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_005.sql"
+    },
+    {
+      "qid": "q_transfer_006",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "latency_s": 23.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_006.sql"
+    },
+    {
+      "qid": "q_transfer_007",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 24.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_007.sql"
+    },
+    {
+      "qid": "q_transfer_008",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 25.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_008.sql"
+    },
+    {
+      "qid": "q_transfer_009",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 22.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_009.sql"
+    },
+    {
+      "qid": "q_transfer_010",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 39.1,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_010.sql"
+    },
+    {
+      "qid": "q_transfer_011",
+      "difficulty": "medium",
+      "accuracy": 0.0,
+      "latency_s": 27.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_011.sql"
+    },
+    {
+      "qid": "q_transfer_012",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_012.sql"
+    },
+    {
+      "qid": "q_transfer_013",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 31.4,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_013.sql"
+    },
+    {
+      "qid": "q_transfer_014",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 29.9,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_014.sql"
+    },
+    {
+      "qid": "q_transfer_015",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 32.3,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_015.sql"
+    },
+    {
+      "qid": "q_transfer_016",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "latency_s": 34.2,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_016.sql"
+    },
+    {
+      "qid": "q_transfer_017",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "latency_s": 29.3,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_017.sql"
+    },
+    {
+      "qid": "q_transfer_018",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 58.5,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_018.sql"
+    },
+    {
+      "qid": "q_transfer_019",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "latency_s": 71.7,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_019.sql"
+    },
+    {
+      "qid": "q_transfer_020",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "latency_s": 99.8,
+      "source_file": "transfer_eval_results.json",
+      "sql_path": "evaluation/generated_sql/transfer/q_transfer_020.sql"
+    }
+  ]
+}

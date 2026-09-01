@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""Multi-axis evaluation: compute EM, SELECT-column precision, JOIN accuracy,
-syntax validity, and execution validity for the full pipeline.
+"""Multi-axis evaluation: compute exact match, SELECT-column precision,
+JOIN accuracy, syntax validity, and execution validity for the full pipeline.
 
-Runs the pipeline once on all 100 queries, captures the generated SQL,
-and computes multiple metrics in a single pass.
+Runs the pipeline once on all 245 main-corpus queries
+(evaluation/main_evaluation_dataset.jsonl), captures the generated SQL,
+and computes multiple metrics in a single pass.  This output is the
+CANONICAL main inference run: everything downstream
+(main_eval_with_sql.json, generated_sql/main/, failure_analysis.json,
+scoring_audit.json) is derived from it by
+scripts/derive_main_artifacts.py without further LLM calls.
+
+The exact metric is the canonical exact_result_set_match (exact gold
+column list + row multiset + row order when the gold query is ordered).
 
 Output: evaluation/multiaxis_results.json
 """
@@ -20,7 +28,6 @@ from typing import Any
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from evaluation.metrics import (  # noqa: E402
     execution_accuracy_full,
@@ -33,9 +40,13 @@ from evaluation.metrics import (  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
+from evaluation.metrics_strict import exact_result_set_match  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
+DATASET_PATH = EVAL_DIR / "main_evaluation_dataset.jsonl"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 GOLD_SQL_DIR = EVAL_DIR / "gold_sql"
 
@@ -50,7 +61,7 @@ CONNINFO = (
 
 def load_queries():
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(DATASET_PATH) as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -71,22 +82,7 @@ def load_expected(qid):
 
 
 def execute_sql(conn, sql):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {
-            "success": True, "columns": columns,
-            "rows": [list(r) for r in rows], "row_count": len(rows),
-        }
-    except Exception as e:
-        conn.rollback()
-        return {
-            "success": False, "error": str(e),
-            "rows": [], "row_count": 0, "columns": [],
-        }
+    return run_model_sql(conn, sql)
 
 
 def _extract_select_columns(sql: str) -> list[str]:
@@ -163,24 +159,6 @@ def _extract_join_tables(sql: str) -> list[str]:
     return tables
 
 
-def _exact_match(gen_sql: str, gold_sql: str, conn) -> bool:
-    """Check if generated and gold SQL produce identical result sets."""
-    if not gen_sql or not gold_sql:
-        return False
-    gen_result = execute_sql(conn, gen_sql)
-    gold_result = execute_sql(conn, gold_sql)
-    if not gen_result["success"] or not gold_result["success"]:
-        return False
-    # Sort and compare
-    gen_rows = sorted(
-        [tuple(str(v) for v in r) for r in gen_result["rows"]],
-    )
-    gold_rows = sorted(
-        [tuple(str(v) for v in r) for r in gold_result["rows"]],
-    )
-    return gen_rows == gold_rows
-
-
 def _select_column_precision(gen_sql: str, gold_sql: str) -> float:
     """Precision of SELECT columns: what fraction of generated columns
     match gold columns."""
@@ -208,8 +186,8 @@ def _join_match_rate(gen_sql: str, gold_sql: str) -> float:
 def main():
     out_path = PROJECT / "evaluation" / "multiaxis_results.json"
 
-    print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    print("Connecting to PostgreSQL (READ ONLY + REPEATABLE READ + guard)...")
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Loading schema...")
     tables = get_tables(conn)
@@ -279,8 +257,12 @@ def main():
                 gen_result.get("columns", []), expected_columns,
             )
 
-            # Metric 2: Exact Match
-            em = _exact_match(gen_sql, gold_sql, conn) if gold_sql else False
+            # Metric 2: canonical exact result-set match
+            em = exact_result_set_match(
+                gen_result.get("rows", []), expected_rows,
+                gen_result.get("columns", []), expected_columns,
+                ordered=bool(expected.get("semantic_ordered")),
+            )
 
             # Metric 3: SELECT column precision
             sel_prec = _select_column_precision(gen_sql, gold_sql) if gold_sql else 0.0
@@ -387,6 +369,11 @@ def main():
 
     output = {
         "model": os.getenv("LLM_MODEL", "gpt-5.5"),
+        "provenance": build_provenance(DATASET_PATH),
+        "exact_metric": (
+            "exact_match = evaluation.metrics_strict.exact_result_set_match: "
+            "exact gold column list + row multiset match + row order when "
+            "the gold query is ordered"),
         "aggregate": agg,
         "by_difficulty": by_diff,
         "results": results,

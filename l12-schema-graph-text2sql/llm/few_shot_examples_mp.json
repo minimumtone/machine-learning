@@ -24,7 +24,7 @@
     "sql": "SELECT crystal_system, COUNT(*) FROM mp_entries GROUP BY crystal_system ORDER BY COUNT(*) DESC;"
   },
   {
-    "nl_query": "バンドギャップがある材料の割合。",
+    "nl_query": "バンドギャップがある材料の割合（%）。",
     "sql": "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) FROM mp_entries;"
   },
   {

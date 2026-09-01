@@ -15,13 +15,15 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
+
+from scripts.provenance import build_provenance  # noqa: E402
 
 from evaluation.metrics import execution_accuracy_full, normalize_limit  # noqa: E402
 from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
@@ -54,16 +56,8 @@ def load_expected(qid):
 
 
 def execute_sql(conn, sql):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {"success": True, "columns": columns, "rows": [list(r) for r in rows], "row_count": len(rows)}
-    except Exception as e:
-        conn.rollback()
-        return {"success": False, "error": str(e), "rows": [], "row_count": 0, "columns": []}
+    return run_model_sql(conn, sql)
+
 
 
 def run_pipeline_no_reranker(question, allowed_joins, allowed_columns,
@@ -112,7 +106,7 @@ def main():
     print(f"Model: {model}")
     print(f"Sample size: {sample_size}")
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Loading schema...")
     tables = get_tables(conn)
@@ -249,6 +243,8 @@ def main():
     with open(out_path, "w") as f:
         json.dump({
             "model": model,
+            "provenance": build_provenance(
+                EVAL_DIR / "evaluation_dataset.jsonl"),
             "sample_size": len(results),
             "overall_reranker": total_reranker,
             "overall_baseline": total_baseline,

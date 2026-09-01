@@ -1,5 +1,5 @@
 -- CTE L: CTE + 磁性テーブル到達
--- 「強磁性のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して安定な順に出して」
+-- 「強磁性のL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して再基準化生成エネルギーが低い順に出して」
 WITH fm_l12 AS (
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
            ps.reference_set,
@@ -27,5 +27,4 @@ SELECT formula,
        ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4)
            AS enthalpy_vs_element_ground_states
 FROM enthalpy
-ORDER BY enthalpy_vs_element_ground_states ASC
-LIMIT 20;
+ORDER BY enthalpy_vs_element_ground_states ASC;

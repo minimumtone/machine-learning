@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, et.bulk_modulus_vrh, tp.debye_temperature_k FROM material_entry me JOIN calculation c ON c.entry_id = me.entry_id JOIN elastic_tensor et ON et.calculation_id = c.calculation_id JOIN thermal_property tp ON tp.calculation_id = c.calculation_id ORDER BY me.entry_id;

@@ -1,0 +1,1 @@
+SELECT mp.magnetic_ordering, AVG(mp.total_magnetization) AS avg_magnetization, COUNT(*) AS n_entries FROM magnetic_property mp JOIN phase_stability ps ON ps.entry_id = mp.entry_id WHERE ps.is_stable GROUP BY mp.magnetic_ordering ORDER BY mp.magnetic_ordering;

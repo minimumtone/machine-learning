@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """LLM-only baseline: raw single-shot SQL generation with no pipeline aids.
 
-The prompt contains only the raw schema (table.column listing plus FK
-pairs) and the natural-language question.  No term dictionary, no
+The prompt contains the raw schema (table.column listing plus FK
+pairs), the neutral semantic conventions of the fixture (stability
+thresholds, chemical_system ordering, controlled vocabularies — the
+same conventions given to the main pipeline prompt), and the
+natural-language question.  No term dictionary, no
 few-shot examples, no schema linking, no graph-constrained JOIN paths,
 no SQLGuard, no repair loop, no n-best generation, no reranker, and no
 literal/alias post-processing are applied.  The only post-processing is
@@ -29,7 +32,6 @@ from typing import Any
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from evaluation.metrics import (  # noqa: E402
     execution_accuracy_full,
@@ -39,8 +41,35 @@ from evaluation.metrics import (  # noqa: E402
     syntax_validity,
 )
 from llm.sql_generator import extract_sql_from_response  # noqa: E402
+from scripts.provenance import (  # noqa: E402
+    assert_resumable,
+    build_provenance,
+)
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
+
+# Neutral semantic conventions shared with the main pipeline prompt
+# (llm/prompt_templates/sql_generation_prompt.md).  These are domain/data
+# conventions of the fixture, not pipeline aids, so every method receives
+# the same information for a fair comparison.
+SEMANTIC_NOTE = (
+    "Semantic conventions of this database:\n"
+    "- For binary stable/not-stable checks, use is_stable = TRUE/FALSE "
+    "(a generated column equal to energy_above_hull <= 0.001).\n"
+    "- Three-way stability classes are defined on "
+    "phase_stability.energy_above_hull (eV/atom): stable = "
+    "energy_above_hull <= 0.001; metastable = 0.001 < energy_above_hull "
+    "<= 0.05; unstable = energy_above_hull > 0.05.\n"
+    "- material_entry.chemical_system joins element symbols in "
+    "alphabetical order with '-' (e.g. the Ni-Al system is stored as "
+    "chemical_system = 'Al-Ni').\n"
+    "- element.category is a controlled vocabulary: transition_metal, "
+    "post_transition_metal, lanthanide, actinide, alkali_metal, "
+    "alkaline_earth_metal, metalloid, nonmetal, halogen, noble_gas.\n"
+    "- composition.site_label uses the values 'A-site' and 'B-site'.\n"
+)
 
 EVAL_DIR = PROJECT / "evaluation"
+DATASET_PATH = EVAL_DIR / "main_evaluation_dataset.jsonl"
 RESULTS_DIR = EVAL_DIR / "expected_results"
 GOLD_SQL_DIR = EVAL_DIR / "gold_sql"
 SQL_OUT_DIR = EVAL_DIR / "generated_sql" / "llm_only"
@@ -56,7 +85,7 @@ CONNINFO = (
 
 def load_queries() -> list[dict[str, Any]]:
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(DATASET_PATH) as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -76,22 +105,8 @@ def load_expected(qid: str) -> dict[str, Any]:
 
 
 def execute_sql(conn: Any, sql: str) -> dict[str, Any]:
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '10s'")
-            cur.execute(sql)
-            columns = [d[0] for d in cur.description] if cur.description else []
-            rows = cur.fetchall()
-        return {
-            "success": True, "columns": columns,
-            "rows": [list(r) for r in rows], "row_count": len(rows),
-        }
-    except Exception as e:
-        conn.rollback()
-        return {
-            "success": False, "error": str(e),
-            "rows": [], "row_count": 0, "columns": [],
-        }
+    return run_model_sql(conn, sql)
+
 
 
 def build_raw_schema_text(conn: Any) -> tuple[str, list[str], list[str], list[str]]:
@@ -144,6 +159,7 @@ def generate_sql_raw(question: str, schema_text: str, model: str) -> tuple[str, 
         "Given the following PostgreSQL database schema, write a single SQL "
         "query that answers the question. Output only the SQL query.\n\n"
         f"{schema_text}\n\n"
+        f"{SEMANTIC_NOTE}\n"
         f"Question: {question}\n"
     )
     create_kwargs: dict[str, Any] = dict(
@@ -184,6 +200,9 @@ def main() -> None:
     parser.add_argument("--only", default="",
                         help="comma-separated qids to (re)run; merge into "
                              "existing results")
+    parser.add_argument("--force-stale-resume", action="store_true",
+                        help="resume even if stored provenance differs "
+                             "from the current inputs/model/commit")
     args = parser.parse_args()
     only_qids = {q for q in args.only.split(",") if q}
 
@@ -192,7 +211,7 @@ def main() -> None:
     model = os.getenv("LLM_MODEL", "gpt-5.5")
 
     print("Connecting to PostgreSQL...")
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
 
     print("Serializing raw schema...")
     schema_text, allowed_tables, allowed_columns, allowed_joins = (
@@ -204,10 +223,18 @@ def main() -> None:
     all_queries = load_queries()
     print(f"Total queries: {len(all_queries)}")
 
+    current_prov = {**build_provenance(DATASET_PATH), "model": model}
+
     prior: dict[str, dict[str, Any]] = {}
     if only_qids:
         with open(out_path) as f:
-            prior = {r["qid"]: r for r in json.load(f)["results"]}
+            saved_doc = json.load(f)
+        assert_resumable(
+            {**saved_doc.get("provenance", {}),
+             "model": saved_doc.get("model", "")},
+            current_prov, force=args.force_stale_resume,
+            what=out_path.name)
+        prior = {r["qid"]: r for r in saved_doc["results"]}
         all_queries = [q for q in all_queries if q["id"] in only_qids]
         print(f"Rerunning {len(all_queries)} queries: "
               f"{sorted(only_qids)}")
@@ -215,7 +242,13 @@ def main() -> None:
     results = []
     if not only_qids and out_path.exists():
         with open(out_path) as f:
-            saved = json.load(f).get("results", [])
+            saved_doc = json.load(f)
+        assert_resumable(
+            {**saved_doc.get("provenance", {}),
+             "model": saved_doc.get("model", "")},
+            current_prov, force=args.force_stale_resume,
+            what=out_path.name)
+        saved = saved_doc.get("results", [])
         done = {r["qid"] for r in saved}
         results = [r for r in saved if r["qid"] in done]
         all_queries = [q for q in all_queries if q["id"] not in done]
@@ -338,7 +371,8 @@ def main() -> None:
 
     output = {
         "model": model,
-        "condition": "llm_only_raw_schema_single_shot",
+        "condition": "llm_only_raw_schema_semantic_note_single_shot",
+        "provenance": build_provenance(DATASET_PATH),
         "aggregate": agg,
         "by_difficulty": by_diff,
         "results": results,

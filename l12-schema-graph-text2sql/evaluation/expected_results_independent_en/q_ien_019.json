@@ -1,0 +1,26 @@
+{
+  "columns": [
+    "domain_name",
+    "n_materials",
+    "avg_relevance"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "Catalysis",
+      43,
+      0.6613255813953488
+    ],
+    [
+      "Magnetic recording",
+      42,
+      0.6379285714285714
+    ],
+    [
+      "Wear-resistant coating",
+      42,
+      0.6620238095238096
+    ]
+  ]
+}

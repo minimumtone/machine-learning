@@ -5,6 +5,7 @@
     "avg_delta_e"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "cubic",

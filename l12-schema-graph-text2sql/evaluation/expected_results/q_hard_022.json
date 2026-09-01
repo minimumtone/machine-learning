@@ -4,6 +4,7 @@
     "bulk_modulus"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Cr3Sc",

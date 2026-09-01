@@ -19,8 +19,11 @@ sys.path.insert(0, str(PROJECT))
 
 import psycopg  # noqa: E402
 from psycopg import sql as pgsql  # noqa: E402
+from psycopg.conninfo import make_conninfo  # noqa: E402
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 TRANSFER_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 
@@ -46,14 +49,29 @@ SCHEMA_SQL = PROJECT / "db" / "transfer_schema.sql"
 INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
 
 
+def git_commit() -> str:
+    """Build provenance for the transfer marker (same convention as the
+    main 007 marker): the GIT_COMMIT env var, the package's GIT_COMMIT
+    file, or 'unknown'."""
+    env = os.getenv("GIT_COMMIT", "").strip()
+    if env:
+        return env
+    f = PROJECT / "GIT_COMMIT"
+    if f.is_file():
+        content = f.read_text().strip()
+        if content:
+            return content
+    return "unknown"
+
+
 def transfer_conninfo() -> str:
     """Connection string for the transfer database."""
-    return (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={TRANSFER_DB} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
+    return make_conninfo(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=TRANSFER_DB,
+        user=os.getenv("POSTGRES_USER", "l12_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
     )
 
 
@@ -72,19 +90,26 @@ def recreate_database() -> None:
 
 
 def main() -> None:
-    """Recreate the transfer DB, apply its schema, and copy data across."""
-    recreate_database()
-    src = psycopg.connect(CONNINFO)
-    dst = psycopg.connect(transfer_conninfo())
-    with dst.cursor() as cur:
-        cur.execute(SCHEMA_SQL.read_text())  # type: ignore[arg-type]
+    """Validate the source fixture, then recreate the transfer DB, apply
+    its schema, and copy data across.
 
-    def copy(select_sql: str, insert_sql: str) -> int:
-        with src.cursor() as sc, dst.cursor() as dc:
-            sc.execute(select_sql)  # type: ignore[arg-type]
-            rows = sc.fetchall()
-            dc.executemany(insert_sql, rows)  # type: ignore[arg-type]
-        return len(rows)
+    Fail-safe ordering: ALL source validation (fixture guard and
+    reference-set contract) runs BEFORE the existing transfer DB is
+    dropped, so a broken source never destroys a healthy transfer DB.
+
+    Snapshot consistency: the source connection is pinned to a single
+    REPEATABLE READ READ ONLY snapshot that covers the guard, the
+    contract checks and every copy SELECT, so the transfer DB is an
+    exact copy of one source state (never a mix of states seen by
+    successive READ COMMITTED statements).
+
+    Destination cleanup: if any step after recreation fails (schema
+    load, copy, integrity check, marker), the half-built transfer DB is
+    dropped again so no marker-less partial database is left behind.
+    """
+    src = psycopg.connect(CONNINFO)
+    src.read_only = True
+    src.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
 
     # The transfer DB carries a single energy convention. If the main DB
     # ever mixed reference sets in phase_stability, the copied formation
@@ -98,6 +123,70 @@ def main() -> None:
             "transfer build requires phase_stability to use exactly "
             f"'L12-FIXTURE-PBE-v1', got {sorted(ref_sets)}"
         )
+    # The set NAME alone does not guarantee the reference master still
+    # carries the fixture semantics, so pin the full master tuple too.
+    expected_master = (
+        "L12-FIXTURE-PBE-v1", "DFT", "PBE",
+        "synthetic fixture (elemental references adopted from OQMD)",
+        "OQMD standard reference-energy fit "
+        "(adopted for elemental references)",
+    )
+    with src.cursor() as sc:
+        sc.execute(
+            "SELECT reference_set, method, functional, source, fit_name "
+            "FROM reference_energy_set "
+            "WHERE reference_set = 'L12-FIXTURE-PBE-v1'")
+        master = sc.fetchone()
+    if master is None or tuple(master) != expected_master:
+        raise RuntimeError(
+            "reference_energy_set master row for 'L12-FIXTURE-PBE-v1' "
+            f"does not match the fixture contract: got {master!r}, "
+            f"expected {expected_master!r}"
+        )
+    # Only build from a fully initialized main fixture whose schema is
+    # unchanged since initialization AND whose data currently passes the
+    # 006 invariants (schema-only guarding would let schema-preserving
+    # data edits flow into the transfer copy).
+    assert_valid_fixture(src)
+
+    # Source validated: only now may the existing transfer DB be touched.
+    recreate_database()
+    try:
+        dst = psycopg.connect(transfer_conninfo())
+        _build_into(src, dst)
+    except Exception:
+        # A partially built transfer DB carries no marker (guarded tools
+        # reject it), but leaving it around is still misleading, so drop
+        # the half-built DB before re-raising.
+        drop_database()
+        raise
+    src.close()
+    print("Transfer DB built.")
+
+
+def drop_database() -> None:
+    """Drop the transfer database (used to clean up a failed build)."""
+    assert_safe_transfer_db(TRANSFER_DB)
+    admin = psycopg.connect(CONNINFO, autocommit=True)
+    with admin.cursor() as cur:
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                pgsql.Identifier(TRANSFER_DB))
+        )
+    admin.close()
+
+
+def _build_into(src: psycopg.Connection, dst: psycopg.Connection) -> None:
+    """Apply the transfer schema to *dst* and copy data from *src*."""
+    with dst.cursor() as cur:
+        cur.execute(SCHEMA_SQL.read_text())  # type: ignore[arg-type]
+
+    def copy(select_sql: str, insert_sql: str) -> int:
+        with src.cursor() as sc, dst.cursor() as dc:
+            sc.execute(select_sql)  # type: ignore[arg-type]
+            rows = sc.fetchall()
+            dc.executemany(insert_sql, rows)  # type: ignore[arg-type]
+        return len(rows)
 
     n = copy(
         "SELECT symbol, name, atomic_number, atomic_mass FROM element",
@@ -156,14 +245,19 @@ def main() -> None:
 
     dst.commit()
 
-    # Post-load cross-row assertions (ratio sums, reference coverage).
+    # Post-load cross-row assertions (ratio sums, reference coverage):
+    # installs validate_transfer_integrity() and
+    # compute_transfer_schema_fingerprint(), runs the validator, and
+    # writes the fingerprint-sealed transfer_initialization_status marker
+    # on success.
     with dst.cursor() as cur:
+        cur.execute("SELECT set_config('l12.git_commit', %s, false)",
+                    (git_commit(),))
         cur.execute(INTEGRITY_SQL.read_text())  # type: ignore[arg-type]
     dst.commit()
-    print("Transfer integrity checks passed.")
-    src.close()
+    assert_valid_transfer(dst)
+    print("Transfer integrity checks passed (marker written).")
     dst.close()
-    print("Transfer DB built.")
 
 
 if __name__ == "__main__":

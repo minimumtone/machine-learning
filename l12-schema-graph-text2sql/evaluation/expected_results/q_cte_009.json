@@ -5,6 +5,7 @@
     "avg_enthalpy_vs_element_gs"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Al",

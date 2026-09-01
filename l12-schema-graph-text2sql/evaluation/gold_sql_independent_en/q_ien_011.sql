@@ -1,0 +1,1 @@
+SELECT DISTINCT me.entry_id, me.formula FROM material_entry me JOIN calculation c ON c.entry_id = me.entry_id JOIN band_structure bs ON bs.calculation_id = c.calculation_id WHERE bs.is_direct_gap ORDER BY me.entry_id;

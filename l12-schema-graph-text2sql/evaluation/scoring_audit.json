@@ -1,1177 +1,64 @@
 {
   "main": {
-    "n_queries": 100,
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "n_queries": 245,
     "policies": {
       "historical": {
-        "mean_recall_pct": 85.6,
-        "n_scored": 100
+        "mean_recall_pct": 86.1,
+        "n_scored": 245
       },
       "require_all_cols": {
-        "mean_recall_pct": 41.0,
-        "n_scored": 100
+        "mean_recall_pct": 26.3,
+        "n_scored": 245
       },
       "no_positional": {
-        "mean_recall_pct": 82.6,
-        "n_scored": 100
+        "mean_recall_pct": 82.8,
+        "n_scored": 245
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 85.6,
-        "n_scored": 100
+        "mean_recall_pct": 86.3,
+        "n_scored": 241
       },
       "multiset": {
-        "mean_recall_pct": 84.0,
-        "n_scored": 100
+        "mean_recall_pct": 83.9,
+        "n_scored": 245
       },
       "strict": {
-        "mean_recall_pct": 41.0,
-        "n_scored": 100
+        "mean_recall_pct": 25.5,
+        "n_scored": 241
       }
     },
-    "exact_match_pct": 73.0,
+    "exact_result_set_match_pct": 10.6,
+    "common_column_exact_overlap_pct": 78.0,
     "ordered": {
-      "mean_recall_pct": 49.6,
-      "n_gold_with_order_by": 98
+      "mean_recall_pct": 54.3,
+      "n_gold_with_order_by": 234
     },
     "diagnostics": {
-      "empty_gold_credited": [],
-      "n_excluded_empty_gold": 0,
+      "empty_gold_credited": [
+        "q_cte_008",
+        "q_expert_003",
+        "q_expert_022"
+      ],
+      "n_excluded_empty_gold": 4,
       "queries_missing_gold_columns": [
+        "q_cte_006",
+        "q_cte_007",
+        "q_cte_009",
+        "q_cte_010",
+        "q_cte_011",
+        "q_cte_012",
+        "q_cte_013",
+        "q_cte_014",
         "q_easy_001",
-        "q_easy_002",
         "q_easy_003",
         "q_easy_004",
         "q_easy_006",
         "q_easy_007",
         "q_easy_009",
-        "q_easy_010",
         "q_easy_011",
         "q_easy_012",
         "q_easy_019",
-        "q_medium_001",
-        "q_medium_002",
-        "q_medium_003",
-        "q_medium_004",
-        "q_medium_005",
-        "q_medium_006",
-        "q_medium_008",
-        "q_medium_010",
-        "q_medium_015",
-        "q_medium_021",
-        "q_medium_026",
-        "q_medium_028",
-        "q_medium_029",
-        "q_medium_030",
-        "q_hard_001",
-        "q_hard_002",
-        "q_hard_004",
-        "q_hard_005",
-        "q_hard_006",
-        "q_hard_008",
-        "q_hard_012",
-        "q_hard_014",
-        "q_hard_015",
-        "q_hard_018",
-        "q_hard_020",
-        "q_hard_021",
-        "q_hard_023",
-        "q_hard_030",
-        "q_vhard_002",
-        "q_vhard_005",
-        "q_vhard_006",
-        "q_vhard_007",
-        "q_vhard_008",
-        "q_vhard_009",
-        "q_vhard_010",
-        "q_vhard_011",
-        "q_vhard_012",
-        "q_vhard_013",
-        "q_vhard_014",
-        "q_vhard_015",
-        "q_vhard_016",
-        "q_vhard_018",
-        "q_vhard_019",
-        "q_vhard_020"
-      ],
-      "queries_no_column_overlap": [
-        "q_easy_012",
-        "q_medium_021",
-        "q_medium_026",
-        "q_hard_014",
-        "q_hard_018",
-        "q_hard_020"
-      ],
-      "credited_on_single_column": [
-        {
-          "qid": "q_easy_003",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_easy_010",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_easy_011",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_medium_010",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_medium_028",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_medium_029",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "chemical_system"
-          ]
-        },
-        {
-          "qid": "q_hard_006",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "avg_lattice_a"
-          ]
-        },
-        {
-          "qid": "q_hard_008",
-          "n_common": 1,
-          "n_gold_cols": 2,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_hard_021",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_vhard_009",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_vhard_018",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "a_site"
-          ]
-        },
-        {
-          "qid": "q_vhard_019",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "formula"
-          ]
-        },
-        {
-          "qid": "q_vhard_020",
-          "n_common": 1,
-          "n_gold_cols": 4,
-          "common": [
-            "formula"
-          ]
-        }
-      ],
-      "credited_on_minority_of_columns": [
-        {
-          "qid": "q_vhard_005",
-          "n_common": 2,
-          "n_gold_cols": 5,
-          "common": [
-            "a_site",
-            "b_site"
-          ]
-        }
-      ]
-    },
-    "selfcheck": {
-      "compared_against": "main_eval_with_sql.json",
-      "n_mismatch": 0,
-      "mismatches": []
-    },
-    "per_query": {
-      "q_easy_001": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_002": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_003": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.05102040816326531
-      },
-      "q_easy_004": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.002551020408163265
-      },
-      "q_easy_005": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.010416666666666666
-      },
-      "q_easy_006": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_007": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_008": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.05128205128205128
-      },
-      "q_easy_009": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_010": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 0.717948717948718,
-        "strict": 0.0,
-        "ordered": 0.02564102564102564
-      },
-      "q_easy_011": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_012": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0
-      },
-      "q_easy_013": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
-      },
-      "q_easy_014": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_easy_015": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.13043478260869565
-      },
-      "q_easy_016": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
-      },
-      "q_easy_017": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_easy_018": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0064516129032258064
-      },
-      "q_easy_019": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_easy_020": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.08333333333333333
-      },
-      "q_medium_001": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_002": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.008645533141210375
-      },
-      "q_medium_003": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_medium_004": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_005": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_006": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.8609625668449198
-      },
-      "q_medium_007": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_008": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_009": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_010": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 0.6222222222222222,
-        "strict": 0.0,
-        "ordered": 0.022222222222222223
-      },
-      "q_medium_011": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_012": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_013": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.02564102564102564
-      },
-      "q_medium_014": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.9693877551020408
-      },
-      "q_medium_015": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_016": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_017": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_018": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.6923076923076923
-      },
-      "q_medium_019": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
-      },
-      "q_medium_020": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_021": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_medium_022": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_023": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.03488372093023256
-      },
-      "q_medium_024": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_025": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_026": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_medium_027": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_medium_028": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 0.75,
-        "strict": 0.0,
-        "ordered": 0.0625
-      },
-      "q_medium_029": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_medium_030": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_001": {
-        "historical": 0.06153846153846154,
-        "require_all_cols": 0.0,
-        "no_positional": 0.06153846153846154,
-        "drop_empty_gold": 0.06153846153846154,
-        "multiset": 0.06153846153846154,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_002": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.007722007722007722
-      },
-      "q_hard_003": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
-      },
-      "q_hard_004": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_005": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_006": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_007": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_008": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_009": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_010": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_011": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.002551020408163265
-      },
-      "q_hard_012": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_013": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.1875
-      },
-      "q_hard_014": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_015": {
-        "historical": 0.5050505050505051,
-        "require_all_cols": 0.0,
-        "no_positional": 0.5050505050505051,
-        "drop_empty_gold": 0.5050505050505051,
-        "multiset": 0.5050505050505051,
-        "strict": 0.0,
-        "ordered": 0.030303030303030304
-      },
-      "q_hard_016": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_017": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_018": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_019": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.8609625668449198
-      },
-      "q_hard_020": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_021": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 0.3333333333333333,
-        "strict": 0.0,
-        "ordered": 0.0008503401360544217
-      },
-      "q_hard_022": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.00510204081632653
-      },
-      "q_hard_023": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_hard_024": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_hard_025": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_026": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 0.0
-      },
-      "q_hard_027": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_028": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_029": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_hard_030": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_001": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_002": {
-        "historical": 0.015384615384615385,
-        "require_all_cols": 0.0,
-        "no_positional": 0.015384615384615385,
-        "drop_empty_gold": 0.015384615384615385,
-        "multiset": 0.015384615384615385,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_003": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_004": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
-      },
-      "q_vhard_005": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.007722007722007722
-      },
-      "q_vhard_006": {
-        "historical": 0.041025641025641026,
-        "require_all_cols": 0.0,
-        "no_positional": 0.041025641025641026,
-        "drop_empty_gold": 0.041025641025641026,
-        "multiset": 0.041025641025641026,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_007": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.015384615384615385
-      },
-      "q_vhard_008": {
-        "historical": 0.05263157894736842,
-        "require_all_cols": 0.0,
-        "no_positional": 0.05263157894736842,
-        "drop_empty_gold": 0.05263157894736842,
-        "multiset": 0.05263157894736842,
-        "strict": 0.0,
-        "ordered": 0.05263157894736842
-      },
-      "q_vhard_009": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0
-      },
-      "q_vhard_010": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.010256410256410256
-      },
-      "q_vhard_011": {
-        "historical": 0.02040816326530612,
-        "require_all_cols": 0.0,
-        "no_positional": 0.02040816326530612,
-        "drop_empty_gold": 0.02040816326530612,
-        "multiset": 0.02040816326530612,
-        "strict": 0.0,
-        "ordered": 0.007653061224489796
-      },
-      "q_vhard_012": {
-        "historical": 0.035897435897435895,
-        "require_all_cols": 0.0,
-        "no_positional": 0.035897435897435895,
-        "drop_empty_gold": 0.035897435897435895,
-        "multiset": 0.035897435897435895,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_013": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_014": {
-        "historical": 0.875,
-        "require_all_cols": 0.0,
-        "no_positional": 0.875,
-        "drop_empty_gold": 0.875,
-        "multiset": 0.875,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_015": {
-        "historical": 0.010256410256410256,
-        "require_all_cols": 0.0,
-        "no_positional": 0.010256410256410256,
-        "drop_empty_gold": 0.010256410256410256,
-        "multiset": 0.010256410256410256,
-        "strict": 0.0,
-        "ordered": 0.010256410256410256
-      },
-      "q_vhard_016": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_vhard_017": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_018": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.0
-      },
-      "q_vhard_019": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
-      },
-      "q_vhard_020": {
-        "historical": 1.0,
-        "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 0.35
-      }
-    }
-  },
-  "independent": {
-    "n_queries": 100,
-    "policies": {
-      "historical": {
-        "mean_recall_pct": 72.7,
-        "n_scored": 100
-      },
-      "require_all_cols": {
-        "mean_recall_pct": 12.0,
-        "n_scored": 100
-      },
-      "no_positional": {
-        "mean_recall_pct": 67.7,
-        "n_scored": 100
-      },
-      "drop_empty_gold": {
-        "mean_recall_pct": 75.6,
-        "n_scored": 83
-      },
-      "multiset": {
-        "mean_recall_pct": 70.3,
-        "n_scored": 100
-      },
-      "strict": {
-        "mean_recall_pct": 2.4,
-        "n_scored": 83
-      }
-    },
-    "exact_match_pct": 66.0,
-    "ordered": {
-      "mean_recall_pct": 50.0,
-      "n_gold_with_order_by": 90
-    },
-    "diagnostics": {
-      "empty_gold_credited": [
-        "q_expert_003",
-        "q_expert_020",
-        "q_expert_022",
-        "q_expert_028",
-        "q_expert_045",
-        "q_expert_047",
-        "q_expert_060",
-        "q_expert_074",
-        "q_expert_075",
-        "q_expert_089"
-      ],
-      "n_excluded_empty_gold": 17,
-      "queries_missing_gold_columns": [
         "q_expert_001",
         "q_expert_002",
         "q_expert_004",
@@ -1187,14 +74,17 @@
         "q_expert_014",
         "q_expert_015",
         "q_expert_016",
+        "q_expert_017",
         "q_expert_018",
         "q_expert_019",
+        "q_expert_020",
         "q_expert_021",
         "q_expert_023",
         "q_expert_024",
         "q_expert_025",
         "q_expert_026",
         "q_expert_027",
+        "q_expert_028",
         "q_expert_029",
         "q_expert_030",
         "q_expert_031",
@@ -1209,7 +99,10 @@
         "q_expert_040",
         "q_expert_042",
         "q_expert_043",
+        "q_expert_044",
+        "q_expert_045",
         "q_expert_046",
+        "q_expert_047",
         "q_expert_048",
         "q_expert_049",
         "q_expert_050",
@@ -1218,60 +111,186 @@
         "q_expert_053",
         "q_expert_054",
         "q_expert_055",
-        "q_expert_056",
         "q_expert_057",
         "q_expert_058",
+        "q_expert_059",
+        "q_expert_060",
         "q_expert_061",
         "q_expert_062",
         "q_expert_063",
         "q_expert_064",
+        "q_expert_065",
+        "q_expert_066",
         "q_expert_067",
+        "q_expert_068",
         "q_expert_069",
         "q_expert_070",
         "q_expert_071",
         "q_expert_072",
         "q_expert_073",
+        "q_expert_074",
+        "q_expert_075",
         "q_expert_076",
         "q_expert_077",
         "q_expert_078",
+        "q_expert_079",
         "q_expert_080",
         "q_expert_081",
         "q_expert_082",
         "q_expert_083",
         "q_expert_084",
-        "q_expert_085",
         "q_expert_086",
         "q_expert_088",
+        "q_expert_089",
         "q_expert_090",
         "q_expert_091",
         "q_expert_092",
         "q_expert_093",
+        "q_expert_094",
         "q_expert_095",
         "q_expert_096",
+        "q_expert_097",
         "q_expert_098",
         "q_expert_099",
-        "q_expert_100"
+        "q_expert_100",
+        "q_expert_101",
+        "q_expert_103",
+        "q_expert_104",
+        "q_expert_110",
+        "q_expert_113",
+        "q_expert_115",
+        "q_hard_001",
+        "q_hard_002",
+        "q_hard_005",
+        "q_hard_006",
+        "q_hard_009",
+        "q_hard_014",
+        "q_hard_015",
+        "q_hard_018",
+        "q_hard_020",
+        "q_hard_021",
+        "q_hard_023",
+        "q_hard_030",
+        "q_medium_001",
+        "q_medium_002",
+        "q_medium_003",
+        "q_medium_004",
+        "q_medium_006",
+        "q_medium_008",
+        "q_medium_010",
+        "q_medium_015",
+        "q_medium_017",
+        "q_medium_021",
+        "q_medium_026",
+        "q_medium_028",
+        "q_medium_029",
+        "q_proto_b2_easy_001",
+        "q_proto_b2_very_hard_001",
+        "q_proto_bif3_easy_001",
+        "q_proto_bif3_medium_001",
+        "q_proto_l12_easy_001",
+        "q_proto_l12_very_hard_001",
+        "q_proto_nacl_easy_001",
+        "q_proto_nacl_hard_001",
+        "q_proto_nacl_medium_001",
+        "q_proto_nacl_very_hard_001",
+        "q_proto_nias_easy_001",
+        "q_proto_nias_medium_001",
+        "q_proto_nias_very_hard_001",
+        "q_vhard_001",
+        "q_vhard_005",
+        "q_vhard_006",
+        "q_vhard_007",
+        "q_vhard_008",
+        "q_vhard_009",
+        "q_vhard_010",
+        "q_vhard_011",
+        "q_vhard_012",
+        "q_vhard_013",
+        "q_vhard_014",
+        "q_vhard_015",
+        "q_vhard_016",
+        "q_vhard_017",
+        "q_vhard_018",
+        "q_vhard_019",
+        "q_vhard_020"
       ],
       "queries_no_column_overlap": [
+        "q_cte_014",
+        "q_easy_012",
         "q_expert_001",
         "q_expert_005",
         "q_expert_008",
+        "q_expert_017",
         "q_expert_018",
         "q_expert_026",
         "q_expert_029",
-        "q_expert_030",
         "q_expert_035",
         "q_expert_040",
         "q_expert_088",
         "q_expert_091",
         "q_expert_092",
         "q_expert_093",
-        "q_expert_095",
         "q_expert_098",
         "q_expert_099",
-        "q_expert_100"
+        "q_expert_100",
+        "q_hard_014",
+        "q_hard_018",
+        "q_hard_020",
+        "q_medium_021",
+        "q_medium_026",
+        "q_proto_l12_very_hard_001",
+        "q_proto_nias_very_hard_001"
       ],
       "credited_on_single_column": [
+        {
+          "qid": "q_cte_008",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "b_site"
+          ]
+        },
+        {
+          "qid": "q_cte_009",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "element"
+          ]
+        },
+        {
+          "qid": "q_cte_010",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_cte_012",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_easy_003",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_easy_011",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
         {
           "qid": "q_expert_004",
           "n_common": 1,
@@ -1289,9 +308,41 @@
           ]
         },
         {
-          "qid": "q_expert_016",
+          "qid": "q_expert_014",
           "n_common": 1,
-          "n_gold_cols": 4,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_030",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "prototype"
+          ]
+        },
+        {
+          "qid": "q_expert_042",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_043",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_046",
+          "n_common": 1,
+          "n_gold_cols": 5,
           "common": [
             "formula"
           ]
@@ -1361,24 +412,103 @@
           ]
         },
         {
-          "qid": "q_expert_096",
+          "qid": "q_expert_079",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_095",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "stability"
+          ]
+        },
+        {
+          "qid": "q_expert_097",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "method"
+          ]
+        },
+        {
+          "qid": "q_hard_006",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "avg_lattice_a"
+          ]
+        },
+        {
+          "qid": "q_hard_021",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_medium_028",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_medium_029",
           "n_common": 1,
           "n_gold_cols": 2,
           "common": [
             "chemical_system"
           ]
-        }
-      ],
-      "credited_on_minority_of_columns": [
+        },
         {
-          "qid": "q_expert_006",
-          "n_common": 2,
-          "n_gold_cols": 7,
+          "qid": "q_vhard_009",
+          "n_common": 1,
+          "n_gold_cols": 4,
           "common": [
-            "entry_id",
             "formula"
           ]
         },
+        {
+          "qid": "q_vhard_014",
+          "n_common": 1,
+          "n_gold_cols": 5,
+          "common": [
+            "avg_energy_above_hull"
+          ]
+        },
+        {
+          "qid": "q_vhard_018",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "a_site"
+          ]
+        },
+        {
+          "qid": "q_vhard_019",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_vhard_020",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        }
+      ],
+      "credited_on_minority_of_columns": [
         {
           "qid": "q_expert_089",
           "n_common": 2,
@@ -1387,15 +517,327 @@
             "formula",
             "poisson_ratio"
           ]
+        },
+        {
+          "qid": "q_proto_b2_very_hard_001",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "a_site",
+            "b_site"
+          ]
+        },
+        {
+          "qid": "q_proto_nacl_very_hard_001",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "a_site",
+            "b_site"
+          ]
+        },
+        {
+          "qid": "q_vhard_005",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "a_site",
+            "b_site"
+          ]
+        },
+        {
+          "qid": "q_vhard_011",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "formula",
+            "energy_above_hull"
+          ]
+        },
+        {
+          "qid": "q_vhard_016",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "formula",
+            "lattice_a"
+          ]
         }
       ]
     },
     "selfcheck": {
-      "compared_against": "independent_eval_results.json",
+      "compared_against": "main_eval_with_sql.json",
       "n_mismatch": 0,
       "mismatches": []
     },
     "per_query": {
+      "q_cte_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.045454545454545456
+      },
+      "q_cte_007": {
+        "historical": 0.2,
+        "require_all_cols": 0.0,
+        "no_positional": 0.2,
+        "drop_empty_gold": 0.2,
+        "multiset": 0.2,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_cte_008": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "multiset": 1.0,
+        "ordered": 1.0
+      },
+      "q_cte_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.2
+      },
+      "q_cte_010": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.006535947712418301
+      },
+      "q_cte_011": {
+        "historical": 0.7,
+        "require_all_cols": 0.0,
+        "no_positional": 0.7,
+        "drop_empty_gold": 0.7,
+        "multiset": 0.7,
+        "strict": 0.0,
+        "ordered": 0.5
+      },
+      "q_cte_012": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9090909090909091
+      },
+      "q_cte_013": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_cte_014": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_cte_015": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_easy_002": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.21428571428571427
+      },
+      "q_easy_003": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.6505102040816326,
+        "strict": 0.0,
+        "ordered": 0.002551020408163265
+      },
+      "q_easy_004": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.002551020408163265
+      },
+      "q_easy_005": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.010752688172043012
+      },
+      "q_easy_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.46638655462184875,
+        "strict": 0.0,
+        "ordered": 0.0007002801120448179
+      },
+      "q_easy_007": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_easy_008": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.021739130434782608
+      },
+      "q_easy_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_easy_010": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.024390243902439025
+      },
+      "q_easy_011": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_easy_012": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_easy_013": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.011904761904761904
+      },
+      "q_easy_014": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_easy_015": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.05555555555555555
+      },
+      "q_easy_016": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.007874015748031496
+      },
+      "q_easy_017": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_easy_018": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.0064516129032258064
+      },
+      "q_easy_019": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_easy_020": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.05555555555555555
+      },
       "q_expert_001": {
         "historical": 1.0,
         "require_all_cols": 0.0,
@@ -1425,9 +867,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.45217391304347826,
+        "multiset": 0.49606299212598426,
         "strict": 0.0,
-        "ordered": 0.017391304347826087
+        "ordered": 0.015748031496062992
       },
       "q_expert_005": {
         "historical": 1.0,
@@ -1450,9 +892,9 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.5700389105058365,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0038910505836575876
+        "ordered": 1.0
       },
       "q_expert_008": {
         "historical": 1.0,
@@ -1469,7 +911,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.020134228187919462
+        "ordered": 0.007142857142857143
       },
       "q_expert_010": {
         "historical": 1.0,
@@ -1503,18 +945,18 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6285714285714286,
+        "multiset": 0.6666666666666666,
         "strict": 0.0,
-        "ordered": 0.2
+        "ordered": 0.02564102564102564
       },
       "q_expert_014": {
-        "historical": 0.5444015444015444,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.5444015444015444,
-        "drop_empty_gold": 0.5444015444015444,
-        "multiset": 0.5459183673469388,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.6697247706422018,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.0045871559633027525
       },
       "q_expert_015": {
         "historical": 1.0,
@@ -1530,18 +972,18 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6166666666666667,
+        "multiset": 0.58,
         "strict": 0.0,
-        "ordered": 0.016666666666666666
+        "ordered": 0.0
       },
       "q_expert_017": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
       },
       "q_expert_018": {
         "historical": 0.0,
@@ -1557,15 +999,17 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6541554959785523,
+        "multiset": 0.6418732782369146,
         "strict": 0.0,
-        "ordered": 0.013404825737265416
+        "ordered": 0.0027548209366391185
       },
       "q_expert_020": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
         "multiset": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_expert_021": {
@@ -1630,10 +1074,12 @@
       },
       "q_expert_028": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "ordered": 1.0
+        "strict": 0.0,
+        "ordered": 0.0
       },
       "q_expert_029": {
         "historical": 1.0,
@@ -1644,20 +1090,20 @@
         "strict": 0.0
       },
       "q_expert_030": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_expert_031": {
-        "historical": 0.125,
+        "historical": 0.2857142857142857,
         "require_all_cols": 0.0,
-        "no_positional": 0.125,
-        "drop_empty_gold": 0.125,
-        "multiset": 0.125,
+        "no_positional": 0.2857142857142857,
+        "drop_empty_gold": 0.2857142857142857,
+        "multiset": 0.2857142857142857,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -1668,7 +1114,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.0024330900243309003
       },
       "q_expert_033": {
         "historical": 1.0,
@@ -1686,7 +1132,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.7692307692307693
       },
       "q_expert_035": {
         "historical": 0.0,
@@ -1703,7 +1149,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.8133333333333334
       },
       "q_expert_037": {
         "historical": 1.0,
@@ -1719,18 +1165,18 @@
         "require_all_cols": 0.0,
         "no_positional": 0.5,
         "drop_empty_gold": 0.5,
-        "multiset": 0.3333333333333333,
+        "multiset": 0.4,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.2
       },
       "q_expert_039": {
-        "historical": 0.037037037037037035,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.037037037037037035,
-        "drop_empty_gold": 0.037037037037037035,
-        "multiset": 0.037037037037037035,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.9245283018867925
       },
       "q_expert_040": {
         "historical": 0.0,
@@ -1749,61 +1195,67 @@
         "ordered": 0.0
       },
       "q_expert_042": {
-        "historical": 0.9818181818181818,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.9818181818181818,
-        "drop_empty_gold": 0.9818181818181818,
-        "multiset": 0.9824561403508771,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.017543859649122806
+        "ordered": 0.0273972602739726
       },
       "q_expert_043": {
-        "historical": 0.3333333333333333,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.3333333333333333,
-        "drop_empty_gold": 0.3333333333333333,
-        "multiset": 0.3333333333333333,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.3333333333333333
+        "ordered": 1.0
       },
       "q_expert_044": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
-        "ordered": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.001349527665317139
       },
       "q_expert_045": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "ordered": 1.0
+        "strict": 0.0,
+        "ordered": 0.27586206896551724
       },
       "q_expert_046": {
-        "historical": 0.008695652173913044,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.008695652173913044,
-        "drop_empty_gold": 0.008695652173913044,
-        "multiset": 0.008695652173913044,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 0.015267175572519083
       },
       "q_expert_047": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
-        "multiset": 1.0,
-        "ordered": 1.0
+        "drop_empty_gold": 1.0,
+        "multiset": 0.9166666666666666,
+        "strict": 0.0,
+        "ordered": 0.09259259259259259
       },
       "q_expert_048": {
-        "historical": 0.9666666666666667,
+        "historical": 0.9755102040816327,
         "require_all_cols": 0.0,
-        "no_positional": 0.9666666666666667,
-        "drop_empty_gold": 0.9666666666666667,
-        "multiset": 0.9666666666666667,
+        "no_positional": 0.9755102040816327,
+        "drop_empty_gold": 0.9755102040816327,
+        "multiset": 0.9755102040816327,
         "strict": 0.0,
-        "ordered": 0.9666666666666667
+        "ordered": 0.02585034013605442
       },
       "q_expert_049": {
         "historical": 1.0,
@@ -1820,7 +1272,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.0
+        "ordered": 1.0
       },
       "q_expert_051": {
         "historical": 1.0,
@@ -1838,16 +1290,16 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.01744186046511628
+        "ordered": 0.0
       },
       "q_expert_053": {
         "historical": 1.0,
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "multiset": 0.8578680203045685,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.050761421319796954
       },
       "q_expert_054": {
         "historical": 1.0,
@@ -1856,7 +1308,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.021739130434782608
+        "ordered": 0.06060606060606061
       },
       "q_expert_055": {
         "historical": 1.0,
@@ -1869,12 +1321,12 @@
       },
       "q_expert_056": {
         "historical": 1.0,
-        "require_all_cols": 0.0,
+        "require_all_cols": 1.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
-        "strict": 0.0,
-        "ordered": 1.0
+        "strict": 1.0,
+        "ordered": 0.0031746031746031746
       },
       "q_expert_057": {
         "historical": 1.0,
@@ -1883,7 +1335,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.012578616352201259
+        "ordered": 0.006535947712418301
       },
       "q_expert_058": {
         "historical": 1.0,
@@ -1892,20 +1344,24 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.009708737864077669
       },
       "q_expert_059": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
-        "ordered": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
       },
       "q_expert_060": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
         "multiset": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_expert_061": {
@@ -1924,7 +1380,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.9682539682539683
+        "ordered": 0.9375
       },
       "q_expert_063": {
         "historical": 1.0,
@@ -1933,7 +1389,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.8448275862068966
+        "ordered": 0.9552238805970149
       },
       "q_expert_064": {
         "historical": 1.0,
@@ -1945,18 +1401,22 @@
         "ordered": 0.0
       },
       "q_expert_065": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
-        "ordered": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
       },
       "q_expert_066": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
-        "ordered": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
       },
       "q_expert_067": {
         "historical": 1.0,
@@ -1968,11 +1428,13 @@
         "ordered": 1.0
       },
       "q_expert_068": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
-        "ordered": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
       },
       "q_expert_069": {
         "historical": 1.0,
@@ -1981,7 +1443,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.006493506493506494
       },
       "q_expert_070": {
         "historical": 1.0,
@@ -1997,40 +1459,44 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.875,
+        "multiset": 0.9072164948453608,
         "strict": 0.0,
-        "ordered": 0.10576923076923077
+        "ordered": 0.020618556701030927
       },
       "q_expert_072": {
-        "historical": 0.8,
+        "historical": 0.7272727272727273,
         "require_all_cols": 0.0,
-        "no_positional": 0.8,
-        "drop_empty_gold": 0.8,
-        "multiset": 0.8,
+        "no_positional": 0.7272727272727273,
+        "drop_empty_gold": 0.7272727272727273,
+        "multiset": 0.7272727272727273,
         "strict": 0.0,
-        "ordered": 0.1
+        "ordered": 0.36363636363636365
       },
       "q_expert_073": {
-        "historical": 0.8514851485148515,
+        "historical": 0.7878787878787878,
         "require_all_cols": 0.0,
-        "no_positional": 0.8514851485148515,
-        "drop_empty_gold": 0.8514851485148515,
-        "multiset": 0.8514851485148515,
+        "no_positional": 0.7878787878787878,
+        "drop_empty_gold": 0.7878787878787878,
+        "multiset": 0.7878787878787878,
         "strict": 0.0,
-        "ordered": 0.13861386138613863
+        "ordered": 0.010101010101010102
       },
       "q_expert_074": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
-        "multiset": 1.0,
-        "ordered": 1.0
+        "drop_empty_gold": 1.0,
+        "multiset": 0.9333333333333333,
+        "strict": 0.0,
+        "ordered": 0.0
       },
       "q_expert_075": {
         "historical": 1.0,
-        "require_all_cols": 1.0,
+        "require_all_cols": 0.0,
         "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
         "multiset": 1.0,
+        "strict": 0.0,
         "ordered": 1.0
       },
       "q_expert_076": {
@@ -2043,28 +1509,30 @@
         "ordered": 1.0
       },
       "q_expert_077": {
-        "historical": 0.5106382978723404,
+        "historical": 0.4883720930232558,
         "require_all_cols": 0.0,
-        "no_positional": 0.5106382978723404,
-        "drop_empty_gold": 0.5106382978723404,
-        "multiset": 0.49,
+        "no_positional": 0.4883720930232558,
+        "drop_empty_gold": 0.4883720930232558,
+        "multiset": 0.4421052631578947,
         "strict": 0.0,
         "ordered": 0.0
       },
       "q_expert_078": {
-        "historical": 0.8444444444444444,
+        "historical": 0.8292682926829268,
         "require_all_cols": 0.0,
-        "no_positional": 0.8444444444444444,
-        "drop_empty_gold": 0.8444444444444444,
-        "multiset": 0.7916666666666666,
+        "no_positional": 0.8292682926829268,
+        "drop_empty_gold": 0.8292682926829268,
+        "multiset": 0.813953488372093,
         "strict": 0.0,
-        "ordered": 0.0625
+        "ordered": 0.09302325581395349
       },
       "q_expert_079": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "multiset": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
         "ordered": 0.0
       },
       "q_expert_080": {
@@ -2074,7 +1542,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 0.07142857142857142
+        "ordered": 0.03295454545454545
       },
       "q_expert_081": {
         "historical": 1.0,
@@ -2092,7 +1560,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.9894179894179894
       },
       "q_expert_083": {
         "historical": 1.0,
@@ -2113,11 +1581,11 @@
         "ordered": 1.0
       },
       "q_expert_085": {
-        "historical": 0.1875,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.1875,
-        "drop_empty_gold": 0.1875,
-        "multiset": 0.1875,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
         "ordered": 0.0
       },
@@ -2128,7 +1596,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.5
       },
       "q_expert_087": {
         "historical": 0.0,
@@ -2150,10 +1618,2260 @@
       },
       "q_expert_089": {
         "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.8846153846153846
+      },
+      "q_expert_090": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_091": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_092": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_093": {
+        "historical": 0.045454545454545456,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.045454545454545456,
+        "multiset": 0.045454545454545456,
+        "strict": 0.0,
+        "ordered": 0.045454545454545456
+      },
+      "q_expert_094": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9846938775510204
+      },
+      "q_expert_095": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.3333333333333333
+      },
+      "q_expert_096": {
+        "historical": 0.8,
+        "require_all_cols": 0.0,
+        "no_positional": 0.8,
+        "drop_empty_gold": 0.8,
+        "multiset": 0.8,
+        "strict": 0.0,
+        "ordered": 0.6
+      },
+      "q_expert_097": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_098": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0
+      },
+      "q_expert_099": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_100": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_101": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_102": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_103": {
+        "historical": 0.996078431372549,
+        "require_all_cols": 0.0,
+        "no_positional": 0.996078431372549,
+        "drop_empty_gold": 0.996078431372549,
+        "multiset": 0.996078431372549,
+        "strict": 0.0,
+        "ordered": 0.24313725490196078
+      },
+      "q_expert_104": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_105": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.3333333333333333
+      },
+      "q_expert_106": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_107": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_108": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_109": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_110": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_111": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_112": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_113": {
+        "historical": 0.5,
+        "require_all_cols": 0.0,
+        "no_positional": 0.5,
+        "drop_empty_gold": 0.5,
+        "multiset": 0.375,
+        "strict": 0.0,
+        "ordered": 0.25
+      },
+      "q_expert_114": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_115": {
+        "historical": 0.3333333333333333,
+        "require_all_cols": 0.0,
+        "no_positional": 0.3333333333333333,
+        "drop_empty_gold": 0.3333333333333333,
+        "multiset": 0.3333333333333333,
+        "strict": 0.0,
+        "ordered": 0.3333333333333333
+      },
+      "q_hard_001": {
+        "historical": 0.026455026455026454,
+        "require_all_cols": 0.0,
+        "no_positional": 0.026455026455026454,
+        "drop_empty_gold": 0.026455026455026454,
+        "multiset": 0.026455026455026454,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_hard_002": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.00392156862745098
+      },
+      "q_hard_003": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9777777777777777
+      },
+      "q_hard_004": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.7142857142857143
+      },
+      "q_hard_005": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_hard_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.045454545454545456
+      },
+      "q_hard_007": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_008": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9791666666666666
+      },
+      "q_hard_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_hard_010": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_011": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.007653061224489796
+      },
+      "q_hard_012": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_013": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.14285714285714285
+      },
+      "q_hard_014": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_hard_015": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_hard_016": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9846938775510204
+      },
+      "q_hard_017": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_018": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_hard_019": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.7692307692307693
+      },
+      "q_hard_020": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_hard_021": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.3333333333333333,
+        "strict": 0.0,
+        "ordered": 0.0017006802721088435
+      },
+      "q_hard_022": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.007653061224489796
+      },
+      "q_hard_023": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_hard_024": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_hard_025": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_026": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.021164021164021163
+      },
+      "q_hard_027": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_028": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9846938775510204
+      },
+      "q_hard_029": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_hard_030": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_medium_002": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.005917159763313609
+      },
+      "q_medium_003": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.25
+      },
+      "q_medium_004": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9948979591836735
+      },
+      "q_medium_005": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_medium_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.7692307692307693
+      },
+      "q_medium_007": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9744897959183674
+      },
+      "q_medium_008": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_medium_009": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9883381924198251
+      },
+      "q_medium_010": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.7419354838709677,
+        "strict": 0.0,
+        "ordered": 0.03225806451612903
+      },
+      "q_medium_011": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9821428571428571
+      },
+      "q_medium_012": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.6578947368421053
+      },
+      "q_medium_013": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.6585365853658537
+      },
+      "q_medium_014": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.9846938775510204
+      },
+      "q_medium_015": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_medium_016": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_medium_017": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_medium_018": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.6
+      },
+      "q_medium_019": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.0
+      },
+      "q_medium_020": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.7007672634271099
+      },
+      "q_medium_021": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.45454545454545453
+      },
+      "q_medium_022": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_medium_023": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.00980392156862745
+      },
+      "q_medium_024": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_medium_025": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.95
+      },
+      "q_medium_026": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_medium_027": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_medium_028": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.6470588235294118,
+        "strict": 0.0,
+        "ordered": 0.17647058823529413
+      },
+      "q_medium_029": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.00823045267489712
+      },
+      "q_medium_030": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_proto_b2_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_b2_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_proto_b2_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.014492753623188406
+      },
+      "q_proto_b2_very_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.00303951367781155
+      },
+      "q_proto_bif3_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_bif3_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_proto_bif3_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_bif3_very_hard_001": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_proto_l12_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_l12_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_proto_l12_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.21428571428571427
+      },
+      "q_proto_l12_very_hard_001": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_proto_nacl_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.4394366197183099,
+        "strict": 0.0,
+        "ordered": 0.0028169014084507044
+      },
+      "q_proto_nacl_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_nacl_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_nacl_very_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_proto_nias_easy_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_nias_hard_001": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_proto_nias_medium_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_proto_nias_very_hard_001": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_vhard_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_002": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_vhard_003": {
+        "historical": 0.41798941798941797,
+        "require_all_cols": 0.41798941798941797,
+        "no_positional": 0.41798941798941797,
+        "drop_empty_gold": 0.41798941798941797,
+        "multiset": 0.41798941798941797,
+        "strict": 0.41798941798941797,
+        "ordered": 0.0
+      },
+      "q_vhard_004": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 1.0
+      },
+      "q_vhard_005": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.00392156862745098
+      },
+      "q_vhard_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_007": {
+        "historical": 0.41798941798941797,
+        "require_all_cols": 0.0,
+        "no_positional": 0.41798941798941797,
+        "drop_empty_gold": 0.41798941798941797,
+        "multiset": 0.41798941798941797,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_vhard_008": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_vhard_010": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.783068783068783
+      },
+      "q_vhard_011": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.8367346938775511
+      },
+      "q_vhard_012": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_vhard_013": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_vhard_014": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_015": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_016": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.6
+      },
+      "q_vhard_017": {
+        "historical": 0.85,
+        "require_all_cols": 0.0,
+        "no_positional": 0.85,
+        "drop_empty_gold": 0.85,
+        "multiset": 0.85,
+        "strict": 0.0,
+        "ordered": 0.25
+      },
+      "q_vhard_018": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.6666666666666666
+      },
+      "q_vhard_019": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_vhard_020": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.5927272727272728
+      }
+    }
+  },
+  "independent": {
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "n_queries": 100,
+    "policies": {
+      "historical": {
+        "mean_recall_pct": 81.5,
+        "n_scored": 100
+      },
+      "require_all_cols": {
+        "mean_recall_pct": 4.0,
+        "n_scored": 100
+      },
+      "no_positional": {
+        "mean_recall_pct": 76.4,
+        "n_scored": 100
+      },
+      "drop_empty_gold": {
+        "mean_recall_pct": 81.9,
+        "n_scored": 97
+      },
+      "multiset": {
+        "mean_recall_pct": 80.3,
+        "n_scored": 100
+      },
+      "strict": {
+        "mean_recall_pct": 2.1,
+        "n_scored": 97
+      }
+    },
+    "exact_result_set_match_pct": 1.0,
+    "common_column_exact_overlap_pct": 71.0,
+    "ordered": {
+      "mean_recall_pct": 50.4,
+      "n_gold_with_order_by": 91
+    },
+    "diagnostics": {
+      "empty_gold_credited": [
+        "q_expert_003",
+        "q_expert_022"
+      ],
+      "n_excluded_empty_gold": 3,
+      "queries_missing_gold_columns": [
+        "q_expert_001",
+        "q_expert_002",
+        "q_expert_004",
+        "q_expert_005",
+        "q_expert_006",
+        "q_expert_007",
+        "q_expert_008",
+        "q_expert_009",
+        "q_expert_010",
+        "q_expert_011",
+        "q_expert_012",
+        "q_expert_013",
+        "q_expert_014",
+        "q_expert_015",
+        "q_expert_016",
+        "q_expert_017",
+        "q_expert_018",
+        "q_expert_019",
+        "q_expert_020",
+        "q_expert_021",
+        "q_expert_023",
+        "q_expert_024",
+        "q_expert_025",
+        "q_expert_026",
+        "q_expert_027",
+        "q_expert_028",
+        "q_expert_029",
+        "q_expert_030",
+        "q_expert_031",
+        "q_expert_032",
+        "q_expert_033",
+        "q_expert_034",
+        "q_expert_035",
+        "q_expert_036",
+        "q_expert_037",
+        "q_expert_038",
+        "q_expert_039",
+        "q_expert_040",
+        "q_expert_042",
+        "q_expert_043",
+        "q_expert_044",
+        "q_expert_045",
+        "q_expert_046",
+        "q_expert_047",
+        "q_expert_048",
+        "q_expert_049",
+        "q_expert_050",
+        "q_expert_051",
+        "q_expert_052",
+        "q_expert_053",
+        "q_expert_054",
+        "q_expert_055",
+        "q_expert_057",
+        "q_expert_058",
+        "q_expert_059",
+        "q_expert_060",
+        "q_expert_061",
+        "q_expert_062",
+        "q_expert_063",
+        "q_expert_064",
+        "q_expert_065",
+        "q_expert_066",
+        "q_expert_067",
+        "q_expert_068",
+        "q_expert_069",
+        "q_expert_070",
+        "q_expert_071",
+        "q_expert_072",
+        "q_expert_073",
+        "q_expert_074",
+        "q_expert_075",
+        "q_expert_076",
+        "q_expert_077",
+        "q_expert_078",
+        "q_expert_079",
+        "q_expert_080",
+        "q_expert_081",
+        "q_expert_082",
+        "q_expert_083",
+        "q_expert_084",
+        "q_expert_086",
+        "q_expert_088",
+        "q_expert_089",
+        "q_expert_090",
+        "q_expert_091",
+        "q_expert_092",
+        "q_expert_093",
+        "q_expert_095",
+        "q_expert_096",
+        "q_expert_097",
+        "q_expert_098",
+        "q_expert_099",
+        "q_expert_100"
+      ],
+      "queries_no_column_overlap": [
+        "q_expert_001",
+        "q_expert_005",
+        "q_expert_008",
+        "q_expert_017",
+        "q_expert_018",
+        "q_expert_026",
+        "q_expert_029",
+        "q_expert_035",
+        "q_expert_040",
+        "q_expert_088",
+        "q_expert_091",
+        "q_expert_092",
+        "q_expert_093",
+        "q_expert_098",
+        "q_expert_099",
+        "q_expert_100"
+      ],
+      "credited_on_single_column": [
+        {
+          "qid": "q_expert_003",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_004",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_013",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_014",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_016",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_030",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "prototype"
+          ]
+        },
+        {
+          "qid": "q_expert_043",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_047",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_052",
+          "n_common": 1,
+          "n_gold_cols": 5,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_053",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_054",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_067",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_069",
+          "n_common": 1,
+          "n_gold_cols": 4,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_071",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_074",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_079",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_095",
+          "n_common": 1,
+          "n_gold_cols": 3,
+          "common": [
+            "stability"
+          ]
+        },
+        {
+          "qid": "q_expert_097",
+          "n_common": 1,
+          "n_gold_cols": 2,
+          "common": [
+            "method"
+          ]
+        }
+      ],
+      "credited_on_minority_of_columns": [
+        {
+          "qid": "q_expert_006",
+          "n_common": 2,
+          "n_gold_cols": 7,
+          "common": [
+            "entry_id",
+            "formula"
+          ]
+        },
+        {
+          "qid": "q_expert_089",
+          "n_common": 2,
+          "n_gold_cols": 5,
+          "common": [
+            "formula",
+            "poisson_ratio"
+          ]
+        }
+      ]
+    },
+    "selfcheck": {
+      "compared_against": "independent_eval_results.json",
+      "n_mismatch": 0,
+      "mismatches": []
+    },
+    "per_query": {
+      "q_expert_001": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_002": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_003": {
+        "historical": 1.0,
         "require_all_cols": 1.0,
         "no_positional": 1.0,
         "multiset": 1.0,
         "ordered": 1.0
+      },
+      "q_expert_004": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.49606299212598426,
+        "strict": 0.0,
+        "ordered": 0.015748031496062992
+      },
+      "q_expert_005": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_006": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_007": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_008": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_009": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.007142857142857143
+      },
+      "q_expert_010": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_011": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_012": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_013": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_014": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.6697247706422018,
+        "strict": 0.0,
+        "ordered": 0.0045871559633027525
+      },
+      "q_expert_015": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_016": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.02
+      },
+      "q_expert_017": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_018": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_019": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0027548209366391185
+      },
+      "q_expert_020": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_021": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_022": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "multiset": 1.0,
+        "ordered": 1.0
+      },
+      "q_expert_023": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_024": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_025": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_026": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_027": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_028": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_029": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_030": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_031": {
+        "historical": 0.2857142857142857,
+        "require_all_cols": 0.0,
+        "no_positional": 0.2857142857142857,
+        "drop_empty_gold": 0.2857142857142857,
+        "multiset": 0.2857142857142857,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_032": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9343065693430657
+      },
+      "q_expert_033": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_034": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.7692307692307693
+      },
+      "q_expert_035": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0
+      },
+      "q_expert_036": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.8133333333333334
+      },
+      "q_expert_037": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_038": {
+        "historical": 0.5,
+        "require_all_cols": 0.0,
+        "no_positional": 0.5,
+        "drop_empty_gold": 0.5,
+        "multiset": 0.4,
+        "strict": 0.0,
+        "ordered": 0.2
+      },
+      "q_expert_039": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9245283018867925
+      },
+      "q_expert_040": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_041": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "multiset": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_042": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_043": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_044": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.001349527665317139
+      },
+      "q_expert_045": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.27586206896551724
+      },
+      "q_expert_046": {
+        "historical": 0.022900763358778626,
+        "require_all_cols": 0.0,
+        "no_positional": 0.022900763358778626,
+        "drop_empty_gold": 0.022900763358778626,
+        "multiset": 0.022900763358778626,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_047": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_048": {
+        "historical": 0.9755102040816327,
+        "require_all_cols": 0.0,
+        "no_positional": 0.9755102040816327,
+        "drop_empty_gold": 0.9755102040816327,
+        "multiset": 0.9755102040816327,
+        "strict": 0.0,
+        "ordered": 0.02585034013605442
+      },
+      "q_expert_049": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0
+      },
+      "q_expert_050": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.017241379310344827
+      },
+      "q_expert_051": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_052": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.011235955056179775
+      },
+      "q_expert_053": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_054": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.06060606060606061
+      },
+      "q_expert_055": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_056": {
+        "historical": 1.0,
+        "require_all_cols": 1.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 1.0,
+        "ordered": 0.0031746031746031746
+      },
+      "q_expert_057": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_058": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.009708737864077669
+      },
+      "q_expert_059": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_060": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_061": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_062": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9375
+      },
+      "q_expert_063": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9552238805970149
+      },
+      "q_expert_064": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_065": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_066": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_067": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_068": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_069": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.006493506493506494
+      },
+      "q_expert_070": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0029182879377431907
+      },
+      "q_expert_071": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.9072164948453608,
+        "strict": 0.0,
+        "ordered": 0.020618556701030927
+      },
+      "q_expert_072": {
+        "historical": 0.7272727272727273,
+        "require_all_cols": 0.0,
+        "no_positional": 0.7272727272727273,
+        "drop_empty_gold": 0.7272727272727273,
+        "multiset": 0.7272727272727273,
+        "strict": 0.0,
+        "ordered": 0.36363636363636365
+      },
+      "q_expert_073": {
+        "historical": 0.7878787878787878,
+        "require_all_cols": 0.0,
+        "no_positional": 0.7878787878787878,
+        "drop_empty_gold": 0.7878787878787878,
+        "multiset": 0.7878787878787878,
+        "strict": 0.0,
+        "ordered": 0.030303030303030304
+      },
+      "q_expert_074": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 0.9333333333333333,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_075": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_076": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_077": {
+        "historical": 0.4883720930232558,
+        "require_all_cols": 0.0,
+        "no_positional": 0.4883720930232558,
+        "drop_empty_gold": 0.4883720930232558,
+        "multiset": 0.4421052631578947,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_078": {
+        "historical": 0.8292682926829268,
+        "require_all_cols": 0.0,
+        "no_positional": 0.8292682926829268,
+        "drop_empty_gold": 0.8292682926829268,
+        "multiset": 0.813953488372093,
+        "strict": 0.0,
+        "ordered": 0.09302325581395349
+      },
+      "q_expert_079": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_080": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.03295454545454545
+      },
+      "q_expert_081": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_082": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.9894179894179894
+      },
+      "q_expert_083": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_084": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 1.0
+      },
+      "q_expert_085": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_086": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.5
+      },
+      "q_expert_087": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_088": {
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
+      },
+      "q_expert_089": {
+        "historical": 1.0,
+        "require_all_cols": 0.0,
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.8846153846153846
       },
       "q_expert_090": {
         "historical": 1.0,
@@ -2198,17 +3916,27 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.00510204081632653
+        "ordered": 0.0
       },
       "q_expert_095": {
-        "historical": 0.0,
+        "historical": 1.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0
+        "no_positional": 1.0,
+        "drop_empty_gold": 1.0,
+        "multiset": 1.0,
+        "strict": 0.0,
+        "ordered": 0.3333333333333333
       },
       "q_expert_096": {
+        "historical": 0.8,
+        "require_all_cols": 0.0,
+        "no_positional": 0.8,
+        "drop_empty_gold": 0.8,
+        "multiset": 0.8,
+        "strict": 0.0,
+        "ordered": 0.6
+      },
+      "q_expert_097": {
         "historical": 1.0,
         "require_all_cols": 0.0,
         "no_positional": 1.0,
@@ -2216,15 +3944,6 @@
         "multiset": 1.0,
         "strict": 0.0,
         "ordered": 1.0
-      },
-      "q_expert_097": {
-        "historical": 0.0,
-        "require_all_cols": 0.0,
-        "no_positional": 0.0,
-        "drop_empty_gold": 0.0,
-        "multiset": 0.0,
-        "strict": 0.0,
-        "ordered": 0.0
       },
       "q_expert_098": {
         "historical": 0.0,
@@ -2255,10 +3974,11 @@
     }
   },
   "transfer": {
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
-        "mean_recall_pct": 90.5,
+        "mean_recall_pct": 85.0,
         "n_scored": 20
       },
       "require_all_cols": {
@@ -2266,15 +3986,15 @@
         "n_scored": 20
       },
       "no_positional": {
-        "mean_recall_pct": 75.5,
+        "mean_recall_pct": 70.0,
         "n_scored": 20
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 90.5,
+        "mean_recall_pct": 85.0,
         "n_scored": 20
       },
       "multiset": {
-        "mean_recall_pct": 87.6,
+        "mean_recall_pct": 85.0,
         "n_scored": 20
       },
       "strict": {
@@ -2282,9 +4002,10 @@
         "n_scored": 20
       }
     },
-    "exact_match_pct": 85.0,
+    "exact_result_set_match_pct": 15.0,
+    "common_column_exact_overlap_pct": 85.0,
     "ordered": {
-      "mean_recall_pct": 64.5,
+      "mean_recall_pct": 66.5,
       "n_gold_with_order_by": 11
     },
     "diagnostics": {
@@ -2300,8 +4021,7 @@
         "q_transfer_013",
         "q_transfer_017",
         "q_transfer_018",
-        "q_transfer_019",
-        "q_transfer_020"
+        "q_transfer_019"
       ],
       "queries_no_column_overlap": [
         "q_transfer_005",
@@ -2348,14 +4068,6 @@
           "common": [
             "composition_formula"
           ]
-        },
-        {
-          "qid": "q_transfer_020",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "a_site"
-          ]
         }
       ],
       "credited_on_minority_of_columns": []
@@ -2387,7 +4099,7 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.4189189189189189,
+        "multiset": 1.0,
         "strict": 0.0
       },
       "q_transfer_004": {
@@ -2430,7 +4142,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 0.9615384615384616
       },
       "q_transfer_009": {
         "historical": 1.0,
@@ -2439,7 +4151,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.8
       },
       "q_transfer_010": {
         "historical": 1.0,
@@ -2491,7 +4203,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 1.0
+        "ordered": 0.5526315789473685
       },
       "q_transfer_016": {
         "historical": 1.0,
@@ -2503,13 +4215,13 @@
         "ordered": 1.0
       },
       "q_transfer_017": {
-        "historical": 0.1,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 0.1,
-        "drop_empty_gold": 0.1,
-        "multiset": 0.1,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 0.1
+        "ordered": 0.0
       },
       "q_transfer_018": {
         "historical": 1.0,
@@ -2529,47 +4241,49 @@
         "ordered": 1.0
       },
       "q_transfer_020": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
         "ordered": 0.0
       }
     }
   },
   "transfer_obfuscated": {
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
-        "mean_recall_pct": 90.0,
+        "mean_recall_pct": 80.0,
         "n_scored": 20
       },
       "require_all_cols": {
-        "mean_recall_pct": 35.0,
+        "mean_recall_pct": 30.0,
         "n_scored": 20
       },
       "no_positional": {
-        "mean_recall_pct": 70.0,
+        "mean_recall_pct": 60.0,
         "n_scored": 20
       },
       "drop_empty_gold": {
-        "mean_recall_pct": 90.0,
+        "mean_recall_pct": 80.0,
         "n_scored": 20
       },
       "multiset": {
-        "mean_recall_pct": 85.4,
+        "mean_recall_pct": 77.0,
         "n_scored": 20
       },
       "strict": {
-        "mean_recall_pct": 35.0,
+        "mean_recall_pct": 30.0,
         "n_scored": 20
       }
     },
-    "exact_match_pct": 90.0,
+    "exact_result_set_match_pct": 20.0,
+    "common_column_exact_overlap_pct": 80.0,
     "ordered": {
-      "mean_recall_pct": 72.7,
+      "mean_recall_pct": 57.4,
       "n_gold_with_order_by": 11
     },
     "diagnostics": {
@@ -2584,6 +4298,7 @@
         "q_transfer_obf_009",
         "q_transfer_obf_012",
         "q_transfer_obf_013",
+        "q_transfer_obf_014",
         "q_transfer_obf_017",
         "q_transfer_obf_018",
         "q_transfer_obf_019"
@@ -2592,7 +4307,8 @@
         "q_transfer_obf_005",
         "q_transfer_obf_007",
         "q_transfer_obf_009",
-        "q_transfer_obf_012"
+        "q_transfer_obf_012",
+        "q_transfer_obf_014"
       ],
       "credited_on_single_column": [
         {
@@ -2615,22 +4331,6 @@
           "qid": "q_transfer_obf_013",
           "n_common": 1,
           "n_gold_cols": 2,
-          "common": [
-            "col_quebec"
-          ]
-        },
-        {
-          "qid": "q_transfer_obf_017",
-          "n_common": 1,
-          "n_gold_cols": 3,
-          "common": [
-            "col_papa"
-          ]
-        },
-        {
-          "qid": "q_transfer_obf_018",
-          "n_common": 1,
-          "n_gold_cols": 4,
           "common": [
             "col_quebec"
           ]
@@ -2673,7 +4373,7 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.4189189189189189,
+        "multiset": 0.4074074074074074,
         "strict": 0.0
       },
       "q_transfer_obf_004": {
@@ -2716,7 +4416,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 0.0
+        "ordered": 0.9615384615384616
       },
       "q_transfer_obf_009": {
         "historical": 1.0,
@@ -2725,7 +4425,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.8
       },
       "q_transfer_obf_010": {
         "historical": 1.0,
@@ -2758,17 +4458,17 @@
         "require_all_cols": 0.0,
         "no_positional": 1.0,
         "drop_empty_gold": 1.0,
-        "multiset": 0.6666666666666666,
+        "multiset": 1.0,
         "strict": 0.0
       },
       "q_transfer_obf_014": {
-        "historical": 1.0,
-        "require_all_cols": 1.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
-        "strict": 1.0,
-        "ordered": 1.0
+        "historical": 0.0,
+        "require_all_cols": 0.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
+        "strict": 0.0,
+        "ordered": 0.0
       },
       "q_transfer_obf_015": {
         "historical": 1.0,
@@ -2777,7 +4477,7 @@
         "drop_empty_gold": 1.0,
         "multiset": 1.0,
         "strict": 1.0,
-        "ordered": 1.0
+        "ordered": 0.5526315789473685
       },
       "q_transfer_obf_016": {
         "historical": 1.0,
@@ -2789,13 +4489,13 @@
         "ordered": 1.0
       },
       "q_transfer_obf_017": {
-        "historical": 1.0,
+        "historical": 0.0,
         "require_all_cols": 0.0,
-        "no_positional": 1.0,
-        "drop_empty_gold": 1.0,
-        "multiset": 1.0,
+        "no_positional": 0.0,
+        "drop_empty_gold": 0.0,
+        "multiset": 0.0,
         "strict": 0.0,
-        "ordered": 1.0
+        "ordered": 0.0
       },
       "q_transfer_obf_018": {
         "historical": 1.0,
@@ -2823,6 +4523,38 @@
         "strict": 0.0,
         "ordered": 0.0
       }
+    }
+  },
+  "provenance": {
+    "dataset_file": "main_evaluation_dataset.jsonl",
+    "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "expected_dir": "expected_results",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-30T10:32:19+00:00",
+    "rescore_note": "audit recomputed deterministically from stored generated SQL and shipped result JSONs by scripts/audit_scoring.py; no LLM call is involved"
+  },
+  "sources": {
+    "main": {
+      "source_result_file": "main_eval_with_sql.json",
+      "source_result_sha256": "82e5ba4e417e450548d7be45548a9cac14671d99a3d8eca33934caf1d2b93c57"
+    },
+    "independent": {
+      "source_result_file": "independent_eval_results.json",
+      "source_result_sha256": "0975ff3cef8b1d25ce44890bf8e6e36992b9ac92c5b1d58f22b20ffc9e090d2c"
+    },
+    "transfer": {
+      "source_result_file": "transfer_eval_results.json",
+      "source_result_sha256": "106801746e2cf2bf07ecc784e9dcf7cc0ef7c7a98e1cee979e538ef49cc7ae01"
+    },
+    "transfer_obfuscated": {
+      "source_result_file": "transfer_obfuscated_eval_results.json",
+      "source_result_sha256": "717cbf0743eb86ee56adcb3877bb18e857014d811ca5f74232a387d2e54dd3e9"
     }
   }
 }

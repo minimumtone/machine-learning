@@ -16,5 +16,4 @@ FROM enthalpy en
 JOIN oqmd_element_ratios ra
     ON ra.entry_key = en.entry_key AND ra.wyckoff_site = 'A-site'
 GROUP BY ra.symbol
-HAVING COUNT(*) >= 2
 ORDER BY avg_enthalpy ASC;

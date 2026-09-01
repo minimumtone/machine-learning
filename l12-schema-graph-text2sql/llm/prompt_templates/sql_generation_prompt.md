@@ -14,7 +14,10 @@ Rules:
 - For synthesis methods, JOIN material_synthesis → synthesis_method.
 - For defect types, JOIN material_defect → defect_type.
 - For literature/DOI, use literature_reference directly or via material_reference.
-- Use is_stable = TRUE/FALSE for stability checks (not energy_above_hull).
+- For binary stable/not-stable checks, use is_stable = TRUE/FALSE (a generated column equal to energy_above_hull <= 0.001).
+- Three-way stability classes are defined on phase_stability.energy_above_hull (eV/atom): stable = energy_above_hull <= 0.001; metastable = 0.001 < energy_above_hull <= 0.05; unstable = energy_above_hull > 0.05.
+- material_entry.chemical_system joins element symbols in alphabetical order with '-' (e.g. the Ni-Al system is stored as chemical_system = 'Al-Ni').
+- element.category is a controlled vocabulary: transition_metal, post_transition_metal, lanthanide, actinide, alkali_metal, alkaline_earth_metal, metalloid, nonmetal, halogen, noble_gas.
 - For space group filtering, use structure.space_group_number (INTEGER) not structure.space_group (TEXT).
 - For atomic fraction, use composition.atomic_fraction (not fraction, fractional_amount, or atomic_percent).
 - For volume, use structure.volume_per_atom (not volume or cell_volume).

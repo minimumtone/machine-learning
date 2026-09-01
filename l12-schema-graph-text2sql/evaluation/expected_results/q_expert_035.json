@@ -1,10 +1,11 @@
 {
   "columns": [
     "total",
-    "unstable",
-    "unstable_pct"
+    "not_stable",
+    "not_stable_pct"
   ],
   "ordered": false,
+  "semantic_ordered": false,
   "rows": [
     [
       355,

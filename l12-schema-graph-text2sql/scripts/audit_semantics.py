@@ -16,6 +16,16 @@ against fraction rows, so this Python audit closes that gap:
 3. PROTOTYPE STOICHIOMETRY: the entry's sorted fraction multiset must
    match the stoichiometry declared by its prototype's formula_type
    (e.g. A3B -> {0.75, 0.25}, AB -> {0.5, 0.5}, A -> {1.0}).
+   Scope note: this validates stoichiometric fractions only, NOT
+   Wyckoff/site occupancy. composition.site_label is not part of the
+   benchmark's semantic contract (no gold query filters on it), so a
+   site assignment swapped between elements with the same total
+   composition is intentionally out of scope.
+
+The DB must be a fully initialized fixture: the audit first checks the
+version='007' marker, that the stored schema fingerprint equals a
+freshly computed compute_schema_fingerprint(), and that the current
+data passes validate_fixture_integrity() (see fixture_guard.py).
 
 Read-only; exits 0 when every entry passes all three audits, 1 otherwise.
 
@@ -38,6 +48,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
 
 TOL = 1e-8
 
@@ -87,10 +98,12 @@ def formula_type_fractions(
 def main() -> int:
     dsn = os.environ.get("L12_DSN") or CONNINFO
     conn = psycopg.connect(dsn)
+    # One REPEATABLE READ READ ONLY snapshot for the whole audit run.
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
-    conn.commit()
+    assert_valid_fixture(conn)
 
     failures: list[str] = []
     with conn.cursor() as cur:
@@ -139,7 +152,10 @@ def main() -> int:
                         f"{entry_id}: {el} formula fraction {f} != "
                         f"composition fraction {stored[el]}")
         # 2. reduced_formula agrees with gcd-reduced formula counts
-        if reduced_formula is not None:
+        # (fixture contract: every material has one; NULL is a failure)
+        if reduced_formula is None:
+            failures.append(f"{entry_id}: reduced_formula is NULL")
+        else:
             red = parse_formula(reduced_formula)
             if red is None:
                 failures.append(f"{entry_id}: unparseable reduced_formula "

@@ -40,12 +40,12 @@ Allowed columns (ONLY use these exact column names — use the descriptions in p
     - col_rhea: unique entry identifier
     - col_zulu: Wyckoff site letter
   tbl_victor:
-    - col_gemini: ground-state space group number
+    - col_gemini: ground-state Hermann–Mauguin space-group symbol (e.g. Fm-3m)
     - col_mars: reference-state identifier
     - col_papa: chemical element symbol (e.g. Ni)
     - col_pegasus: ground-state atomic volume
     - col_tango: elemental reference formation energy per atom (same convention as delta_e; subtract the ratio-weighted sum from delta_e to re-reference to elemental ground states)
-    - col_uniform: number of thermodynamically stable polymorphs
+    - col_uniform: number of OQMD single-element structure entries (polymorph candidates) for this element
   tbl_xray:
     - col_alpha: atomic mass (amu)
     - col_bravo: atomic number Z

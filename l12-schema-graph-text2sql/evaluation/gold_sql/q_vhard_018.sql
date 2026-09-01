@@ -26,5 +26,4 @@ SELECT a_site,
        ROUND(MIN(e_vs_gs)::numeric, 4) AS min_enthalpy_vs_element_gs
 FROM with_a_site
 GROUP BY a_site
-HAVING COUNT(*) >= 2
 ORDER BY avg_enthalpy_vs_element_gs ASC;

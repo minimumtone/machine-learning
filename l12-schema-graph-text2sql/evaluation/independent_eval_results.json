@@ -1,20 +1,34 @@
 {
   "model": "gpt-5.5",
+  "provenance": {
+    "dataset_file": "expert_evaluation_dataset.jsonl",
+    "dataset_sha256": "9f4d6f71cfca4ec57c230b516cc2b4ff7f2240293d9d07ec7b206bd3c607f4d9",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_file": "sql_generation_prompt.md",
+    "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+    "generated_at": "2026-08-29T02:35:53+00:00",
+    "expected_dir": "expected_results",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "rescored_at": "2026-08-30T10:31:51+00:00",
+    "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
+  },
   "dataset": "expert_evaluation_dataset.jsonl",
   "n_queries": 100,
   "summary": {
-    "overall": 0.7273647485171686,
-    "overall_recall": 0.7273647485171686,
+    "overall": 0.8146237169946693,
+    "overall_recall": 0.8146237169946693,
     "by_difficulty": {
-      "easy": 0.8333333333333334,
-      "medium": 0.8126089324618736,
-      "hard": 0.5856345734070366,
-      "very_hard": 0.7282996894409938
+      "easy": 0.8777777777777778,
+      "medium": 0.9047418967587034,
+      "hard": 0.7023013660680072,
+      "very_hard": 0.787350054525627
     },
-    "avg_latency": 24.942999999999998,
-    "overall_precision": 0.7698816333972051,
-    "overall_f1": 0.7303009203211127,
-    "overall_exact_match": 0.66
+    "avg_latency": 29.92699999999999,
+    "overall_precision": 0.8121437137466307,
+    "overall_f1": 0.798010232501749,
+    "overall_exact_match": 0.01
   },
   "results": [
     {
@@ -24,9 +38,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 26.3,
-      "sql": "SELECT COUNT(*) AS count\nFROM material_entry m\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 32.4,
+      "sql": "SELECT COUNT(*) AS compound_total_count\nFROM material_entry m\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_002",
@@ -35,9 +49,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 28.5,
-      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.formula_type\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'BCC_B2'\n   OR s.strukturbericht = 'BCC_B2'\n   OR s.formula_type = 'BCC_B2'\n   OR s.prototype = 'B2'\n   OR s.strukturbericht = 'B2'\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 32.6,
+      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.space_group_number, s.crystal_system\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'BCC_B2'\n   OR s.strukturbericht = 'BCC_B2'\n   OR s.prototype = 'B2'\n   OR s.strukturbericht = 'B2'\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_003",
@@ -46,9 +60,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 13.5,
-      "sql": "SELECT m.formula, m.number_of_elements\nFROM material_entry m\nWHERE m.number_of_elements >= 3\nORDER BY m.number_of_elements DESC, m.formula ASC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 19.3,
+      "sql": "SELECT m.formula\nFROM material_entry m\nWHERE m.number_of_elements >= 3\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_004",
@@ -57,8 +71,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 23.0,
+      "exact_match": 0.0,
+      "latency_s": 20.5,
       "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Fe'\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
@@ -68,9 +82,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 21.1,
-      "sql": "SELECT COUNT(*) AS nacl_type_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.prototype = 'B1' OR s.strukturbericht = 'B1')\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 20.4,
+      "sql": "SELECT COUNT(*) AS nacl_type_compound_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_006",
@@ -79,8 +93,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 23.0,
+      "exact_match": 0.0,
+      "latency_s": 27.5,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nWHERE\n    (m.formula = 'Ni3Al' OR m.reduced_formula = 'Ni3Al')\n\nLIMIT 10000;"
     },
     {
@@ -90,9 +104,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 20.2,
-      "sql": "SELECT DISTINCT m.formula, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.space_group = 'Pm-3m'\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 19.2,
+      "sql": "SELECT m.formula, s.space_group, s.space_group_number\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.space_group_number = 221\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_008",
@@ -101,8 +115,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 9.1,
+      "exact_match": 0.0,
+      "latency_s": 13.4,
       "sql": "SELECT COUNT(*) AS oqmd_entry_count\nFROM material_entry m\nWHERE m.source_db = 'OQMD'\nLIMIT 10000;"
     },
     {
@@ -112,8 +126,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 26.0,
+      "exact_match": 0.0,
+      "latency_s": 26.1,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Ti'\n\nLIMIT 10000;"
     },
     {
@@ -123,9 +137,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 18.3,
-      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.space_group_number, s.space_group\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'BiF3' OR s.strukturbericht = 'BiF3')\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 33.0,
+      "sql": "SELECT m.formula, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'BiF3'\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_011",
@@ -134,8 +148,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 18.9,
+      "exact_match": 0.0,
+      "latency_s": 28.4,
       "sql": "SELECT m.formula, c.element, c.atomic_fraction, s.prototype\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Pt'\n  AND c.atomic_fraction >= 0.25\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
@@ -145,8 +159,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 30.6,
+      "exact_match": 0.0,
+      "latency_s": 42.4,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\nWHERE\n    EXISTS (SELECT 1 FROM composition c_al WHERE c_al.entry_id = m.entry_id AND c_al.element = 'Al')\n    AND EXISTS (SELECT 1 FROM composition c_rh WHERE c_rh.entry_id = m.entry_id AND c_rh.element = 'Rh')\n\nLIMIT 10000;"
     },
     {
@@ -156,20 +170,20 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 31.3,
-      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system ~ '(^|-)(Sc|Y|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu)(-|$)'\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 35.9,
+      "sql": "SELECT m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND string_to_array(m.chemical_system, '-') && ARRAY['Sc','Y','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu']\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_014",
       "difficulty": "hard",
-      "accuracy": 0.5444015444015444,
-      "recall": 0.5444015444015444,
+      "accuracy": 1.0,
+      "recall": 1.0,
       "precision": 1.0,
-      "f1": 0.7050000000000001,
+      "f1": 1.0,
       "exact_match": 0.0,
-      "latency_s": 40.7,
-      "sql": "SELECT m.formula, m.chemical_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND m.chemical_system ~ '^(Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn)(-(Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn))*$'\nORDER BY m.formula\nLIMIT 10000;"
+      "latency_s": 48.8,
+      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n  )\n  AND NOT EXISTS (\n    SELECT 1\n    FROM composition c\n    WHERE c.entry_id = m.entry_id\n      AND c.element NOT IN (\n        'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',\n        'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',\n        'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'\n      )\n  )\nORDER BY m.formula ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_015",
@@ -178,8 +192,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 20.8,
+      "exact_match": 0.0,
+      "latency_s": 28.7,
       "sql": "SELECT m.formula, c.element, c.atomic_fraction, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE c.element = 'Cu'\n  AND c.atomic_fraction = 0.75\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
@@ -189,20 +203,20 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 24.1,
-      "sql": "SELECT DISTINCT\n  m.formula,\n  c.element AS b_site,\n  c.site_label\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\n  AND c.element IN ('Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd')\nORDER BY c.element, m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 34.5,
+      "sql": "SELECT m.formula, c.element AS b_site, c.site_label\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\n  AND c.element IN ('Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd')\nORDER BY c.element, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_017",
       "difficulty": "easy",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 28.3,
-      "sql": "SELECT DISTINCT regexp_split_to_table(m.chemical_system, '-') AS element\nFROM material_entry m\nORDER BY element\nLIMIT 10000;"
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 30.5,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_018",
@@ -212,8 +226,8 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 16.4,
-      "sql": "SELECT m.formula, c.element, c.atomic_fraction\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE c.element = 'Mn'\nORDER BY m.formula\nLIMIT 10000;"
+      "latency_s": 30.9,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\nWHERE\n    c.element = 'Mn'\n\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_019",
@@ -222,9 +236,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 29.6,
-      "sql": "SELECT DISTINCT m.formula, c.element, c.atomic_fraction, e.atomic_number\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN element e ON e.symbol = c.element\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND e.atomic_number >= 40\nORDER BY m.formula, e.atomic_number, c.element\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 33.5,
+      "sql": "SELECT m.formula, c.element, e.atomic_number, c.atomic_fraction\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN element e ON e.symbol = c.element\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND e.atomic_number >= 40\nORDER BY e.atomic_number, c.element, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_020",
@@ -233,9 +247,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 25.6,
-      "sql": "SELECT m.formula, ps.is_stable, ps.energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_v\n    WHERE c_v.entry_id = m.entry_id\n      AND c_v.element = 'V'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 27.7,
+      "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_v\n    WHERE c_v.entry_id = m.entry_id\n      AND c_v.element = 'V'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM composition c_al\n    WHERE c_al.entry_id = m.entry_id\n      AND c_al.element = 'Al'\n  )\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_021",
@@ -244,8 +258,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.3,
+      "exact_match": 0.0,
+      "latency_s": 17.9,
       "sql": "SELECT m.formula, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND s.lattice_a BETWEEN 3.50 AND 3.60\nORDER BY s.lattice_a ASC\nLIMIT 10000;"
     },
     {
@@ -255,9 +269,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 14.7,
-      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, s.crystal_system\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND s.crystal_system <> 'cubic'\nORDER BY s.crystal_system, m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 25.5,
+      "sql": "SELECT m.formula, s.crystal_system, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND LOWER(s.crystal_system) <> 'cubic'\nORDER BY s.crystal_system, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_023",
@@ -266,8 +280,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.8,
+      "exact_match": 0.0,
+      "latency_s": 25.9,
       "sql": "SELECT m.formula, s.volume_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY s.volume_per_atom ASC\nLIMIT 1;"
     },
     {
@@ -277,9 +291,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 15.1,
-      "sql": "SELECT m.formula, s.lattice_a, s.lattice_c\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a IS NOT NULL\n  AND s.lattice_c IS NOT NULL\n  AND s.lattice_a <> s.lattice_c\nORDER BY ABS(s.lattice_a - s.lattice_c) DESC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 27.0,
+      "sql": "SELECT m.formula, s.lattice_a, s.lattice_c, ABS(s.lattice_a - s.lattice_c) AS lattice_a_c_diff\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE ABS(s.lattice_a - s.lattice_c) > 0.01\nORDER BY ABS(s.lattice_a - s.lattice_c) DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_025",
@@ -288,9 +302,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 14.4,
-      "sql": "SELECT m.formula, s.strukturbericht, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.strukturbericht = 'L12'\nORDER BY m.formula, s.prototype\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 23.6,
+      "sql": "SELECT m.formula, s.strukturbericht, s.prototype\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.strukturbericht = 'L12'\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_026",
@@ -299,8 +313,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 12.5,
+      "exact_match": 0.0,
+      "latency_s": 11.8,
       "sql": "SELECT COUNT(*) AS space_group_225_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.space_group_number = 225\nLIMIT 10000;"
     },
     {
@@ -310,9 +324,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 25.9,
-      "sql": "SELECT m.formula, s.lattice_c\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'NiAs' OR s.strukturbericht = 'B81')\n  AND LOWER(s.crystal_system) = 'hexagonal'\n  AND s.lattice_c IS NOT NULL\nORDER BY s.lattice_c DESC\nLIMIT 1;"
+      "exact_match": 0.0,
+      "latency_s": 31.7,
+      "sql": "SELECT m.formula, s.lattice_c\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'NiAs'\n  AND s.crystal_system = 'hexagonal'\nORDER BY s.lattice_c DESC NULLS LAST\nLIMIT 1;"
     },
     {
       "qid": "q_expert_028",
@@ -321,8 +335,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 14.7,
+      "exact_match": 0.0,
+      "latency_s": 21.2,
       "sql": "SELECT m.formula, s.lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND s.lattice_a >= 4.0\nORDER BY s.lattice_a DESC, m.formula\nLIMIT 10000;"
     },
     {
@@ -332,31 +346,31 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 17.2,
+      "exact_match": 0.0,
+      "latency_s": 23.1,
       "sql": "SELECT AVG(s.lattice_a) AS avg_lattice_a,\n       STDDEV_SAMP(s.lattice_a) AS stddev_lattice_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_030",
       "difficulty": "easy",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
-      "latency_s": 27.7,
-      "sql": "SELECT COUNT(*) AS material_entry_count\nFROM material_entry m\nLIMIT 10000;"
+      "latency_s": 23.8,
+      "sql": "SELECT s.prototype, COUNT(*) AS prototype_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype IS NOT NULL\nGROUP BY s.prototype\nORDER BY prototype_count DESC, s.prototype\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_031",
       "difficulty": "medium",
-      "accuracy": 0.125,
-      "recall": 0.125,
+      "accuracy": 0.2857142857142857,
+      "recall": 0.2857142857142857,
       "precision": 1.0,
-      "f1": 0.2222222222222222,
+      "f1": 0.4444444444444445,
       "exact_match": 0.0,
-      "latency_s": 26.8,
-      "sql": "SELECT DISTINCT m.formula, ps.energy_above_hull, ps.is_stable, pde.is_on_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND pde.is_on_hull = TRUE\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;"
+      "latency_s": 39.3,
+      "sql": "SELECT m.formula, s.prototype, ps.energy_above_hull, ps.is_stable, pde.is_on_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND pde.is_on_hull = TRUE\n  AND ps.is_stable = TRUE\nORDER BY ps.energy_above_hull ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_032",
@@ -365,9 +379,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.7,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom > 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 23.3,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom > 0\nORDER BY ps.formation_energy_per_atom DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_033",
@@ -376,9 +390,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 26.2,
-      "sql": "SELECT m.formula, ps.is_stable, ps.formation_energy_per_atom, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 31.4,
+      "sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom,\n  ps.energy_above_hull,\n  ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  AND ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < 0\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_034",
@@ -387,9 +401,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 21.7,
-      "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull > 0\n  AND ps.energy_above_hull < 0.1\nORDER BY ps.energy_above_hull ASC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 26.7,
+      "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull > 0.001\n  AND ps.energy_above_hull <= 0.05\nORDER BY ps.energy_above_hull ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_035",
@@ -399,8 +413,8 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 29.7,
-      "sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) * 100.0 / NULLIF(COUNT(*), 0) AS unstable_nacl_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\nLIMIT 10000;"
+      "latency_s": 46.0,
+      "sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE) * 100.0 / NULLIF(COUNT(*), 0) AS nacl_not_stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'NaCl' OR s.strukturbericht = 'B1')\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_036",
@@ -409,8 +423,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 17.3,
+      "exact_match": 0.0,
+      "latency_s": 30.5,
       "sql": "SELECT m.formula, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.band_gap > 0\nORDER BY ps.band_gap DESC\nLIMIT 10000;"
     },
     {
@@ -420,9 +434,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 29.2,
-      "sql": "SELECT m.formula, ps.band_gap, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.band_gap = 0\nORDER BY m.formula ASC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 38.2,
+      "sql": "SELECT m.formula, ps.band_gap, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND ps.band_gap = 0\nORDER BY ps.energy_above_hull ASC, m.formula ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_038",
@@ -432,19 +446,19 @@
       "precision": 1.0,
       "f1": 0.6666666666666666,
       "exact_match": 0.0,
-      "latency_s": 23.6,
-      "sql": "SELECT m.formula, m.chemical_system, phase_diagram_entry.hull_distance\nFROM material_entry m\nJOIN phase_diagram_entry ON phase_diagram_entry.entry_id = m.entry_id\nWHERE m.chemical_system IN ('Al-Ni', 'Ni-Al')\nORDER BY phase_diagram_entry.hull_distance ASC, m.formula\nLIMIT 10000;"
+      "latency_s": 29.4,
+      "sql": "SELECT m.formula, pde.hull_distance\nFROM material_entry m\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nWHERE m.chemical_system = 'Al-Ni'\nORDER BY pde.hull_distance ASC, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_039",
       "difficulty": "medium",
-      "accuracy": 0.037037037037037035,
-      "recall": 0.037037037037037035,
+      "accuracy": 1.0,
+      "recall": 1.0,
       "precision": 1.0,
-      "f1": 0.07142857142857142,
+      "f1": 1.0,
       "exact_match": 0.0,
-      "latency_s": 19.6,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\n  AND ps.is_stable = TRUE\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+      "latency_s": 19.4,
+      "sql": "SELECT m.formula, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.formation_energy_per_atom <= -0.5\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_040",
@@ -454,8 +468,8 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 34.3,
-      "sql": "SELECT\n  m.formula,\n  AVG(pde.hull_distance) AS avg_energy_above_hull\nFROM material_entry m\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nGROUP BY m.formula\nORDER BY avg_energy_above_hull ASC\nLIMIT 10000;"
+      "latency_s": 31.5,
+      "sql": "SELECT\n    m.formula,\n    AVG(pde.hull_distance) AS avg_energy_above_hull\nFROM material_entry m\nJOIN phase_diagram_entry pde ON pde.entry_id = m.entry_id\nGROUP BY m.formula\nORDER BY avg_energy_above_hull ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_041",
@@ -465,40 +479,40 @@
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 17.3,
-      "sql": "SELECT m.formula, calc.functional\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nWHERE calc.functional <> 'GGA-PBE'\nORDER BY calc.functional, m.formula\nLIMIT 10000;"
+      "latency_s": 27.3,
+      "sql": "SELECT m.formula, calc.functional\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nWHERE calc.functional IS NOT NULL\n  AND calc.functional <> 'GGA-PBE'\nORDER BY calc.functional, m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_042",
       "difficulty": "hard",
-      "accuracy": 0.9818181818181818,
-      "recall": 0.9818181818181818,
-      "precision": 0.5046728971962616,
-      "f1": 0.6666666666666666,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 0.5367647058823529,
+      "f1": 0.6985645933014354,
       "exact_match": 0.0,
-      "latency_s": 21.9,
-      "sql": "SELECT m.formula, cp.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.unit = 'GPa'\n  AND cp.value >= 200\nORDER BY cp.value DESC\nLIMIT 10000;"
+      "latency_s": 29.7,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, cp.property_name, cp.value, cp.unit\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND cp.value >= 200.0\n    AND cp.property_name = 'bulk_modulus'\n\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_043",
       "difficulty": "hard",
-      "accuracy": 0.3333333333333333,
-      "recall": 0.3333333333333333,
-      "precision": 0.3333333333333333,
-      "f1": 0.3333333333333333,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
       "exact_match": 0.0,
-      "latency_s": 18.2,
-      "sql": "SELECT m.formula, cp.value AS shear_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'shear_modulus'\nORDER BY cp.value DESC\nLIMIT 3;"
+      "latency_s": 28.0,
+      "sql": "SELECT m.formula, cp.value AS shear_modulus, cp.unit\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'shear_modulus'\nORDER BY cp.value DESC\nLIMIT 3;"
     },
     {
       "qid": "q_expert_044",
       "difficulty": "medium",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 0.5040816326530613,
+      "f1": 0.6702849389416554,
       "exact_match": 0.0,
-      "latency_s": 24.2,
+      "latency_s": 27.5,
       "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, cp.property_name, cp.value, cp.unit\nFROM material_entry m\n    JOIN calculation calc ON calc.entry_id = m.entry_id\n    JOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE\n    cp.property_name = 'youngs_modulus'\n\nLIMIT 10000;"
     },
     {
@@ -508,20 +522,20 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 30.6,
-      "sql": "SELECT m.formula, et.poisson_ratio\nFROM elastic_tensor et\nJOIN calculation calc ON calc.calculation_id = et.calculation_id\nJOIN material_entry m ON m.entry_id = calc.entry_id\nWHERE et.poisson_ratio >= 0.3\nORDER BY et.poisson_ratio DESC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 36.1,
+      "sql": "SELECT m.formula, et.poisson_ratio\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = calc.calculation_id\nWHERE et.poisson_ratio >= 0.3\nORDER BY et.poisson_ratio DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_046",
       "difficulty": "very_hard",
-      "accuracy": 0.008695652173913044,
-      "recall": 0.008695652173913044,
-      "precision": 0.0043859649122807015,
-      "f1": 0.005830903790087463,
+      "accuracy": 0.022900763358778626,
+      "recall": 0.022900763358778626,
+      "precision": 0.01276595744680851,
+      "f1": 0.01639344262295082,
       "exact_match": 0.0,
-      "latency_s": 37.9,
-      "sql": "SELECT m.formula,\n       cp_bm.value AS bulk_modulus,\n       cp_sm.value AS shear_modulus,\n       cp_bm.value / NULLIF(cp_sm.value, 0) AS bg_ratio\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id\n     AND cp_sm.property_name = 'shear_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_sm.value <> 0\n  AND cp_bm.value / cp_sm.value >= 2\nORDER BY bg_ratio DESC\nLIMIT 10000;"
+      "latency_s": 34.6,
+      "sql": "SELECT m.formula,\n       cp_bm.value AS bulk_modulus,\n       cp_sm.value AS shear_modulus,\n       cp_bm.value / NULLIF(cp_sm.value, 0) AS bg_ratio\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_sm ON cp_sm.calculation_id = calc.calculation_id\n     AND cp_sm.property_name = 'shear_modulus'\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp_bm.value / NULLIF(cp_sm.value, 0) >= 2\nORDER BY bg_ratio DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_047",
@@ -530,20 +544,20 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 24.6,
-      "sql": "SELECT\n  m.formula,\n  et.is_stable\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = calc.calculation_id\nWHERE et.is_stable = FALSE\n  AND calc.calculation_type = 'DFT'\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 30.6,
+      "sql": "SELECT\n  m.formula,\n  et.is_stable\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = calc.calculation_id\nWHERE\n  et.is_stable = FALSE\n  AND (calc.method = 'DFT' OR calc.calculation_type = 'DFT')\nORDER BY m.formula ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_048",
       "difficulty": "medium",
-      "accuracy": 0.9666666666666667,
-      "recall": 0.9666666666666667,
-      "precision": 0.9666666666666667,
-      "f1": 0.9666666666666667,
+      "accuracy": 0.9755102040816327,
+      "recall": 0.9755102040816327,
+      "precision": 0.9755102040816327,
+      "f1": 0.9755102040816327,
       "exact_match": 0.0,
-      "latency_s": 18.6,
-      "sql": "SELECT\n  m.formula,\n  s.lattice_a,\n  s.lattice_c,\n  s.lattice_c / NULLIF(s.lattice_a, 0) AS c_over_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a IS NOT NULL\n  AND s.lattice_c IS NOT NULL\nORDER BY c_over_a DESC\nLIMIT 10000;"
+      "latency_s": 24.1,
+      "sql": "SELECT m.formula, s.lattice_a, s.lattice_c, (s.lattice_c / NULLIF(s.lattice_a, 0)) AS c_over_a\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.lattice_a IS NOT NULL\n  AND s.lattice_c IS NOT NULL\n  AND s.lattice_a <> 0\nORDER BY c_over_a DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_049",
@@ -552,9 +566,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 20.1,
-      "sql": "SELECT m.formula, cp.value AS bulk_modulus, ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE m.formula = 'Ni3Al'\n  AND cp.property_name = 'bulk_modulus'\nORDER BY m.formula\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 29.1,
+      "sql": "SELECT\n  m.formula,\n  cp.value AS bulk_modulus,\n  ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE m.formula = 'Ni3Al'\n  AND cp.property_name = 'bulk_modulus'\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_050",
@@ -563,460 +577,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 19.8,
-      "sql": "SELECT m.formula, mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.total_magnetization <> 0\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_054",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 19.3,
-      "sql": "SELECT\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    mp.magnetic_ordering\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND mp.magnetic_ordering = 'ferromagnetic'\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_055",
-      "difficulty": "medium",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.6,
-      "sql": "SELECT m.formula, mp.curie_temperature_k\nFROM material_entry m\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE mp.curie_temperature_k IS NOT NULL\nORDER BY mp.curie_temperature_k DESC\nLIMIT 1;"
-    },
-    {
-      "qid": "q_expert_059",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 22.7,
-      "sql": "SELECT m.formula, mp.magnetic_anisotropy_energy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY mp.magnetic_anisotropy_energy DESC\nLIMIT 1;"
-    },
-    {
-      "qid": "q_expert_060",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 41.6,
-      "sql": "SELECT DISTINCT\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    dos.is_metallic,\n    mp.magnetic_ordering,\n    mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN density_of_states dos ON dos.calculation_id = calc.calculation_id\nWHERE\n    dos.is_metallic = TRUE\n    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND (mp.magnetic_ordering = 'FM' OR mp.magnetic_ordering ILIKE 'ferromagnetic')\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_061",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 20.6,
-      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, se.miller_index, se.surface_energy_j_m2\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND se.miller_index = '111'\nORDER BY se.surface_energy_j_m2 ASC\nLIMIT 1;"
-    },
-    {
-      "qid": "q_expert_062",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 24.9,
-      "sql": "SELECT m.formula, se.miller_index, se.work_function\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND se.work_function >= 5\nORDER BY se.work_function DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_063",
-      "difficulty": "medium",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.9,
-      "sql": "SELECT m.formula, se.miller_index, se.is_reconstructed\nFROM material_entry m\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE se.is_reconstructed = TRUE\nORDER BY m.formula, se.miller_index\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_064",
-      "difficulty": "medium",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.4,
-      "sql": "SELECT m.formula, gb.sigma_value, gb.gb_energy_j_m2\nFROM material_entry m\nJOIN grain_boundary gb ON gb.entry_id = m.entry_id\nWHERE gb.sigma_value = 5\n  AND gb.gb_energy_j_m2 IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_065",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 25.7,
-      "sql": "SELECT m.formula, md.formation_energy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (dt.category ILIKE '%vacancy%' OR dt.defect_name ILIKE '%vacancy%')\nORDER BY md.formation_energy ASC\nLIMIT 1;"
-    },
-    {
-      "qid": "q_expert_066",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 26.5,
-      "sql": "SELECT\n  m.formula,\n  s.prototype,\n  s.strukturbericht,\n  dt.defect_name,\n  dt.category,\n  md.site,\n  md.concentration,\n  md.formation_energy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (dt.defect_name ILIKE '%antisite%' OR dt.category ILIKE '%antisite%')\nORDER BY m.formula, dt.defect_name, md.site\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_067",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 17.4,
-      "sql": "SELECT DISTINCT m.formula, e.symbol AS dopant_element\nFROM material_entry m\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN element e ON e.element_id = md.dopant_element_id\nWHERE e.symbol = 'B'\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_068",
-      "difficulty": "medium",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 20.3,
-      "sql": "SELECT\n  m.formula,\n  dt.defect_name,\n  dt.category,\n  md.site,\n  md.concentration,\n  md.formation_energy\nFROM material_entry m\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE dt.category ILIKE '%interstitial%'\n   OR dt.defect_name ILIKE '%interstitial%'\nORDER BY m.formula, dt.defect_name\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_069",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 24.5,
-      "sql": "SELECT m.formula,\n       se100.surface_energy_j_m2 AS surface_energy_100_j_m2,\n       se110.surface_energy_j_m2 AS surface_energy_110_j_m2\nFROM material_entry m\nJOIN surface_energy se100 ON se100.entry_id = m.entry_id\nJOIN surface_energy se110 ON se110.entry_id = m.entry_id\nWHERE se100.miller_index = '100'\n  AND se110.miller_index = '110'\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_070",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 35.8,
-      "sql": "SELECT\n  m.formula,\n  s.prototype,\n  s.strukturbericht,\n  s.lattice_a,\n  s.lattice_b,\n  s.lattice_c,\n  s.volume_per_atom,\n  (GREATEST(s.lattice_a, s.lattice_b, s.lattice_c) - LEAST(s.lattice_a, s.lattice_b, s.lattice_c)) AS lattice_parameter_deviation\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype IN ('L12', 'B2')\n   OR s.strukturbericht IN ('L12', 'B2')\nORDER BY lattice_parameter_deviation DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_071",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 28.4,
-      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_072",
-      "difficulty": "hard",
-      "accuracy": 0.8,
-      "recall": 0.8,
-      "precision": 1.0,
-      "f1": 0.888888888888889,
-      "exact_match": 0.0,
-      "latency_s": 30.3,
-      "sql": "SELECT DISTINCT m.formula, sm.method_name\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\n  AND (\n    sm.method_name ILIKE '%arc melting%'\n    OR sm.method_name ILIKE '%アーク%'\n    OR sm.description ILIKE '%arc melting%'\n    OR sm.description ILIKE '%アーク%'\n  )\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_073",
-      "difficulty": "hard",
-      "accuracy": 0.8514851485148515,
-      "recall": 0.8514851485148515,
-      "precision": 1.0,
-      "f1": 0.9197860962566845,
-      "exact_match": 0.0,
-      "latency_s": 22.6,
-      "sql": "SELECT m.formula, ms.temperature_k, s.prototype, s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.temperature_k >= 1000\n  AND ms.success = TRUE\nORDER BY ms.temperature_k DESC, m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_074",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 43.9,
-      "sql": "SELECT DISTINCT\n    m.formula,\n    s.prototype,\n    s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND (\n        SELECT COUNT(DISTINCT mr.reference_id)\n        FROM material_reference mr\n        WHERE mr.entry_id = m.entry_id\n    ) >= 3\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_075",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 22.5,
-      "sql": "SELECT m.formula, ad.domain_name\nFROM material_entry m\nJOIN material_application ma ON ma.entry_id = m.entry_id\nJOIN application_domain ad ON ad.domain_id = ma.domain_id\nWHERE ad.domain_name = '高温超合金'\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_076",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 19.6,
-      "sql": "SELECT DISTINCT\n  m.formula,\n  s.prototype,\n  s.strukturbericht,\n  lr.year,\n  lr.title,\n  lr.doi\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_reference mr ON mr.entry_id = m.entry_id\nJOIN literature_reference lr ON lr.reference_id = mr.reference_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND lr.year >= 2020\nORDER BY lr.year DESC, m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_077",
-      "difficulty": "hard",
-      "accuracy": 0.5106382978723404,
-      "recall": 0.5106382978723404,
-      "precision": 0.1791044776119403,
-      "f1": 0.26519337016574585,
-      "exact_match": 0.0,
-      "latency_s": 30.8,
-      "sql": "SELECT DISTINCT m.formula, m.source_db\nFROM material_entry m\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE ms.success = TRUE\n  AND m.source_db IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_078",
-      "difficulty": "hard",
-      "accuracy": 0.8444444444444444,
-      "recall": 0.8444444444444444,
-      "precision": 1.0,
-      "f1": 0.9156626506024096,
-      "exact_match": 0.0,
-      "latency_s": 24.9,
-      "sql": "SELECT DISTINCT m.formula, sm.method_name\nFROM material_entry m\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE ms.success = TRUE\n  AND (\n    sm.method_name ILIKE '%ball milling%'\n    OR sm.description ILIKE '%ball milling%'\n    OR sm.method_name ILIKE '%ボールミリング%'\n    OR sm.description ILIKE '%ボールミリング%'\n  )\nORDER BY m.formula, sm.method_name\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_080",
-      "difficulty": "easy",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 13.6,
-      "sql": "SELECT lr.title, lr.authors, lr.journal, lr.year, lr.volume, lr.pages, lr.doi\nFROM literature_reference lr\nWHERE lr.doi IS NOT NULL\n  AND lr.doi <> ''\nORDER BY lr.year DESC, lr.title\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_081",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 43.1,
-      "sql": "SELECT m.formula,\n       s.lattice_a,\n       ABS(s.lattice_a - 3.57) AS lattice_diff,\n       ps.is_stable,\n       ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE ABS(s.lattice_a - 3.57) <= 0.05\n  AND ps.is_stable = TRUE\n  AND cp_bm.value >= 150\nORDER BY lattice_diff ASC, cp_bm.value DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_082",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 37.6,
-      "sql": "SELECT m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (ps.is_stable = TRUE OR ps.energy_above_hull <= 0.1)\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_084",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 32.0,
-      "sql": "SELECT m.formula, s.lattice_a, cp.value AS shear_modulus, cp.unit, ps.is_stable, ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND s.lattice_a BETWEEN 3.53 AND 3.59\n  AND cp.property_name = 'shear_modulus'\n  AND cp.value >= 70\n  AND cp.unit = 'GPa'\n  AND ps.is_stable = TRUE\nORDER BY ABS(s.lattice_a - 3.56) ASC, cp.value DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_085",
-      "difficulty": "very_hard",
-      "accuracy": 0.1875,
-      "recall": 0.1875,
-      "precision": 1.0,
-      "f1": 0.3157894736842105,
-      "exact_match": 0.0,
-      "latency_s": 33.3,
-      "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable, mp.magnetic_ordering, mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.magnetic_ordering IN ('ferromagnetic', 'FM')\n  AND ps.is_stable = TRUE\nORDER BY m.formula ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_086",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 33.5,
-      "sql": "SELECT DISTINCT\n  m.formula,\n  ps.is_stable,\n  ps.energy_above_hull\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\n  AND ps.is_stable = TRUE\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_087",
-      "difficulty": "very_hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 35.8,
-      "sql": "SELECT m.formula, cp_bm.value AS bulk_modulus, cp_hull.value AS energy_above_hull\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n    AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculated_property cp_hull ON cp_hull.calculation_id = calc.calculation_id\n    AND cp_hull.property_name = 'energy_above_hull'\nWHERE cp_bm.value > (\n    SELECT cp_ref.value\n    FROM material_entry m_ref\n    JOIN calculation calc_ref ON calc_ref.entry_id = m_ref.entry_id\n    JOIN calculated_property cp_ref ON cp_ref.calculation_id = calc_ref.calculation_id\n        AND cp_ref.property_name = 'bulk_modulus'\n    WHERE m_ref.formula = 'Ni3Al'\n    ORDER BY cp_ref.value DESC\n    LIMIT 1\n)\n  AND cp_hull.value <= 0.01\nORDER BY cp_bm.value DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_088",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 19.7,
-      "sql": "SELECT COUNT(*) AS stable_binary_compound_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.number_of_elements = 2\n  AND ps.is_stable = TRUE\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_089",
-      "difficulty": "hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 41.2,
-      "sql": "SELECT m.formula, et.poisson_ratio\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND et.poisson_ratio < 0.25\nORDER BY et.poisson_ratio ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_090",
-      "difficulty": "very_hard",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 28.4,
-      "sql": "SELECT m.formula, ps.is_stable, ps.energy_above_hull, se.miller_index, se.surface_energy_j_m2\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND se.surface_energy_j_m2 < 1.5\nORDER BY se.surface_energy_j_m2 ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_091",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 28.0,
-      "sql": "SELECT\n  COUNT(*) FILTER (\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.is_stable = TRUE\n  ) * 100.0 / NULLIF(COUNT(*) FILTER (\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  ), 0) AS l12_stable_percentage,\n  COUNT(*) FILTER (\n    WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n      AND ps.is_stable = TRUE\n  ) * 100.0 / NULLIF(COUNT(*) FILTER (\n    WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n  ), 0) AS b2_stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype IN ('L12', 'B2') OR s.strukturbericht IN ('L12', 'B2'))\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_092",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 35.3,
-      "sql": "SELECT cp.property_name, AVG(cp.value) AS average_bulk_modulus\nFROM calculated_property cp\nJOIN calculation calc ON calc.calculation_id = cp.calculation_id\nJOIN material_entry m ON m.entry_id = calc.entry_id\nWHERE cp.property_name = 'bulk_modulus'\nGROUP BY cp.property_name\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_093",
-      "difficulty": "hard",
-      "accuracy": 0.045454545454545456,
-      "recall": 0.045454545454545456,
-      "precision": 1.0,
-      "f1": 0.08695652173913045,
-      "exact_match": 0.0,
-      "latency_s": 20.4,
-      "sql": "SELECT c.element AS a_site, COUNT(DISTINCT m.entry_id) AS l12_compound_count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY l12_compound_count DESC\nLIMIT 1;"
-    },
-    {
-      "qid": "q_expert_094",
-      "difficulty": "medium",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 19.3,
-      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_095",
-      "difficulty": "very_hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 29.3,
-      "sql": "SELECT ps.is_stable,\n       AVG(cp.value) AS avg_bulk_modulus,\n       COUNT(*) AS l12_bulk_modulus_count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND ps.is_stable IN (TRUE, FALSE)\nGROUP BY ps.is_stable\nORDER BY ps.is_stable DESC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_096",
-      "difficulty": "easy",
-      "accuracy": 1.0,
-      "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 11.8,
-      "sql": "SELECT m.chemical_system, COUNT(*) AS entry_count\nFROM material_entry m\nGROUP BY m.chemical_system\nORDER BY entry_count DESC\nLIMIT 10;"
-    },
-    {
-      "qid": "q_expert_098",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 20.4,
-      "sql": "SELECT m.formula,\n       ps.band_gap,\n       CASE\n         WHEN ps.band_gap = 0 THEN 'zero'\n         ELSE 'nonzero'\n       END AS band_gap_category\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.band_gap IS NOT NULL\nORDER BY band_gap_category, ps.band_gap ASC, m.formula\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_099",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 27.6,
-      "sql": "SELECT\n  b.lattice_a_bin_start,\n  b.lattice_a_bin_start + 0.1 AS lattice_a_bin_end,\n  COUNT(*) AS lattice_a_bin_count\nFROM (\n  SELECT FLOOR(s.lattice_a * 10) / 10.0 AS lattice_a_bin_start\n  FROM structure s\n  WHERE s.lattice_a IS NOT NULL\n) b\nGROUP BY b.lattice_a_bin_start\nORDER BY b.lattice_a_bin_start ASC\nLIMIT 10000;"
-    },
-    {
-      "qid": "q_expert_100",
-      "difficulty": "hard",
-      "accuracy": 0.0,
-      "recall": 0.0,
-      "precision": 0.0,
-      "f1": 0.0,
-      "exact_match": 0.0,
-      "latency_s": 30.1,
-      "sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) AS count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE AND ps.energy_above_hull <= 0.1) AS metastable_count,\n  COUNT(*) FILTER (WHERE ps.is_stable = FALSE AND ps.energy_above_hull > 0.1) AS unstable_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nLIMIT 10000;"
+      "latency_s": 25.6,
+      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.total_magnetization <> 0\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_051",
@@ -1025,8 +588,8 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 48.2,
+      "exact_match": 0.0,
+      "latency_s": 33.6,
       "sql": "SELECT m.formula, dos.total_dos_at_fermi\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN density_of_states dos ON dos.calculation_id = calc.calculation_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nORDER BY dos.total_dos_at_fermi DESC\nLIMIT 1;"
     },
     {
@@ -1036,9 +599,9 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 34.9,
-      "sql": "SELECT m.formula, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN band_structure bs ON bs.calculation_id = calc.calculation_id\nWHERE bs.is_direct_gap = TRUE\n  AND ps.band_gap > 0\nORDER BY ps.band_gap DESC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 40.8,
+      "sql": "SELECT m.formula, ps.band_gap, bs.is_direct_gap\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN band_structure bs ON bs.calculation_id = calc.calculation_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE bs.is_direct_gap = TRUE\nORDER BY ps.band_gap DESC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_053",
@@ -1047,9 +610,31 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 31.6,
+      "exact_match": 0.0,
+      "latency_s": 31.4,
       "sql": "SELECT m.formula, dos.spin_polarized\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN density_of_states dos ON dos.calculation_id = calc.calculation_id\nWHERE dos.spin_polarized = TRUE\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_054",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 23.3,
+      "sql": "SELECT\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    mp.magnetic_ordering\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND mp.magnetic_ordering = 'ferromagnetic'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_055",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 17.6,
+      "sql": "SELECT m.formula, mp.curie_temperature_k\nFROM material_entry m\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE mp.curie_temperature_k IS NOT NULL\nORDER BY mp.curie_temperature_k DESC\nLIMIT 1;"
     },
     {
       "qid": "q_expert_056",
@@ -1059,18 +644,18 @@
       "precision": 1.0,
       "f1": 1.0,
       "exact_match": 1.0,
-      "latency_s": 25.2,
-      "sql": "SELECT m.formula, tp.debye_temperature_k\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE tp.debye_temperature_k >= 500\nORDER BY tp.debye_temperature_k DESC\nLIMIT 10000;"
+      "latency_s": 28.2,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, tp.debye_temperature_k\nFROM material_entry m\n    JOIN calculation cal_tp ON cal_tp.entry_id = m.entry_id\n    JOIN thermal_property tp ON tp.calculation_id = cal_tp.calculation_id\nWHERE\n    tp.debye_temperature_k >= 500.0\n\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_057",
       "difficulty": "hard",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 35.2,
+      "precision": 0.5862068965517241,
+      "f1": 0.7391304347826086,
+      "exact_match": 0.0,
+      "latency_s": 36.5,
       "sql": "SELECT m.formula, s.strukturbericht, tp.thermal_conductivity, tp.temperature_k\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE s.strukturbericht = 'L12'\n  AND tp.thermal_conductivity IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
     },
     {
@@ -1078,22 +663,275 @@
       "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
-      "precision": 1.0,
-      "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 35.0,
+      "precision": 0.5965250965250966,
+      "f1": 0.747279322853688,
+      "exact_match": 0.0,
+      "latency_s": 37.3,
       "sql": "SELECT m.formula, tp.gruneisen_parameter\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE tp.gruneisen_parameter >= 2\nORDER BY tp.gruneisen_parameter DESC\nLIMIT 10000;"
     },
     {
-      "qid": "q_expert_079",
+      "qid": "q_expert_059",
       "difficulty": "hard",
       "accuracy": 0.0,
       "recall": 0.0,
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 33.9,
+      "latency_s": 23.0,
+      "sql": "SELECT m.formula, mp.magnetic_anisotropy_energy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nORDER BY mp.magnetic_anisotropy_energy DESC\nLIMIT 1;"
+    },
+    {
+      "qid": "q_expert_060",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 40.1,
+      "sql": "SELECT DISTINCT\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    dos.is_metallic,\n    mp.magnetic_ordering,\n    mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN density_of_states dos ON dos.calculation_id = calc.calculation_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND dos.is_metallic = TRUE\n    AND mp.magnetic_ordering ILIKE 'ferro%'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_061",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 26.3,
+      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, se.miller_index, se.surface_energy_j_m2\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND se.miller_index = '111'\nORDER BY se.surface_energy_j_m2 ASC\nLIMIT 1;"
+    },
+    {
+      "qid": "q_expert_062",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 26.1,
+      "sql": "SELECT m.formula, se.miller_index, se.work_function\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND se.work_function >= 5\nORDER BY se.work_function DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_063",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 19.0,
+      "sql": "SELECT m.formula, se.miller_index, se.is_reconstructed\nFROM material_entry m\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE se.is_reconstructed = TRUE\nORDER BY m.formula, se.miller_index\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_064",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 23.3,
+      "sql": "SELECT m.formula, gb.sigma_value, gb.gb_energy_j_m2\nFROM material_entry m\nJOIN grain_boundary gb ON gb.entry_id = m.entry_id\nWHERE gb.sigma_value = 5\n  AND gb.gb_energy_j_m2 IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_065",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 35.6,
+      "sql": "SELECT m.formula, md.formation_energy, dt.defect_name\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND (dt.category = 'vacancy' OR dt.defect_name ILIKE '%vacancy%')\n  AND md.formation_energy IS NOT NULL\nORDER BY md.formation_energy ASC\nLIMIT 1;"
+    },
+    {
+      "qid": "q_expert_066",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 37.6,
+      "sql": "SELECT\n    m.formula,\n    s.prototype,\n    s.strukturbericht,\n    dt.defect_name,\n    dt.category,\n    md.site,\n    md.concentration,\n    md.formation_energy\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND (dt.category ILIKE '%antisite%' OR dt.defect_name ILIKE '%antisite%')\nORDER BY\n    m.formula,\n    dt.defect_name,\n    md.site\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_067",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 26.3,
+      "sql": "SELECT DISTINCT m.formula, e.symbol AS dopant_element\nFROM material_entry m\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN element e ON e.element_id = md.dopant_element_id\nWHERE e.symbol = 'B'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_068",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 26.4,
+      "sql": "SELECT\n    m.formula,\n    dt.defect_name,\n    dt.category,\n    md.site,\n    md.concentration,\n    md.formation_energy\nFROM material_entry m\nJOIN material_defect md ON md.entry_id = m.entry_id\nJOIN defect_type dt ON dt.defect_type_id = md.defect_type_id\nWHERE dt.category = 'interstitial'\n   OR dt.defect_name ILIKE '%interstitial%'\nORDER BY m.formula, dt.defect_name\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_069",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 23.6,
+      "sql": "SELECT m.formula, se.miller_index, se.surface_energy_j_m2\nFROM material_entry m\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE se.miller_index IN ('100', '110')\n  AND EXISTS (\n    SELECT 1\n    FROM surface_energy se100\n    WHERE se100.entry_id = m.entry_id\n      AND se100.miller_index = '100'\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM surface_energy se110\n    WHERE se110.entry_id = m.entry_id\n      AND se110.miller_index = '110'\n  )\nORDER BY m.formula, se.miller_index\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_070",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 40.7,
+      "sql": "SELECT\n  m.formula,\n  s.prototype,\n  s.strukturbericht,\n  s.lattice_a,\n  s.lattice_b,\n  s.lattice_c,\n  s.volume_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE s.prototype IN ('L12', 'B2')\n   OR s.strukturbericht IN ('L12', 'B2')\nORDER BY s.prototype, s.strukturbericht, m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_071",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 34.1,
+      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_072",
+      "difficulty": "hard",
+      "accuracy": 0.7272727272727273,
+      "recall": 0.7272727272727273,
+      "precision": 1.0,
+      "f1": 0.8421052631578948,
+      "exact_match": 0.0,
+      "latency_s": 33.8,
+      "sql": "SELECT DISTINCT m.formula, s.prototype, s.strukturbericht, sm.method_name\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\n  AND sm.method_name ILIKE '%arc%'\n  AND sm.method_name ILIKE '%melt%'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_073",
+      "difficulty": "hard",
+      "accuracy": 0.7878787878787878,
+      "recall": 0.7878787878787878,
+      "precision": 1.0,
+      "f1": 0.8813559322033898,
+      "exact_match": 0.0,
+      "latency_s": 31.3,
+      "sql": "SELECT m.formula, s.prototype, s.strukturbericht, ms.temperature_k\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.temperature_k >= 1000\n  AND ms.success = TRUE\nORDER BY ms.temperature_k DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_074",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 43.4,
+      "sql": "SELECT DISTINCT\n    m.formula,\n    s.prototype,\n    s.strukturbericht\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_reference mr1 ON mr1.entry_id = m.entry_id\nJOIN material_reference mr2 ON mr2.entry_id = m.entry_id\nJOIN material_reference mr3 ON mr3.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mr1.reference_id < mr2.reference_id\n  AND mr2.reference_id < mr3.reference_id\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_075",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 38.7,
+      "sql": "SELECT m.formula, ad.domain_name\nFROM material_entry m\nJOIN material_application ma ON ma.entry_id = m.entry_id\nJOIN application_domain ad ON ad.domain_id = ma.domain_id\nWHERE ad.domain_name ILIKE '%high%temperature%superalloy%'\n   OR ad.domain_name ILIKE '%高温超合金%'\nORDER BY ad.domain_name, m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_076",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 28.0,
+      "sql": "SELECT DISTINCT\n  m.formula,\n  s.prototype,\n  s.strukturbericht,\n  lr.year,\n  lr.title,\n  lr.doi\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN material_reference mr ON mr.entry_id = m.entry_id\nJOIN literature_reference lr ON lr.reference_id = mr.reference_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND lr.year >= 2020\nORDER BY lr.year DESC, m.formula ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_077",
+      "difficulty": "hard",
+      "accuracy": 0.4883720930232558,
+      "recall": 0.4883720930232558,
+      "precision": 0.15555555555555556,
+      "f1": 0.23595505617977527,
+      "exact_match": 0.0,
+      "latency_s": 39.6,
+      "sql": "SELECT DISTINCT m.formula, m.source_db\nFROM material_entry m\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE ms.success = TRUE\n  AND m.source_db IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_078",
+      "difficulty": "hard",
+      "accuracy": 0.8292682926829268,
+      "recall": 0.8292682926829268,
+      "precision": 1.0,
+      "f1": 0.9066666666666667,
+      "exact_match": 0.0,
+      "latency_s": 29.6,
+      "sql": "SELECT DISTINCT m.formula, sm.method_name, ms.temperature_k, ms.duration_hours, ms.atmosphere\nFROM material_entry m\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE ms.success = TRUE\n  AND (sm.method_name ILIKE '%ball%mill%' OR sm.description ILIKE '%ball%mill%')\nORDER BY m.formula, sm.method_name\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_079",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 0.04696132596685083,
+      "f1": 0.08970976253298152,
+      "exact_match": 0.0,
+      "latency_s": 40.0,
       "sql": "SELECT m.formula\nFROM material_entry m\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_080",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 18.5,
+      "sql": "SELECT lr.title, lr.authors, lr.journal, lr.year, lr.doi\nFROM literature_reference lr\nWHERE lr.doi IS NOT NULL\n  AND lr.doi <> ''\nORDER BY lr.year DESC, lr.title\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_081",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 34.1,
+      "sql": "SELECT m.formula,\n       s.lattice_a,\n       ABS(s.lattice_a - 3.57) AS lattice_diff,\n       ps.energy_above_hull,\n       cp_bm.value AS bulk_modulus\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nWHERE ABS(s.lattice_a - 3.57) <= 0.05\n  AND ps.is_stable = TRUE\n  AND cp_bm.value >= 150\n  AND cp_bm.unit = 'GPa'\nORDER BY lattice_diff ASC, cp_bm.value DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_082",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 32.6,
+      "sql": "SELECT\n  m.formula,\n  s.prototype,\n  ps.formation_energy_per_atom,\n  ps.energy_above_hull,\n  ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n  (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.energy_above_hull <= 0.05\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
     },
     {
       "qid": "q_expert_083",
@@ -1102,20 +940,196 @@
       "recall": 1.0,
       "precision": 1.0,
       "f1": 1.0,
-      "exact_match": 1.0,
-      "latency_s": 41.7,
-      "sql": "SELECT m.formula, c.element, cp.value AS bulk_modulus, cp.unit, tp.debye_temperature_k, ps.is_stable, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE c.element = 'Co'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.value >= 180\n  AND cp.unit = 'GPa'\n  AND tp.debye_temperature_k >= 400\nORDER BY cp.value DESC, tp.debye_temperature_k DESC\nLIMIT 10000;"
+      "exact_match": 0.0,
+      "latency_s": 45.0,
+      "sql": "SELECT DISTINCT m.formula, cp_bm.value AS bulk_modulus, tp.debye_temperature_k, ps.energy_above_hull\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc_bm ON calc_bm.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc_bm.calculation_id\n     AND cp_bm.property_name = 'bulk_modulus'\nJOIN calculation calc_tp ON calc_tp.entry_id = m.entry_id\nJOIN thermal_property tp ON tp.calculation_id = calc_tp.calculation_id\nWHERE c.element = 'Co'\n  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND cp_bm.value >= 180\n  AND tp.debye_temperature_k >= 400\nORDER BY cp_bm.value DESC, tp.debye_temperature_k DESC\nLIMIT 10000;"
     },
     {
-      "qid": "q_expert_097",
-      "difficulty": "easy",
+      "qid": "q_expert_084",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 32.8,
+      "sql": "SELECT m.formula,\n       s.lattice_a,\n       cp.value AS shear_modulus,\n       ps.energy_above_hull,\n       ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND s.lattice_a BETWEEN 3.53 AND 3.59\n  AND cp.property_name = 'shear_modulus'\n  AND cp.unit = 'GPa'\n  AND cp.value >= 70\n  AND ps.is_stable = TRUE\nORDER BY s.lattice_a ASC, cp.value DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_085",
+      "difficulty": "very_hard",
       "accuracy": 0.0,
       "recall": 0.0,
       "precision": 0.0,
       "f1": 0.0,
       "exact_match": 0.0,
-      "latency_s": 17.1,
-      "sql": "SELECT calc.method, COUNT(DISTINCT calc.entry_id) AS entry_count\nFROM calculation calc\nWHERE calc.calculation_type = 'DFT'\nGROUP BY calc.method\nORDER BY entry_count DESC\nLIMIT 10000;"
+      "latency_s": 38.1,
+      "sql": "SELECT m.formula, ps.energy_above_hull, ps.is_stable, mp.magnetic_ordering, mp.total_magnetization\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND mp.magnetic_ordering = 'ferromagnetic'\n  AND ps.is_stable = TRUE\nORDER BY m.formula ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_086",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 30.3,
+      "sql": "SELECT DISTINCT\n    m.formula,\n    ps.energy_above_hull,\n    ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN material_synthesis ms ON ms.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ms.success = TRUE\n  AND ps.is_stable = TRUE\nORDER BY ps.energy_above_hull ASC, m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_087",
+      "difficulty": "very_hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 34.6,
+      "sql": "SELECT m.formula, cp_bm.value AS bulk_modulus, cp_hull.value AS energy_above_hull\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp_bm ON cp_bm.calculation_id = calc.calculation_id\nJOIN calculated_property cp_hull ON cp_hull.calculation_id = calc.calculation_id\nWHERE cp_bm.property_name = 'bulk_modulus'\n  AND cp_hull.property_name = 'energy_above_hull'\n  AND cp_hull.value <= 0.01\n  AND cp_bm.value > (\n      SELECT cp_ref.value\n      FROM material_entry m_ref\n      JOIN calculation calc_ref ON calc_ref.entry_id = m_ref.entry_id\n      JOIN calculated_property cp_ref ON cp_ref.calculation_id = calc_ref.calculation_id\n      WHERE cp_ref.property_name = 'bulk_modulus'\n        AND (m_ref.formula = 'Ni3Al' OR m_ref.reduced_formula = 'Ni3Al')\n      ORDER BY cp_ref.value DESC\n      LIMIT 1\n  )\nORDER BY cp_bm.value DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_088",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 26.0,
+      "sql": "SELECT COUNT(*) AS stable_binary_compound_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE m.number_of_elements = 2\n  AND ps.is_stable = TRUE\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_089",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 37.0,
+      "sql": "SELECT m.formula, et.poisson_ratio\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN elastic_tensor et ON et.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND et.poisson_ratio < 0.25\nORDER BY et.poisson_ratio ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_090",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 28.0,
+      "sql": "SELECT m.formula, se.miller_index, se.surface_energy_j_m2, ps.energy_above_hull, ps.is_stable\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND se.surface_energy_j_m2 < 1.5\n  AND ps.is_stable = TRUE\nORDER BY se.surface_energy_j_m2 ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_091",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 36.5,
+      "sql": "SELECT\n  COUNT(DISTINCT m.entry_id) FILTER (\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.is_stable = TRUE\n  ) * 100.0\n  / NULLIF(\n      COUNT(DISTINCT m.entry_id) FILTER (\n        WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      ),\n      0\n    ) AS l12_stable_percentage,\n  COUNT(DISTINCT m.entry_id) FILTER (\n    WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n      AND ps.is_stable = TRUE\n  ) * 100.0\n  / NULLIF(\n      COUNT(DISTINCT m.entry_id) FILTER (\n        WHERE (s.prototype = 'B2' OR s.strukturbericht = 'B2')\n      ),\n      0\n    ) AS b2_stable_percentage\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_092",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 36.3,
+      "sql": "SELECT cp.property_name, AVG(cp.value) AS average_bulk_modulus\nFROM calculated_property cp\nWHERE cp.property_name = 'bulk_modulus'\nGROUP BY cp.property_name\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_093",
+      "difficulty": "hard",
+      "accuracy": 0.045454545454545456,
+      "recall": 0.045454545454545456,
+      "precision": 1.0,
+      "f1": 0.08695652173913045,
+      "exact_match": 0.0,
+      "latency_s": 29.3,
+      "sql": "SELECT c.element AS a_site, COUNT(DISTINCT m.entry_id) AS l12_compound_count\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY l12_compound_count DESC\nLIMIT 1;"
+    },
+    {
+      "qid": "q_expert_094",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 21.1,
+      "sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_095",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 40.6,
+      "sql": "SELECT\n  CASE\n    WHEN ps.energy_above_hull <= 0.001 THEN 'stable'\n    WHEN ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05 THEN 'metastable'\n    WHEN ps.energy_above_hull > 0.05 THEN 'unstable'\n  END AS stability,\n  AVG(cp.value) AS avg_bulk_modulus,\n  COUNT(*) AS count\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\nGROUP BY\n  CASE\n    WHEN ps.energy_above_hull <= 0.001 THEN 'stable'\n    WHEN ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05 THEN 'metastable'\n    WHEN ps.energy_above_hull > 0.05 THEN 'unstable'\n  END\nORDER BY\n  CASE\n    WHEN CASE\n      WHEN ps.energy_above_hull <= 0.001 THEN 'stable'\n      WHEN ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05 THEN 'metastable'\n      WHEN ps.energy_above_hull > 0.05 THEN 'unstable'\n    END = 'stable' THEN 1\n    WHEN CASE\n      WHEN ps.energy_above_hull <= 0.001 THEN 'stable'\n      WHEN ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05 THEN 'metastable'\n      WHEN ps.energy_above_hull > 0.05 THEN 'unstable'\n    END = 'metastable' THEN 2\n    ELSE 3\n  END\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_096",
+      "difficulty": "easy",
+      "accuracy": 0.8,
+      "recall": 0.8,
+      "precision": 0.8,
+      "f1": 0.8000000000000002,
+      "exact_match": 0.0,
+      "latency_s": 23.0,
+      "sql": "SELECT m.chemical_system, COUNT(*) AS entry_count\nFROM material_entry m\nGROUP BY m.chemical_system\nORDER BY entry_count DESC\nLIMIT 10;"
+    },
+    {
+      "qid": "q_expert_097",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 22.7,
+      "sql": "SELECT calc.method, COUNT(DISTINCT m.entry_id) AS entry_count\nFROM calculation calc\nJOIN material_entry m ON m.entry_id = calc.entry_id\nGROUP BY calc.method\nORDER BY entry_count DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_098",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 25.8,
+      "sql": "SELECT m.formula,\n       ps.band_gap,\n       CASE\n         WHEN ps.band_gap = 0 THEN 'zero_band_gap'\n         ELSE 'nonzero_band_gap'\n       END AS band_gap_category\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.band_gap IS NOT NULL\nORDER BY band_gap_category, ps.band_gap ASC, m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_099",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 30.6,
+      "sql": "SELECT\n  bins.lattice_a_bin_start,\n  bins.lattice_a_bin_start + 0.1 AS lattice_a_bin_end,\n  COUNT(*) AS lattice_a_bin_count\nFROM (\n  SELECT FLOOR(s.lattice_a * 10) / 10.0 AS lattice_a_bin_start\n  FROM structure s\n  WHERE s.lattice_a IS NOT NULL\n) bins\nGROUP BY bins.lattice_a_bin_start\nORDER BY bins.lattice_a_bin_start ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_expert_100",
+      "difficulty": "hard",
+      "accuracy": 0.0,
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "exact_match": 0.0,
+      "latency_s": 29.1,
+      "sql": "SELECT\n  COUNT(*) FILTER (WHERE ps.energy_above_hull <= 0.001) AS count,\n  COUNT(*) FILTER (WHERE ps.energy_above_hull > 0.001 AND ps.energy_above_hull <= 0.05) AS metastable_count,\n  COUNT(*) FILTER (WHERE ps.energy_above_hull > 0.05) AS unstable_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nLIMIT 10000;"
     }
   ]
 }

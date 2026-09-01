@@ -141,3 +141,149 @@ def test_multi_hop_success():
     result = multi_hop_success(3, True)
     assert result["is_multi_hop"]
     assert result["correct"]
+
+
+def test_exact_result_set_match_canonical():
+    from evaluation.metrics_strict import exact_result_set_match
+
+    rows = [["Ni3Al", 1.0], ["Cu3Au", 2.0]]
+    cols = ["formula", "delta_e"]
+
+    # identical -> exact
+    assert exact_result_set_match(rows, rows, cols, cols)
+    # missing gold column -> not exact
+    assert not exact_result_set_match(
+        [["Ni3Al"], ["Cu3Au"]], rows, ["formula"], cols)
+    # extra column -> not exact
+    assert not exact_result_set_match(
+        [r + ["x"] for r in rows], rows, cols + ["extra"], cols)
+    # column order mismatch -> not exact
+    assert not exact_result_set_match(
+        [[r[1], r[0]] for r in rows], rows, ["delta_e", "formula"], cols)
+    # duplicate-row multiplicity mismatch -> not exact
+    assert not exact_result_set_match(rows + [rows[0]], rows, cols, cols)
+    # unordered: permutation is exact
+    assert exact_result_set_match(list(reversed(rows)), rows, cols, cols)
+    # ordered: permutation is NOT exact
+    assert not exact_result_set_match(
+        list(reversed(rows)), rows, cols, cols, ordered=True)
+    assert exact_result_set_match(rows, rows, cols, cols, ordered=True)
+
+
+def test_exact_result_set_match_value_strictness():
+    from decimal import Decimal
+
+    from evaluation.metrics_strict import exact_result_set_match
+
+    cols = ["v"]
+    # type discrimination: number vs string, bool vs string, NULL vs sentinel
+    assert not exact_result_set_match([[1]], [["1"]], cols, cols)
+    assert not exact_result_set_match([[True]], [["true"]], cols, cols)
+    assert not exact_result_set_match([[None]], [["__NULL__"]], cols, cols)
+    assert not exact_result_set_match([[True]], [[1]], cols, cols)
+    # string case is significant in values
+    assert not exact_result_set_match([["Ni"]], [["ni"]], cols, cols)
+    assert exact_result_set_match([["Ni"]], [["Ni"]], cols, cols)
+    # numeric types unify across driver Decimal / JSON float / int
+    assert exact_result_set_match([[Decimal("1.5")]], [[1.5]], cols, cols)
+    assert exact_result_set_match([[Decimal("2")]], [[2]], cols, cols)
+    # column names stay case-insensitive
+    assert exact_result_set_match([[1]], [[1]], ["V"], ["v"])
+
+
+def test_eval_ablation_load_expected_returns_ordered(tmp_path, monkeypatch):
+    import json
+
+    import scripts.eval_ablation as ea
+
+    monkeypatch.setattr(ea, "RESULTS_DIR", tmp_path)
+    # Model scoring follows semantic_ordered (the question's own ordering
+    # requirement), not the gold-storage ordered flag.
+    (tmp_path / "q_x.json").write_text(json.dumps(
+        {"rows": [[1], [2]], "columns": ["v"], "ordered": True,
+         "semantic_ordered": True}))
+    rows, columns, ordered = ea.load_expected("q_x")
+    assert (rows, columns, ordered) == ([[1], [2]], ["v"], True)
+    (tmp_path / "q_y.json").write_text(json.dumps(
+        {"rows": [[1], [2]], "columns": ["v"], "ordered": True,
+         "semantic_ordered": False}))
+    assert ea.load_expected("q_y") == ([[1], [2]], ["v"], False)
+    assert ea.load_expected("q_missing") == ([], [], False)
+
+    # ordered=true: same row set in a different order must not be exact
+    from evaluation.metrics_strict import exact_result_set_match
+    assert not exact_result_set_match([[2], [1]], rows, columns, columns,
+                                      ordered=ordered)
+
+
+def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
+    import json
+
+    import pytest
+
+    import scripts.verify_all as va
+    from scripts.provenance import build_provenance
+
+    project = tmp_path
+    eval_dir = project / "evaluation"
+    prompts = project / "llm" / "prompt_templates"
+    gold = eval_dir / "gold_sql"
+    expected = eval_dir / "expected_results"
+    for d in (eval_dir, prompts, gold, expected, eval_dir / "generated_sql"):
+        d.mkdir(parents=True)
+    (project / "GIT_COMMIT").write_text("deadbeef\n")
+    dataset = eval_dir / "evaluation_dataset.jsonl"
+    dataset.write_text('{"id": "q1", "question": "x"}\n')
+    (gold / "q1.sql").write_text("SELECT 1;\n")
+    prompt = prompts / "sql_generation_prompt.md"
+    prompt.write_text("template v1\n")
+    exp_file = expected / "q1.json"
+    exp_file.write_text('{"rows": [[1]], "columns": ["v"], "ordered": false}')
+
+    prov = build_provenance(dataset, gold_dir=gold, prompt_path=prompt,
+                            expected_dir=expected)
+    prov["git_commit"] = "deadbeef"
+    result = eval_dir / "some_eval_results.json"
+    result.write_text(json.dumps({
+        "model": "m", "provenance": prov,
+        "results": [{"qid": "q1", "sql": "SELECT 1;"}],
+    }))
+
+    monkeypatch.setattr(va, "PROJECT", project)
+    monkeypatch.setattr(va, "EVAL", eval_dir)
+    monkeypatch.setattr(va, "PROMPTS", prompts)
+
+    summary, warnings = va.check_provenance()
+    assert "1 evaluation provenance blocks" in summary
+
+    # tampering the prompt template must fail static verification
+    prompt.write_text("template v2 tampered\n")
+    with pytest.raises(va.VerifyError, match="prompt_template_sha256"):
+        va.check_provenance()
+    prompt.write_text("template v1\n")
+
+    # tampering an expected-result JSON must fail static verification
+    exp_file.write_text('{"rows": [[2]], "columns": ["v"], "ordered": false}')
+    with pytest.raises(va.VerifyError, match="expected_sha256"):
+        va.check_provenance()
+
+
+def test_model_comparison_config_hash_staleness():
+    import pytest
+
+    from scripts.eval_model_comparison import models_config_sha256
+    from scripts.provenance import assert_resumable
+
+    base = {"dataset_sha256": "d", "gold_sha256": "g",
+            "prompt_template_sha256": "p", "model": "m", "git_commit": "c"}
+    stored = dict(base, models_config_sha256=models_config_sha256(
+        [{"name": "gpt-4o", "provider": "openai", "model_id": "gpt-4o"}]))
+    current_same = dict(stored)
+    assert_resumable(stored, current_same,
+                     extra_keys=("models_config_sha256",))
+
+    changed = dict(base, models_config_sha256=models_config_sha256(
+        [{"name": "gpt-4o", "provider": "openai", "model_id": "gpt-4o-mini"}]))
+    with pytest.raises(RuntimeError):
+        assert_resumable(stored, changed,
+                         extra_keys=("models_config_sha256",))

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Audit how much of the reported accuracy comes from metric leniency.
+"""Audit how much of the reported score comes from metric leniency.
+
+Naming note: the shipped headline number is the mean of the
+"historical" policy below.  It is a row-set RECALL over the common
+columns (superset answers still score 1.0), NOT a strict execution
+accuracy, and must be reported as "historical execution recall"
+alongside the strict score and the exact-match rate.
 
 Re-executes the packaged generated-SQL logs against the verification database
 and re-scores them under several policies.  No LLM and no API key are needed:
@@ -8,8 +14,14 @@ everything required is already in the reproduction package.
 The script first reproduces the shipped numbers exactly (self-check), then
 reports what the same runs score once each leniency is removed:
 
-  historical        the metric used for the reported numbers
-  +exact_match      superset answers no longer count as correct
+  historical        historical execution recall — the metric used for
+                    the reported numbers
+  exact_result_set_match   the canonical exact metric: exact gold column
+                    list + row multiset match + row order when the gold
+                    query is ordered
+  common_column_exact_overlap  the LEGACY lenient "exact": recall=1 and
+                    precision=1 over the common columns only (a result
+                    missing gold columns can still count)
   require_all_cols  every gold column must be present in the result
   no_positional     no positional fallback when column names do not overlap
   drop_empty_gold   queries whose gold result is empty are excluded
@@ -42,13 +54,23 @@ sys.path.insert(0, str(PROJECT))
 import psycopg  # noqa: E402
 
 from evaluation.metrics import execution_accuracy_full  # noqa: E402
-from evaluation.metrics_strict import ScoringPolicy, score  # noqa: E402
+from evaluation.metrics_strict import (  # noqa: E402
+    ScoringPolicy,
+    exact_result_set_match,
+    score,
+)
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
+from scripts.provenance import build_provenance, sha256_file  # noqa: E402
 
 EVAL = PROJECT / "evaluation"
 
 # name -> (dataset file, generated-SQL subdir, database, shipped result file)
+# "main" is audited against the derivation of the canonical inference run
+# (multiaxis_results.json -> main_eval_with_sql.json; see
+# scripts/derive_main_artifacts.py).
 DATASETS: dict[str, tuple[str, str, str, str | None]] = {
-    "main": ("evaluation_dataset.jsonl", "main", "l12_materials", "main_eval_with_sql.json"),
+    "main": ("main_evaluation_dataset.jsonl", "main", "l12_materials",
+             "main_eval_with_sql.json"),
     "independent": ("expert_evaluation_dataset.jsonl", "independent", "l12_materials",
                     "independent_eval_results.json"),
     "transfer": ("transfer_evaluation_dataset.jsonl", "transfer", "oqmd_transfer",
@@ -65,6 +87,13 @@ POLICIES: dict[str, ScoringPolicy] = {
     "drop_empty_gold": ScoringPolicy(empty_gold="exclude"),
     "multiset": ScoringPolicy(multiset=True),
     "strict": ScoringPolicy.strict(),
+}
+
+SUITE_GUARD = {
+    "main": "main",
+    "independent": "main",
+    "transfer": "transfer",
+    "transfer_obfuscated": "transfer",
 }
 
 ORDER_BY = re.compile(r"\border\s+by\b", re.IGNORECASE)
@@ -86,19 +115,6 @@ def is_placeholder(sql: str) -> bool:
     return not body
 
 
-def run_sql(conn, sql: str) -> tuple[list[list[Any]], list[str], bool]:
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SET statement_timeout = '30s'")
-            cur.execute(sql)
-            cols = [d.name for d in cur.description] if cur.description else []
-            rows = [list(r) for r in cur.fetchall()]
-        return rows, cols, True
-    except Exception:
-        conn.rollback()
-        return [], [], False
-
-
 def shipped_per_query(name: str) -> dict[str, float]:
     _, _, _, resf = DATASETS[name]
     if not resf or not (EVAL / resf).exists():
@@ -106,7 +122,10 @@ def shipped_per_query(name: str) -> dict[str, float]:
     data = json.load(open(EVAL / resf))
     for value in data.values():
         if isinstance(value, list) and value and isinstance(value[0], dict) and "qid" in value[0]:
-            return {r["qid"]: float(r.get("accuracy", 0.0)) for r in value}
+            return {
+                r["qid"]: float(
+                    r.get("execution_recall", r.get("accuracy", 0.0)))
+                for r in value}
     return {}
 
 
@@ -118,8 +137,9 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
         print(f"[{name}] skipped: {sql_dir} not found", file=sys.stderr)
         return None
     try:
-        conn = psycopg.connect(conninfo(db))
-    except Exception as exc:  # noqa: BLE001
+        conn = open_eval_connection(conninfo(db), suite=SUITE_GUARD[name],
+                                    statement_timeout="30s")
+    except psycopg.OperationalError as exc:
         print(f"[{name}] skipped: cannot connect to database '{db}' "
               f"({str(exc).splitlines()[0]})", file=sys.stderr)
         if db.startswith("oqmd_"):
@@ -129,7 +149,8 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
 
     shipped = shipped_per_query(name)
     totals = {p: [0.0, 0] for p in POLICIES}          # policy -> [sum, n_counted]
-    exact_sum = 0.0
+    common_col_exact_sum = 0.0
+    canonical_exact_sum = 0.0
     ordered_sum, ordered_n = 0.0, 0
     excluded: list[str] = []
     missing_cols: list[str] = []
@@ -148,9 +169,16 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
         exp_cols = exp.get("columns") if isinstance(exp, dict) else None
 
         sql_file = sql_dir / f"{qid}.sql"
-        sql = sql_file.read_text() if sql_file.exists() else ""
+        if not sql_file.exists():
+            raise FileNotFoundError(
+                f"[{name}] generated SQL log missing: {sql_file} — the "
+                "package must ship one .sql file per query; re-run "
+                "scripts/derive_main_artifacts.py / "
+                "scripts/extract_generated_sql_logs.py")
+        sql = sql_file.read_text()
         if sql.strip() and not is_placeholder(sql):
-            got, cols, _ = run_sql(conn, sql)
+            res = run_model_sql(conn, sql)
+            got, cols = res["rows"], res["columns"]
         else:
             got, cols = [], []
 
@@ -159,7 +187,12 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
         if qid in shipped and abs(hist["recall"] - shipped[qid]) > 1e-6:
             selfcheck_mismatch.append((qid, hist["recall"], shipped[qid]))
 
-        exact_sum += 1.0 if (hist["recall"] == 1.0 and hist["precision"] == 1.0) else 0.0
+        common_col_exact_sum += 1.0 if (
+            hist["recall"] == 1.0 and hist["precision"] == 1.0) else 0.0
+        canonical_exact_sum += 1.0 if exact_result_set_match(
+            got, exp_rows, cols, exp_cols,
+            ordered=bool(exp.get("semantic_ordered")) if isinstance(exp, dict) else False,
+        ) else 0.0
         q_scores: dict[str, float] = {}
 
         for pname, policy in POLICIES.items():
@@ -206,6 +239,14 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
     conn.close()
     n = len(rows)
     out: dict[str, Any] = {
+        "metric_naming": (
+            "the 'historical' policy is a historical execution recall "
+            "(row-set recall over common columns), not a strict "
+            "execution accuracy; the canonical exact metric is "
+            "'exact_result_set_match_pct' (exact gold column list + row "
+            "multiset + order when the gold query is ordered); "
+            "'common_column_exact_overlap_pct' is the LEGACY lenient "
+            "exact over common columns only and is kept for comparison"),
         "n_queries": n,
         "policies": {
             p: {
@@ -214,7 +255,8 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
             }
             for p in POLICIES
         },
-        "exact_match_pct": round(exact_sum / n * 100, 1),
+        "exact_result_set_match_pct": round(canonical_exact_sum / n * 100, 1),
+        "common_column_exact_overlap_pct": round(common_col_exact_sum / n * 100, 1),
         "ordered": {
             "mean_recall_pct": round(ordered_sum / ordered_n * 100, 1) if ordered_n else None,
             "n_gold_with_order_by": ordered_n,
@@ -258,7 +300,7 @@ def main() -> int:
     cols = ["historical", "require_all_cols", "no_positional", "drop_empty_gold",
             "multiset", "strict"]
     header = f"{'dataset':22s}{'n':>4s}" + "".join(f"{c[:14]:>16s}" for c in cols) \
-             + f"{'exact':>8s}{'ordered':>9s}"
+             + f"{'exact':>8s}{'cc-ex':>8s}{'ordered':>9s}"
     print(header)
     print("-" * len(header))
     for name, res in report.items():
@@ -266,7 +308,8 @@ def main() -> int:
         for c in cols:
             v = res["policies"][c]["mean_recall_pct"]
             line += f"{(f'{v:.1f}%' if v is not None else '--'):>16s}"
-        line += f"{res['exact_match_pct']:7.1f}%"
+        line += f"{res['exact_result_set_match_pct']:7.1f}%"
+        line += f"{res['common_column_exact_overlap_pct']:7.1f}%"
         ov = res["ordered"]["mean_recall_pct"]
         line += f"{(f'{ov:.1f}%' if ov is not None else '--'):>9s}"
         print(line)
@@ -299,6 +342,21 @@ def main() -> int:
                 print(f"          {rec['qid']}: {rec['n_common']}/{rec['n_gold_cols']} cols "
                       f"({', '.join(rec['common'])})")
 
+    report["provenance"] = build_provenance(
+        EVAL / "main_evaluation_dataset.jsonl",
+        rescore_note=(
+            "audit recomputed deterministically from stored generated SQL and "
+            "shipped result JSONs by scripts/audit_scoring.py; no LLM call is "
+            "involved"))
+    report["sources"] = {
+        name: {
+            "source_result_file": DATASETS[name][3],
+            "source_result_sha256": sha256_file(EVAL / DATASETS[name][3]),
+        }
+        for name in report
+        if name in DATASETS and DATASETS[name][3]
+        and (EVAL / DATASETS[name][3]).exists()
+    }
     Path(args.out).write_text(json.dumps(report, indent=2, ensure_ascii=False))
     print(f"\nWrote {args.out}")
     return 0 if bad == 0 else 2

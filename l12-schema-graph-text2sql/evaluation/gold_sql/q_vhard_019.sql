@@ -1,5 +1,5 @@
 -- CTE D: 多段CTE（2段以上）
--- 「安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、Ni含有のもので最も安定な5件を出して」
+-- 「安定なL1₂化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、Ni含有のもので再基準化生成エネルギーが低い5件を出して」
 WITH stable_l12 AS (
     SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,
            ps.reference_set

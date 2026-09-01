@@ -5,6 +5,7 @@
     "band_gap"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "entry_00007",

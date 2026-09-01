@@ -1,0 +1,53 @@
+{
+  "paired_ja": {
+    "n_runs": 3,
+    "n_queries": 100,
+    "overall_recall_pct_mean": 92.0,
+    "overall_recall_pct_sd": 0.7,
+    "overall_recall_pct_runs": [
+      91.8,
+      91.4,
+      92.7
+    ],
+    "by_difficulty_mean_pct": {
+      "easy": 99.7,
+      "hard": 88.9,
+      "medium": 96.7,
+      "very_hard": 81.9
+    }
+  },
+  "paired_en": {
+    "n_runs": 3,
+    "n_queries": 100,
+    "overall_recall_pct_mean": 90.0,
+    "overall_recall_pct_sd": 2.0,
+    "overall_recall_pct_runs": [
+      91.7,
+      90.4,
+      87.8
+    ],
+    "by_difficulty_mean_pct": {
+      "easy": 98.3,
+      "hard": 89.1,
+      "medium": 93.3,
+      "very_hard": 77.8
+    }
+  },
+  "independent_en": {
+    "n_runs": 3,
+    "n_queries": 25,
+    "overall_recall_pct_mean": 96.5,
+    "overall_recall_pct_sd": 2.3,
+    "overall_recall_pct_runs": [
+      95.2,
+      95.2,
+      99.2
+    ],
+    "by_difficulty_mean_pct": {
+      "easy": 88.9,
+      "hard": 100.0,
+      "medium": 100.0,
+      "very_hard": 96.0
+    }
+  }
+}

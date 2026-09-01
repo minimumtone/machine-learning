@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Capture per-query generated SQL for the main 100-query evaluation set.
+"""RE-INFERENCE tool: run the full pipeline over the main 245-query corpus.
 
-This script runs the full pipeline (n_best=3, hybrid reranker, SQLGuard) over
-`evaluation/evaluation_dataset.jsonl` and writes:
-  - evaluation/generated_sql/main/<qid>.sql
-  - evaluation/main_eval_with_sql.json
-
-It does NOT overwrite `ablation_results.json` or `ablation_run_*.json`.  It is
-distributed as a re-run option for reviewers who want to audit the generated SQL.
+This calls the LLM and therefore produces a NEW run, not the canonical
+one.  The canonical main run is evaluation/multiaxis_results.json and
+the shipped evaluation/main_eval_with_sql.json + generated_sql/main/
+are derived from it deterministically by scripts/derive_main_artifacts.py.
+To avoid clobbering those canonical artifacts, this script writes to
+  - evaluation/generated_sql/main_rerun/<qid>.sql
+  - evaluation/main_eval_rerun_with_sql.json
+by default.  It is distributed as a re-run option for reviewers who want
+to reproduce inference end-to-end.
 """
 from __future__ import annotations
 
@@ -29,11 +31,12 @@ from graph.graph_builder import build_table_graph  # noqa: E402
 from graph.join_path_generator import get_allowed_join_list  # noqa: E402
 from graph.schema_parser import get_foreign_keys, get_tables, get_columns  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.eval_db import open_eval_connection, run_model_sql  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_DIR = EVAL_DIR / "expected_results"
-OUT_DIR = EVAL_DIR / "generated_sql" / "main"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = EVAL_DIR / "generated_sql" / "main_rerun"
 
 CONNINFO = (
     f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
@@ -46,7 +49,7 @@ CONNINFO = (
 
 def load_queries(limit: int | None = None):
     queries = []
-    with open(EVAL_DIR / "evaluation_dataset.jsonl") as f:
+    with open(EVAL_DIR / "main_evaluation_dataset.jsonl") as f:
         for line in f:
             if line.strip():
                 queries.append(json.loads(line))
@@ -68,21 +71,17 @@ def get_conn():
     return psycopg.connect(CONNINFO)
 
 
+_EVAL_CONN = None
+
+
 def execute_sql(sql):
-    try:
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SET statement_timeout = '10s'")
-                cur.execute(sql)
-                columns = [d[0] for d in cur.description] if cur.description else []
-                rows = cur.fetchall()
-            conn.commit()
-        return {"success": True, "columns": columns, "rows": [list(r) for r in rows], "row_count": len(rows)}
-    except Exception as e:
-        return {"success": False, "error": str(e), "rows": [], "row_count": 0, "columns": []}
+    global _EVAL_CONN
+    if _EVAL_CONN is None or _EVAL_CONN.closed:
+        _EVAL_CONN = open_eval_connection(CONNINFO, suite="main")
+    return run_model_sql(_EVAL_CONN, sql)
 
 
-def compute_accuracy(sql, qid):
+def compute_execution_recall(sql, qid):
     expected_rows, expected_columns = load_expected(qid)
     if not sql:
         return 0.0
@@ -99,8 +98,13 @@ def compute_accuracy(sql, qid):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=None, help="Run only first N queries for testing")
-    parser.add_argument("--out", type=Path, default=EVAL_DIR / "main_eval_with_sql.json", help="Aggregate JSON output")
+    parser.add_argument("--out", type=Path,
+                        default=EVAL_DIR / "main_eval_rerun_with_sql.json",
+                        help="Aggregate JSON output (a NEW run; the canonical "
+                             "main_eval_with_sql.json is derived by "
+                             "scripts/derive_main_artifacts.py)")
     args = parser.parse_args()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     model = os.getenv("LLM_MODEL", "gpt-5.5")
     print(f"Model: {model}")
@@ -145,8 +149,8 @@ def main():
             sql = pipe_result.get("sql", "")
             if sql:
                 sql = normalize_limit(sql)
-            acc = compute_accuracy(sql, qid)
-            print(f"acc={acc:.1%}  {elapsed:.1f}s")
+            acc = compute_execution_recall(sql, qid)
+            print(f"recall={acc:.1%}  {elapsed:.1f}s")
 
             sql_path = OUT_DIR / f"{qid}.sql"
             sql_path.write_text(sql.rstrip() + "\n", encoding="utf-8")
@@ -155,7 +159,7 @@ def main():
                 "qid": qid,
                 "difficulty": difficulty,
                 "question": question,
-                "accuracy": acc,
+                "execution_recall": acc,
                 "latency_s": round(elapsed, 1),
                 "sql": sql,
             })
@@ -166,7 +170,7 @@ def main():
                 "qid": qid,
                 "difficulty": difficulty,
                 "question": question,
-                "accuracy": 0.0,
+                "execution_recall": 0.0,
                 "latency_s": round(elapsed, 1),
                 "sql": "",
                 "error": f"{type(e).__name__}: {e!s}",
@@ -175,24 +179,29 @@ def main():
     conn.close()
 
     # Summary
-    total_acc = sum(r["accuracy"] for r in results) / len(results)
+    total_acc = sum(r["execution_recall"] for r in results) / len(results)
     by_diff = {}
     for r in results:
-        by_diff.setdefault(r["difficulty"], []).append(r["accuracy"])
+        by_diff.setdefault(r["difficulty"], []).append(r["execution_recall"])
     diff_summary = {d: sum(accs) / len(accs) for d, accs in by_diff.items()}
     avg_latency = sum(r["latency_s"] for r in results) / len(results)
 
     out_data = {
         "model": model,
+        "provenance": build_provenance(
+            EVAL_DIR / "main_evaluation_dataset.jsonl"),
+        "metric": "historical execution recall (row-set recall over "
+                  "common columns; see scripts/audit_scoring.py for the "
+                  "strict and exact-match co-metrics)",
         "n_queries": len(results),
-        "overall": total_acc,
+        "overall_execution_recall": total_acc,
         "by_difficulty": diff_summary,
         "avg_latency": avg_latency,
         "results": results,
     }
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(out_data, f, ensure_ascii=False, indent=2)
-    print(f"\nOverall: {total_acc:.1%}")
+    print(f"\nOverall historical execution recall: {total_acc:.1%}")
     for d in ["easy", "medium", "hard", "very_hard"]:
         if d in diff_summary:
             print(f"  {d:12s}: {diff_summary[d]:.1%}")

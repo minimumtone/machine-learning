@@ -10,7 +10,12 @@ actual top-level ORDER BY (an order-contract mismatch fails the run).
 Also reports orphan expected-results files that no longer have a gold SQL.
 
 All database connections are forced READ ONLY with a 30 s
-statement_timeout (--update only rewrites JSON files, never the DB).
+statement_timeout (--update only rewrites JSON files, never the DB), and
+each connection is pinned to a single REPEATABLE READ snapshot: the guard
+and every gold query of a suite see one and the same database state. Each
+gold query runs inside a SAVEPOINT, so a SQL error rolls back only that
+query (never the outer snapshot transaction), and every execution error
+is recorded in an errors bucket that fails the run.
 Skipped transfer/obfuscated queries fail the run unless
 --allow-missing-transfer is given, so a partial run can never be mistaken
 for a full check.
@@ -36,6 +41,8 @@ from scripts.build_obfuscated_transfer_db import (  # noqa: E402
 )
 from scripts.build_transfer_db import transfer_conninfo  # noqa: E402
 from scripts.db_conninfo import CONNINFO  # noqa: E402
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
@@ -50,9 +57,13 @@ OBF_RESULTS_DIR = PROJECT / "evaluation" / "expected_results_obfuscated"
 
 
 def _connect_readonly(conninfo: str) -> psycopg.Connection:
+    """READ ONLY + REPEATABLE READ: after the initial commit below, the
+    first statement (the suite guard) opens one snapshot that every
+    subsequent gold query shares until the run ends."""
     conn = psycopg.connect(conninfo)
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
     conn.commit()
     return conn
@@ -88,6 +99,7 @@ class Buckets:
         self.order_mismatch: list[str] = []
         self.order_contract_mismatch: list[str] = []
         self.malformed: list[str] = []
+        self.errors: list[tuple[str, str]] = []
 
 
 def check_suite(gold_dir: Path, results_dir: Path,
@@ -106,13 +118,23 @@ def check_suite(gold_dir: Path, results_dir: Path,
         sql = sql_path.read_text()
         ordered = sql_is_ordered(sql)
         try:
+            # SAVEPOINT: a failing gold query must roll back only itself,
+            # not the outer REPEATABLE READ transaction, so every later
+            # query still sees the same snapshot.
             with conn.cursor() as cur:
-                cur.execute(sql)  # type: ignore[arg-type]
-                columns = ([d.name for d in cur.description]
-                           if cur.description else [])
-                rows = [list(r) for r in cur.fetchall()]
+                cur.execute("SAVEPOINT gold_query")
+                try:
+                    cur.execute(sql)  # type: ignore[arg-type]
+                    columns = ([d.name for d in cur.description]
+                               if cur.description else [])
+                    rows = [list(r) for r in cur.fetchall()]
+                    cur.execute("RELEASE SAVEPOINT gold_query")
+                except psycopg.Error:
+                    cur.execute("ROLLBACK TO SAVEPOINT gold_query")
+                    cur.execute("RELEASE SAVEPOINT gold_query")
+                    raise
         except Exception as e:
-            conn.rollback()
+            b.errors.append((qid, str(e).splitlines()[0]))
             print(f"{qid}: GOLD SQL ERROR: {e!s:.100s}")
             continue
         rows_norm = normalize_rows(rows)
@@ -168,13 +190,19 @@ def main() -> None:
                              "non-fatal (default: skipping fails the run)")
     args = parser.parse_args()
 
+    # Guard every connection before any query runs: 007 marker +
+    # fingerprint + validate_fixture_integrity() for the main DB,
+    # transfer marker + validate_transfer_integrity() for the others.
     conn = _connect_readonly(CONNINFO)
+    assert_valid_fixture(conn)
     try:
         transfer_conn = _connect_readonly(transfer_conninfo())
+        assert_valid_transfer(transfer_conn)
     except psycopg.OperationalError:
         transfer_conn = None
     try:
         obf_conn = _connect_readonly(obfuscated_conninfo())
+        assert_valid_transfer(obf_conn)
     except psycopg.OperationalError:
         obf_conn = None
 
@@ -208,14 +236,17 @@ def main() -> None:
           f"order_contract_mismatch={len(b.order_contract_mismatch)} "
           f"column_mismatch={len(b.column_mismatch)} "
           f"missing={len(b.missing)} malformed={len(b.malformed)} "
+          f"errors={len(b.errors)} "
           f"orphan={len(orphans)} skipped={len(b.skipped)}")
+    for qid, msg in b.errors:
+        print(f"ERROR           {qid}: {msg}")
     if b.missing:
         print("missing:", b.missing)
     if orphans:
         print("orphan expected_results (no matching gold SQL):", orphans)
         sys.exit(1)
     if (b.stale or b.order_mismatch or b.order_contract_mismatch
-            or b.column_mismatch or b.malformed):
+            or b.column_mismatch or b.malformed or b.errors):
         sys.exit(1)
     if b.missing and not args.update:
         sys.exit(1)

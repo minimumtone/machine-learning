@@ -24,5 +24,4 @@ SELECT formula, lattice_a, formation_energy_per_atom,
            AS enthalpy_vs_element_ground_states
 FROM enthalpy
 WHERE formation_energy_per_atom - weighted_ref < -0.3
-ORDER BY formation_energy_per_atom - weighted_ref ASC
-LIMIT 20;
+ORDER BY formation_energy_per_atom - weighted_ref ASC;

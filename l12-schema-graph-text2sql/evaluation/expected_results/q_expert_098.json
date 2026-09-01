@@ -5,6 +5,7 @@
     "avg_gap"
   ],
   "ordered": false,
+  "semantic_ordered": false,
   "rows": [
     [
       "non-zero gap",

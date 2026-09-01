@@ -47,6 +47,7 @@ SUITES = [
      lambda qid: qid.startswith("q_transfer")),
     ("obfuscated", "gold_sql_obfuscated", "OBF_TRANSFER_DSN",
      lambda qid: True),
+    ("mp", "gold_sql_mp", "MP_DSN", lambda qid: True),
 ]
 
 _COMMENT_RE = re.compile(r"--[^\n]*|/\*.*?\*/", re.DOTALL)
@@ -185,11 +186,13 @@ def main() -> int:
             continue
         dsn = os.environ.get(env)
         conns[env] = psycopg.connect(dsn) if dsn else None
+    # READ ONLY + REPEATABLE READ: one snapshot per connection covers the
+    # whole audit run, so every audited query sees the same DB state.
     for c in conns.values():
         if c is not None:
+            c.read_only = True
+            c.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
             with c.cursor() as cur:
-                cur.execute(
-                    "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
                 cur.execute("SET statement_timeout = '30s'")
             c.commit()
 
@@ -244,22 +247,33 @@ def main() -> int:
                     continue
                 keys = None
                 try:
+                    # SAVEPOINT: a failing injected query must roll back
+                    # only itself, not the outer REPEATABLE READ
+                    # transaction, so the rest of the audit still sees
+                    # the same snapshot.
                     with conn.cursor() as cur:
-                        cur.execute(audit_sql)  # type: ignore[arg-type]
-                        n_inj = len(to_inject)
-                        keys = []
-                        for row in cur.fetchall():
-                            key = []
-                            inj_pos = {i: p for p, (i, _)
-                                       in enumerate(to_inject)}
-                            for i in range(len(exprs)):
-                                if i in mapped:
-                                    key.append(row[n_inj + mapped[i]])
-                                else:
-                                    key.append(row[inj_pos[i]])
-                            keys.append(tuple(key))
+                        cur.execute("SAVEPOINT audit_query")
+                        try:
+                            cur.execute(audit_sql)  # type: ignore[arg-type]
+                            n_inj = len(to_inject)
+                            keys = []
+                            for row in cur.fetchall():
+                                key = []
+                                inj_pos = {i: p for p, (i, _)
+                                           in enumerate(to_inject)}
+                                for i in range(len(exprs)):
+                                    if i in mapped:
+                                        key.append(row[n_inj + mapped[i]])
+                                    else:
+                                        key.append(row[inj_pos[i]])
+                                keys.append(tuple(key))
+                            cur.execute("RELEASE SAVEPOINT audit_query")
+                        except psycopg.Error:
+                            cur.execute("ROLLBACK TO SAVEPOINT audit_query")
+                            cur.execute("RELEASE SAVEPOINT audit_query")
+                            raise
                 except psycopg.Error:
-                    conn.rollback()
+                    pass
                 if keys is None:
                     unmapped.append(
                         f"{label}: {', '.join(e for _, e in to_inject)}")

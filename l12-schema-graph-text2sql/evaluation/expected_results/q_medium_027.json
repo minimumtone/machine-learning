@@ -4,6 +4,7 @@
     "volume_per_atom"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Rh3Sb",

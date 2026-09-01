@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, md.formation_energy, e.symbol AS dopant_symbol FROM material_defect md JOIN defect_type dt ON dt.defect_type_id = md.defect_type_id JOIN material_entry me ON me.entry_id = md.entry_id LEFT JOIN element e ON e.element_id = md.dopant_element_id WHERE dt.defect_name = 'vacancy' ORDER BY md.formation_energy ASC, me.entry_id;

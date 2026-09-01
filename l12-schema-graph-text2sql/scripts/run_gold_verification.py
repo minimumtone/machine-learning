@@ -5,15 +5,21 @@ Executes every gold SQL file against the fixture databases and compares the
 result to the stored expected_results JSON (column names, row order for
 ORDER BY queries, row multiset otherwise, typed value tolerance — see
 scripts/gold_compare.py for the full comparison policy), so a third party
-can re-verify the package claims alone (no LLM, no API key, only psycopg +
-loaded databases).
+can re-verify the package claims alone (no LLM, no API key; requires
+psycopg + sqlglot — see requirements-repro.txt — and the loaded databases).
 
 Main-database queries run against L12_DSN; q_transfer_* queries run against
 TRANSFER_DSN; the obfuscated transfer suite (evaluation/gold_sql_obfuscated)
 runs against OBF_TRANSFER_DSN. Suites whose DSN is not set are skipped and
 reported — and skipping is a FAILURE unless --allow-skip is passed, so a
 partial run can never be mistaken for full verification by its exit code.
-All connections are forced READ ONLY with a 30 s statement_timeout.
+All connections are forced READ ONLY with a 30 s statement_timeout, and
+each connection is pinned to a single REPEATABLE READ snapshot: the guard
+and every gold query of a suite see one and the same database state, so a
+concurrent writer cannot make part of the run verify a different state
+(each gold query runs inside a SAVEPOINT, so a SQL error rolls back only
+that query — the outer snapshot transaction, and hence the single-state
+guarantee for the remaining queries, is preserved; the run still fails).
 
 Usage:
     L12_DSN="postgresql://l12_user:...@127.0.0.1:5432/l12_materials" \
@@ -39,6 +45,9 @@ import psycopg
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
+from scripts.fixture_guard import assert_valid_fixture  # noqa: E402
+from scripts.mp_guard import assert_valid_mp_transfer  # noqa: E402
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 from scripts.gold_compare import (  # noqa: E402
     normalize_rows,
     rows_match,
@@ -54,13 +63,34 @@ SUITES = [
      lambda qid: qid.startswith("q_transfer")),
     ("obfuscated", "gold_sql_obfuscated", "expected_results_obfuscated",
      "OBF_TRANSFER_DSN", lambda qid: True),
+    ("mp", "gold_sql_mp", "expected_results_mp_transfer",
+     "MP_DSN", lambda qid: True),
 ]
+
+# ok=N must mean "this distribution's schema answered N queries", not
+# "some database answered N queries": every connection is guarded before
+# any query runs. The main DB must carry the 007 marker with an
+# unchanged schema fingerprint and pass validate_fixture_integrity()
+# now; the transfer DBs must carry their initialization marker and pass
+# validate_transfer_integrity() now.
+GUARDS = {
+    "L12_DSN": assert_valid_fixture,
+    "TRANSFER_DSN": assert_valid_transfer,
+    "OBF_TRANSFER_DSN": assert_valid_transfer,
+    # The MP transfer DB carries no marker table; its guard compares the
+    # live table contents' SHA-256 against the pinned snapshot digest.
+    "MP_DSN": assert_valid_mp_transfer,
+}
 
 
 def _connect_readonly(dsn: str) -> psycopg.Connection:
+    """READ ONLY + REPEATABLE READ: after the initial commit below, the
+    first statement (the suite guard) opens one snapshot that every
+    subsequent gold query shares until the run ends."""
     conn = psycopg.connect(dsn)
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
     with conn.cursor() as cur:
-        cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
         cur.execute("SET statement_timeout = '30s'")
     conn.commit()
     return conn
@@ -83,7 +113,10 @@ def main() -> int:
     for _, _, _, env, _ in SUITES:
         dsn = os.environ.get(env)
         if env not in conns:
-            conns[env] = _connect_readonly(dsn) if dsn else None
+            conn = _connect_readonly(dsn) if dsn else None
+            if conn is not None:
+                GUARDS[env](conn)
+            conns[env] = conn
 
     ok: list[str] = []
     stale: list[str] = []
@@ -122,15 +155,24 @@ def main() -> int:
             sql = sql_path.read_text()
             expected_path = results_dir / f"{qid}.json"
             try:
+                # SAVEPOINT: a failing gold query must roll back only
+                # itself, not the outer REPEATABLE READ transaction, so
+                # every later query still sees the same snapshot.
                 with conn.cursor() as cur:
-                    cur.execute(sql)
-                    actual_columns = (
-                        [d.name for d in cur.description]
-                        if cur.description else []
-                    )
-                    rows = cur.fetchall()
+                    cur.execute("SAVEPOINT gold_query")
+                    try:
+                        cur.execute(sql)
+                        actual_columns = (
+                            [d.name for d in cur.description]
+                            if cur.description else []
+                        )
+                        rows = cur.fetchall()
+                        cur.execute("RELEASE SAVEPOINT gold_query")
+                    except psycopg.Error:
+                        cur.execute("ROLLBACK TO SAVEPOINT gold_query")
+                        cur.execute("RELEASE SAVEPOINT gold_query")
+                        raise
             except psycopg.Error as exc:
-                conn.rollback()
                 errors.append((qid, str(exc).splitlines()[0]))
                 continue
             if not expected_path.exists():

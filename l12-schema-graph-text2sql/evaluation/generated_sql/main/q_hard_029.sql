@@ -1,0 +1,15 @@
+SELECT
+    m.formula,
+    s.prototype,
+    ps.energy_above_hull,
+    ps.formation_energy_per_atom,
+    ps.is_stable
+FROM material_entry m
+JOIN structure s ON s.entry_id = m.entry_id
+JOIN phase_stability ps ON ps.entry_id = m.entry_id
+WHERE
+    (s.prototype = 'L12' OR s.strukturbericht = 'L12')
+    AND ps.energy_above_hull = 0
+    AND ps.formation_energy_per_atom <= -0.4
+ORDER BY ps.formation_energy_per_atom ASC
+LIMIT 10000;

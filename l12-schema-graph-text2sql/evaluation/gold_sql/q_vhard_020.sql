@@ -18,5 +18,4 @@ SELECT formula,
        ROUND((formation_energy_per_atom - weighted_ref)::numeric, 4) AS delta
 FROM compound_ref
 WHERE formation_energy_per_atom - weighted_ref < -0.1
-ORDER BY formation_energy_per_atom - weighted_ref ASC
-LIMIT 20;
+ORDER BY formation_energy_per_atom - weighted_ref ASC;

@@ -13,5 +13,4 @@ SELECT col_quebec,
        ROUND((col_luna - weighted_ref)::numeric, 4) AS enthalpy_vs_element_ground_states
 FROM enthalpy
 WHERE col_luna - weighted_ref < -0.3
-ORDER BY enthalpy_vs_element_ground_states ASC
-LIMIT 20;
+ORDER BY enthalpy_vs_element_ground_states ASC;

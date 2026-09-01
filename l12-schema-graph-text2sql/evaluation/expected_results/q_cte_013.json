@@ -6,6 +6,7 @@
     "abs_correction"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Co3Sb",

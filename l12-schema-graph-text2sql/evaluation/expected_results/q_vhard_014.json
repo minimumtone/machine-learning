@@ -1,69 +1,27 @@
 {
   "columns": [
-    "a_site",
-    "b_site",
-    "formula",
-    "lattice_a",
-    "energy_above_hull",
-    "bulk_modulus"
+    "a_site_series",
+    "n_compounds",
+    "avg_energy_above_hull",
+    "stable_fraction",
+    "avg_formation_energy"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
-      "Pt",
-      "Al",
-      "Pt3Al",
-      3.9,
-      0.0,
-      210.0
+      "3d",
+      147,
+      0.05251904761904764,
+      0.027210884353741496,
+      -0.25265714285714297
     ],
     [
-      "Co",
-      "Ti",
-      "Co3Ti",
-      3.55,
-      0.0,
-      190.0
-    ],
-    [
-      "Ni",
-      "Al",
-      "Ni3Al",
-      3.572,
-      0.0,
-      180.0
-    ],
-    [
-      "Al",
-      "Sc",
-      "Al3Sc",
-      4.09,
-      0.0,
-      155.0
-    ],
-    [
-      "Al",
-      "V",
-      "Al3V",
-      3.93,
-      0.0,
-      155.0
-    ],
-    [
-      "Cu",
-      "Ge",
-      "Cu3Ge",
-      3.4611,
-      0.0006,
-      130.88
-    ],
-    [
-      "Cr",
-      "Fe",
-      "Cr3Fe",
-      3.8896,
-      0.0,
-      113.35
+      "4d/5d",
+      242,
+      0.05583223140495872,
+      0.004132231404958678,
+      -0.23929917355371902
     ]
   ]
 }

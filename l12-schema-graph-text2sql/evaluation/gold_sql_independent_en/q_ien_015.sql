@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, se.miller_index, se.work_function FROM surface_energy se JOIN material_entry me ON me.entry_id = se.entry_id WHERE se.work_function IS NOT NULL ORDER BY se.work_function DESC, me.entry_id, se.miller_index LIMIT 5;

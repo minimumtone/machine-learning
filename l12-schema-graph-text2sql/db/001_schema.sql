@@ -40,7 +40,7 @@ CREATE TABLE material_entry (
     source_material_id TEXT NOT NULL,
     UNIQUE (source_db, source_material_id),
     formula TEXT NOT NULL,
-    reduced_formula TEXT,
+    reduced_formula TEXT NOT NULL,
     chemical_system TEXT,
     number_of_elements INTEGER NOT NULL CHECK (number_of_elements > 0)
 );
@@ -57,7 +57,11 @@ CREATE TABLE element (
         CHECK (atomic_number BETWEEN 1 AND 118),
     -- NUMERIC admits NaN (which compares greater than any number), so
     -- one-sided lower bounds alone would not reject it; hence <> 'NaN'.
-    atomic_mass NUMERIC(10,4) CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
+    -- Every element in the fixture has a known mass (002 loads all 89);
+    -- NOT NULL matches the transfer schema's oqmd_elements.atomic_mass so
+    -- the transfer copy can never hit a NOT NULL violation mid-build.
+    atomic_mass NUMERIC(10,4) NOT NULL
+        CHECK (atomic_mass > 0 AND atomic_mass <> 'NaN'),
     electronegativity NUMERIC(5,3)
         CHECK (electronegativity >= 0 AND electronegativity <> 'NaN'),
     atomic_radius NUMERIC(6,2)
@@ -68,6 +72,12 @@ CREATE TABLE element (
     -- fixture element; group_number is NULL for f-block interior elements
     -- (no IUPAC group). category is a required controlled vocabulary
     -- because gold SQL filters on it.
+    -- Taxonomy convention (fixed for this fixture): transition_metal
+    -- covers Sc–Zn, Y–Cd and Hf–Hg, i.e. the group-12 elements
+    -- Zn/Cd/Hg are classified as transition_metal (some taxonomies
+    -- place them in post_transition_metal instead; this fixture
+    -- deliberately uses the d-block definition, and the natural-language
+    -- questions reference this database category explicitly).
     block VARCHAR(5) NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (
         category IN (

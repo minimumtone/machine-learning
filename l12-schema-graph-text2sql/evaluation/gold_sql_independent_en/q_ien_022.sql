@@ -1,0 +1,1 @@
+SELECT me.source_db, COUNT(*) AS n_entries, AVG(CASE WHEN ps.is_stable THEN 1.0 ELSE 0.0 END) AS stable_fraction, AVG(ps.energy_above_hull) AS avg_energy_above_hull FROM material_entry me JOIN phase_stability ps ON ps.entry_id = me.entry_id GROUP BY me.source_db ORDER BY me.source_db;

@@ -10,21 +10,34 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterator
 
 import psycopg
+from psycopg.conninfo import make_conninfo
 from psycopg import sql as pgsql
 
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.build_transfer_db import assert_safe_transfer_db  # noqa: E402
+from scripts.build_transfer_db import (  # noqa: E402
+    assert_safe_transfer_db,
+    git_commit,
+)
+from scripts.transfer_guard import assert_valid_transfer  # noqa: E402
 
 SRC_DB = os.getenv("TRANSFER_DB", "oqmd_transfer")
 OBF_DB = f"{SRC_DB}_obfuscated"
 MAPPING_PATH = PROJECT / "db" / "obfuscated_transfer_mapping.json"
+INTEGRITY_SQL = PROJECT / "db" / "transfer_integrity_checks.sql"
+
+# Integrity infrastructure is NOT obfuscated: the marker table and the
+# validator function keep their names in both transfer databases so
+# scripts/transfer_guard.py can locate them; only the validator BODY is
+# rewritten to the obfuscated identifiers below.
+UNOBFUSCATED_TABLES = {"transfer_initialization_status"}
 
 WORDS = [
     "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
@@ -39,13 +52,12 @@ WORDS = [
 
 def _db_conninfo(db: str) -> str:
     """Build a connection string using environment variables."""
-    password = os.getenv("POSTGRES_PASSWORD", "l12_password")
-    return (
-        f"host={os.getenv('POSTGRES_HOST', 'localhost')} "
-        f"port={os.getenv('POSTGRES_PORT', '5432')} "
-        f"dbname={db} "
-        f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={password}"
+    return make_conninfo(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+        dbname=db,
+        user=os.getenv("POSTGRES_USER", "l12_user"),
+        password=os.getenv("POSTGRES_PASSWORD", "l12_password"),
     )
 
 
@@ -66,11 +78,32 @@ def _name_stream(prefix: str, rng: random.Random) -> Iterator[str]:
         suffix += 1
 
 
+def drop_obfuscated_database() -> None:
+    """Drop the obfuscated database (used to clean up a failed build)."""
+    assert_safe_transfer_db(OBF_DB)
+    admin = psycopg.connect(_db_conninfo("postgres"), autocommit=True)
+    with admin.cursor() as cur:
+        cur.execute(
+            pgsql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                pgsql.Identifier(OBF_DB))
+        )
+    admin.close()
+
+
 def main() -> None:
     assert_safe_transfer_db(SRC_DB)
     assert_safe_transfer_db(OBF_DB)
     seed = int(os.getenv("OBFUSCATE_SEED", "42"))
     rng = random.Random(seed)
+
+    # Fail fast on a broken source: the template copy would otherwise
+    # drop the previous obfuscated DB and only fail at the very end.
+    # This also rejects a source whose schema drifted after its own
+    # initialization (fingerprint mismatch).
+    print(f"Guarding source transfer DB {SRC_DB}...")
+    src = psycopg.connect(_db_conninfo(SRC_DB))
+    assert_valid_transfer(src)
+    src.close()
 
     print("Terminating existing transfer connections...")
     admin = psycopg.connect(_db_conninfo("postgres"), autocommit=True)
@@ -92,9 +125,31 @@ def main() -> None:
         )
     admin.close()
 
-    obf_conninfo = _db_conninfo(OBF_DB)
-    print(f"Connecting to {OBF_DB}...")
-    conn = psycopg.connect(obf_conninfo)
+    try:
+        print(f"Connecting to {OBF_DB}...")
+        conn = psycopg.connect(_db_conninfo(OBF_DB))
+        # Guard the templated copy itself before any rename: the source
+        # was validated above, but another owner connection could have
+        # mutated it between that check and the template copy. The copy
+        # still carries the source marker/fingerprint, so validating it
+        # here proves the ACTUAL templated state is a valid transfer DB.
+        assert_valid_transfer(conn)
+        mapping = _obfuscate_into(conn, rng, seed)
+    except Exception:
+        # A partially obfuscated DB carries a stale/no marker (guarded
+        # tools reject it), but leaving it around is still misleading,
+        # so drop the half-built DB before re-raising.
+        drop_obfuscated_database()
+        raise
+
+    MAPPING_PATH.write_text(json.dumps(mapping, ensure_ascii=False, indent=2))
+    print(f"Obfuscated DB {OBF_DB} built.")
+    print(f"Mapping saved to {MAPPING_PATH}")
+
+
+def _obfuscate_into(conn: psycopg.Connection, rng: random.Random,
+                    seed: int) -> dict[str, Any]:
+    """Rename identifiers in *conn*'s DB and re-seal it; return the mapping."""
     with conn.cursor() as cur:
         print("Fetching table list...")
         cur.execute("""
@@ -104,7 +159,8 @@ def main() -> None:
               AND table_type = 'BASE TABLE'
             ORDER BY table_name
         """)
-        tables = [r[0] for r in cur.fetchall()]
+        tables = [r[0] for r in cur.fetchall()
+                  if r[0] not in UNOBFUSCATED_TABLES]
 
     tbl_stream = _name_stream("tbl", rng)
     table_map = {old_t: next(tbl_stream) for old_t in tables}
@@ -147,11 +203,33 @@ def main() -> None:
             )
     print("Committing schema renames...")
     conn.commit()
-    conn.close()
 
-    MAPPING_PATH.write_text(json.dumps(mapping, ensure_ascii=False, indent=2))
-    print(f"Obfuscated DB {OBF_DB} built.")
-    print(f"Mapping saved to {MAPPING_PATH}")
+    # The validator copied from the template DB still references the
+    # pre-rename identifiers; reinstall it with the obfuscated names and
+    # re-run it so the obfuscated DB carries a working CURRENT-STATE
+    # integrity check. The marker row copied from the template records
+    # the SOURCE schema's fingerprint, which no longer matches after the
+    # renames — clear it so this deliberately re-derived database is
+    # re-sealed with its OWN post-rename fingerprint (the anti-reseal
+    # guard would otherwise correctly refuse to overwrite it).
+    print("Reinstalling validate_transfer_integrity() with obfuscated "
+          "identifiers and re-sealing the marker...")
+    ident_map = dict(table_map)
+    ident_map.update(global_col_map)
+    integrity_sql = INTEGRITY_SQL.read_text()
+    for old, new in sorted(ident_map.items(), key=lambda kv: -len(kv[0])):
+        integrity_sql = re.sub(rf"\b{re.escape(old)}\b", new, integrity_sql)
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM transfer_initialization_status "
+                    "WHERE version = '001'")
+        cur.execute("SELECT set_config('l12.git_commit', %s, false)",
+                    (git_commit(),))
+        cur.execute(integrity_sql)  # type: ignore[arg-type]
+    conn.commit()
+    assert_valid_transfer(conn)
+    print("Obfuscated transfer integrity checks passed (marker present).")
+    conn.close()
+    return mapping
 
 
 if __name__ == "__main__":

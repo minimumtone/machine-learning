@@ -1,0 +1,1 @@
+SELECT sm.category, AVG(CASE WHEN ms.success THEN 1.0 ELSE 0.0 END) AS success_rate, AVG(ms.temperature_k) AS avg_temperature_k FROM material_synthesis ms JOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id GROUP BY sm.category ORDER BY success_rate DESC, sm.category;

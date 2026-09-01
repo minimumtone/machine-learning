@@ -44,6 +44,9 @@ import numpy as np
 from scipy.stats import binomtest, wilcoxon
 
 PROJECT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT))
+
+from scripts.provenance import build_provenance  # noqa: E402
 EVAL = PROJECT / "evaluation"
 STATS_FILE = EVAL / "ablation_multirun_stats.json"
 
@@ -219,6 +222,12 @@ def main() -> int:
             "correction": "Holm-Bonferroni across the ablated conditions",
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },
+        "provenance": build_provenance(
+            EVAL / "evaluation_dataset.jsonl",
+            rescore_note=(
+                "statistics recomputed deterministically from stored "
+                "ablation_run_*.json by scripts/recompute_significance.py; "
+                "no LLM call is involved")),
         "conditions": detail,
     }
     Path(args.out).write_text(json.dumps(payload, indent=2))

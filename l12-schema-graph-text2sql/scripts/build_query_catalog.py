@@ -1,11 +1,17 @@
-"""Build a unified catalog of all evaluation queries.
+"""Build the canonical catalog of all unique evaluation queries.
 
-Reads every evaluation dataset (main 100, independent 100, CTE 15,
-CTE-pattern 10, transfer, obfuscated transfer, MP transfer, prototype),
-parses the gold SQL with sqlglot, and emits:
+Reads the canonical corpora (main 245, transfer 20, obfuscated transfer
+20, MP transfer 15 — 300 unique queries in total), parses each gold SQL
+with sqlglot, and emits:
 
 - evaluation/query_catalog.csv  (one row per query, machine-readable)
 - evaluation/query_catalog.json (same content plus summary matrices)
+
+The build asserts that qids are unique and that the catalog covers
+exactly the canonical gold-SQL corpus (gold_sql/ + gold_sql_obfuscated/
++ gold_sql_mp/).  Per-experiment run datasets (evaluation_dataset.jsonl,
+expert_evaluation_dataset.jsonl, cte15_dataset.jsonl, ...) overlap with
+the main corpus and are intentionally NOT concatenated here.
 
 Each query gets: id, question, eval set, category, difficulty (CTE queries
 are folded into very_hard), CTE flag, tables used, table count, join count,
@@ -23,14 +29,10 @@ ROOT = Path(__file__).resolve().parent.parent
 EVAL = ROOT / "evaluation"
 
 DATASETS = [
-    ("main", "evaluation_dataset.jsonl"),
-    ("independent", "expert_evaluation_dataset.jsonl"),
-    ("cte15", "cte15_dataset.jsonl"),
-    ("cte_pattern", "cte_evaluation_dataset.jsonl"),
+    ("main", "main_evaluation_dataset.jsonl"),
     ("transfer", "transfer_evaluation_dataset.jsonl"),
     ("transfer_obfuscated", "transfer_obfuscated_evaluation_dataset.jsonl"),
     ("mp_transfer", "mp_transfer_evaluation_dataset.jsonl"),
-    ("prototype", "prototype_evaluation_dataset.jsonl"),
 ]
 
 CATEGORY_TABLES = {
@@ -64,6 +66,9 @@ CATEGORY_ORDER = [
 ]
 CATEGORY_JA = {
     "multistep": "多段計算",
+    "transfer": "転用（OQMD）",
+    "transfer_obfuscated": "転用（難読化）",
+    "mp_transfer": "転用（MP）",
     "surface_gb_defect": "表面・粒界・欠陥",
     "literature_application": "文献・応用",
     "electronic_magnetic_thermal": "電子構造・磁気・熱",
@@ -135,6 +140,21 @@ def load_gold_sql(rec: dict) -> str:
     return (EVAL / rec["gold_sql_path"]).read_text()
 
 
+def expected_result_path(eval_set: str, rec: dict) -> Path | None:
+    if rec.get("expected_result_path"):
+        return EVAL / rec["expected_result_path"]
+    if eval_set == "mp_transfer":
+        return EVAL / "expected_results_mp_transfer" / f"{rec['id']}.json"
+    return None
+
+
+def canonical_gold_qids() -> set[str]:
+    qids: set[str] = set()
+    for d in ("gold_sql", "gold_sql_obfuscated", "gold_sql_mp"):
+        qids |= {p.stem for p in (EVAL / d).glob("*.sql")}
+    return qids
+
+
 def main() -> None:
     rows = []
     for eval_set, fname in DATASETS:
@@ -145,7 +165,10 @@ def main() -> None:
             is_cte_set = eval_set in ("cte15", "cte_pattern")
             difficulty = rec["difficulty"]
             unified_difficulty = "very_hard" if (is_cte_set or feats["has_cte"]) else difficulty
-            cat = categorize(feats["tables"], feats["has_cte"])
+            if eval_set == "main":
+                cat = categorize(feats["tables"], feats["has_cte"])
+            else:
+                cat = eval_set
             rows.append({
                 "qid": rec["id"],
                 "question": rec["question"],
@@ -163,10 +186,18 @@ def main() -> None:
                 "sql_features": ";".join(feats["sql_features"]),
                 "gold_sql_available": True,
                 "expected_result_available": bool(
-                    rec.get("expected_result_path")
-                    and (EVAL / rec["expected_result_path"]).exists()
+                    (erp := expected_result_path(eval_set, rec))
+                    and erp.exists()
                 ),
             })
+
+    qids = [r["qid"] for r in rows]
+    assert len(qids) == len(set(qids)), "duplicate qids in catalog"
+    gold_qids = canonical_gold_qids()
+    assert set(qids) == gold_qids, (
+        f"catalog/gold mismatch: missing={sorted(gold_qids - set(qids))} "
+        f"extra={sorted(set(qids) - gold_qids)}")
+    assert len(rows) == 300, f"expected 300 canonical queries, got {len(rows)}"
 
     csv_path = EVAL / "query_catalog.csv"
     with open(csv_path, "w", newline="") as f:

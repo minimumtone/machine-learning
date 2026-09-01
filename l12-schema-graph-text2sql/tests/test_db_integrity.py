@@ -1,7 +1,9 @@
 """Database-level integrity tests (require a loaded l12_materials DB).
 
 Skipped automatically when the database is unreachable, so the pure-Python
-test suite still runs without PostgreSQL. Covers:
+test suite still runs without PostgreSQL — run pytest with -ra so skips
+are visible. Set FULL_DB_TEST=1 to turn an unreachable database into a
+hard failure instead of a skip. Covers:
 
 - the reference-set divergence fixture: SQL that joins
   pure_element_reference WITHOUT a reference_set condition must return a
@@ -11,9 +13,14 @@ test suite still runs without PostgreSQL. Covers:
 """
 from __future__ import annotations
 
+import os
+
 import pytest
 
-psycopg = pytest.importorskip("psycopg")
+if os.environ.get("FULL_DB_TEST"):
+    import psycopg
+else:
+    psycopg = pytest.importorskip("psycopg")
 
 from scripts.eval_ablation import CONNINFO  # noqa: E402
 
@@ -26,6 +33,9 @@ def conn():
     try:
         connection = psycopg.connect(CONNINFO)
     except psycopg.OperationalError:
+        if os.environ.get("FULL_DB_TEST"):
+            pytest.fail("FULL_DB_TEST=1: l12_materials database is not "
+                        "reachable — DB tests may not be skipped")
         pytest.skip("l12_materials database is not reachable")
     yield connection
     connection.close()

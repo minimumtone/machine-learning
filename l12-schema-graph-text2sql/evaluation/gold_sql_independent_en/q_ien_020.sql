@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, mp.property_name, mp.value FROM material_entry me JOIN experimental_measurement em ON em.entry_id = me.entry_id JOIN measured_property mp ON mp.measurement_id = em.measurement_id WHERE em.method = 'XRD' ORDER BY me.entry_id, mp.property_name, mp.value;

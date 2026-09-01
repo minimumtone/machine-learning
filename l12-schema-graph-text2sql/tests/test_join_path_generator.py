@@ -1,7 +1,10 @@
 """Tests for graph.join_path_generator."""
+import pytest
+
 from graph.schema_parser import ForeignKeyMetadata
 from graph.graph_builder import build_table_graph
 from graph.join_path_generator import (
+    generate_join_clause,
     generate_joins_for_tables,
     get_allowed_join_list,
 )
@@ -54,9 +57,97 @@ def test_multi_hop_join_order():
         introduced.add(new_alias)
 
 
+def test_generate_join_clause_multi_hop_alias_reuse():
+    """A multi-hop path must reuse the alias introduced for a table."""
+    path = [
+        {"source_table": "material_entry", "source_column": "entry_id",
+         "target_table": "calculation", "target_column": "entry_id"},
+        {"source_table": "calculation", "source_column": "calculation_id",
+         "target_table": "calculated_property",
+         "target_column": "calculation_id"},
+    ]
+    result = generate_join_clause(path)
+    lines = result.strip().split("\n")
+    assert lines[0] == "JOIN calculation calc ON calc.entry_id = m.entry_id"
+    assert lines[1] == ("JOIN calculated_property cp "
+                        "ON cp.calculation_id = calc.calculation_id")
+    assert "calc2" not in result
+    # Every alias referenced on the right of an ON must already exist.
+    introduced = {"m"}
+    for line in lines:
+        parts = line.split()
+        rhs_alias = line.split("=")[1].strip().split(".")[0]
+        assert rhs_alias in introduced, line
+        introduced.add(parts[2])
+
+
+def test_generate_join_clause_reverse_direction_edge():
+    """An edge pointing INTO the base table must still join correctly."""
+    path = [
+        {"source_table": "composition", "source_column": "entry_id",
+         "target_table": "material_entry", "target_column": "entry_id"},
+    ]
+    result = generate_join_clause(path)
+    assert result == "JOIN composition c ON c.entry_id = m.entry_id"
+
+
+def test_generate_join_clause_three_hop():
+    """A 3-hop chain must introduce each table exactly once, in order."""
+    path = [
+        {"source_table": "material_entry", "source_column": "entry_id",
+         "target_table": "calculation", "target_column": "entry_id"},
+        {"source_table": "calculation", "source_column": "calculation_id",
+         "target_table": "calculated_property",
+         "target_column": "calculation_id"},
+        {"source_table": "calculated_property", "source_column": "property_id",
+         "target_table": "band_structure", "target_column": "property_id"},
+    ]
+    lines = generate_join_clause(path).strip().split("\n")
+    assert lines == [
+        "JOIN calculation calc ON calc.entry_id = m.entry_id",
+        "JOIN calculated_property cp "
+        "ON cp.calculation_id = calc.calculation_id",
+        "JOIN band_structure bs ON bs.property_id = cp.property_id",
+    ]
+
+
+def test_generate_join_clause_disconnected_edge_raises():
+    """An edge with both endpoints unknown must raise, never emit SQL."""
+    path = [
+        {"source_table": "elastic_tensor", "source_column": "x",
+         "target_table": "thermal_property", "target_column": "y"},
+    ]
+    with pytest.raises(ValueError, match="disconnected"):
+        generate_join_clause(path)
+
+
+def test_generate_join_clause_duplicate_edge():
+    """A repeated edge must not emit a second JOIN for the same table."""
+    edge = {"source_table": "material_entry", "source_column": "entry_id",
+            "target_table": "calculation", "target_column": "entry_id"}
+    result = generate_join_clause([edge, dict(edge)])
+    assert result == "JOIN calculation calc ON calc.entry_id = m.entry_id"
+
+
+def test_generate_join_clause_alias_collision():
+    """Tables without a registered alias must get unique fallback aliases."""
+    path = [
+        {"source_table": "material_entry", "source_column": "entry_id",
+         "target_table": "aaa_first", "target_column": "entry_id"},
+        {"source_table": "aaa_first", "source_column": "k",
+         "target_table": "aaa_second", "target_column": "k"},
+    ]
+    lines = generate_join_clause(path).strip().split("\n")
+    assert lines[0] == "JOIN aaa_first aaa ON aaa.entry_id = m.entry_id"
+    # Same 3-char prefix: the second table must get a distinct alias and
+    # the ON clause must reference the first table's original alias.
+    assert lines[1] == "JOIN aaa_second aaa2 ON aaa2.k = aaa.k"
+
+
 def test_get_allowed_join_list():
     g = build_table_graph(_sample_fks())
     joins = get_allowed_join_list(g)
-    # Fix B12: both directions emitted. 5 FK edges + 1 semantic JOIN = 6 * 2 = 12
-    assert len(joins) == 12
+    # Fix B12: both directions emitted. 5 FK edges * 2 = 10
+    # (_SEMANTIC_JOINS is empty: composition->element is a physical FK now)
+    assert len(joins) == 10
     assert any("composition" in j for j in joins)

@@ -4,6 +4,7 @@
     "shear_modulus"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Pd3Ga",

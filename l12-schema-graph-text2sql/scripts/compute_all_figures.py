@@ -4,10 +4,11 @@
 Every number in the LaTeX paper MUST originate from the JSON output
 of this script.  No hand-typed numbers allowed.
 
-Reads:
+Reads packaged artefacts from either the repository root or the bundled
+``sql_package/`` root:
   evaluation/ablation_multirun_stats.json — 5-run ablation statistics
   evaluation/ablation_results.json   — latest single-run (for per-query CTE/error)
-  evaluation/jp_reranker_vh_results.json — JP reranker VH comparison
+  paper/jp_reranker_vh_results.json — JP reranker VH comparison
   evaluation/reranker_eval_results.json  — 90-query reranker A/B eval
   evaluation/evaluation_dataset.jsonl    — author query set metadata
   evaluation/expert_evaluation_dataset.jsonl — independent query set
@@ -37,9 +38,44 @@ from psycopg import sql as pgsql
 import yaml
 
 PROJECT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT))
+SCRIPT_DIR = Path(__file__).resolve().parent
+SQL_PACKAGE = PROJECT / "sql_package" if (PROJECT / "sql_package").exists() else PROJECT
+for import_root in (PROJECT, SQL_PACKAGE):
+    sys.path.insert(0, str(import_root))
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from safety.sql_validator import check_limit, validate_sql  # noqa: E402
+
+
+def first_existing(*paths: Path) -> Path:
+    """Return the first existing path, or the first candidate for diagnostics."""
+    for path in paths:
+        if path.exists():
+            return path
+    return paths[0]
+
+
+def find_relpath(relpath: str) -> Path | None:
+    """Find a path in either the repo root or the bundled sql_package root."""
+    for root in (PROJECT, SQL_PACKAGE):
+        path = root / relpath
+        if path.exists():
+            return path
+    return None
+
+
+def resolve_relpath(relpath: str) -> Path:
+    """Resolve a packaged relative path, exiting with a clear error if absent."""
+    path = find_relpath(relpath)
+    if path is None:
+        checked = [str(root / relpath) for root in (PROJECT, SQL_PACKAGE)]
+        print("ERROR: required file not found; checked:\n  " +
+              "\n  ".join(checked), file=sys.stderr)
+        sys.exit(1)
+    return path
 
 
 def db_conninfo() -> str:
@@ -49,27 +85,22 @@ def db_conninfo() -> str:
         f"port={os.getenv('POSTGRES_PORT', '5432')} "
         f"dbname={os.getenv('POSTGRES_DB', 'l12_materials')} "
         f"user={os.getenv('POSTGRES_USER', 'l12_user')} "
-        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')}"
+        f"password={os.getenv('POSTGRES_PASSWORD', 'l12_password')} "
+        f"connect_timeout={os.getenv('PGCONNECT_TIMEOUT', '10')}"
     )
 
 
 def load_json(relpath: str) -> Any:
     """Load a JSON file relative to the project root, exiting on failure."""
-    p = PROJECT / relpath
-    if not p.exists():
-        print(f"ERROR: {p} not found", file=sys.stderr)
-        sys.exit(1)
-    with open(p) as f:
+    p = resolve_relpath(relpath)
+    with open(p, encoding="utf-8") as f:
         return json.load(f)
 
 
 def load_jsonl(relpath: str) -> list[dict]:
     """Load a JSONL file relative to the project root, exiting on failure."""
-    p = PROJECT / relpath
-    if not p.exists():
-        print(f"ERROR: {p} not found", file=sys.stderr)
-        sys.exit(1)
-    with open(p) as f:
+    p = resolve_relpath(relpath)
+    with open(p, encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
 
 
@@ -79,11 +110,12 @@ def count_sqlguard_checks() -> int:
     Derived from the implementation so paper_data.json cannot drift from
     safety/sql_validator.py.
     """
-    src = (PROJECT / "safety" / "sql_validator.py").read_text()
+    validator_path = resolve_relpath("safety/sql_validator.py")
+    src = validator_path.read_text(encoding="utf-8")
     body = re.search(r"^def validate_sql\b.*?(?=\n^def |\Z)", src,
                      re.M | re.S)
     if not body:
-        print("ERROR: validate_sql() not found in safety/sql_validator.py",
+        print(f"ERROR: validate_sql() not found in {validator_path}",
               file=sys.stderr)
         sys.exit(1)
     return len(set(re.findall(r"\b(check_[a-z_]+)\(", body.group(0))))
@@ -97,6 +129,17 @@ def pct(v: float) -> float:
 def pp(a: float, b: float) -> float:
     """Compute percentage-point difference between two fractions."""
     return round((a - b) * 100, 1)
+
+
+def result_score(row: dict[str, Any]) -> float:
+    """Return the historical execution score from old or R23 result rows."""
+    if "accuracy" in row:
+        return row["accuracy"]
+    if "recall" in row:
+        return row["recall"]
+    print(f"ERROR: result row has neither accuracy nor recall: {row.get('qid')}",
+          file=sys.stderr)
+    sys.exit(1)
 
 
 def summarize_eval_results(relpath: str) -> dict[str, Any]:
@@ -116,10 +159,10 @@ def summarize_eval_results(relpath: str) -> dict[str, Any]:
 
 
 def count_file_lines(relpath: str, skip_header: bool = False) -> int:
-    p = PROJECT / relpath
-    if not p.exists():
+    p = find_relpath(relpath)
+    if p is None:
         return 0
-    with open(p) as f:
+    with open(p, encoding="utf-8") as f:
         lines = [line for line in f if line.strip()]
     return len(lines) - (1 if skip_header else 0)
 
@@ -135,7 +178,17 @@ def main():
     # ==================================================================
     # Database metadata (live query)
     # ==================================================================
-    conn = psycopg.connect(db_conninfo())
+    try:
+        conn = psycopg.connect(db_conninfo())
+    except psycopg.OperationalError as exc:
+        print("ERROR: cannot connect to the main PostgreSQL fixture DB.",
+              file=sys.stderr)
+        print("Set POSTGRES_* variables or start sql_package/docker with "
+              "Docker Compose before regenerating paper_data.json.",
+              file=sys.stderr)
+        print(f"conninfo: {db_conninfo()}", file=sys.stderr)
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
     cur = conn.cursor()
 
     cur.execute(
@@ -226,6 +279,11 @@ def main():
     n_queries = len(queries)
     diff_counts = Counter(q["difficulty"] for q in queries)
 
+    # Full main evaluation dataset (245 queries incl. expert/CTE/prototype)
+    main_queries = load_jsonl("evaluation/main_evaluation_dataset.jsonl")
+    n_main_queries = len(main_queries)
+    main_diff_counts = Counter(q["difficulty"] for q in main_queries)
+
     cte_qids = {"q_vhard_009", "q_vhard_016", "q_vhard_018",
                 "q_vhard_019", "q_vhard_020"}
     n_cte_queries = sum(1 for q in queries if q["id"] in cte_qids)
@@ -234,6 +292,9 @@ def main():
     expert_queries = load_jsonl("evaluation/expert_evaluation_dataset.jsonl")
     n_expert_queries = len(expert_queries)
     expert_diff_counts = Counter(q["difficulty"] for q in expert_queries)
+
+    # Language-dependence evaluations (paired ja/en 100q + independent EN 25q)
+    language_eval = load_json("evaluation/language_eval_summary.json")
 
     # Extended validation runs (independent 100q / transfer 20q / CTE 15q)
     independent_eval = summarize_eval_results(
@@ -256,9 +317,9 @@ def main():
         "n_queries": cte15_data["n_queries"],
         "overall_pct": pct(cte15_data["summary"]["overall"]),
         "original_5_pct": pct(
-            sum(r["accuracy"] for r in cte15_original) / len(cte15_original)),
+            sum(result_score(r) for r in cte15_original) / len(cte15_original)),
         "new_10_pct": pct(
-            sum(r["accuracy"] for r in cte15_new) / len(cte15_new)),
+            sum(result_score(r) for r in cte15_new) / len(cte15_new)),
         "n_original": len(cte15_original),
         "n_novel": len(cte15_new),
         "avg_latency_s": round(cte15_data["summary"]["avg_latency"], 1),
@@ -278,7 +339,7 @@ def main():
     n_runs = multirun["n_runs"]
     mrc = multirun["conditions"]  # per-condition stats
     sig = multirun["significance_tests"]  # Wilcoxon p-values (legacy)
-    sig_v2 = load_json("evaluation/ablation_significance_v2.json")
+    sig_v2 = load_json("evaluation/ablation_significance_v2.json")["conditions"]
 
     # Also load latest single-run for per-query CTE/error analysis
     abl = load_json("evaluation/ablation_results.json")
@@ -310,8 +371,11 @@ def main():
         if cond_name in sig:
             s = sig[cond_name]
             ablation_table[cond_name]["p_value"] = s["p_value"]
-            ablation_table[cond_name]["significant"] = (
-                s["p_value"] is not None and s["p_value"] < 0.05
+            ablation_table[cond_name]["p_value_holm"] = s.get("p_value_holm")
+            ablation_table[cond_name]["n_nonzero"] = s.get("n_nonzero")
+            ablation_table[cond_name]["significant"] = s.get(
+                "significant",
+                s["p_value"] is not None and s["p_value"] < 0.05,
             )
         # Sign-flip permutation test + bootstrap CI (v2 statistics, used
         # in the manuscript's ablation table)
@@ -338,22 +402,21 @@ def main():
     # CTE query results per condition (5-run average)
     cte_results = {}
     run_files = [
-        PROJECT / f"evaluation/ablation_run_{i}.json" for i in range(1, 6)
+        resolve_relpath(f"evaluation/ablation_run_{i}.json") for i in range(1, 6)
     ]
     for cond_name in ["full", "no_fewshot", "no_dict", "no_reranker",
                        "no_guard", "no_nbest", "no_graph"]:
         run_means = []
         for rf in run_files:
-            if rf.exists():
-                with open(rf) as f:
-                    rd = json.load(f)
-                rc = rd["conditions"][cond_name]
-                cte_accs = [
-                    r["accuracy"] for r in rc["results"]
-                    if r["qid"] in cte_qids
-                ]
-                if cte_accs:
-                    run_means.append(sum(cte_accs) / len(cte_accs))
+            with open(rf, encoding="utf-8") as f:
+                rd = json.load(f)
+            rc = rd["conditions"][cond_name]
+            cte_accs = [
+                result_score(r) for r in rc["results"]
+                if r["qid"] in cte_qids
+            ]
+            if cte_accs:
+                run_means.append(sum(cte_accs) / len(cte_accs))
         if run_means:
             cte_results[f"{cond_name}_cte_accuracy_pct"] = round(
                 sum(run_means) / len(run_means) * 100, 1
@@ -366,15 +429,14 @@ def main():
         run_vh_fails: list[int] = []
         run_vh_totals: list[int] = []
         for rf in run_files:
-            if rf.exists():
-                with open(rf) as f:
-                    rd = json.load(f)
-                rc = rd["conditions"][cond_name]
-                vh_res = [r for r in rc["results"] if "vhard" in r["qid"]]
-                run_vh_fails.append(
-                    sum(1 for r in vh_res if r["accuracy"] < 0.8)
-                )
-                run_vh_totals.append(len(vh_res))
+            with open(rf, encoding="utf-8") as f:
+                rd = json.load(f)
+            rc = rd["conditions"][cond_name]
+            vh_res = [r for r in rc["results"] if "vhard" in r["qid"]]
+            run_vh_fails.append(
+                sum(1 for r in vh_res if result_score(r) < 0.8)
+            )
+            run_vh_totals.append(len(vh_res))
         if run_vh_fails:
             error_analysis[cond_name] = {
                 "vh_failures": round(sum(run_vh_fails) / len(run_vh_fails)),
@@ -383,7 +445,7 @@ def main():
         else:
             c = conditions[cond_name]
             vh_results = [r for r in c["results"] if "vhard" in r["qid"]]
-            n_vh_fail = sum(1 for r in vh_results if r["accuracy"] < 0.8)
+            n_vh_fail = sum(1 for r in vh_results if result_score(r) < 0.8)
             error_analysis[cond_name] = {
                 "vh_failures": n_vh_fail,
                 "vh_total": len(vh_results),
@@ -404,7 +466,7 @@ def main():
     # ==================================================================
     # JP reranker VH comparison
     # ==================================================================
-    jp = load_json("evaluation/jp_reranker_vh_results.json")
+    jp = load_json("paper/jp_reranker_vh_results.json")
     jp_marco = jp["ms-marco (current)"]
     jp_xsmall = jp["japanese-xsmall"]
     jp_reranker = {
@@ -425,21 +487,20 @@ def main():
     )
 
     # YAML terms
-    yaml_path = PROJECT / "llm" / "material_terms.yaml"
+    yaml_path = resolve_relpath("llm/material_terms.yaml")
     n_yaml_terms = 0
-    if yaml_path.exists():
-        with open(yaml_path) as f:
-            yd = yaml.safe_load(f)
-        for cat, entries in yd.items():
-            if isinstance(entries, dict):
-                n_yaml_terms += len(entries)
-            elif isinstance(entries, list):
-                n_yaml_terms += len(entries)
+    with open(yaml_path, encoding="utf-8") as f:
+        yd = yaml.safe_load(f)
+    for cat, entries in yd.items():
+        if isinstance(entries, dict):
+            n_yaml_terms += len(entries)
+        elif isinstance(entries, list):
+            n_yaml_terms += len(entries)
 
     # Pipeline / additional terms (from build_mecab_materials_dict.py)
     eng_list: list[tuple[str, ...]] = []
     try:
-        sys.path.insert(0, str(PROJECT / "scripts"))
+        sys.path.insert(0, str(resolve_relpath("scripts")))
         from build_mecab_materials_dict import (
             load_material_terms,
             get_additional_materials_terms,
@@ -468,13 +529,12 @@ def main():
     # MeCab single-token evaluation (counts from mecab_materials.csv)
     # These are computed by build_mecab_materials_dict.py
     # We read the CSV and count terms with cost <= -2000 (custom entries)
-    mecab_csv_path = PROJECT / "llm" / "mecab_materials.csv"
+    mecab_csv_path = resolve_relpath("llm/mecab_materials.csv")
     n_custom_entries = 0
-    if mecab_csv_path.exists():
-        with open(mecab_csv_path) as f:
-            for line in f:
-                if line.strip():
-                    n_custom_entries += 1
+    with open(mecab_csv_path, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                n_custom_entries += 1
     mecab_stats["n_custom_entries"] = n_custom_entries
 
     # Tokenization single-token rate for the 402 vocabulary terms
@@ -498,7 +558,10 @@ def main():
             return len(toks) == 1
 
         default_tagger = MeCab.Tagger(ipadic.MECAB_ARGS)
-        custom_args = f"{ipadic.MECAB_ARGS} -u {PROJECT / 'llm' / 'mecab_materials.dic'}"
+        custom_args = (
+            f"{ipadic.MECAB_ARGS} -u "
+            f"{resolve_relpath('llm/mecab_materials.dic')}"
+        )
         custom_tagger = MeCab.Tagger(custom_args)
         terms = [t for t, _, _ in eng_list] if eng_list else []
         if not terms and n_vocab_terms:
@@ -667,16 +730,24 @@ def main():
     # ==================================================================
     # Unit tests
     # ==================================================================
+    tests_dir = resolve_relpath("tests")
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/", "-q"],
-        capture_output=True, text=True, cwd=str(PROJECT),
+        [sys.executable, "-m", "pytest", str(tests_dir), "-q"],
+        capture_output=True, text=True, cwd=str(tests_dir.parent),
+        env={**os.environ, "FULL_DB_TEST": "1"},
     )
     if result.returncode != 0:
         print("ERROR: pytest tests/ failed; paper_data.json requires a "
               "passing test suite", file=sys.stderr)
         print(result.stdout[-2000:], file=sys.stderr)
+        print(result.stderr[-2000:], file=sys.stderr)
         sys.exit(1)
     summary = result.stdout.strip().split("\n")[-1]
+    if "skipped" in summary:
+        print("ERROR: pytest reported skipped tests; rerun with DB DSNs set "
+              "so the SSOT test gate exercises DB integrity.", file=sys.stderr)
+        print(summary, file=sys.stderr)
+        sys.exit(1)
     n_unit_tests = int(summary.split(" passed")[0].split()[-1])
 
     # ==================================================================
@@ -698,7 +769,7 @@ def main():
         "F02": ("UPDATE material_entry SET formula = 'X';", "blocked"),
     }
     n_safety_tests = len(safety_tests)
-    all_blocked = True
+    all_handled = True
     for test_id, (sql_text, expected) in safety_tests.items():
         verdict = validate_sql(sql_text)
         if expected == "blocked":
@@ -709,8 +780,8 @@ def main():
         if not handled:
             print(f"ERROR: safety test {test_id} not handled as expected",
                   file=sys.stderr)
-            all_blocked = False
-    if not all_blocked:
+            all_handled = False
+    if not all_handled:
         sys.exit(1)
 
     # SQLGuard check count, derived from the implementation: the number of
@@ -741,7 +812,9 @@ def main():
     # db/003_material_data.sql so the packaged list cannot drift silently.
     # ==================================================================
     known_l12 = load_json("db/known_l12_seed_list.json")["known_l12_seed_list"]
-    insert_sql_text = (PROJECT / "db" / "003_material_data.sql").read_text()
+    insert_sql_text = resolve_relpath("db/003_material_data.sql").read_text(
+        encoding="utf-8"
+    )
     missing_seeds = [c for c in known_l12 if f"'{c}'" not in insert_sql_text]
     if missing_seeds:
         print(f"ERROR: seed compounds not found in db/003_material_data.sql: "
@@ -764,16 +837,16 @@ def main():
         pass  # git hash is optional metadata
     if git_hash == "unknown":
         # Distribution packages carry the source commit in a GIT_COMMIT file
-        commit_file = PROJECT / "GIT_COMMIT"
-        if commit_file.exists():
-            recorded = commit_file.read_text().strip()
+        commit_file = find_relpath("GIT_COMMIT")
+        if commit_file is not None:
+            recorded = commit_file.read_text(encoding="utf-8").strip()
             if recorded:
                 git_hash = recorded
 
     output = {
         "_meta": {
             "description": "Single source of truth for paper numerical values",
-            "generated_by": "scripts/compute_all_figures.py",
+            "generated_by": "paper_scripts/compute_all_figures.py",
             "generated_at": datetime.now(timezone.utc).strftime(
                 "%Y-%m-%d %H:%M:%S UTC"
             ),
@@ -786,7 +859,7 @@ def main():
                 "evaluation/ablation_run_4.json",
                 "evaluation/ablation_run_5.json",
                 "evaluation/ablation_results.json",
-                "evaluation/jp_reranker_vh_results.json",
+                "paper/jp_reranker_vh_results.json",
                 "evaluation/reranker_eval_results.json",
                 "evaluation/evaluation_dataset.jsonl",
                 "evaluation/expert_evaluation_dataset.jsonl",
@@ -803,8 +876,15 @@ def main():
             ],
         },
         "dataset": {
-            "n_author_queries": n_queries,
-            "difficulty_distribution": {
+            "n_main_queries": n_main_queries,
+            "main_difficulty_distribution": {
+                "easy": main_diff_counts.get("easy", 0),
+                "medium": main_diff_counts.get("medium", 0),
+                "hard": main_diff_counts.get("hard", 0),
+                "very_hard": main_diff_counts.get("very_hard", 0),
+            },
+            "n_ablation_subset_queries": n_queries,
+            "ablation_subset_difficulty_distribution": {
                 "easy": diff_counts.get("easy", 0),
                 "medium": diff_counts.get("medium", 0),
                 "hard": diff_counts.get("hard", 0),
@@ -862,6 +942,16 @@ def main():
             "n_ni3al_lattice_match": n_ni3al_lattice_match,
             "a_ref_ni3al": a_ref_ni3al,
         },
+        "language_evaluation": {
+            "_note": "Paired ja/en robustness test: English translations of "
+                     "the 100-query ablation set evaluated with identical "
+                     "gold SQL, expected results, database, and pipeline "
+                     "(full condition, 3 runs per language); plus an "
+                     "independently authored 25-query English validation "
+                     "set (independent_en_dataset.jsonl) with its own gold "
+                     "SQL and expected results",
+            **language_eval,
+        },
         "independent_evaluation": {
             "_note": "The earlier harmonized comparison has been removed; "
                      "use the full independent rerun below (see n_queries).",
@@ -911,7 +1001,7 @@ def main():
         "safety": {
             "n_safety_tests": n_safety_tests,
             "n_sqlguard_checks": n_sqlguard_checks,
-            "all_blocked": all_blocked,
+            "all_handled": all_handled,
         },
         "testing": {
             "n_unit_tests": n_unit_tests,
@@ -924,19 +1014,24 @@ def main():
     # Write
     # ==================================================================
     out_path = PROJECT / "paper" / "paper_data.json"
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"Written: {out_path}")
 
     # Post-condition: the freshly written SSOT must satisfy the SSOT audit
     # (figure provenance, no hand-written numbers, SQLGuard count, derivable
     # invariants, provenance fields)
+    ssot_script = first_existing(
+        PROJECT / "scripts" / "verify_ssot.py",
+        SCRIPT_DIR / "verify_ssot.py",
+    )
     ssot_audit = subprocess.run(
-        [sys.executable, str(PROJECT / "scripts" / "verify_ssot.py")],
+        [sys.executable, str(ssot_script)],
         cwd=str(PROJECT),
+        env={**os.environ, "PYTHONUTF8": "1"},
     )
     if ssot_audit.returncode != 0:
-        print("ERROR: SSOT audit (scripts/verify_ssot.py) failed",
+        print(f"ERROR: SSOT audit ({ssot_script}) failed",
               file=sys.stderr)
         sys.exit(1)
 

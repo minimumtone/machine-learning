@@ -4,6 +4,7 @@
     "avg"
   ],
   "ordered": true,
+  "semantic_ordered": true,
   "rows": [
     [
       "Hexagonal",
@@ -14,11 +15,11 @@
       0.0
     ],
     [
-      "Orthorhombic",
+      "Monoclinic",
       0.0
     ],
     [
-      "Triclinic",
+      "Orthorhombic",
       0.0
     ],
     [
@@ -26,7 +27,7 @@
       0.0
     ],
     [
-      "Monoclinic",
+      "Triclinic",
       0.0
     ],
     [

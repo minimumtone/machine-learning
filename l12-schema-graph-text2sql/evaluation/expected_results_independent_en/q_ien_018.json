@@ -1,0 +1,74 @@
+{
+  "columns": [
+    "entry_id",
+    "formula"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "entry_00107",
+      "Zr3Al"
+    ],
+    [
+      "entry_00108",
+      "Ta3Cu"
+    ],
+    [
+      "entry_00280",
+      "V3Be"
+    ],
+    [
+      "entry_00405",
+      "VMg"
+    ],
+    [
+      "entry_00503",
+      "VSi"
+    ],
+    [
+      "entry_00649",
+      "RuFe"
+    ],
+    [
+      "entry_00685",
+      "PdAl"
+    ],
+    [
+      "entry_00687",
+      "MnY"
+    ],
+    [
+      "entry_00782",
+      "TaV"
+    ],
+    [
+      "entry_00850",
+      "NiHf"
+    ],
+    [
+      "entry_00989",
+      "TiMn"
+    ],
+    [
+      "entry_01028",
+      "PtGa"
+    ],
+    [
+      "entry_01089",
+      "CuGe"
+    ],
+    [
+      "entry_01107",
+      "NiY"
+    ],
+    [
+      "entry_01171",
+      "TiGa"
+    ],
+    [
+      "entry_01453",
+      "RhGe"
+    ]
+  ]
+}

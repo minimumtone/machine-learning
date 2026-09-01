@@ -1,0 +1,50 @@
+{
+  "columns": [
+    "method_name",
+    "n_success"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "Arc Melting",
+      31
+    ],
+    [
+      "Ball Milling",
+      35
+    ],
+    [
+      "Chemical Vapor Deposition",
+      38
+    ],
+    [
+      "Electrodeposition",
+      25
+    ],
+    [
+      "Induction Melting",
+      38
+    ],
+    [
+      "Magnetron Sputtering",
+      37
+    ],
+    [
+      "Molecular Beam Epitaxy",
+      30
+    ],
+    [
+      "Powder Metallurgy",
+      34
+    ],
+    [
+      "Sol-Gel",
+      41
+    ],
+    [
+      "Spark Plasma Sintering",
+      33
+    ]
+  ]
+}

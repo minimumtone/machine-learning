@@ -4,17 +4,23 @@
     "avg_bulk",
     "cnt"
   ],
-  "ordered": false,
+  "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
-      "unstable",
-      174.92798165137617,
-      218
+      "metastable",
+      175.14990099009907,
+      101
     ],
     [
       "stable",
       178.0,
       5
+    ],
+    [
+      "unstable",
+      174.73641025641027,
+      117
     ]
   ]
 }

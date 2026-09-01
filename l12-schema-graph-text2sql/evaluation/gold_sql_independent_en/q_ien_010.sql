@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, se.miller_index, se.surface_energy_j_m2 FROM surface_energy se JOIN material_entry me ON me.entry_id = se.entry_id WHERE se.surface_energy_j_m2 < 1.5 ORDER BY me.entry_id, se.miller_index;

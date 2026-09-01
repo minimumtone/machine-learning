@@ -4,6 +4,7 @@
     "energy_above_hull"
   ],
   "ordered": true,
+  "semantic_ordered": false,
   "rows": [
     [
       "Al5Co2",

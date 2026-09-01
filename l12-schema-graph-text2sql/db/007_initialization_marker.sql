@@ -9,7 +9,12 @@
 -- as an immutable verification fixture (see README): post-initialization
 -- entity INSERT/UPDATE/DELETE is unsupported, and queries should run as
 -- the read-only role l12_reader.
--- Idempotent: re-running only refreshes the timestamp.
+-- Sealed marker: the '007' row is written once. Re-running this file
+-- against an already-initialized database is a no-op when the schema is
+-- unchanged, and FAILS when the schema fingerprint differs — the marker
+-- cannot be "re-sealed" over a modified schema (ALTER TABLE / DROP
+-- CONSTRAINT / CREATE OR REPLACE VIEW followed by a 007 re-run). A new
+-- package revision must initialize a freshly created database instead.
 
 -- The marker is gated on the 006 assertions: validate_fixture_integrity()
 -- RAISEs on any violated invariant, so this whole file aborts and the
@@ -31,6 +36,14 @@ SELECT validate_fixture_integrity();
 -- changing NUMERIC precision all change the fingerprint. SHA-256 (core
 -- since PostgreSQL 11, no extension dependency) is used as a
 -- corruption/mismatch detector.
+--
+-- Scope: this is a SEMANTIC schema fingerprint — it covers everything
+-- that changes query semantics or the integrity contract. It does NOT
+-- cover indexes, roles, GRANT/REVOKE, default privileges, or role/GUC
+-- settings (default_transaction_read_only, statement_timeout, ...):
+-- those affect performance and access control but not what the gold
+-- queries compute, and are enforced separately by db/005_roles.sql and
+-- the verifiers' own READ ONLY + timeout session settings.
 CREATE OR REPLACE FUNCTION compute_schema_fingerprint() RETURNS TEXT AS $$
     WITH parts AS (
         SELECT 'col:' || c.relname || '.' || a.attname
@@ -99,12 +112,31 @@ CREATE TABLE IF NOT EXISTS schema_initialization_status (
 -- make re-running this file against them idempotent.
 ALTER TABLE schema_initialization_status
     ADD COLUMN IF NOT EXISTS git_commit TEXT NOT NULL DEFAULT 'unknown';
+
+-- Anti-reseal guard: an existing marker whose fingerprint does not match
+-- the current schema means the schema was changed AFTER initialization.
+-- Refuse to overwrite it — otherwise a tampered schema could be
+-- re-legitimized simply by re-running this file.
+DO $$
+DECLARE
+    old_fp TEXT;
+    new_fp TEXT;
+BEGIN
+    SELECT schema_fingerprint INTO old_fp
+    FROM schema_initialization_status
+    WHERE version = '007';
+    new_fp := compute_schema_fingerprint();
+    IF old_fp IS NOT NULL AND old_fp <> new_fp THEN
+        RAISE EXCEPTION
+            'schema fingerprint changed after initialization (recorded %, current %); refusing to re-seal the 007 marker — rebuild the database from db/001... instead',
+            substr(old_fp, 1, 12), substr(new_fp, 1, 12);
+    END IF;
+END
+$$;
+
 INSERT INTO schema_initialization_status (version, schema_fingerprint,
                                           git_commit)
 VALUES ('007', compute_schema_fingerprint(),
         COALESCE(NULLIF(current_setting('l12.git_commit', true), ''),
                  'unknown'))
-ON CONFLICT (version) DO UPDATE
-    SET schema_fingerprint = EXCLUDED.schema_fingerprint,
-        git_commit = EXCLUDED.git_commit,
-        initialized_at = now();
+ON CONFLICT (version) DO NOTHING;

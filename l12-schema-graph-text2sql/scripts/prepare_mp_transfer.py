@@ -1,8 +1,25 @@
 #!/usr/bin/env python3
-"""Prepare queries, gold SQL, expected results, and prompt assets for MP transfer test."""
+"""Prepare queries, gold SQL, expected results, and prompt assets for MP transfer test.
+
+Before anything is generated the connection must pass
+``assert_valid_mp_transfer()`` (snapshot digest + schema fingerprint),
+so expected results can only be produced from the pinned fixture.
+
+Expected results are written to a temporary directory and atomically
+swapped into ``expected_results_mp_transfer/`` only after every gold
+SQL succeeds; any failure leaves the previous expected results
+untouched and makes the script exit non-zero, so a broken gold SQL can
+never leave behind a mixed-revision or fabricated expected result (nor
+a success exit code).
+
+The whole generation run executes on a single REPEATABLE READ READ
+ONLY snapshot; a failing query rolls back to a savepoint so the
+remaining expected results still reflect the same DB state.
+"""
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -13,11 +30,13 @@ import psycopg
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-from scripts.build_mp_transfer_db import mp_conninfo  # noqa: E402
+from scripts.db_conninfo import mp_conninfo  # noqa: E402
 from scripts.gold_compare import sql_is_ordered  # noqa: E402
+from scripts.mp_guard import assert_valid_mp_transfer  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 EXPECTED_DIR = EVAL_DIR / "expected_results_mp_transfer"
+GOLD_DIR = EVAL_DIR / "gold_sql_mp"
 PROMPT_DIR = PROJECT / "llm" / "prompt_templates"
 FEW_SHOT_DIR = PROJECT / "llm"
 
@@ -62,7 +81,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "結晶系ごとの材料数を教えてください。",
         "gold_sql": (
             "SELECT crystal_system, COUNT(*) FROM mp_entries "
-            "GROUP BY crystal_system ORDER BY COUNT(*) DESC;"
+            "GROUP BY crystal_system ORDER BY COUNT(*) DESC, crystal_system ASC;"
         ),
     },
     {
@@ -74,7 +93,7 @@ QUERIES: list[dict[str, Any]] = [
     {
         "id": "q_mp_008",
         "difficulty": "medium",
-        "question": "バンドギャップを持つ材料（band_gap > 0）の割合を教えてください。",
+        "question": "バンドギャップを持つ材料（band_gap > 0）の割合（%）を教えてください。",
         "gold_sql": (
             "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) "
             "FROM mp_entries;"
@@ -84,7 +103,7 @@ QUERIES: list[dict[str, Any]] = [
         "id": "q_mp_009",
         "difficulty": "medium",
         "question": "体積が最も大きい材料の式を教えてください。",
-        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula LIMIT 1;",
+        "gold_sql": "SELECT formula FROM mp_entries ORDER BY volume DESC NULLS LAST, formula, entry_id LIMIT 1;",
     },
     {
         "id": "q_mp_010",
@@ -93,16 +112,16 @@ QUERIES: list[dict[str, Any]] = [
         "gold_sql": (
             "SELECT e.formula, e.energy_above_hull FROM mp_entries e "
             "JOIN mp_element_ratios r ON e.entry_id = r.entry_id "
-            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula LIMIT 1;"
+            "WHERE r.element = 'Co' ORDER BY e.energy_above_hull ASC, e.formula, e.entry_id LIMIT 1;"
         ),
     },
     {
         "id": "q_mp_011",
         "difficulty": "hard",
-        "question": "各元素系（chemsys）ごとに最も安定な材料の式を教えてください。",
+        "question": "各元素系（chemsys）ごとに最も安定な材料の式を、そのenergy_above_hullとentry_idとともに教えてください。",
         "gold_sql": (
-            "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull "
-            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula;"
+            "SELECT DISTINCT ON (chemsys) chemsys, formula, energy_above_hull, entry_id "
+            "FROM mp_entries ORDER BY chemsys, energy_above_hull ASC, formula, entry_id;"
         ),
     },
     {
@@ -120,7 +139,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "Co-Ti系の材料の中で、バンドギャップが最大の材料の式を教えてください。",
         "gold_sql": (
             "SELECT formula FROM mp_entries WHERE chemsys = 'Co-Ti' "
-            "ORDER BY band_gap DESC NULLS LAST, formula LIMIT 1;"
+            "ORDER BY band_gap DESC NULLS LAST, formula, entry_id LIMIT 1;"
         ),
     },
     {
@@ -139,7 +158,7 @@ QUERIES: list[dict[str, Any]] = [
         "question": "結晶系ごとの平均バンドギャップを大きい順に教えてください。",
         "gold_sql": (
             "SELECT crystal_system, AVG(band_gap) FROM mp_entries "
-            "GROUP BY crystal_system ORDER BY AVG(band_gap) DESC NULLS LAST;"
+            "GROUP BY crystal_system ORDER BY AVG(band_gap) DESC NULLS LAST, crystal_system ASC;"
         ),
     },
 ]
@@ -184,7 +203,7 @@ FEW_SHOT: list[dict[str, str]] = [
         ),
     },
     {
-        "question": "バンドギャップがある材料の割合。",
+        "question": "バンドギャップがある材料の割合（%）。",
         "sql": (
             "SELECT COUNT(*) FILTER(WHERE band_gap > 0) * 100.0 / COUNT(*) "
             "FROM mp_entries;"
@@ -248,31 +267,63 @@ def _convert(v: Any) -> Any:
 
 def execute_gold(conn, sql: str) -> dict[str, Any]:
     with conn.cursor() as cur:
-        cur.execute("SET statement_timeout = '30s'")
-        cur.execute(sql)
-        columns = [d[0] for d in cur.description] if cur.description else []
-        rows = [_convert(list(r)) for r in cur.fetchall()]
+        cur.execute("SAVEPOINT mp_gold")
+        try:
+            cur.execute(sql)
+            columns = [d[0] for d in cur.description] if cur.description else []
+            rows = [_convert(list(r)) for r in cur.fetchall()]
+            cur.execute("RELEASE SAVEPOINT mp_gold")
+        except psycopg.Error:
+            cur.execute("ROLLBACK TO SAVEPOINT mp_gold")
+            cur.execute("RELEASE SAVEPOINT mp_gold")
+            raise
     return {"columns": columns, "ordered": sql_is_ordered(sql), "rows": rows}
+
+
+# Questions whose text itself asks for an ordered answer (e.g. "大きい順").
+# All other gold ORDER BY clauses exist only to make the stored expected
+# result deterministic and are NOT part of the semantic answer contract.
+SEMANTIC_ORDERED_QIDS = {"q_mp_015"}
 
 
 def main() -> None:
     conn = psycopg.connect(mp_conninfo())
+    # One REPEATABLE READ READ ONLY snapshot for the whole generation
+    # run: every expected result reflects the same DB state, and a
+    # failing gold SQL (rolled back to a savepoint) does not start a
+    # new snapshot for the remaining queries.
+    conn.read_only = True
+    conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+    with conn.cursor() as cur:
+        cur.execute("SET statement_timeout = '30s'")
+    # The snapshot used for generation must be the pinned fixture.
+    assert_valid_mp_transfer(conn)
 
-    EXPECTED_DIR.mkdir(parents=True, exist_ok=True)
+    tmp_dir = EXPECTED_DIR.with_name(EXPECTED_DIR.name + ".tmp")
+    if tmp_dir.exists():
+        shutil.rmtree(tmp_dir)
+    tmp_dir.mkdir(parents=True)
+    GOLD_DIR.mkdir(parents=True, exist_ok=True)
+    for q in QUERIES:
+        (GOLD_DIR / f"{q['id']}.sql").write_text(q["gold_sql"] + "\n",
+                                                 encoding="utf-8")
 
     with open(EVAL_DIR / "mp_transfer_evaluation_dataset.jsonl", "w", encoding="utf-8") as f:
         for q in QUERIES:
             f.write(json.dumps(q, ensure_ascii=False) + "\n")
 
+    n_failed = 0
     for q in QUERIES:
         try:
             result = execute_gold(conn, q["gold_sql"])
+            result["semantic_ordered"] = q["id"] in SEMANTIC_ORDERED_QIDS
         except Exception as exc:
+            n_failed += 1
             print(f"ERROR {q['id']}: {exc}")
-            result = {"columns": [], "ordered": False, "rows": [], "error": str(exc)}
-        with open(EXPECTED_DIR / f"{q['id']}.json", "w", encoding="utf-8") as f:
+            continue
+        with open(tmp_dir / f"{q['id']}.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
-        print(f"{q['id']}: rows={len(result.get('rows', []))}")
+        print(f"{q['id']}: rows={len(result['rows'])}")
 
     with open(PROMPT_DIR / "sql_generation_prompt_mp.md", "w", encoding="utf-8") as f:
         f.write(PROMPT_TEMPLATE)
@@ -281,8 +332,18 @@ def main() -> None:
     with open(FEW_SHOT_DIR / "few_shot_examples_mp.json", "w", encoding="utf-8") as f:
         json.dump(mp_few_shot, f, ensure_ascii=False, indent=2)
 
-    print("Prepared MP transfer assets.")
     conn.close()
+    if n_failed:
+        shutil.rmtree(tmp_dir)
+        print(f"FAILED: {n_failed} gold SQL queries did not execute; "
+              "the existing expected results were left untouched",
+              file=sys.stderr)
+        raise SystemExit(1)
+    # All queries succeeded on the same snapshot: swap into place.
+    if EXPECTED_DIR.exists():
+        shutil.rmtree(EXPECTED_DIR)
+    tmp_dir.rename(EXPECTED_DIR)
+    print("Prepared MP transfer assets.")
 
 
 if __name__ == "__main__":

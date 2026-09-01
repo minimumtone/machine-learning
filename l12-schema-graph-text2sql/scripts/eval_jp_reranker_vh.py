@@ -15,10 +15,11 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
-import psycopg  # noqa: E402
 
 from graph.graph_builder import build_table_graph  # noqa: E402
 from llm.sql_generator import pipeline as sql_pipeline  # noqa: E402
+from scripts.provenance import build_provenance  # noqa: E402
+from scripts.eval_db import open_eval_connection  # noqa: E402
 from scripts.eval_ablation import (  # noqa: E402
     load_queries, get_tables, get_columns, get_foreign_keys,
     get_allowed_join_list, normalize_limit, compute_accuracy,
@@ -81,7 +82,7 @@ def run_vh_with_model(conn, vh_queries, allowed_joins, allowed_columns, table_gr
 
 
 def main():
-    conn = psycopg.connect(CONNINFO)
+    conn = open_eval_connection(CONNINFO, suite="main")
     tables = get_tables(conn)
     columns = {}
     for t in tables:
@@ -124,7 +125,9 @@ def main():
         }
 
     # Save
-    out_path = PROJECT / "evaluation" / "jp_reranker_vh_results.json"
+    out_path = PROJECT / "paper" / "jp_reranker_vh_results.json"
+    all_results["provenance"] = build_provenance(
+        PROJECT / "evaluation" / "evaluation_dataset.jsonl")
     with open(out_path, "w") as f:
         json.dump(all_results, f, ensure_ascii=False, indent=2)
     print(f"\nSaved to {out_path}")
@@ -133,14 +136,15 @@ def main():
     print(f"\n{'='*60}")
     print("COMPARISON")
     print(f"{'='*60}")
-    for label, data in all_results.items():
+    model_results = {k: v for k, v in all_results.items() if k != "provenance"}
+    for label, data in model_results.items():
         print(f"  {label}: {data['overall_accuracy']:.1%}  (lat: {data['avg_latency']:.1f}s)")
 
     # Per-query diff
-    if len(all_results) == 2:
-        labels = list(all_results.keys())
-        r1 = {r["qid"]: r["accuracy"] for r in all_results[labels[0]]["results"]}
-        r2 = {r["qid"]: r["accuracy"] for r in all_results[labels[1]]["results"]}
+    if len(model_results) == 2:
+        labels = list(model_results.keys())
+        r1 = {r["qid"]: r["accuracy"] for r in model_results[labels[0]]["results"]}
+        r2 = {r["qid"]: r["accuracy"] for r in model_results[labels[1]]["results"]}
         print(f"\nPer-query diff ({labels[1]} - {labels[0]}):")
         for qid in sorted(r1.keys()):
             diff = r2.get(qid, 0) - r1.get(qid, 0)

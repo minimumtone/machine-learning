@@ -20,6 +20,8 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
+from scripts.provenance import build_provenance  # noqa: E402
+
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_FILE = EVAL_DIR / "ablation_results.json"
 
@@ -30,6 +32,8 @@ def run_single(run_id: int, condition: str | None = None) -> dict:
     backup = RESULTS_FILE.with_suffix(f".backup_run{run_id}.json")
     if RESULTS_FILE.exists():
         shutil.copy2(RESULTS_FILE, backup)
+        # eval_ablation resumes from an existing results file
+        RESULTS_FILE.unlink()
 
     # Set environment to start from specific condition if requested
     env = os.environ.copy()
@@ -218,7 +222,15 @@ def main():
         significance = compute_significance(stats)
         stats_file = EVAL_DIR / "ablation_multirun_stats.json"
         with open(stats_file, "w") as f:
-            json.dump({"n_runs": len(runs), "conditions": stats,
+            json.dump({"n_runs": len(runs),
+                       "provenance": build_provenance(
+                           EVAL_DIR / "evaluation_dataset.jsonl",
+                           rescore_note=(
+                               "aggregated deterministically from stored "
+                               "ablation_run_*.json; the per-run provenance "
+                               "in those files identifies the inference "
+                               "revision")),
+                       "conditions": stats,
                        "significance_tests": significance}, f,
                       ensure_ascii=False, indent=2)
         print(f"\nStatistics saved to {stats_file}")
