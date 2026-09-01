@@ -280,14 +280,11 @@ ax.plot(_x_end, V_fcc_veg, "--", color="tab:green", lw=1.8,
         label="fcc Vegard (Ni–Al)")
 ax.plot(_x_end, V_bcc_veg, "--", color="tab:gray", lw=1.8,
         label="bcc A2 Vegard")
-ax.plot([0.0, 1.0], [V_fcc_Ni, V_fcc_Al], "o", ms=10, color="tab:green",
-        mfc="none", mew=2.0, label="純 fcc Ni/Al (MACE)")
-ax.plot([0.0, 1.0], [V_bcc_Ni, V_bcc_Al], "s", ms=10, color="tab:gray",
-        mfc="none", mew=2.0, label="純 bcc A2 Ni/Al (MACE)")
+# pure endpoints shown in the full-range figure only
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
-ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 平均原子体積と純金属・Vegard 線")
-ax.set_xlim(-0.05, 1.05)
+ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 平均原子体積と Vegard 線")
+ax.set_xlim(0.40, 0.68)
 ax.legend(fontsize=11)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)
@@ -343,13 +340,12 @@ ax.plot(_x_end, a_bcc_veg, "--", color="tab:gray", lw=1.8,
         label="bcc A2 Vegard")
 ax.plot([0.0, 1.0], [a_bcc_Ni, a_bcc_Al], "s", ms=10, color="tab:gray",
         mfc="none", mew=2.0, label="純 bcc A2 Ni/Al (MACE)")
-ax.plot(_x_end, a_fcc_veg, "--", color="tab:green", lw=1.8,
-        label="fcc Vegard (参考)")
-ax.plot([0.0, 1.0], [a_fcc_Ni, a_fcc_Al], "o", ms=10, color="tab:green",
-        mfc="none", mew=2.0, label="純 fcc Ni/Al (MACE)")
+# fcc lattice constants use a 4-atom conventional cell, so they are omitted
+# here to avoid misleading direct comparison with the 2-atom B2/bcc-A2 axis.
+# fcc Ni/Al comparison is shown in the volume figure instead.
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"格子定数 $a$ (Å)")
-ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数と純金属・Vegard 線")
+ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数と bcc A2 Vegard")
 ax.set_xlim(-0.05, 1.05)
 ax.legend(fontsize=10)
 plt.tight_layout()
