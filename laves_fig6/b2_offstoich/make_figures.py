@@ -102,6 +102,30 @@ N_SITES = 2 * NCELL  # 128 lattice sites
 
 perfect = df[df.branch == "perfect"].iloc[0]
 
+# Pure fcc/bcc end-member references for Vegard comparison
+ref = pd.read_csv(os.path.join(AN, "mace_mp_ref_results.csv"))
+a2_ref = pd.read_csv(os.path.join(AN, "a2_endmember_energies.csv"))
+
+# fcc (MACE references are single-atom equivalents)
+V_fcc_Ni = float(ref[ref.label == "Ni"].volume_per_atom_A3.values[0])
+V_fcc_Al = float(ref[ref.label == "Al"].volume_per_atom_A3.values[0])
+a_fcc_Ni = (4.0 * V_fcc_Ni) ** (1.0 / 3.0)
+a_fcc_Al = (4.0 * V_fcc_Al) ** (1.0 / 3.0)
+
+# bcc A2 end-members
+ni_bcc = a2_ref[a2_ref.element == "Ni"].iloc[0]
+al_bcc = a2_ref[a2_ref.element == "Al"].iloc[0]
+V_bcc_Ni = float(ni_bcc.V_atom_A3)
+V_bcc_Al = float(al_bcc.V_atom_A3)
+a_bcc_Ni = float(ni_bcc.a_A)
+a_bcc_Al = float(al_bcc.a_A)
+
+_x_end = np.array([0.0, 1.0])
+V_fcc_veg = (1.0 - _x_end) * V_fcc_Ni + _x_end * V_fcc_Al
+V_bcc_veg = (1.0 - _x_end) * V_bcc_Ni + _x_end * V_bcc_Al
+a_fcc_veg = (1.0 - _x_end) * a_fcc_Ni + _x_end * a_fcc_Al
+a_bcc_veg = (1.0 - _x_end) * a_bcc_Ni + _x_end * a_bcc_Al
+
 # Drop unrelaxed structures, keeping the perfect reference regardless.
 df = df[df.converged | (df.branch == "perfect")].copy()
 
@@ -252,10 +276,19 @@ ax.plot(mix.x_Al, mix.V_mix, "k--", lw=2.5,
 mark_perfect_b2(ax, 0.5, perfect.V_per_atom_A3, label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2 (Fig. 6(a)), 室温")
+ax.plot(_x_end, V_fcc_veg, "--", color="tab:green", lw=1.8,
+        label="fcc Vegard (Ni–Al)")
+ax.plot(_x_end, V_bcc_veg, "--", color="tab:gray", lw=1.8,
+        label="bcc A2 Vegard")
+ax.plot([0.0, 1.0], [V_fcc_Ni, V_fcc_Al], "o", ms=10, color="tab:green",
+        mfc="none", mew=2.0, label="純 fcc Ni/Al (MACE)")
+ax.plot([0.0, 1.0], [V_bcc_Ni, V_bcc_Al], "s", ms=10, color="tab:gray",
+        mfc="none", mew=2.0, label="純 bcc A2 Ni/Al (MACE)")
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
-ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 不定比組成の平均原子体積")
-ax.legend(fontsize=12)
+ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 平均原子体積と純金属・Vegard 線")
+ax.set_xlim(-0.05, 1.05)
+ax.legend(fontsize=11)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)
 plt.close()
@@ -278,10 +311,19 @@ ax.plot(exp_b2.x_Al, exp_b2.V_bar_A3, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2")
 ax.plot(exp_ss.x_Al, exp_ss.V_bar_A3, "^", ms=11, mfc="none", mec="gray", mew=2,
         label="Yamanouchi実験 Ni(Al)固溶体領域")
+ax.plot(_x_end, V_fcc_veg, "--", color="tab:green", lw=1.8,
+        label="fcc Vegard (Ni–Al)")
+ax.plot(_x_end, V_bcc_veg, "--", color="tab:gray", lw=1.8,
+        label="bcc A2 Vegard")
+ax.plot([0.0, 1.0], [V_fcc_Ni, V_fcc_Al], "o", ms=10, color="tab:green",
+        mfc="none", mew=2.0, label="純 fcc Ni/Al (MACE)")
+ax.plot([0.0, 1.0], [V_bcc_Ni, V_bcc_Al], "s", ms=10, color="tab:gray",
+        mfc="none", mew=2.0, label="純 bcc A2 Ni/Al (MACE)")
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
-ax.set_title(r"Fig. 6(a) 全域: Ni(Al)固溶体とB2不定比モデルのMLIP再現")
-ax.legend(fontsize=11, loc="upper left")
+ax.set_title(r"Fig. 6(a) 全域: Ni(Al)固溶体・B2不定比・純金属/Vegard 線")
+ax.set_xlim(-0.05, 1.05)
+ax.legend(fontsize=10, loc="upper left")
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar_full.png"), dpi=150)
 plt.close()
@@ -297,10 +339,19 @@ ax.plot(mix.x_Al, mix.a_mix, "k--", lw=2.5,
 mark_perfect_b2(ax, 0.5, perfect.a_eff_A, label="完全B2 (MLIP)")
 ax.plot(exp_b2.x_Al, exp_b2.a_exp_A, "o", ms=11, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 B2 → 格子定数")
+ax.plot(_x_end, a_bcc_veg, "--", color="tab:gray", lw=1.8,
+        label="bcc A2 Vegard")
+ax.plot([0.0, 1.0], [a_bcc_Ni, a_bcc_Al], "s", ms=10, color="tab:gray",
+        mfc="none", mew=2.0, label="純 bcc A2 Ni/Al (MACE)")
+ax.plot(_x_end, a_fcc_veg, "--", color="tab:green", lw=1.8,
+        label="fcc Vegard (参考)")
+ax.plot([0.0, 1.0], [a_fcc_Ni, a_fcc_Al], "o", ms=10, color="tab:green",
+        mfc="none", mew=2.0, label="純 fcc Ni/Al (MACE)")
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
-ax.set_ylabel(r"B2格子定数 $a$ (Å)")
-ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ の格子定数（構造空孔による異常挙動）")
-ax.legend(fontsize=12)
+ax.set_ylabel(r"格子定数 $a$ (Å)")
+ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 格子定数と純金属・Vegard 線")
+ax.set_xlim(-0.05, 1.05)
+ax.legend(fontsize=10)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_a.png"), dpi=150)
 plt.close()
