@@ -1,0 +1,42 @@
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "miller_index",
+    "work_function"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "entry_01309",
+      "RuY",
+      "111",
+      5.996
+    ],
+    [
+      "entry_00238",
+      "Zr3Al",
+      "111",
+      5.995
+    ],
+    [
+      "entry_01008",
+      "IrCu",
+      "100",
+      5.992
+    ],
+    [
+      "entry_00486",
+      "AgMg",
+      "110",
+      5.986
+    ],
+    [
+      "entry_00653",
+      "RhSb",
+      "111",
+      5.986
+    ]
+  ]
+}

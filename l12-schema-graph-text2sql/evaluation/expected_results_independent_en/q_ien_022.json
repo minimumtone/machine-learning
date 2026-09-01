@@ -1,0 +1,30 @@
+{
+  "columns": [
+    "source_db",
+    "n_entries",
+    "stable_fraction",
+    "avg_energy_above_hull"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "AFLOW",
+      355,
+      0.005633802816901409,
+      0.0720092957746478
+    ],
+    [
+      "Materials Project",
+      649,
+      0.01078582434514638,
+      0.066420030816641
+    ],
+    [
+      "OQMD",
+      555,
+      0.12252252252252252,
+      0.047029263500346224
+    ]
+  ]
+}

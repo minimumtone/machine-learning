@@ -1,0 +1,26 @@
+{
+  "columns": [
+    "magnetic_ordering",
+    "avg_magnetization",
+    "n_entries"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "antiferromagnetic",
+      2.9685,
+      2
+    ],
+    [
+      "ferromagnetic",
+      4.759,
+      1
+    ],
+    [
+      "paramagnetic",
+      1.934,
+      2
+    ]
+  ]
+}

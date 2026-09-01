@@ -1,0 +1,138 @@
+{
+  "columns": [
+    "doi",
+    "title"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "10.1000/test.00008.0",
+      "Study of Pt3Al properties"
+    ],
+    [
+      "10.1000/test.00008.2",
+      "Study of Pt3Al properties"
+    ],
+    [
+      "10.1000/test.00026.0",
+      "Study of Nb3V properties"
+    ],
+    [
+      "10.1000/test.00032.0",
+      "Study of V3Y properties"
+    ],
+    [
+      "10.1000/test.00049.0",
+      "Study of V3Zn properties"
+    ],
+    [
+      "10.1000/test.00059.2",
+      "Study of Fe3Mg properties"
+    ],
+    [
+      "10.1000/test.00293.1",
+      "Study of Pd3Sc properties"
+    ],
+    [
+      "10.1000/test.00373.2",
+      "Study of Pt3Sc properties"
+    ],
+    [
+      "10.1000/test.00380.1",
+      "Study of W3Zn properties"
+    ],
+    [
+      "10.1000/test.00427.0",
+      "Study of HfSb properties"
+    ],
+    [
+      "10.1000/test.00437.0",
+      "Study of RhIn properties"
+    ],
+    [
+      "10.1000/test.00496.1",
+      "Study of NbFe properties"
+    ],
+    [
+      "10.1000/test.00496.2",
+      "Study of NbFe properties"
+    ],
+    [
+      "10.1000/test.00553.1",
+      "Study of VMg properties"
+    ],
+    [
+      "10.1000/test.00610.3",
+      "Study of RhY properties"
+    ],
+    [
+      "10.1000/test.00660.2",
+      "Study of RuZr properties"
+    ],
+    [
+      "10.1000/test.00692.1",
+      "Study of VAl properties"
+    ],
+    [
+      "10.1000/test.00706.0",
+      "Study of TiAl properties"
+    ],
+    [
+      "10.1000/test.00736.3",
+      "Study of NiY properties"
+    ],
+    [
+      "10.1000/test.00781.2",
+      "Study of MoSn properties"
+    ],
+    [
+      "10.1000/test.00878.0",
+      "Study of RhTi properties"
+    ],
+    [
+      "10.1000/test.00899.1",
+      "Study of RuAl properties"
+    ],
+    [
+      "10.1000/test.00923.1",
+      "Study of RhTi properties"
+    ],
+    [
+      "10.1000/test.00923.2",
+      "Study of RhTi properties"
+    ],
+    [
+      "10.1000/test.01107.1",
+      "Study of NiY properties"
+    ],
+    [
+      "10.1000/test.01110.0",
+      "Study of PtAl properties"
+    ],
+    [
+      "10.1000/test.01129.1",
+      "Study of PtSc properties"
+    ],
+    [
+      "10.1000/test.01204.2",
+      "Study of PtGa properties"
+    ],
+    [
+      "10.1000/test.01243.0",
+      "Study of PtTi properties"
+    ],
+    [
+      "10.1000/test.01264.1",
+      "Study of IrTi properties"
+    ],
+    [
+      "10.1000/test.01298.0",
+      "Study of HfSc properties"
+    ],
+    [
+      "10.1000/test.01351.1",
+      "Study of FeZn properties"
+    ]
+  ]
+}

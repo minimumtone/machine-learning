@@ -1,0 +1,1 @@
+SELECT DISTINCT me.entry_id, me.formula FROM material_entry me JOIN magnetic_property mp ON mp.entry_id = me.entry_id JOIN calculation c ON c.entry_id = me.entry_id JOIN density_of_states dos ON dos.calculation_id = c.calculation_id WHERE mp.magnetic_ordering = 'antiferromagnetic' AND dos.is_metallic ORDER BY me.entry_id;

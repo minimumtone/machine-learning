@@ -1,0 +1,1 @@
+SELECT ad.domain_name, COUNT(*) AS n_materials, AVG(ma.relevance_score) AS avg_relevance FROM material_application ma JOIN application_domain ad ON ad.domain_id = ma.domain_id GROUP BY ad.domain_name HAVING COUNT(*) >= 40 ORDER BY ad.domain_name;

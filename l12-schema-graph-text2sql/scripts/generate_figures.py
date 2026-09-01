@@ -2,7 +2,7 @@
 """Generate all visualization figures for the paper.
 
 Reads ONLY paper/paper_data.json (the single source of truth produced
-by scripts/compute_all_figures.py after the pytest gate), via its
+by paper_scripts/compute_all_figures.py after the pytest gate), via its
 ``figure_source_data`` section, so manuscript numbers and figures are
 guaranteed to come from the same validated data.
 
@@ -19,19 +19,27 @@ All figures saved to paper/figures/
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
-import matplotlib
+try:
+    import matplotlib
+    import numpy as np
+except ImportError:
+    print("ERROR: matplotlib and numpy are required to regenerate paper figures.",
+          file=sys.stderr)
+    print("Install the paper plotting dependency, then rerun "
+          "paper_scripts/generate_figures.py.", file=sys.stderr)
+    sys.exit(1)
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 
 PROJECT = Path(__file__).resolve().parent.parent
 FIG_DIR = PROJECT / "paper" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 PAPER_DATA_PATH = PROJECT / "paper" / "paper_data.json"
-with open(PAPER_DATA_PATH) as _f:
+with open(PAPER_DATA_PATH, encoding="utf-8") as _f:
     _PAPER_DATA = json.load(_f)
 FIGURE_DATA = _PAPER_DATA["figure_source_data"]
 
@@ -65,16 +73,30 @@ def fig_ablation_bar():
     # Sign-flip permutation statistics: the same test reported in the
     # manuscript's ablation table (Table 1)
     sig_tests = FIGURE_DATA["ablation_significance_v2"]
+
+    # Holm step-down correction over all 6 non-full comparisons
+    # (matches the Holm-corrected p values reported in the ablation table).
+    raw_ps = sorted(
+        (sig_tests[c]["p_exact_sign_flip"], c)
+        for c in conditions_order if c != "full"
+    )
+    m = len(raw_ps)
+    holm_p = {}
+    running_max = 0.0
+    for rank, (p, c) in enumerate(raw_ps):
+        adj = min(1.0, (m - rank) * p)
+        running_max = max(running_max, adj)
+        holm_p[c] = running_max
+
     for cond in conditions_order:
         c = stats["conditions"][cond]
         means.append(c["overall_mean"] * 100)
         sds.append(c["overall_std"] * 100)
         s = sig_tests.get(cond, {})
-        p_val = s.get("p_exact_sign_flip", 1.0)
         powered = s.get("test_powered_at_0.05", True)
         if cond == "full":
             colors_list.append("#2196F3")
-        elif powered and p_val < 0.05:
+        elif powered and holm_p.get(cond, 1.0) < 0.05:
             colors_list.append("#F44336")
         else:
             colors_list.append("#9E9E9E")
@@ -83,28 +105,29 @@ def fig_ablation_bar():
     x = np.arange(len(labels))
     ax.bar(x, means, yerr=sds, capsize=5, color=colors_list, edgecolor="black", linewidth=0.5)
 
-    ax.set_ylabel("Accuracy (%)")
-    ax.set_title("Ablation Study (5-run mean $\\pm$ SD)")
+    ax.set_ylabel("Execution recall (%)", fontsize=LABEL_SIZE + 8)
+    ax.set_title("Ablation Study (5-run mean $\\pm$ SD)", fontsize=TITLE_SIZE + 6)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=30, ha="right")
-    ax.set_ylim(70, 90)
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=TICK_SIZE + 8)
+    ax.tick_params(axis="y", labelsize=TICK_SIZE + 8)
+    ax.set_ylim(50.0, 100.0)
     ax.axhline(y=means[0], color="#2196F3", linestyle="--", alpha=0.3)
 
     # Add significance markers (dagger = underpowered, no significance call)
     for i, cond in enumerate(conditions_order):
         s = sig_tests.get(cond, {})
-        p = s.get("p_exact_sign_flip", 1.0)
+        p = holm_p.get(cond, 1.0)
         if cond != "full":
             if not s.get("test_powered_at_0.05", True):
-                ax.text(i, means[i] + sds[i] + 0.5, "\u2020", ha="center", fontsize=TICK_SIZE - 2)
+                ax.text(i, means[i] + sds[i] + 0.8, "\u2020", ha="center", fontsize=LABEL_SIZE + 8)
             elif p < 0.001:
-                ax.text(i, means[i] + sds[i] + 0.5, "***", ha="center", fontsize=LEGEND_SIZE)
+                ax.text(i, means[i] + sds[i] + 0.8, "***", ha="center", fontsize=LABEL_SIZE + 8)
             elif p < 0.01:
-                ax.text(i, means[i] + sds[i] + 0.5, "**", ha="center", fontsize=LEGEND_SIZE)
+                ax.text(i, means[i] + sds[i] + 0.8, "**", ha="center", fontsize=LABEL_SIZE + 8)
             elif p < 0.05:
-                ax.text(i, means[i] + sds[i] + 0.5, "*", ha="center", fontsize=LEGEND_SIZE)
+                ax.text(i, means[i] + sds[i] + 0.8, "*", ha="center", fontsize=LABEL_SIZE + 8)
             else:
-                ax.text(i, means[i] + sds[i] + 0.5, "n.s.", ha="center", fontsize=TICK_SIZE - 2)
+                ax.text(i, means[i] + sds[i] + 0.8, "n.s.", ha="center", fontsize=LABEL_SIZE + 4)
 
     plt.tight_layout()
     out = FIG_DIR / "ablation_bar.pdf"
@@ -137,7 +160,7 @@ def fig_fewshot_sensitivity():
     ax.plot(k_values, overall, marker="*", color="black", label="Overall", linewidth=3, markersize=12)
 
     ax.set_xlabel("Number of Few-shot Examples (k)")
-    ax.set_ylabel("Accuracy (%)")
+    ax.set_ylabel("Execution recall (%)")
     ax.set_title("Few-shot Sensitivity Analysis")
     ax.set_xticks(k_values)
     ax.legend(loc="lower right")
@@ -177,7 +200,7 @@ def fig_dict_sensitivity():
     ax.plot(x, overall, marker="*", color="black", linewidth=3, markersize=14, label="Overall", zorder=5)
 
     ax.set_xlabel("Dictionary Size")
-    ax.set_ylabel("Accuracy (%)")
+    ax.set_ylabel("Execution recall (%)")
     ax.set_title("Domain Dictionary Size Sensitivity")
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
@@ -197,7 +220,7 @@ def fig_multiaxis_radar():
     """Multi-axis radar chart by difficulty."""
     data = FIGURE_DATA["multiaxis"]
 
-    categories = ["Recall", "Precision", "F1", "EM", "SELECT Col", "JOIN Match"]
+    categories = ["Recall", "Precision", "F1", "Exact", "SELECT Col", "JOIN Match"]
     diffs = ["easy", "medium", "hard", "very_hard"]
     diff_labels = ["Easy", "Medium", "Hard", "Very Hard"]
     colors = ["#4CAF50", "#2196F3", "#FF9800", "#F44336"]
@@ -267,7 +290,7 @@ def fig_model_comparison():
            edgecolor="black", linewidth=0.5)
 
     ax.set_xlabel("Difficulty Level")
-    ax.set_ylabel("Accuracy (%)")
+    ax.set_ylabel("Execution recall (%)")
     ax.set_title("LLM Model Comparison")
     ax.set_xticks(x)
     ax.set_xticklabels(diff_labels)

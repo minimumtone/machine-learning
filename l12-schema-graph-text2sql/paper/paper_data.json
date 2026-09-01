@@ -1,9 +1,9 @@
 {
   "_meta": {
     "description": "Single source of truth for paper numerical values",
-    "generated_by": "scripts/compute_all_figures.py",
-    "generated_at": "2026-08-29 10:49:58 UTC",
-    "git_commit": "a012022cce73a4522f4ad3b8a552890c0735d433",
+    "generated_by": "paper_scripts/compute_all_figures.py",
+    "generated_at": "2026-09-01 19:47:02 UTC",
+    "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -78,33 +78,33 @@
         "avg_latency_s": 30.9
       },
       "no_fewshot": {
-        "overall_pct": 75.4,
+        "overall_pct": 76.4,
         "overall_std": 4.5,
         "easy_pct": 97.0,
         "easy_std": 2.7,
-        "medium_pct": 80.8,
+        "medium_pct": 84.0,
         "medium_std": 11.2,
         "hard_pct": 62.1,
         "hard_std": 3.8,
         "vhard_pct": 65.7,
         "vhard_std": 6.0,
-        "delta_pp": -17.1,
+        "delta_pp": -16.1,
         "avg_latency_s": 26.5,
-        "p_value": 9.089696993684971e-11,
-        "p_value_holm": 5.453818196210982e-10,
+        "p_value": 1.426901054601353e-09,
+        "p_value_holm": 8.561406327608118e-09,
         "n_nonzero": 55,
         "significant": true,
         "stats_v2": {
-          "delta_pp": 17.07674207512917,
+          "delta_pp": 16.122196620583715,
           "n_eff": 55,
           "p_exact_sign_flip": 4.9999750001249995e-06,
           "p_method": "monte_carlo_200k",
           "min_attainable_p": 5.551115123125783e-17,
           "test_powered_at_0.05": true,
-          "rank_biserial": 0.990909090909091,
+          "rank_biserial": 0.9253246753246753,
           "bootstrap_ci95_pp": [
-            12.910803472513148,
-            21.615385091312508
+            11.205259941969619,
+            21.101587301587298
           ],
           "n_bootstrap": 20000,
           "seed": 20260602
@@ -279,7 +279,7 @@
     "top3_per_difficulty_deltas": {
       "no_fewshot": {
         "easy_delta_pp": -2.8,
-        "medium_delta_pp": -15.8,
+        "medium_delta_pp": -12.7,
         "hard_delta_pp": -24.7,
         "vhard_delta_pp": -21.8
       },
@@ -399,9 +399,9 @@
     "model": "gpt-5.5",
     "condition": "llm_only_raw_schema_semantic_note_single_shot",
     "n_queries": 245,
-    "recall_pct": 77.9,
-    "precision_pct": 82.4,
-    "f1_pct": 78.1,
+    "recall_pct": 78.3,
+    "precision_pct": 83.9,
+    "f1_pct": 79.4,
     "syntax_validity_pct": 100.0,
     "execution_validity_pct": 99.6,
     "hallucinated_table_rate_pct": 0.7,
@@ -424,8 +424,8 @@
       "medium": {
         "n": 69,
         "recall_pct": 82.6,
-        "precision_pct": 87.9,
-        "f1_pct": 83.3,
+        "precision_pct": 88.0,
+        "f1_pct": 83.4,
         "execution_validity_pct": 100.0,
         "queries_with_column_hallucination": 20,
         "queries_with_join_hallucination": 29
@@ -441,9 +441,9 @@
       },
       "very_hard": {
         "n": 64,
-        "recall_pct": 73.0,
-        "precision_pct": 76.0,
-        "f1_pct": 71.4,
+        "recall_pct": 74.6,
+        "precision_pct": 81.8,
+        "f1_pct": 76.4,
         "execution_validity_pct": 98.4,
         "queries_with_column_hallucination": 44,
         "queries_with_join_hallucination": 30
@@ -575,10 +575,10 @@
     "model": "gpt-5.5",
     "n_queries": 245,
     "aggregate_pct": {
-      "recall_mean": 85.7,
-      "precision_mean": 85.2,
-      "f1_mean": 84.0,
-      "exact_match_rate": 17.1,
+      "recall_mean": 86.1,
+      "precision_mean": 86.7,
+      "f1_mean": 85.3,
+      "exact_match_rate": 10.6,
       "select_column_precision_mean": 61.7,
       "join_match_rate_mean": 89.3,
       "syntax_validity_rate": 100.0,
@@ -593,7 +593,7 @@
         "recall": 94.9,
         "precision": 94.8,
         "f1": 94.8,
-        "exact_match": 32.6,
+        "exact_match": 14.0,
         "select_col_prec": 71.0,
         "join_match": 96.5,
         "syntax_validity_pct": 100.0,
@@ -604,7 +604,7 @@
         "recall": 93.9,
         "precision": 94.3,
         "f1": 93.5,
-        "exact_match": 20.3,
+        "exact_match": 14.5,
         "select_col_prec": 71.2,
         "join_match": 93.1,
         "syntax_validity_pct": 100.0,
@@ -615,7 +615,7 @@
         "recall": 81.0,
         "precision": 80.8,
         "f1": 78.5,
-        "exact_match": 17.4,
+        "exact_match": 13.0,
         "select_col_prec": 61.0,
         "join_match": 92.0,
         "syntax_validity_pct": 100.0,
@@ -623,10 +623,10 @@
       },
       "very_hard": {
         "n": 64,
-        "recall": 75.6,
-        "precision": 73.8,
-        "f1": 72.3,
-        "exact_match": 3.1,
+        "recall": 77.2,
+        "precision": 79.5,
+        "f1": 77.6,
+        "exact_match": 1.6,
         "select_col_prec": 46.0,
         "join_match": 77.3,
         "syntax_validity_pct": 100.0,
@@ -702,6 +702,60 @@
     "n_metastable_l12": 150,
     "n_ni3al_lattice_match": 26,
     "a_ref_ni3al": 3.572
+  },
+  "language_evaluation": {
+    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus an independently authored 25-query English validation set (independent_en_dataset.jsonl) with its own gold SQL and expected results",
+    "paired_ja": {
+      "n_runs": 3,
+      "n_queries": 100,
+      "overall_recall_pct_mean": 92.0,
+      "overall_recall_pct_sd": 0.7,
+      "overall_recall_pct_runs": [
+        91.8,
+        91.4,
+        92.7
+      ],
+      "by_difficulty_mean_pct": {
+        "easy": 99.7,
+        "hard": 88.9,
+        "medium": 96.7,
+        "very_hard": 81.9
+      }
+    },
+    "paired_en": {
+      "n_runs": 3,
+      "n_queries": 100,
+      "overall_recall_pct_mean": 90.0,
+      "overall_recall_pct_sd": 2.0,
+      "overall_recall_pct_runs": [
+        91.7,
+        90.4,
+        87.8
+      ],
+      "by_difficulty_mean_pct": {
+        "easy": 98.3,
+        "hard": 89.1,
+        "medium": 93.3,
+        "very_hard": 77.8
+      }
+    },
+    "independent_en": {
+      "n_runs": 3,
+      "n_queries": 25,
+      "overall_recall_pct_mean": 96.5,
+      "overall_recall_pct_sd": 2.3,
+      "overall_recall_pct_runs": [
+        95.2,
+        95.2,
+        99.2
+      ],
+      "by_difficulty_mean_pct": {
+        "easy": 88.9,
+        "hard": 100.0,
+        "medium": 100.0,
+        "very_hard": 96.0
+      }
+    }
   },
   "independent_evaluation": {
     "_note": "The earlier harmonized comparison has been removed; use the full independent rerun below (see n_queries).",
@@ -803,9 +857,9 @@
     "_note": "Original CTE patterns (few-shot covered) plus novel zero-shot patterns; counts in n_original / n_novel",
     "model": "gpt-5.5",
     "n_queries": 15,
-    "overall_pct": 66.0,
+    "overall_pct": 72.7,
     "original_5_pct": 100.0,
-    "new_10_pct": 49.0,
+    "new_10_pct": 59.0,
     "n_original": 5,
     "n_novel": 10,
     "avg_latency_s": 54.1,
@@ -814,10 +868,10 @@
   "safety": {
     "n_safety_tests": 7,
     "n_sqlguard_checks": 15,
-    "all_blocked": true
+    "all_handled": true
   },
   "testing": {
-    "n_unit_tests": 155
+    "n_unit_tests": 160
   },
   "pipeline_components": [
     {
@@ -859,13 +913,17 @@
       "n_runs": 5,
       "provenance": {
         "dataset_file": "evaluation_dataset.jsonl",
-        "dataset_sha256": "ce9c646852410a1a4a70449099d8bc2159cab8b68d32e712bd6dfa60a2215b67",
+        "dataset_sha256": "71726110962b1fa03472b4fd92cfc7b1c13bca7691015801ac916bf9b7bf6909",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
-        "prompt_file": "sql_generation_prompt.md",
-        "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T06:16:24+00:00"
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+        "prompt_template_file": "sql_generation_prompt.md",
+        "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+        "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-30T10:32:12+00:00",
+        "rescore_note": "aggregated deterministically from stored ablation_run_*.json; the per-run provenance in those files identifies the inference revision"
       },
       "conditions": {
         "full": {
@@ -1559,10 +1617,10 @@
         },
         "no_fewshot": {
           "n_runs": 5,
-          "overall_mean": 0.7541540163540164,
+          "overall_mean": 0.7636994708994709,
           "overall_std": 0.045004645782289056,
-          "overall_min": 0.677578884078884,
-          "overall_max": 0.7931344396344396,
+          "overall_min": 0.6871243386243385,
+          "overall_max": 0.8026798941798942,
           "by_difficulty": {
             "easy": {
               "mean": 0.9700000000000001,
@@ -1571,10 +1629,10 @@
               "max": 1.0
             },
             "medium": {
-              "mean": 0.8081818181818182,
+              "mean": 0.8400000000000001,
               "std": 0.11155467020454343,
-              "min": 0.6348484848484849,
-              "max": 0.9348484848484849
+              "min": 0.6666666666666666,
+              "max": 0.9666666666666667
             },
             "hard": {
               "mean": 0.620705467372134,
@@ -1637,7 +1695,7 @@
             "q_medium_023": 1.0,
             "q_medium_024": 0.6,
             "q_medium_025": 0.8,
-            "q_medium_026": 0.045454545454545456,
+            "q_medium_026": 1.0,
             "q_medium_027": 1.0,
             "q_medium_028": 0.8,
             "q_medium_029": 0.8,
@@ -1693,7 +1751,7 @@
             "q_vhard_019": 0.8,
             "q_vhard_020": 0.6
           },
-          "delta_mean": -0.1707674207512917
+          "delta_mean": -0.16122196620583717
         },
         "no_guard": {
           "n_runs": 5,
@@ -1872,9 +1930,9 @@
           "correction": "holm"
         },
         "no_fewshot": {
-          "delta_pp": 17.07674207512917,
-          "p_value": 9.089696993684971e-11,
-          "p_value_holm": 5.453818196210982e-10,
+          "delta_pp": 16.122196620583715,
+          "p_value": 1.426901054601353e-09,
+          "p_value_holm": 8.561406327608118e-09,
           "significant": true,
           "n_nonzero": 55,
           "test": "wilcoxon-exact",
@@ -1893,16 +1951,16 @@
     },
     "ablation_significance_v2": {
       "no_fewshot": {
-        "delta_pp": 17.07674207512917,
+        "delta_pp": 16.122196620583715,
         "n_eff": 55,
         "p_exact_sign_flip": 4.9999750001249995e-06,
         "p_method": "monte_carlo_200k",
         "min_attainable_p": 5.551115123125783e-17,
         "test_powered_at_0.05": true,
-        "rank_biserial": 0.990909090909091,
+        "rank_biserial": 0.9253246753246753,
         "bootstrap_ci95_pp": [
-          12.910803472513148,
-          21.615385091312508
+          11.205259941969619,
+          21.101587301587298
         ],
         "n_bootstrap": 20000,
         "seed": 20260602
@@ -1987,13 +2045,17 @@
       "model": "gpt-5.5",
       "provenance": {
         "dataset_file": "evaluation_dataset.jsonl",
-        "dataset_sha256": "ce9c646852410a1a4a70449099d8bc2159cab8b68d32e712bd6dfa60a2215b67",
+        "dataset_sha256": "71726110962b1fa03472b4fd92cfc7b1c13bca7691015801ac916bf9b7bf6909",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
         "prompt_file": "sql_generation_prompt.md",
         "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T06:36:24+00:00"
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-29T06:36:24+00:00",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "rescored_at": "2026-08-30T10:32:07+00:00",
+        "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
       },
       "n_queries": 100,
       "k_values": [
@@ -5575,13 +5637,17 @@
       "model": "gpt-5.5",
       "provenance": {
         "dataset_file": "evaluation_dataset.jsonl",
-        "dataset_sha256": "ce9c646852410a1a4a70449099d8bc2159cab8b68d32e712bd6dfa60a2215b67",
+        "dataset_sha256": "71726110962b1fa03472b4fd92cfc7b1c13bca7691015801ac916bf9b7bf6909",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
         "prompt_file": "sql_generation_prompt.md",
         "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T09:48:26+00:00"
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-29T09:48:26+00:00",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "rescored_at": "2026-08-30T10:32:09+00:00",
+        "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
       },
       "n_queries": 100,
       "configs": [
@@ -9168,20 +9234,24 @@
       "model": "gpt-5.5",
       "provenance": {
         "dataset_file": "main_evaluation_dataset.jsonl",
-        "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+        "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
         "prompt_file": "sql_generation_prompt.md",
         "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T03:08:25+00:00"
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-29T03:08:25+00:00",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "rescored_at": "2026-08-30T10:31:49+00:00",
+        "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
       },
       "aggregate": {
         "n_queries": 245,
-        "recall_mean": 0.8566584349520323,
-        "precision_mean": 0.8521155017003916,
-        "f1_mean": 0.8395945618836923,
-        "exact_match_rate": 0.17142857142857143,
+        "recall_mean": 0.8607400676050935,
+        "precision_mean": 0.8670548956839371,
+        "f1_mean": 0.8533901214174924,
+        "exact_match_rate": 0.10612244897959183,
         "select_column_precision_mean": 0.6170587802220456,
         "join_match_rate_mean": 0.8927988338192419,
         "syntax_validity_rate": 1.0,
@@ -9196,7 +9266,7 @@
           "recall": 0.9488372093023255,
           "precision": 0.9477920041808204,
           "f1": 0.9483025928896017,
-          "exact_match": 0.32558139534883723,
+          "exact_match": 0.13953488372093023,
           "select_col_prec": 0.7100221483942414,
           "join_match": 0.9651162790697675
         },
@@ -9205,7 +9275,7 @@
           "recall": 0.9385684708666076,
           "precision": 0.9431321294675331,
           "f1": 0.9348432692317115,
-          "exact_match": 0.2028985507246377,
+          "exact_match": 0.14492753623188406,
           "select_col_prec": 0.7123188405797102,
           "join_match": 0.9311594202898551
         },
@@ -9214,16 +9284,16 @@
           "recall": 0.810213064822714,
           "precision": 0.8075773489647353,
           "f1": 0.7848268305460354,
-          "exact_match": 0.17391304347826086,
+          "exact_match": 0.13043478260869565,
           "select_col_prec": 0.6098924022837067,
           "join_match": 0.9202898550724637
         },
         "very_hard": {
           "n": 64,
-          "recall": 0.7564904781356987,
-          "precision": 0.7377232457030334,
-          "f1": 0.7229128012904256,
-          "exact_match": 0.03125,
+          "recall": 0.7721154781356987,
+          "precision": 0.7949131132962931,
+          "f1": 0.7757239276307538,
+          "exact_match": 0.015625,
           "select_col_prec": 0.4596230158730159,
           "join_match": 0.7732142857142856
         }
@@ -9267,9 +9337,9 @@
           "qid": "q_cte_008",
           "difficulty": "very_hard",
           "gen_sql": "SELECT c.element AS b_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nHAVING AVG(ps.formation_energy_per_atom) < -0.4\nORDER BY avg_rebased_formation_energy_per_atom ASC\nLIMIT 10000;",
-          "recall": 0.0,
-          "precision": 0.0,
-          "f1": 0.0,
+          "recall": 1.0,
+          "precision": 1.0,
+          "f1": 1.0,
           "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 0.5,
@@ -9302,8 +9372,8 @@
           "difficulty": "very_hard",
           "gen_sql": "SELECT\n  m.formula,\n  cp.value AS bulk_modulus,\n  ps.formation_energy_per_atom AS renormalized_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND cp.property_name = 'bulk_modulus'\n  AND cp.unit = 'GPa'\n  AND cp.value >= 150\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;",
           "recall": 1.0,
-          "precision": 0.09178743961352658,
-          "f1": 0.168141592920354,
+          "precision": 0.6231884057971014,
+          "f1": 0.7678571428571428,
           "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 0.4444444444444444,
@@ -9336,8 +9406,8 @@
           "difficulty": "very_hard",
           "gen_sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom AS renormalized_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND LOWER(mp.magnetic_ordering) IN ('ferromagnetic', 'fm')\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;",
           "recall": 1.0,
-          "precision": 0.6060606060606061,
-          "f1": 0.7547169811320755,
+          "precision": 1.0,
+          "f1": 1.0,
           "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 0.5,
@@ -9593,7 +9663,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -9746,7 +9816,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -9780,7 +9850,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 1.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -9814,7 +9884,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -9865,7 +9935,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -10103,7 +10173,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.5,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -10171,7 +10241,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -10222,7 +10292,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -10239,7 +10309,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.5,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -11378,7 +11448,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.5,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -11497,7 +11567,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.6666666666666666,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -11786,7 +11856,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.5,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -12024,7 +12094,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -12075,7 +12145,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.6666666666666666,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -12432,7 +12502,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 1.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -12551,7 +12621,7 @@
           "recall": 1.0,
           "precision": 1.0,
           "f1": 1.0,
-          "exact_match": true,
+          "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 1.0,
           "syntax_valid": true,
@@ -13348,8 +13418,8 @@
           "difficulty": "very_hard",
           "gen_sql": "SELECT c.element AS a_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rereferenced_formation_energy_per_atom\nFROM material_entry m\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN composition c ON c.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.is_stable = TRUE\n  AND c.site_label = 'A-site'\nGROUP BY c.element\nORDER BY avg_rereferenced_formation_energy_per_atom ASC\nLIMIT 10000;",
           "recall": 1.0,
-          "precision": 0.16666666666666666,
-          "f1": 0.2857142857142857,
+          "precision": 1.0,
+          "f1": 1.0,
           "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 0.5714285714285714,
@@ -13382,8 +13452,8 @@
           "difficulty": "very_hard",
           "gen_sql": "SELECT\n  m.formula,\n  ps.formation_energy_per_atom\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND ps.formation_energy_per_atom <= -0.1\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;",
           "recall": 1.0,
-          "precision": 0.09852216748768473,
-          "f1": 0.17937219730941703,
+          "precision": 1.0,
+          "f1": 1.0,
           "exact_match": false,
           "select_column_precision": 0.0,
           "join_match_rate": 0.5,
@@ -13394,18 +13464,24 @@
           "hallucinated_join_rate": 0.0,
           "latency_s": 28.9
         }
-      ]
+      ],
+      "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order when the gold query is ordered (normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
     },
     "model_comparison": {
       "provenance": {
         "dataset_file": "evaluation_dataset.jsonl",
-        "dataset_sha256": "ce9c646852410a1a4a70449099d8bc2159cab8b68d32e712bd6dfa60a2215b67",
+        "dataset_sha256": "71726110962b1fa03472b4fd92cfc7b1c13bca7691015801ac916bf9b7bf6909",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
         "prompt_file": "sql_generation_prompt.md",
         "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T09:51:56+00:00"
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-29T09:51:56+00:00",
+        "models_config_sha256": "0652add1711934dc817234558c587d2e1a690e7a803ee98a1dfa3de9a2522222",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "rescored_at": "2026-08-30T10:32:10+00:00",
+        "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
       },
       "n_queries": 100,
       "models": {
@@ -14128,34 +14204,44 @@
     "failure_analysis": {
       "provenance": {
         "dataset_file": "main_evaluation_dataset.jsonl",
-        "dataset_sha256": "34bf217249837e78e90bae4685c26ab53cdabb10f966c5f486e814580c62e510",
+        "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
         "gold_dir": "gold_sql",
-        "gold_sha256": "28745695828c181e8eb3f27b4c4a7306a3d081d79733ce4d9ea4c25fdc63db8a",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+        "prompt_template_file": "sql_generation_prompt.md",
+        "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+        "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-30T10:32:11+00:00",
+        "rescore_note": "derived deterministically from the canonical stored run multiaxis_results.json by scripts/build_failure_analysis.py; no LLM call is involved"
+      },
+      "source_result_file": "multiaxis_results.json",
+      "source_result_sha256": "98d104f30a711e556f678b670ccec22d3c9b5081b97dcdf9ccaee349efc337f7",
+      "source_provenance": {
+        "dataset_file": "main_evaluation_dataset.jsonl",
+        "dataset_sha256": "2b5d0f212e826213bef6f0e07beec3c8ad126f5cb6bcc6f81accb2d8a238dd12",
+        "gold_dir": "gold_sql",
+        "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
         "prompt_file": "sql_generation_prompt.md",
         "prompt_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
-        "git_commit": "a608ec54e68d238fa0901cf349151a0573afbb1d",
-        "generated_at": "2026-08-29T03:11:05+00:00"
+        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
+        "generated_at": "2026-08-29T03:08:25+00:00",
+        "expected_dir": "expected_results",
+        "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+        "rescored_at": "2026-08-30T10:31:49+00:00",
+        "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
       },
       "failures": [
         {
           "qid": "q_cte_007",
           "difficulty": "very_hard",
-          "question": "多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
+          "question": "多形数が多い純物質元素上位5つについて、その元素の多形数、その元素を含むL1₂化合物数と平均形成エネルギーを出して。",
           "recall": 0.2,
           "select_col_prec": 0.0,
           "join_match_rate": 0.5,
           "gen_sql": "WITH top_elements AS (\n  SELECT\n    m.formula AS element_symbol,\n    COUNT(DISTINCT s.structure_id) AS polymorph_count\n  FROM material_entry m\n  JOIN structure s ON s.entry_id = m.entry_id\n  WHERE m.number_of_elements = 1\n  GROUP BY m.formula\n  ORDER BY COUNT(DISTINCT s.structure_id) DESC\n  LIMIT 5\n)\nSELECT\n  te.element_symbol,\n  te.polymorph_count,\n  COUNT(DISTINCT m.entry_id) AS l12_compound_count,\n  AVG(ps.formation_energy_per_atom) AS avg_eform\nFROM top_elements te\nJOIN material_entry m ON (\n  m.chemical_system = te.element_symbol\n  OR m.chemical_system LIKE te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol || '-%'\n  OR m.chemical_system LIKE '%-' || te.element_symbol\n)\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE s.prototype = 'L12' OR s.strukturbericht = 'L12'\nGROUP BY te.element_symbol, te.polymorph_count\nORDER BY te.polymorph_count DESC\nLIMIT 10000;",
           "gold_sql": "-- CTE G: CTE + 純物質参照テーブル集約\n-- 「多形数が多い純物質元素上位5つについて、その元素を含むL1₂化合物数と平均形成エネルギーを出して」\nWITH top_polymorph AS (\n    SELECT element_symbol, n_polymorphs\n    FROM pure_element_reference\n    WHERE reference_set = 'L12-FIXTURE-PBE-v1'\n    ORDER BY n_polymorphs DESC, element_symbol ASC\n    LIMIT 5\n)\nSELECT tp.element_symbol,\n       tp.n_polymorphs,\n       COUNT(DISTINCT m.entry_id) AS n_l12_compounds,\n       ROUND(AVG(ps.formation_energy_per_atom)::numeric, 4) AS avg_e_form\nFROM top_polymorph tp\nLEFT JOIN composition c ON c.element = tp.element_symbol\nLEFT JOIN material_entry m ON m.entry_id = c.entry_id\nLEFT JOIN structure s ON s.entry_id = m.entry_id\n    AND (s.prototype = 'L12' OR s.strukturbericht = 'L12')\nLEFT JOIN phase_stability ps ON ps.entry_id = m.entry_id\nGROUP BY tp.element_symbol, tp.n_polymorphs\nORDER BY tp.n_polymorphs DESC, tp.element_symbol ASC;\n"
-        },
-        {
-          "qid": "q_cte_008",
-          "difficulty": "very_hard",
-          "question": "B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して。",
-          "recall": 0.0,
-          "select_col_prec": 0.0,
-          "join_match_rate": 0.5,
-          "gen_sql": "SELECT c.element AS b_site,\n       AVG(ps.formation_energy_per_atom) AS avg_rebased_formation_energy_per_atom\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nHAVING AVG(ps.formation_energy_per_atom) < -0.4\nORDER BY avg_rebased_formation_energy_per_atom ASC\nLIMIT 10000;",
-          "gold_sql": "-- CTE H: CTE + HAVING（グループフィルタ）\n-- 「B-site元素ごとの純元素基底状態基準に再基準化した生成エネルギーの平均が-0.4 eV/atom未満のグループを出して」\nWITH l12_enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n      AND ps.energy_above_hull <= 0.001\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT cb.element AS b_site,\n       COUNT(*) AS n_compounds,\n       ROUND(AVG(le.formation_energy_per_atom - le.weighted_ref)::numeric, 4)\n           AS avg_enthalpy_vs_element_gs\nFROM l12_enthalpy le\nJOIN composition cb ON cb.entry_id = le.entry_id AND cb.site_label = 'B-site'\nGROUP BY cb.element\nHAVING AVG(le.formation_energy_per_atom - le.weighted_ref) < -0.4\nORDER BY avg_enthalpy_vs_element_gs ASC;\n"
         },
         {
           "qid": "q_cte_011",
@@ -14170,7 +14256,7 @@
         {
           "qid": "q_cte_013",
           "difficulty": "very_hard",
-          "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を出して。",
+          "question": "形成エネルギーと純物質補正後の生成エンタルピーの差が大きいL1₂化合物上位10件を、形成エネルギー・加重純物質基準補正量・補正量の絶対値とともに出して。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 0.5,
@@ -14180,17 +14266,17 @@
         {
           "qid": "q_cte_014",
           "difficulty": "very_hard",
-          "question": "元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して。",
+          "question": "元素ごとに、その元素を含むL1₂化合物の総数と、純元素基底状態基準に再基準化した生成エネルギーが負である件数、負である割合を出して。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 0.5,
           "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, s.prototype, s.lattice_a, s.space_group, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN structure s ON s.entry_id = m.entry_id\nWHERE\n    (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    AND ps.formation_energy_per_atom < 0\n\nLIMIT 10000;",
-          "gold_sql": "-- CTE N: CTE + 割合計算（条件付き集約）\n-- 「元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT c.element,\n       COUNT(DISTINCT e.entry_id) AS n_total,\n       COUNT(DISTINCT e.entry_id) FILTER (\n           WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n       ) AS n_negative,\n       ROUND(\n           COUNT(DISTINCT e.entry_id) FILTER (\n               WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n           )::numeric / COUNT(DISTINCT e.entry_id), 3\n       ) AS negative_ratio\nFROM enthalpy e\nJOIN composition c ON c.entry_id = e.entry_id\nGROUP BY c.element\nHAVING COUNT(DISTINCT e.entry_id) >= 5\nORDER BY negative_ratio DESC, c.element ASC\nLIMIT 15;\n"
+          "gold_sql": "-- CTE N: CTE + 割合計算（条件付き集約）\n-- 「元素ごとに、その元素を含むL1₂化合物のうち純元素基底状態基準に再基準化した生成エネルギーが負である割合を出して」\nWITH enthalpy AS (\n    SELECT m.entry_id, m.formula, ps.formation_energy_per_atom,\n           SUM(comp.atomic_fraction * per.delta_e) AS weighted_ref\n    FROM material_entry m\n    JOIN structure s ON s.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\n    JOIN composition comp ON comp.entry_id = m.entry_id\n    JOIN pure_element_reference per ON per.element_symbol = comp.element\n        AND per.reference_set = ps.reference_set\n    WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n    GROUP BY m.entry_id, m.formula, ps.formation_energy_per_atom\n)\nSELECT c.element,\n       COUNT(DISTINCT e.entry_id) AS n_total,\n       COUNT(DISTINCT e.entry_id) FILTER (\n           WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n       ) AS n_negative,\n       ROUND(\n           COUNT(DISTINCT e.entry_id) FILTER (\n               WHERE e.formation_energy_per_atom - e.weighted_ref < 0\n           )::numeric / COUNT(DISTINCT e.entry_id), 3\n       ) AS negative_ratio\nFROM enthalpy e\nJOIN composition c ON c.entry_id = e.entry_id\nGROUP BY c.element\nORDER BY negative_ratio DESC, c.element ASC;\n"
         },
         {
           "qid": "q_cte_015",
           "difficulty": "very_hard",
-          "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均をA-site元素ごとに出して。",
+          "question": "純物質の原子あたり体積が15Å³以上のA-site元素を持つ安定L1₂化合物の純元素基底状態基準に再基準化した生成エネルギーの平均を、A-site元素ごとに化合物数とともに出して。",
           "recall": 0.0,
           "select_col_prec": 0.5,
           "join_match_rate": 0.5714285714285714,
@@ -14230,7 +14316,7 @@
         {
           "qid": "q_expert_035",
           "difficulty": "hard",
-          "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を教えて。",
+          "question": "NaCl型構造でstableではない（is_stable = false、すなわちenergy_above_hull > 0.001 eV/atom）化合物の割合を、総数と該当件数とともに教えて。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14250,7 +14336,7 @@
         {
           "qid": "q_expert_040",
           "difficulty": "medium",
-          "question": "プロトタイプ別の平均energy_above_hullを比較して。",
+          "question": "プロトタイプ別の平均energy_above_hullを件数とともに比較して。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 0.0,
@@ -14330,7 +14416,7 @@
         {
           "qid": "q_expert_091",
           "difficulty": "hard",
-          "question": "L12とB2で、安定な化合物の割合を比較して。",
+          "question": "L12とB2で、化合物総数・安定件数・安定な化合物の割合を比較して。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14340,7 +14426,7 @@
         {
           "qid": "q_expert_092",
           "difficulty": "hard",
-          "question": "プロトタイプ別の平均バルクモジュラスを教えて。",
+          "question": "プロトタイプ別の平均バルクモジュラスを件数とともに教えて。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 0.3333333333333333,
@@ -14360,7 +14446,7 @@
         {
           "qid": "q_expert_098",
           "difficulty": "hard",
-          "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けてほしい。",
+          "question": "L12型化合物のバンドギャップの分布を教えて。0のものとそうでないものを分けて、各カテゴリの件数と平均バンドギャップが欲しい。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14440,7 +14526,7 @@
         {
           "qid": "q_hard_014",
           "difficulty": "hard",
-          "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。",
+          "question": "安定なL1₂化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーと件数を出して。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14475,12 +14561,12 @@
           "select_col_prec": 0.0,
           "join_match_rate": 0.75,
           "gen_sql": "SELECT DISTINCT\n    m.entry_id, m.formula, ps.formation_energy_per_atom, ps.energy_above_hull, ps.band_gap\nFROM material_entry m\n    JOIN composition c ON c.entry_id = m.entry_id\n    JOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE\n    c.site_label = 'B-site'\n\nLIMIT 10000;",
-          "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN structure s ON s.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12')\n  AND c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
+          "gold_sql": "SELECT c.element AS b_site_element,\n       AVG(ps.formation_energy_per_atom) AS avg_formation_energy\nFROM material_entry m\nJOIN composition c ON c.entry_id = m.entry_id\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE c.site_label = 'B-site'\nGROUP BY c.element\nORDER BY avg_formation_energy ASC\nLIMIT 10000;"
         },
         {
           "qid": "q_proto_bif3_very_hard_001",
           "difficulty": "very_hard",
-          "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+          "question": "BiF3型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14490,7 +14576,7 @@
         {
           "qid": "q_proto_l12_very_hard_001",
           "difficulty": "very_hard",
-          "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+          "question": "L12型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,
@@ -14500,7 +14586,7 @@
         {
           "qid": "q_proto_nias_very_hard_001",
           "difficulty": "very_hard",
-          "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して。",
+          "question": "NiAs型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して（総数・安定件数・平均形成エネルギー）。",
           "recall": 0.0,
           "select_col_prec": 0.0,
           "join_match_rate": 1.0,

@@ -1,0 +1,303 @@
+{
+  "run": 3,
+  "condition": "full",
+  "language": "en_independent",
+  "overall_recall": 0.992,
+  "by_difficulty": {
+    "easy": 1.0,
+    "medium": 1.0,
+    "hard": 1.0,
+    "very_hard": 0.96
+  },
+  "results": [
+    {
+      "qid": "q_ien_001",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 22.1,
+      "sql": "SELECT\n  m.source_db,\n  COUNT(*) AS material_entry_count\nFROM material_entry AS m\nGROUP BY m.source_db\nORDER BY m.source_db\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_002",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 14.9,
+      "sql": "SELECT\n  sm.method_name,\n  sm.category\nFROM synthesis_method sm\nORDER BY sm.category, sm.method_name\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_003",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 16.0,
+      "sql": "SELECT m.formula\nFROM material_entry m\nJOIN magnetic_property mp ON m.entry_id = mp.entry_id\nWHERE mp.magnetic_ordering = 'ferromagnetic'\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_004",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 43.9,
+      "sql": "SELECT e.symbol, e.electronegativity\nFROM element e\nWHERE e.category = 'transition_metal'\n  AND e.electronegativity > 2.0\nORDER BY e.electronegativity DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_005",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 14.8,
+      "sql": "SELECT COUNT(*) AS literature_reference_count\nFROM literature_reference lr\nWHERE lr.year >= 2020\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_006",
+      "difficulty": "easy",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 13.7,
+      "sql": "SELECT\n    lr.doi,\n    lr.title\nFROM literature_reference lr\nWHERE lr.year = 2025\nORDER BY lr.title\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_007",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 11.4,
+      "sql": "SELECT s.crystal_system, COUNT(*) AS structure_count\nFROM structure s\nGROUP BY s.crystal_system\nORDER BY structure_count DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_008",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 9.7,
+      "sql": "SELECT m.formula, ps.band_gap\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.band_gap > 1.0\nORDER BY ps.band_gap DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_009",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 23.4,
+      "sql": "SELECT\n  calc.functional,\n  AVG(cp.value) AS average_bulk_modulus\nFROM calculated_property cp\nJOIN calculation calc ON cp.calculation_id = calc.calculation_id\nWHERE LOWER(cp.property_name) IN ('bulk_modulus', 'bulk modulus')\nGROUP BY calc.functional\nORDER BY calc.functional\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_010",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 20.2,
+      "sql": "SELECT m.formula,\n       se.miller_index\nFROM material_entry m\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE se.surface_energy_j_m2 < 1.5\nORDER BY se.surface_energy_j_m2 ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_011",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 38.6,
+      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN band_structure bs ON bs.calculation_id = calc.calculation_id\nWHERE bs.is_direct_gap = TRUE\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_012",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 23.3,
+      "sql": "SELECT\n  sm.method_name,\n  COUNT(*) AS successful_synthesis_count\nFROM material_synthesis ms\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nWHERE ms.success = TRUE\nGROUP BY sm.method_name\nORDER BY successful_synthesis_count DESC, sm.method_name\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_013",
+      "difficulty": "medium",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 11.8,
+      "sql": "SELECT\n  m.formula,\n  mp.curie_temperature_k\nFROM material_entry AS m\nJOIN magnetic_property AS mp\n  ON mp.entry_id = m.entry_id\nWHERE mp.curie_temperature_k > 800\nORDER BY mp.curie_temperature_k DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_014",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 33.2,
+      "sql": "SELECT\n  mp.magnetic_ordering,\n  AVG(mp.total_magnetization) AS avg_total_magnetization,\n  COUNT(*) AS entry_count\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nJOIN magnetic_property mp ON mp.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\nGROUP BY mp.magnetic_ordering\nORDER BY mp.magnetic_ordering\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_015",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 13.2,
+      "sql": "SELECT m.formula,\n       se.miller_index,\n       se.work_function\nFROM material_entry m\nJOIN surface_energy se ON se.entry_id = m.entry_id\nWHERE se.work_function IS NOT NULL\nORDER BY se.work_function DESC\nLIMIT 5;"
+    },
+    {
+      "qid": "q_ien_016",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 0.5172981878088962,
+      "f1": 0.6818675352877308,
+      "exact_match": 0.0,
+      "latency_s": 42.1,
+      "sql": "SELECT\n  m.formula,\n  cp.value AS bulk_modulus,\n  tp.debye_temperature_k\nFROM material_entry m\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN calculated_property cp ON cp.calculation_id = calc.calculation_id\nJOIN thermal_property tp ON tp.calculation_id = calc.calculation_id\nWHERE cp.property_name = 'bulk_modulus'\n  AND tp.debye_temperature_k IS NOT NULL\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_017",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 13.9,
+      "sql": "SELECT\n  gb.sigma_value,\n  COUNT(*) AS grain_boundary_count,\n  AVG(gb.gb_energy_j_m2) AS avg_gb_energy_j_m2\nFROM grain_boundary gb\nGROUP BY gb.sigma_value\nORDER BY gb.sigma_value\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_018",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 47.6,
+      "sql": "SELECT DISTINCT m.formula\nFROM material_entry m\nJOIN magnetic_property mp ON m.entry_id = mp.entry_id\nJOIN calculation calc ON calc.entry_id = m.entry_id\nJOIN density_of_states dos ON dos.calculation_id = calc.calculation_id\nWHERE mp.magnetic_ordering = 'antiferromagnetic'\n  AND dos.is_metallic = TRUE\nORDER BY m.formula\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_019",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 22.6,
+      "sql": "SELECT\n  ad.domain_name,\n  COUNT(DISTINCT ma.entry_id) AS material_count,\n  AVG(ma.relevance_score) AS average_relevance_score\nFROM application_domain ad\nJOIN material_application ma ON ma.domain_id = ad.domain_id\nGROUP BY ad.domain_id, ad.domain_name\nHAVING COUNT(DISTINCT ma.entry_id) >= 40\nORDER BY material_count DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_020",
+      "difficulty": "hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 0.20930232558139536,
+      "f1": 0.3461538461538462,
+      "exact_match": 0.0,
+      "latency_s": 36.6,
+      "sql": "SELECT\n    m.formula\nFROM material_entry m\n    JOIN experimental_measurement em ON em.entry_id = m.entry_id\nORDER BY m.formula ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_021",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 28.4,
+      "sql": "SELECT\n  m.formula,\n  md.formation_energy AS defect_formation_energy,\n  e.symbol AS dopant_element_symbol\nFROM material_entry AS m\nJOIN material_defect AS md\n  ON md.entry_id = m.entry_id\nJOIN defect_type AS dt\n  ON dt.defect_type_id = md.defect_type_id\nLEFT JOIN element AS e\n  ON e.element_id = md.dopant_element_id\nWHERE dt.category = 'vacancy'\n   OR dt.defect_name ILIKE '%vacancy%'\nORDER BY md.formation_energy ASC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_022",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 24.6,
+      "sql": "SELECT\n  m.source_db,\n  COUNT(*) AS entries_with_stability_data,\n  COUNT(*) FILTER (WHERE ps.is_stable = TRUE) * 1.0 / COUNT(*) AS stable_fraction,\n  AVG(ps.energy_above_hull) AS avg_energy_above_hull\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nGROUP BY m.source_db\nORDER BY m.source_db\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_023",
+      "difficulty": "very_hard",
+      "accuracy": 0.8,
+      "recall": 0.8,
+      "precision": 0.8,
+      "f1": 0.8000000000000002,
+      "exact_match": 0.0,
+      "latency_s": 30.3,
+      "sql": "SELECT\n  m.formula,\n  mp.total_magnetization,\n  cp.value AS bulk_modulus,\n  (mp.total_magnetization * cp.value / 300.0) AS score\nFROM material_entry m\nJOIN magnetic_property mp\n  ON m.entry_id = mp.entry_id\nJOIN calculation calc\n  ON m.entry_id = calc.entry_id\nJOIN calculated_property cp\n  ON calc.calculation_id = cp.calculation_id\nWHERE cp.property_name = 'bulk_modulus'\n  AND mp.total_magnetization IS NOT NULL\n  AND cp.value IS NOT NULL\nORDER BY score DESC\nLIMIT 10;"
+    },
+    {
+      "qid": "q_ien_024",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 22.3,
+      "sql": "SELECT\n  sm.category,\n  COUNT(*) FILTER (WHERE ms.success = TRUE) * 100.0 / COUNT(*) AS success_rate_percent,\n  AVG(ms.temperature_k) AS avg_temperature_k\nFROM material_synthesis ms\nJOIN synthesis_method sm ON sm.synthesis_id = ms.synthesis_id\nGROUP BY sm.category\nORDER BY success_rate_percent DESC\nLIMIT 10000;"
+    },
+    {
+      "qid": "q_ien_025",
+      "difficulty": "very_hard",
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "exact_match": 0.0,
+      "latency_s": 20.7,
+      "sql": "SELECT m.formula,\n       ps.formation_energy_per_atom,\n       ps.reference_set\nFROM material_entry m\nJOIN phase_stability ps ON ps.entry_id = m.entry_id\nWHERE ps.is_stable = TRUE\n  AND ps.formation_energy_per_atom < -0.3\nORDER BY ps.formation_energy_per_atom ASC\nLIMIT 10000;"
+    }
+  ],
+  "provenance": {
+    "dataset_file": "independent_en_dataset.jsonl",
+    "dataset_sha256": "83e30aefa19d2e9b6980e36587e87ca63bc774b9c22a2918198396a57dd88850",
+    "gold_dir": "gold_sql",
+    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "prompt_template_file": "sql_generation_prompt.md",
+    "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
+    "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
+    "expected_dir": "expected_results",
+    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "git_commit": "22b1b43f20d26819a35aecabcbafc448ca8c6b4b",
+    "generated_at": "2026-09-01T19:43:59+00:00",
+    "rescore_note": "run executed at repository commit 22b1b43f20d2 (descendant of the packaged revision); input identity is pinned by the dataset/gold/expected/prompt SHA-256 fields above, which match the packaged files"
+  }
+}

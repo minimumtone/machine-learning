@@ -1,0 +1,1 @@
+SELECT entry_id, formula, reference_set, enthalpy_vs_element_ground_states FROM formation_enthalpy WHERE is_stable AND enthalpy_vs_element_ground_states < -0.3 ORDER BY enthalpy_vs_element_ground_states ASC, entry_id;

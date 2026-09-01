@@ -5,7 +5,7 @@
 numerical values".  This script tests that claim mechanically instead of taking
 it on trust.  It performs five checks:
 
-  1. FIGURE PROVENANCE -- does ``scripts/generate_figures.py`` read
+  1. FIGURE PROVENANCE -- does ``generate_figures.py`` read
      ``paper_data.json``, or does it read the raw evaluation JSONs directly?
      If it reads them directly, the figures do not go through the SSOT and can
      drift from the reported numbers.
@@ -26,8 +26,8 @@ it on trust.  It performs five checks:
 Exit code 0 if every check passes, 1 otherwise.  Deterministic, no LLM, no DB.
 
 Usage:
-    python scripts/verify_ssot.py
-    python scripts/verify_ssot.py --json evaluation/ssot_audit.json
+    python paper_scripts/verify_ssot.py
+    python paper_scripts/verify_ssot.py --json sql_package/evaluation/ssot_audit.json
 """
 from __future__ import annotations
 
@@ -38,11 +38,39 @@ import sys
 from pathlib import Path
 from typing import Any
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 PROJECT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+def first_existing(*paths: Path) -> Path:
+    """Return the first path that exists, or the primary path for errors."""
+    for path in paths:
+        if path.exists():
+            return path
+    return paths[0]
+
+
 PAPER_DATA = PROJECT / "paper" / "paper_data.json"
-GEN_FIGURES = PROJECT / "scripts" / "generate_figures.py"
-COMPUTE = PROJECT / "scripts" / "compute_all_figures.py"
-VALIDATOR = PROJECT / "safety" / "sql_validator.py"
+GEN_FIGURES = first_existing(
+    PROJECT / "scripts" / "generate_figures.py",
+    SCRIPT_DIR / "generate_figures.py",
+)
+COMPUTE = first_existing(
+    PROJECT / "scripts" / "compute_all_figures.py",
+    SCRIPT_DIR / "compute_all_figures.py",
+)
+VALIDATOR = first_existing(
+    PROJECT / "safety" / "sql_validator.py",
+    PROJECT / "sql_package" / "safety" / "sql_validator.py",
+)
+EVALUATION_DIR = first_existing(
+    PROJECT / "evaluation",
+    PROJECT / "sql_package" / "evaluation",
+)
 # Only the maintained Japanese manuscript is synchronized with the SSOT;
 # the English manuscript is intentionally frozen at an earlier revision.
 TEX_FILES = ["paper/stam-m_ja.tex"]
@@ -63,7 +91,7 @@ class Result:
 
 
 def check_figure_provenance(r: Result) -> None:
-    src = GEN_FIGURES.read_text()
+    src = GEN_FIGURES.read_text(encoding="utf-8")
     reads_ssot = "paper_data" in src
     direct = sorted(set(re.findall(r'"evaluation"\s*/\s*"([a-z0-9_]+\.json)"', src)))
     ok = reads_ssot and not direct
@@ -86,7 +114,7 @@ HARDCODE_PATTERNS = [
 
 
 def check_hardcoded_literals(r: Result) -> None:
-    src = COMPUTE.read_text()
+    src = COMPUTE.read_text(encoding="utf-8")
     hits: list[str] = []
     for pat, label in HARDCODE_PATTERNS:
         m = re.search(pat, src)
@@ -106,9 +134,9 @@ def check_hardcoded_literals(r: Result) -> None:
 
 
 def check_sqlguard_count(r: Result) -> None:
-    data = json.loads(PAPER_DATA.read_text())
+    data = json.loads(PAPER_DATA.read_text(encoding="utf-8"))
     claimed = data.get("safety", {}).get("n_sqlguard_checks")
-    src = VALIDATOR.read_text()
+    src = VALIDATOR.read_text(encoding="utf-8")
     body = re.search(r"^def validate_sql\b.*?(?=\n^def |\Z)", src, re.M | re.S)
     invoked = sorted(set(re.findall(r"\b(check_[a-z_]+)\(", body.group(0)))) if body else []
     tex_enum_patterns = [
@@ -121,7 +149,7 @@ def check_sqlguard_count(r: Result) -> None:
         p = PROJECT / rel
         if not p.exists():
             continue
-        text = p.read_text()
+        text = p.read_text(encoding="utf-8")
         for pat in tex_enum_patterns:
             m = re.search(pat, text, re.S)
             if m:
@@ -147,18 +175,18 @@ def check_sqlguard_count(r: Result) -> None:
 
 
 def check_derivable_invariants(r: Result) -> None:
-    data = json.loads(PAPER_DATA.read_text())
+    data = json.loads(PAPER_DATA.read_text(encoding="utf-8"))
     problems: list[str] = []
-    stats_path = PROJECT / "evaluation" / "ablation_multirun_stats.json"
+    stats_path = EVALUATION_DIR / "ablation_multirun_stats.json"
     if stats_path.exists():
-        stats = json.loads(stats_path.read_text())
+        stats = json.loads(stats_path.read_text(encoding="utf-8"))
         n_real = len(stats.get("conditions", {}))
         n_claim = data.get("ablation", {}).get("n_conditions")
         if n_claim != n_real:
             problems.append(f"ablation.n_conditions = {n_claim} but "
                             f"ablation_multirun_stats.json has {n_real} conditions")
         n_runs_claim = data.get("ablation", {}).get("n_runs")
-        n_runs_real = len(list((PROJECT / "evaluation").glob("ablation_run_*.json")))
+        n_runs_real = len(list(EVALUATION_DIR.glob("ablation_run_*.json")))
         if n_runs_claim != n_runs_real:
             problems.append(f"ablation.n_runs = {n_runs_claim} but "
                             f"{n_runs_real} ablation_run_*.json files are packaged")
@@ -174,7 +202,7 @@ def check_derivable_invariants(r: Result) -> None:
 
 
 def check_provenance_fields(r: Result) -> None:
-    data = json.loads(PAPER_DATA.read_text())
+    data = json.loads(PAPER_DATA.read_text(encoding="utf-8"))
     meta = data.get("_meta", {})
     commit = meta.get("git_commit")
     has_git = (PROJECT / ".git").exists()
@@ -209,7 +237,10 @@ def main() -> int:
               "README_REPRO.md should be narrowed to what actually holds, or the "
               "pipeline changed so that it does hold.")
     if args.json:
-        Path(args.json).write_text(json.dumps(r.findings, indent=2, ensure_ascii=False))
+        Path(args.json).write_text(
+            json.dumps(r.findings, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
         print(f"Wrote {args.json}")
     return 1 if r.failed else 0
 

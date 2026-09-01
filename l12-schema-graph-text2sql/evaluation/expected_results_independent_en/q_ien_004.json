@@ -1,0 +1,56 @@
+{
+  "columns": [
+    "symbol",
+    "name",
+    "electronegativity"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "Au",
+      "Au",
+      2.54
+    ],
+    [
+      "Ir",
+      "Ir",
+      2.2
+    ],
+    [
+      "Mo",
+      "Mo",
+      2.16
+    ],
+    [
+      "Os",
+      "Os",
+      2.2
+    ],
+    [
+      "Pd",
+      "Pd",
+      2.2
+    ],
+    [
+      "Pt",
+      "Pt",
+      2.28
+    ],
+    [
+      "Rh",
+      "Rh",
+      2.28
+    ],
+    [
+      "Ru",
+      "Ru",
+      2.2
+    ],
+    [
+      "W",
+      "W",
+      2.36
+    ]
+  ]
+}

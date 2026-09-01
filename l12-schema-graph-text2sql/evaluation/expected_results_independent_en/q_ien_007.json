@@ -1,0 +1,34 @@
+{
+  "columns": [
+    "crystal_system",
+    "n_structures"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "cubic",
+      1428
+    ],
+    [
+      "hexagonal",
+      95
+    ],
+    [
+      "trigonal",
+      14
+    ],
+    [
+      "orthorhombic",
+      11
+    ],
+    [
+      "tetragonal",
+      6
+    ],
+    [
+      "monoclinic",
+      5
+    ]
+  ]
+}

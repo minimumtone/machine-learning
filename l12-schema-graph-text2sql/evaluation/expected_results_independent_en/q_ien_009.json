@@ -1,0 +1,14 @@
+{
+  "columns": [
+    "functional",
+    "avg_bulk_modulus"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "GGA-PBE",
+      168.0588259109311
+    ]
+  ]
+}

@@ -1,0 +1,1 @@
+SELECT me.entry_id, me.formula, mp.curie_temperature_k FROM material_entry me JOIN magnetic_property mp ON mp.entry_id = me.entry_id WHERE mp.curie_temperature_k > 800 ORDER BY mp.curie_temperature_k DESC, me.entry_id;

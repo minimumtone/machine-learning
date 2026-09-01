@@ -15,6 +15,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 PROJECT = Path(__file__).resolve().parent.parent
 
 NUM_RE = re.compile(r"-?\d{1,3}(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?")
@@ -232,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: {data_path} not found", file=sys.stderr)
         return 1
 
-    with open(data_path) as f:
+    with open(data_path, encoding="utf-8") as f:
         paper_data = json.load(f)
     json_numbers = collect_numbers(paper_data)
 

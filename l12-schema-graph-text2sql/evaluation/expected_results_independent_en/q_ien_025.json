@@ -1,0 +1,60 @@
+{
+  "columns": [
+    "entry_id",
+    "formula",
+    "reference_set",
+    "enthalpy_vs_element_ground_states"
+  ],
+  "ordered": true,
+  "semantic_ordered": true,
+  "rows": [
+    [
+      "entry_00008",
+      "Pt3Al",
+      "L12-FIXTURE-PBE-v1",
+      -0.5504510699999998
+    ],
+    [
+      "entry_00005",
+      "Al3Sc",
+      "L12-FIXTURE-PBE-v1",
+      -0.5009568637499999
+    ],
+    [
+      "entry_00206",
+      "Cr3Fe",
+      "L12-FIXTURE-PBE-v1",
+      -0.4400177974999993
+    ],
+    [
+      "entry_00004",
+      "Co3Ti",
+      "L12-FIXTURE-PBE-v1",
+      -0.4379858754166677
+    ],
+    [
+      "entry_00971",
+      "MnMg",
+      "L12-FIXTURE-PBE-v1",
+      -0.43596510196838917
+    ],
+    [
+      "entry_00001",
+      "Ni3Al",
+      "L12-FIXTURE-PBE-v1",
+      -0.41933956249999965
+    ],
+    [
+      "entry_01384",
+      "NiAs",
+      "L12-FIXTURE-PBE-v1",
+      -0.31947902999999983
+    ],
+    [
+      "entry_00733",
+      "RuSn",
+      "L12-FIXTURE-PBE-v1",
+      -0.3055315775000004
+    ]
+  ]
+}
