@@ -297,6 +297,28 @@ def main():
     expert_rows = [r for r in main_run_rows if r["qid"] in expert_qids]
     other_rows = [r for r in main_run_rows if r["qid"] not in expert_qids]
     assert len(expert_rows) == n_expert_queries
+    main_diff_by_qid = {q["id"]: q["difficulty"] for q in main_queries}
+    difficulty_levels = ("easy", "medium", "hard", "very_hard")
+
+    def stratum_means(rows: list[dict]) -> dict[str, tuple[float, int]]:
+        out = {}
+        for level in difficulty_levels:
+            vals = [r["execution_recall"] for r in rows
+                    if main_diff_by_qid[r["qid"]] == level]
+            out[level] = (sum(vals) / len(vals), len(vals))
+        return out
+
+    def standardized_recall(means: dict[str, tuple[float, int]]) -> float:
+        return pct(sum(means[level][0] * main_diff_counts[level]
+                       for level in difficulty_levels)
+                   / n_main_queries)
+
+    expert_means = stratum_means(expert_rows)
+    author_means = stratum_means(other_rows)
+    expert_strata = {level: {"pct": pct(mean), "n": n}
+                     for level, (mean, n) in expert_means.items()}
+    author_strata = {level: {"pct": pct(mean), "n": n}
+                     for level, (mean, n) in author_means.items()}
     main_run_subsets = {
         "_note": "Within-run breakdown of the single main run: the "
                  "independently designed queries are a subset of the main "
@@ -309,6 +331,22 @@ def main():
             sum(r["execution_recall"] for r in other_rows)
             / len(other_rows)),
         "n_author_designed": len(other_rows),
+        "by_difficulty": {
+            "_note": "Per-difficulty recall within the same main run, "
+                     "using the design-time difficulty labels of the "
+                     "main corpus",
+            "expert_subset": expert_strata,
+            "author_designed": author_strata,
+        },
+        "standardized_to_main_distribution": {
+            "_note": "Exploratory direct standardization: each subset's "
+                     "unrounded per-difficulty recall reweighted by the "
+                     "difficulty composition of the whole main corpus, so "
+                     "the two subsets are compared at a common difficulty "
+                     "mix",
+            "expert_subset_pct": standardized_recall(expert_means),
+            "author_designed_pct": standardized_recall(author_means),
+        },
         "source_file": "evaluation/main_eval_with_sql.json",
     }
 
