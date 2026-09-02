@@ -288,10 +288,29 @@ def main():
                 "q_vhard_019", "q_vhard_020"}
     n_cte_queries = sum(1 for q in queries if q["id"] in cte_qids)
 
-    # Expert / independent evaluation dataset
+    # Expert / independent evaluation dataset (a subset of the main 245)
     expert_queries = load_jsonl("evaluation/expert_evaluation_dataset.jsonl")
     n_expert_queries = len(expert_queries)
     expert_diff_counts = Counter(q["difficulty"] for q in expert_queries)
+    expert_qids = {q["id"] for q in expert_queries}
+    main_run_rows = load_json("evaluation/main_eval_with_sql.json")["results"]
+    expert_rows = [r for r in main_run_rows if r["qid"] in expert_qids]
+    other_rows = [r for r in main_run_rows if r["qid"] not in expert_qids]
+    assert len(expert_rows) == n_expert_queries
+    main_run_subsets = {
+        "_note": "Within-run breakdown of the single main run: the "
+                 "independently designed queries are a subset of the main "
+                 "corpus, evaluated here in the same run",
+        "expert_subset_pct": pct(
+            sum(r["execution_recall"] for r in expert_rows)
+            / len(expert_rows)),
+        "n_expert_subset": len(expert_rows),
+        "author_designed_pct": pct(
+            sum(r["execution_recall"] for r in other_rows)
+            / len(other_rows)),
+        "n_author_designed": len(other_rows),
+        "source_file": "evaluation/main_eval_with_sql.json",
+    }
 
     # Language-dependence evaluations (paired ja/en 100q + independent EN 25q)
     language_eval = load_json("evaluation/language_eval_summary.json")
@@ -873,6 +892,8 @@ def main():
                 "evaluation/language_paired_stats.json",
                 "evaluation/evaluation_dataset_en.jsonl",
                 "evaluation/independent_en_dataset.jsonl",
+                "evaluation/main_eval_with_sql.json",
+                "evaluation/independent_eval_results.json",
                 "llm/mecab_materials.csv",
                 "llm/materials_engineering_vocab.csv",
                 "llm/material_terms.yaml",
@@ -974,8 +995,11 @@ def main():
         },
         "independent_evaluation": {
             "_note": "The earlier harmonized comparison has been removed; "
-                     "use the full independent rerun below (see n_queries).",
+                     "use the full independent rerun below (see n_queries). "
+                     "These queries are a subset of the main corpus; the "
+                     "rerun below is a separate run of that same subset.",
             "n_queries": n_expert_queries,
+            "main_run_subsets": main_run_subsets,
             "difficulty_distribution": {
                 "easy": expert_diff_counts.get("easy", 0),
                 "medium": expert_diff_counts.get("medium", 0),

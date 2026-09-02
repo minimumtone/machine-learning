@@ -2,7 +2,7 @@
   "_meta": {
     "generated_by": "scripts/recompute_significance.py",
     "n_runs": 5,
-    "test": "Wilcoxon signed-rank on per-query mean accuracy, exact distribution (SciPy method='auto')",
+    "test": "Wilcoxon signed-rank on per-query mean accuracy, exact distribution (SciPy method='exact')",
     "correction": "Holm-Bonferroni across the ablated conditions",
     "bootstrap": {
       "n_resamples": 10000,
@@ -21,7 +21,7 @@
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
     "git_commit": "unknown",
-    "generated_at": "2026-09-02T06:59:55+00:00",
+    "generated_at": "2026-09-02T09:59:51+00:00",
     "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
@@ -125,7 +125,7 @@
         11.271199735449734,
         20.958201954258403
       ],
-      "legacy_p_value": 1.426901054601353e-09,
+      "legacy_p_value": 4.513278639706186e-12,
       "p_value_holm": 2.7079671838237118e-11,
       "significant_holm": true,
       "stars_holm": "***"

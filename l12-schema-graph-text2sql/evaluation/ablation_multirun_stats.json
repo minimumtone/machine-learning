@@ -10,8 +10,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
-    "generated_at": "2026-08-30T10:32:12+00:00",
+    "git_commit": "unknown",
+    "generated_at": "2026-09-02T09:59:42+00:00",
     "rescore_note": "aggregated deterministically from stored ablation_run_*.json; the per-run provenance in those files identifies the inference revision"
   },
   "conditions": {
@@ -983,58 +983,64 @@
   },
   "significance_tests": {
     "no_graph": {
-      "delta_pp": 1.4241353960939211,
+      "delta_pp": 1.424135396093921,
       "p_value": 0.1484375,
+      "n_nonzero": 8,
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
       "p_value_holm": 0.4453125,
       "significant": false,
-      "n_nonzero": 8,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "correction": "holm-bonferroni"
     },
     "no_reranker": {
-      "delta_pp": 6.191358133141957,
+      "delta_pp": 6.191358133141956,
       "p_value": 0.01953125,
+      "n_nonzero": 9,
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
       "p_value_holm": 0.078125,
       "significant": false,
-      "n_nonzero": 9,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "correction": "holm-bonferroni"
     },
     "no_nbest": {
       "delta_pp": 0.3437310121181088,
       "p_value": 0.8125,
+      "n_nonzero": 5,
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
       "p_value_holm": 1.0,
       "significant": false,
-      "n_nonzero": 5,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "correction": "holm-bonferroni"
     },
     "no_dict": {
-      "delta_pp": 9.782284997814951,
+      "delta_pp": 9.782284997814953,
       "p_value": 0.0001049041748046875,
+      "n_nonzero": 20,
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
       "p_value_holm": 0.0005245208740234375,
       "significant": true,
-      "n_nonzero": 20,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "correction": "holm-bonferroni"
     },
     "no_fewshot": {
-      "delta_pp": 16.122196620583715,
-      "p_value": 1.426901054601353e-09,
-      "p_value_holm": 8.561406327608118e-09,
-      "significant": true,
+      "delta_pp": 16.122196620583708,
+      "p_value": 4.513278639706186e-12,
       "n_nonzero": 55,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
+      "p_value_holm": 2.7079671838237118e-11,
+      "significant": true,
+      "correction": "holm-bonferroni"
     },
     "no_guard": {
       "delta_pp": 0.1617204301075268,
       "p_value": 1.0,
+      "n_nonzero": 2,
+      "n_queries": 100,
+      "test": "wilcoxon-signed-rank-exact",
       "p_value_holm": 1.0,
       "significant": false,
-      "n_nonzero": 2,
-      "test": "wilcoxon-exact",
-      "correction": "holm"
+      "correction": "holm-bonferroni"
     }
   }
 }

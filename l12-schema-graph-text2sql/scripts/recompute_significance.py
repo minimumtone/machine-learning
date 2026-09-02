@@ -220,7 +220,7 @@ def main() -> int:
             "generated_by": "scripts/recompute_significance.py",
             "n_runs": len(runs),
             "test": "Wilcoxon signed-rank on per-query mean accuracy, "
-                    "exact distribution (SciPy method='auto')",
+                    "exact distribution (SciPy method='exact')",
             "correction": "Holm-Bonferroni across the ablated conditions",
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },
