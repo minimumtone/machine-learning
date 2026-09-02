@@ -124,7 +124,8 @@ def compute_significance(stats: dict) -> dict:
 
     Paired samples are the per-query mean accuracies across runs.  Zero
     differences are dropped and the *exact* signed-rank distribution is used
-    (SciPy ``method="auto"``), because several conditions leave fewer than ten
+    (SciPy ``method="exact"``, pinned explicitly because ``auto`` picks
+    different methods across SciPy versions), as several conditions leave fewer than ten
     non-zero differences, for which the normal approximation is invalid --
     SciPy emits "Sample size too small for normal approximation" when it is
     forced.  Because every ablated condition is compared against the same
@@ -150,7 +151,7 @@ def compute_significance(stats: dict) -> dict:
         if len(nonzero) == 0:
             p_value = 1.0
         else:
-            p_value = float(wilcoxon(nonzero, method="auto").pvalue)
+            p_value = float(wilcoxon(nonzero, method="exact").pvalue)
         raw[cond] = p_value
         significance[cond] = {
             "delta_pp": delta_pp,

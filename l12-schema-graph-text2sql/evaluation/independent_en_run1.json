@@ -4,10 +4,9 @@
   "language": "en_independent",
   "overall_recall": 0.9520000000000001,
   "by_difficulty": {
-    "easy": 0.8333333333333334,
+    "easy": 0.9230769230769231,
     "medium": 1.0,
-    "hard": 1.0,
-    "very_hard": 0.96
+    "hard": 0.95
   },
   "results": [
     {
@@ -78,7 +77,7 @@
     },
     {
       "qid": "q_ien_007",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -89,7 +88,7 @@
     },
     {
       "qid": "q_ien_008",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -111,7 +110,7 @@
     },
     {
       "qid": "q_ien_010",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -144,7 +143,7 @@
     },
     {
       "qid": "q_ien_013",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -155,7 +154,7 @@
     },
     {
       "qid": "q_ien_014",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -166,7 +165,7 @@
     },
     {
       "qid": "q_ien_015",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -188,7 +187,7 @@
     },
     {
       "qid": "q_ien_017",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -210,7 +209,7 @@
     },
     {
       "qid": "q_ien_019",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -221,7 +220,7 @@
     },
     {
       "qid": "q_ien_020",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 0.024861878453038673,
@@ -232,7 +231,7 @@
     },
     {
       "qid": "q_ien_021",
-      "difficulty": "very_hard",
+      "difficulty": "hard",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -243,7 +242,7 @@
     },
     {
       "qid": "q_ien_022",
-      "difficulty": "very_hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -254,7 +253,7 @@
     },
     {
       "qid": "q_ien_023",
-      "difficulty": "very_hard",
+      "difficulty": "hard",
       "accuracy": 0.8,
       "recall": 0.8,
       "precision": 0.8,
@@ -265,7 +264,7 @@
     },
     {
       "qid": "q_ien_024",
-      "difficulty": "very_hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -276,7 +275,7 @@
     },
     {
       "qid": "q_ien_025",
-      "difficulty": "very_hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -299,6 +298,6 @@
     "git_commit": "22b1b43f20d26819a35aecabcbafc448ca8c6b4b",
     "generated_at": "2026-09-01T19:23:27+00:00",
     "rescore_note": "run executed at repository commit 22b1b43f20d2 (descendant of the packaged revision); input identity is pinned by the dataset/gold/expected/prompt SHA-256 fields above, which match the packaged files",
-    "dataset_relabel_note": "difficulty labels recomputed from gold SQL via compute_unified_difficulty.py; questions, gold SQL, expected results and run outputs unchanged"
+    "dataset_relabel_note": "difficulty labels updated post hoc from the unified structural-complexity score (compute_unified_difficulty.py) and by_difficulty re-aggregated; model outputs, per-query recalls and latencies unchanged"
   }
 }

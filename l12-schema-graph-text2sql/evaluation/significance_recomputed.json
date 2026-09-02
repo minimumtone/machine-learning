@@ -20,8 +20,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
-    "generated_at": "2026-08-30T10:32:16+00:00",
+    "git_commit": "unknown",
+    "generated_at": "2026-09-02T06:59:55+00:00",
     "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
@@ -113,7 +113,7 @@
       "delta_pp": 16.122196620583715,
       "n_queries": 100,
       "n_nonzero": 55,
-      "p_value_exact": 1.426901054601353e-09,
+      "p_value_exact": 4.513278639706186e-12,
       "p_value_approx_legacy": 1.426901054601353e-09,
       "run_level": {
         "n_runs": 5,
@@ -126,7 +126,7 @@
         20.958201954258403
       ],
       "legacy_p_value": 1.426901054601353e-09,
-      "p_value_holm": 8.561406327608118e-09,
+      "p_value_holm": 2.7079671838237118e-11,
       "significant_holm": true,
       "stars_holm": "***"
     },

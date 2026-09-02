@@ -115,25 +115,48 @@ def main() -> None:
 
 
 def refresh_run_provenance(dataset: Path) -> None:
-    """Re-pin dataset_sha256 in saved run files after a deterministic
-    difficulty relabel (same convention as rescore_stored_results.py);
-    per-query outputs and scores are left untouched."""
+    """Synchronize saved run files with the relabeled dataset: re-pin
+    dataset_sha256, relabel results[].difficulty, and re-aggregate
+    by_difficulty (same convention as rescore_stored_results.py).
+    Per-query model outputs, recalls and latencies are left untouched."""
     digest = hashlib.sha256(dataset.read_bytes()).hexdigest()
+    diff_map = {
+        rec["id"]: rec["difficulty"]
+        for rec in (json.loads(line) for line in dataset.read_text().splitlines())
+    }
     for run in sorted(dataset.parent.glob("independent_en_run*.json")):
         data = json.loads(run.read_text())
         prov = data.get("provenance")
         if not isinstance(prov, dict) or prov.get("dataset_file") != dataset.name:
             continue
-        if prov.get("dataset_sha256") == digest:
+        changed = prov.get("dataset_sha256") != digest
+        for res in data["results"]:
+            new_label = diff_map[res["qid"]]
+            if res["difficulty"] != new_label:
+                res["difficulty"] = new_label
+                changed = True
+        per_level: dict[str, list[float]] = {}
+        for res in data["results"]:
+            per_level.setdefault(res["difficulty"], []).append(res["recall"])
+        by_diff = {
+            d: sum(v) / len(v)
+            for d in ("easy", "medium", "hard", "very_hard")
+            if (v := per_level.get(d))
+        }
+        if data.get("by_difficulty") != by_diff:
+            data["by_difficulty"] = by_diff
+            changed = True
+        if not changed:
             continue
         prov["dataset_sha256"] = digest
         prov["dataset_relabel_note"] = (
-            "difficulty labels recomputed from gold SQL via "
-            "compute_unified_difficulty.py; questions, gold SQL, expected "
-            "results and run outputs unchanged"
+            "difficulty labels updated post hoc from the unified "
+            "structural-complexity score (compute_unified_difficulty.py) "
+            "and by_difficulty re-aggregated; model outputs, per-query "
+            "recalls and latencies unchanged"
         )
         run.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-        print(f"Refreshed dataset_sha256 in {run.name}")
+        print(f"Synchronized difficulty labels in {run.name}")
 
 
 if __name__ == "__main__":

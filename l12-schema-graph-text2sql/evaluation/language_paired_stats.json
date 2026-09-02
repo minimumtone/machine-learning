@@ -1,7 +1,7 @@
 {
   "n_queries": 100,
   "mean_diff_pp": -2.0,
-  "wilcoxon_p_value": 0.216,
+  "wilcoxon_p_value": 0.193,
   "n_nonzero_pairs": 13,
   "bootstrap_ci95_pp": [
     -5.8,
@@ -9,7 +9,7 @@
   ],
   "bootstrap_n_resamples": 100000,
   "bootstrap_seed": 20260602,
-  "test": "wilcoxon-signed-rank-exact on per-query 3-run mean recall (en - ja)",
+  "test": "exhaustive sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|) on per-query 3-run mean recall (en - ja)",
   "by_difficulty": {
     "easy": {
       "n_queries": 20,

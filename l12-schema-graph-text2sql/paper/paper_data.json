@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-02 06:33:24 UTC",
+    "generated_at": "2026-09-02 06:57:36 UTC",
     "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
@@ -21,6 +21,10 @@
       "evaluation/multiaxis_results.json",
       "evaluation/model_comparison_results.json",
       "evaluation/failure_analysis.json",
+      "evaluation/language_eval_summary.json",
+      "evaluation/language_paired_stats.json",
+      "evaluation/evaluation_dataset_en.jsonl",
+      "evaluation/independent_en_dataset.jsonl",
       "llm/mecab_materials.csv",
       "llm/materials_engineering_vocab.csv",
       "llm/material_terms.yaml",
@@ -776,7 +780,7 @@
       "_note": "Per-query three-run mean recall, en - ja (scripts/compute_language_stats.py); exact Wilcoxon signed-rank on non-zero differences and seeded bootstrap percentile CI",
       "n_queries": 100,
       "mean_diff_pp": -2.0,
-      "wilcoxon_p_value": 0.216,
+      "wilcoxon_p_value": 0.193,
       "n_nonzero_pairs": 13,
       "bootstrap_ci95_pp": [
         -5.8,
@@ -784,7 +788,7 @@
       ],
       "bootstrap_n_resamples": 100000,
       "bootstrap_seed": 20260602,
-      "test": "wilcoxon-signed-rank-exact on per-query 3-run mean recall (en - ja)",
+      "test": "exhaustive sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|) on per-query 3-run mean recall (en - ja)",
       "by_difficulty": {
         "easy": {
           "n_queries": 20,
