@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-01 22:26:40 UTC",
+    "generated_at": "2026-09-02 06:33:24 UTC",
     "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
@@ -704,7 +704,7 @@
     "a_ref_ni3al": 3.572
   },
   "language_evaluation": {
-    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus a non-translated 25-query English validation set (independent_en_dataset.jsonl), newly authored in English without reference to the existing query sets, with its own gold SQL and expected results created after authoring and verified against the database",
+    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus a non-translated 25-query English validation set (independent_en_dataset.jsonl), newly authored in English without reference to the existing query sets, with its own gold SQL and expected results created after authoring and verified against the database. Difficulty labels of the non-translated set follow the unified complexity score recomputed from its gold SQL (scripts/compute_unified_difficulty.py); its difficulty distribution differs from the main evaluation, so its recall is not directly comparable in level to the main or paired results",
     "paired_ja": {
       "n_runs": 3,
       "n_queries": 100,
@@ -715,6 +715,12 @@
         91.4,
         92.7
       ],
+      "difficulty_counts": {
+        "easy": 20,
+        "hard": 30,
+        "medium": 30,
+        "very_hard": 20
+      },
       "by_difficulty_mean_pct": {
         "easy": 99.7,
         "hard": 88.9,
@@ -732,6 +738,12 @@
         90.4,
         87.8
       ],
+      "difficulty_counts": {
+        "easy": 20,
+        "hard": 30,
+        "medium": 30,
+        "very_hard": 20
+      },
       "by_difficulty_mean_pct": {
         "easy": 98.3,
         "hard": 89.1,
@@ -749,11 +761,51 @@
         95.2,
         99.2
       ],
+      "difficulty_counts": {
+        "easy": 13,
+        "hard": 4,
+        "medium": 8
+      },
       "by_difficulty_mean_pct": {
-        "easy": 88.9,
-        "hard": 100.0,
-        "medium": 100.0,
-        "very_hard": 96.0
+        "easy": 94.9,
+        "hard": 95.0,
+        "medium": 100.0
+      }
+    },
+    "paired_stats": {
+      "_note": "Per-query three-run mean recall, en - ja (scripts/compute_language_stats.py); exact Wilcoxon signed-rank on non-zero differences and seeded bootstrap percentile CI",
+      "n_queries": 100,
+      "mean_diff_pp": -2.0,
+      "wilcoxon_p_value": 0.216,
+      "n_nonzero_pairs": 13,
+      "bootstrap_ci95_pp": [
+        -5.8,
+        1.6
+      ],
+      "bootstrap_n_resamples": 100000,
+      "bootstrap_seed": 20260602,
+      "test": "wilcoxon-signed-rank-exact on per-query 3-run mean recall (en - ja)",
+      "by_difficulty": {
+        "easy": {
+          "n_queries": 20,
+          "mean_diff_pp": -1.3,
+          "n_nonzero_pairs": 2
+        },
+        "medium": {
+          "n_queries": 30,
+          "mean_diff_pp": -3.3,
+          "n_nonzero_pairs": 2
+        },
+        "hard": {
+          "n_queries": 30,
+          "mean_diff_pp": 0.2,
+          "n_nonzero_pairs": 6
+        },
+        "very_hard": {
+          "n_queries": 20,
+          "mean_diff_pp": -4.1,
+          "n_nonzero_pairs": 3
+        }
       }
     }
   },

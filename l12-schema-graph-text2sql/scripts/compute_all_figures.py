@@ -295,6 +295,7 @@ def main():
 
     # Language-dependence evaluations (paired ja/en 100q + independent EN 25q)
     language_eval = load_json("evaluation/language_eval_summary.json")
+    language_paired_stats = load_json("evaluation/language_paired_stats.json")
 
     # Extended validation runs (independent 100q / transfer 20q / CTE 15q)
     independent_eval = summarize_eval_results(
@@ -951,8 +952,21 @@ def main():
                      "(independent_en_dataset.jsonl), newly authored in "
                      "English without reference to the existing query sets, "
                      "with its own gold SQL and expected results created "
-                     "after authoring and verified against the database",
+                     "after authoring and verified against the database. "
+                     "Difficulty labels of the non-translated set follow "
+                     "the unified complexity score recomputed from its gold "
+                     "SQL (scripts/compute_unified_difficulty.py); its "
+                     "difficulty distribution differs from the main "
+                     "evaluation, so its recall is not directly comparable "
+                     "in level to the main or paired results",
             **language_eval,
+            "paired_stats": {
+                "_note": "Per-query three-run mean recall, en - ja "
+                         "(scripts/compute_language_stats.py); exact "
+                         "Wilcoxon signed-rank on non-zero differences and "
+                         "seeded bootstrap percentile CI",
+                **language_paired_stats,
+            },
         },
         "independent_evaluation": {
             "_note": "The earlier harmonized comparison has been removed; "
