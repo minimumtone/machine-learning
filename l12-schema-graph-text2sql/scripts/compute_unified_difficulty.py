@@ -1,4 +1,9 @@
-"""Unified complexity score for gold SQL (paper section 2.1.2).
+"""Post-hoc structural-complexity proxy for gold SQL (paper section 2.1.2).
+
+Approximates the design-time structural-complexity criterion used when the
+difficulty strata were assigned; it is NOT the deterministic generator of the
+historical labels (main-corpus agreement 144/245; 92 of the 101 mismatches
+are between adjacent strata).
 
 score = 3 * (distinct base tables referenced)
       + 1 * (atomic WHERE/HAVING predicates)
