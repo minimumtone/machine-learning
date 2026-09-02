@@ -598,7 +598,7 @@ E01--E05は、禁止キーワード検出、マルチステートメント検出
 \subsection{材料工学評価}
 \label{sec:materials_evaluation}
 
-材料工学の観点から、次の3つの探索を実行した。本節の表~\ref{tab:gamma_prime}・表~\ref{tab:lattice_match}に示す数値は、SSOT生成スクリプトが検証済みSQL（ゴールドSQLと同型の決定的SQL）をDBに対して実行した結果であり、パイプラインが生成したSQLの出力そのものではない（同型の質問はパイプライン評価ではクエリにより成功・失敗の双方がある；補足資料~\ref{sec:sup_query_detail}の表~\ref{tab:sup_query_detail}）。
+材料工学の観点から、次の3つの探索を実行した。本節の表~\ref{tab:gamma_prime}・表~\ref{tab:lattice_match}に示す数値は、SSOT生成スクリプトが検証済みSQL（ゴールドSQLと同型の決定的SQL）をDBに対して実行した結果であり、パイプラインが生成したSQLの出力そのものではない（同型の質問はパイプライン評価ではクエリにより成功・失敗の双方がある；補足資料~\ref{sec:sup_query_detail}の表~\ref{tab:sup_query_detail}）。両表の行データは集約データに収録され、数値整合検証の対象である。
 \begin{enumerate}
   \item $\gamma'$相候補ランキング：安定性・格子マッチング・体積弾性率の3指標加重複合スコアで255のユニークL1$_2$組成をランク付けした（157の安定/準安定候補のうちNi$_3$Alが1位）。
   \item Ni$_3$Al近傍の格子定数候補抽出：$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を満たす26のユニーク組成（27エントリ）を抽出した。
@@ -1945,7 +1945,7 @@ SQLGuardの15の検証項目（セクション~\ref{sec:sqlguard}）は複数の
 
 \begin{table}[t]
   \centering
-  \caption{採点方針別の実行再現率（\%）。historical＝本文の採点方式。require all＝全ゴールド列の存在を要求。no positional＝列位置フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複度を照合。exact＝厳密な完全結果集合一致（ゴールド列リスト、行の多重集合、必要な順序を照合）。ordered＝各データセットの\texttt{ORDER BY}付きゴールドクエリに対する順序照合Recall（主評価では234件）。緩い完全一致（共通列射影上でPrecision=Recall=1；78.0\%）は本表の列には含めず、同梱の\texttt{scoring\_audit.json}に\texttt{common\_column\_exact\_overlap\_pct}として収録する。いずれも生成SQL付き保存ラン（main: 245クエリ、historical Recall 86.1\%の単一ラン）に基づく。}
+  \caption{採点方針別の実行再現率（\%）。historical＝本文の採点方式。require all＝全ゴールド列の存在を要求。no positional＝列位置フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複度を照合。exact＝厳密な完全結果集合一致（ゴールド列リスト、行の多重集合、必要な順序を照合）。ordered＝各データセットの\texttt{ORDER BY}付きゴールドクエリに対する順序照合Recall（主評価では234件）。緩い完全一致（共通列射影上でPrecision=Recall=1；78.0\%）は本表の列には含めず、同梱の\texttt{scoring\_audit.json}に\texttt{common\_column\_exact\_overlap\_pct}として収録する。同JSONは、全ゴールド列必須・位置フォールバック無効・ゴールド0行除外・多重集合照合を同時に課す（順序照合のみ課さない）strict方針（主評価25.5\%、$n=241$）も収録する。いずれも生成SQL付き保存ラン（main: 245クエリ、historical Recall 86.1\%の単一ラン）に基づく。}
   \label{tab:scoring_audit}
   \footnotesize
   \begin{tabular}{@{}lrrrrrrr@{}}

@@ -270,6 +270,90 @@ def main():
     )
     n_l12_unique_compositions = _fetchone_scalar(cur)
 
+    # Row-level source data for Table 3 (gamma'-phase candidate ranking)
+    # and Table 4 (Ni3Al lattice-constant matches).  Values are rounded to
+    # the precision printed in the manuscript tables; delta_a and the
+    # composite score are computed from unrounded values.
+    cur.execute(
+        "WITH aref AS ("
+        "  SELECT s.lattice_a AS a_ref FROM material_entry me "
+        "  JOIN structure s ON s.entry_id = me.entry_id "
+        "  WHERE me.formula = 'Ni3Al' "
+        "  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  ORDER BY s.entry_id LIMIT 1"
+        "), scored AS ("
+        "  SELECT m.formula, m.entry_id, s.lattice_a, ps.energy_above_hull, "
+        "         cp.value AS bulk_modulus, "
+        "         ABS(s.lattice_a - aref.a_ref) AS delta_a, "
+        "         (1.0 - ps.energy_above_hull / 0.05) * 0.35 "
+        "         + (1.0 - ABS(s.lattice_a - aref.a_ref) / 0.3) * 0.35 "
+        "         + (cp.value / 300.0) * 0.30 AS s_score "
+        "  FROM material_entry m "
+        "  JOIN structure s ON s.entry_id = m.entry_id "
+        "  JOIN phase_stability ps ON ps.entry_id = m.entry_id "
+        "  JOIN calculation c ON c.entry_id = m.entry_id "
+        "  AND c.calculation_type = 'relaxation' "
+        "  JOIN calculated_property cp ON cp.calculation_id = c.calculation_id "
+        "  AND cp.property_name = 'bulk_modulus' "
+        "  CROSS JOIN aref "
+        "  WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  AND ps.energy_above_hull <= 0.05"
+        "), dedup AS ("
+        "  SELECT DISTINCT ON (formula) * FROM scored "
+        "  ORDER BY formula, s_score DESC, entry_id"
+        ") "
+        "SELECT formula, entry_id, ROUND(lattice_a::numeric, 3), "
+        "       ROUND(energy_above_hull::numeric, 3), "
+        "       ROUND(bulk_modulus::numeric, 0), "
+        "       ROUND(delta_a::numeric, 3), ROUND(s_score::numeric, 3) "
+        "FROM dedup ORDER BY s_score DESC, entry_id LIMIT 10"
+    )
+    gamma_prime_top10 = [
+        {
+            "rank": i + 1,
+            "formula": r[0],
+            "entry_id": r[1],
+            "lattice_a": float(r[2]),
+            "energy_above_hull": float(r[3]),
+            "bulk_modulus_gpa": int(r[4]),
+            "delta_a": float(r[5]),
+            "composite_score": float(r[6]),
+        }
+        for i, r in enumerate(cur.fetchall())
+    ]
+
+    cur.execute(
+        "WITH aref AS ("
+        "  SELECT s.lattice_a AS a_ref FROM material_entry me "
+        "  JOIN structure s ON s.entry_id = me.entry_id "
+        "  WHERE me.formula = 'Ni3Al' "
+        "  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  ORDER BY s.entry_id LIMIT 1"
+        ") "
+        "SELECT m.formula, m.entry_id, ROUND(s.lattice_a::numeric, 3), "
+        "       ROUND(ABS(s.lattice_a - aref.a_ref)::numeric, 3), "
+        "       ROUND(ps.energy_above_hull::numeric, 3), "
+        "       ROUND(ps.formation_energy_per_atom::numeric, 3) "
+        "FROM material_entry m "
+        "JOIN structure s ON s.entry_id = m.entry_id "
+        "JOIN phase_stability ps ON ps.entry_id = m.entry_id "
+        "CROSS JOIN aref "
+        "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "AND ABS(s.lattice_a - aref.a_ref) <= 0.03 "
+        "ORDER BY ABS(s.lattice_a - aref.a_ref), m.entry_id"
+    )
+    lattice_match_entries = [
+        {
+            "formula": r[0],
+            "entry_id": r[1],
+            "lattice_a": float(r[2]),
+            "abs_delta_a": float(r[3]),
+            "energy_above_hull": float(r[4]),
+            "formation_energy_per_atom": float(r[5]),
+        }
+        for r in cur.fetchall()
+    ]
+
     conn.close()
 
     # ==================================================================
@@ -1005,6 +1089,8 @@ def main():
             "n_metastable_l12": n_metastable_l12,
             "n_ni3al_lattice_match": n_ni3al_lattice_match,
             "a_ref_ni3al": a_ref_ni3al,
+            "gamma_prime_top10": gamma_prime_top10,
+            "lattice_match_entries": lattice_match_entries,
         },
         "language_evaluation": {
             "_note": "Paired ja/en robustness test: English translations of "
@@ -1017,8 +1103,9 @@ def main():
                      "with its own gold SQL and expected results created "
                      "after authoring and verified against the database. "
                      "Difficulty labels of the non-translated set follow "
-                     "the unified complexity score recomputed from its gold "
-                     "SQL (scripts/compute_unified_difficulty.py); its "
+                     "the post-hoc structural-complexity proxy recomputed "
+                     "from its gold SQL "
+                     "(scripts/compute_unified_difficulty.py); its "
                      "difficulty distribution differs from the main "
                      "evaluation, so its recall is not directly comparable "
                      "in level to the main or paired results",

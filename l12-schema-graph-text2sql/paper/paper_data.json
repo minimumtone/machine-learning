@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-02 14:56:58 UTC",
+    "generated_at": "2026-09-02 16:27:57 UTC",
     "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
@@ -707,10 +707,330 @@
     "n_stable_l12": 7,
     "n_metastable_l12": 150,
     "n_ni3al_lattice_match": 26,
-    "a_ref_ni3al": 3.572
+    "a_ref_ni3al": 3.572,
+    "gamma_prime_top10": [
+      {
+        "rank": 1,
+        "formula": "Ni3Al",
+        "entry_id": "entry_00001",
+        "lattice_a": 3.572,
+        "energy_above_hull": 0.0,
+        "bulk_modulus_gpa": 180,
+        "delta_a": 0.0,
+        "composite_score": 0.88
+      },
+      {
+        "rank": 2,
+        "formula": "Co3Ti",
+        "entry_id": "entry_00004",
+        "lattice_a": 3.55,
+        "energy_above_hull": 0.0,
+        "bulk_modulus_gpa": 190,
+        "delta_a": 0.022,
+        "composite_score": 0.864
+      },
+      {
+        "rank": 3,
+        "formula": "Cr3In",
+        "entry_id": "entry_00068",
+        "lattice_a": 3.547,
+        "energy_above_hull": 0.012,
+        "bulk_modulus_gpa": 249,
+        "delta_a": 0.025,
+        "composite_score": 0.839
+      },
+      {
+        "rank": 4,
+        "formula": "Hf3V",
+        "entry_id": "entry_00170",
+        "lattice_a": 3.59,
+        "energy_above_hull": 0.006,
+        "bulk_modulus_gpa": 196,
+        "delta_a": 0.018,
+        "composite_score": 0.834
+      },
+      {
+        "rank": 5,
+        "formula": "Pt3Sc",
+        "entry_id": "entry_00251",
+        "lattice_a": 3.608,
+        "energy_above_hull": 0.003,
+        "bulk_modulus_gpa": 194,
+        "delta_a": 0.035,
+        "composite_score": 0.833
+      },
+      {
+        "rank": 6,
+        "formula": "Cu3Al",
+        "entry_id": "entry_00214",
+        "lattice_a": 3.537,
+        "energy_above_hull": 0.006,
+        "bulk_modulus_gpa": 204,
+        "delta_a": 0.035,
+        "composite_score": 0.825
+      },
+      {
+        "rank": 7,
+        "formula": "Co3V",
+        "entry_id": "entry_00197",
+        "lattice_a": 3.611,
+        "energy_above_hull": 0.007,
+        "bulk_modulus_gpa": 215,
+        "delta_a": 0.039,
+        "composite_score": 0.822
+      },
+      {
+        "rank": 8,
+        "formula": "Ag3Ti",
+        "entry_id": "entry_00326",
+        "lattice_a": 3.575,
+        "energy_above_hull": 0.018,
+        "bulk_modulus_gpa": 235,
+        "delta_a": 0.003,
+        "composite_score": 0.808
+      },
+      {
+        "rank": 9,
+        "formula": "V3Sn",
+        "entry_id": "entry_00100",
+        "lattice_a": 3.616,
+        "energy_above_hull": 0.007,
+        "bulk_modulus_gpa": 197,
+        "delta_a": 0.043,
+        "composite_score": 0.798
+      },
+      {
+        "rank": 10,
+        "formula": "Pt3Ti",
+        "entry_id": "entry_00110",
+        "lattice_a": 3.506,
+        "energy_above_hull": 0.012,
+        "bulk_modulus_gpa": 247,
+        "delta_a": 0.066,
+        "composite_score": 0.785
+      }
+    ],
+    "lattice_match_entries": [
+      {
+        "formula": "Ni3Al",
+        "entry_id": "entry_00001",
+        "lattice_a": 3.572,
+        "abs_delta_a": 0.0,
+        "energy_above_hull": 0.0,
+        "formation_energy_per_atom": -0.42
+      },
+      {
+        "formula": "Ag3Ti",
+        "entry_id": "entry_00326",
+        "lattice_a": 3.575,
+        "abs_delta_a": 0.003,
+        "energy_above_hull": 0.018,
+        "formation_energy_per_atom": 0.074
+      },
+      {
+        "formula": "Cr3Sb",
+        "entry_id": "entry_00178",
+        "lattice_a": 3.575,
+        "abs_delta_a": 0.003,
+        "energy_above_hull": 0.096,
+        "formation_energy_per_atom": -0.061
+      },
+      {
+        "formula": "Au3Sb",
+        "entry_id": "entry_00118",
+        "lattice_a": 3.576,
+        "abs_delta_a": 0.004,
+        "energy_above_hull": 0.005,
+        "formation_energy_per_atom": -0.471
+      },
+      {
+        "formula": "Ni3Ti",
+        "entry_id": "entry_00191",
+        "lattice_a": 3.578,
+        "abs_delta_a": 0.006,
+        "energy_above_hull": 0.068,
+        "formation_energy_per_atom": 0.0
+      },
+      {
+        "formula": "Fe3Sn",
+        "entry_id": "entry_00354",
+        "lattice_a": 3.58,
+        "abs_delta_a": 0.008,
+        "energy_above_hull": 0.053,
+        "formation_energy_per_atom": -0.456
+      },
+      {
+        "formula": "Fe3Sb",
+        "entry_id": "entry_00227",
+        "lattice_a": 3.563,
+        "abs_delta_a": 0.009,
+        "energy_above_hull": 0.031,
+        "formation_energy_per_atom": 0.078
+      },
+      {
+        "formula": "Zr3Al",
+        "entry_id": "entry_00107",
+        "lattice_a": 3.583,
+        "abs_delta_a": 0.011,
+        "energy_above_hull": 0.094,
+        "formation_energy_per_atom": -0.091
+      },
+      {
+        "formula": "Ag3Y",
+        "entry_id": "entry_00310",
+        "lattice_a": 3.561,
+        "abs_delta_a": 0.011,
+        "energy_above_hull": 0.061,
+        "formation_energy_per_atom": -0.487
+      },
+      {
+        "formula": "Ta3Ga",
+        "entry_id": "entry_00070",
+        "lattice_a": 3.584,
+        "abs_delta_a": 0.012,
+        "energy_above_hull": 0.032,
+        "formation_energy_per_atom": 0.031
+      },
+      {
+        "formula": "Fe3Mg",
+        "entry_id": "entry_00059",
+        "lattice_a": 3.586,
+        "abs_delta_a": 0.014,
+        "energy_above_hull": 0.057,
+        "formation_energy_per_atom": -0.083
+      },
+      {
+        "formula": "Co3Ge",
+        "entry_id": "entry_00337",
+        "lattice_a": 3.554,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.069,
+        "formation_energy_per_atom": -0.067
+      },
+      {
+        "formula": "Pd3Ga",
+        "entry_id": "entry_00234",
+        "lattice_a": 3.59,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.054,
+        "formation_energy_per_atom": -0.027
+      },
+      {
+        "formula": "Hf3V",
+        "entry_id": "entry_00170",
+        "lattice_a": 3.59,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.006,
+        "formation_energy_per_atom": -0.292
+      },
+      {
+        "formula": "Hf3Si",
+        "entry_id": "entry_00303",
+        "lattice_a": 3.553,
+        "abs_delta_a": 0.019,
+        "energy_above_hull": 0.027,
+        "formation_energy_per_atom": -0.194
+      },
+      {
+        "formula": "Mo3Sn",
+        "entry_id": "entry_00053",
+        "lattice_a": 3.552,
+        "abs_delta_a": 0.02,
+        "energy_above_hull": 0.095,
+        "formation_energy_per_atom": -0.489
+      },
+      {
+        "formula": "Nb3Sn",
+        "entry_id": "entry_00112",
+        "lattice_a": 3.593,
+        "abs_delta_a": 0.021,
+        "energy_above_hull": 0.107,
+        "formation_energy_per_atom": 0.079
+      },
+      {
+        "formula": "Mo3Nb",
+        "entry_id": "entry_00362",
+        "lattice_a": 3.551,
+        "abs_delta_a": 0.021,
+        "energy_above_hull": 0.065,
+        "formation_energy_per_atom": -0.496
+      },
+      {
+        "formula": "Co3Ti",
+        "entry_id": "entry_00004",
+        "lattice_a": 3.55,
+        "abs_delta_a": 0.022,
+        "energy_above_hull": 0.0,
+        "formation_energy_per_atom": -0.45
+      },
+      {
+        "formula": "Ru3Mn",
+        "entry_id": "entry_00018",
+        "lattice_a": 3.595,
+        "abs_delta_a": 0.023,
+        "energy_above_hull": 0.063,
+        "formation_energy_per_atom": -0.275
+      },
+      {
+        "formula": "Ag3Ge",
+        "entry_id": "entry_00341",
+        "lattice_a": 3.548,
+        "abs_delta_a": 0.024,
+        "energy_above_hull": 0.009,
+        "formation_energy_per_atom": 0.0
+      },
+      {
+        "formula": "Cr3In",
+        "entry_id": "entry_00068",
+        "lattice_a": 3.547,
+        "abs_delta_a": 0.025,
+        "energy_above_hull": 0.012,
+        "formation_energy_per_atom": 0.023
+      },
+      {
+        "formula": "Ta3Sn",
+        "entry_id": "entry_00247",
+        "lattice_a": 3.547,
+        "abs_delta_a": 0.025,
+        "energy_above_hull": 0.093,
+        "formation_energy_per_atom": -0.159
+      },
+      {
+        "formula": "Cu3Ge",
+        "entry_id": "entry_00285",
+        "lattice_a": 3.544,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.089,
+        "formation_energy_per_atom": -0.524
+      },
+      {
+        "formula": "Zr3Al",
+        "entry_id": "entry_00238",
+        "lattice_a": 3.544,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.061,
+        "formation_energy_per_atom": -0.436
+      },
+      {
+        "formula": "Rh3Y",
+        "entry_id": "entry_00366",
+        "lattice_a": 3.601,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.024,
+        "formation_energy_per_atom": -0.089
+      },
+      {
+        "formula": "Pt3Ga",
+        "entry_id": "entry_00020",
+        "lattice_a": 3.602,
+        "abs_delta_a": 0.03,
+        "energy_above_hull": 0.077,
+        "formation_energy_per_atom": 0.003
+      }
+    ]
   },
   "language_evaluation": {
-    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus a non-translated 25-query English validation set (independent_en_dataset.jsonl), newly authored in English without reference to the existing query sets, with its own gold SQL and expected results created after authoring and verified against the database. Difficulty labels of the non-translated set follow the unified complexity score recomputed from its gold SQL (scripts/compute_unified_difficulty.py); its difficulty distribution differs from the main evaluation, so its recall is not directly comparable in level to the main or paired results",
+    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus a non-translated 25-query English validation set (independent_en_dataset.jsonl), newly authored in English without reference to the existing query sets, with its own gold SQL and expected results created after authoring and verified against the database. Difficulty labels of the non-translated set follow the post-hoc structural-complexity proxy recomputed from its gold SQL (scripts/compute_unified_difficulty.py); its difficulty distribution differs from the main evaluation, so its recall is not directly comparable in level to the main or paired results",
     "paired_ja": {
       "n_runs": 3,
       "n_queries": 100,

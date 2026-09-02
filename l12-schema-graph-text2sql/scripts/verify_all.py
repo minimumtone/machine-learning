@@ -525,12 +525,33 @@ def check_provenance() -> tuple[str, list[str]]:
         n_blocks += 1
 
         dataset_file = prov.get("dataset_file")
+        dataset_rows: list[dict] = []
         if isinstance(dataset_file, str):
             dataset = EVAL / dataset_file
             if not dataset.is_file():
                 errors.append(f"{p.name}: provenance dataset missing: {dataset_file}")
-            elif prov.get("dataset_sha256") != _sha256_file(dataset):
-                errors.append(f"{p.name}: dataset_sha256 mismatch")
+            else:
+                if prov.get("dataset_sha256") != _sha256_file(dataset):
+                    errors.append(f"{p.name}: dataset_sha256 mismatch")
+                dataset_rows = [
+                    json.loads(line)
+                    for line in dataset.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+                ]
+
+        # The recorded gold/expected directories must be the ones the
+        # dataset itself points at, not merely directories whose hashes
+        # check out (guards against build_provenance() being called with
+        # default directories for a non-default dataset).
+        for path_key, dir_key in (("gold_sql_path", "gold_dir"),
+                                  ("expected_result_path", "expected_dir")):
+            dirs = {Path(row[path_key]).parent.as_posix()
+                    for row in dataset_rows if isinstance(row.get(path_key), str)}
+            recorded = prov.get(dir_key)
+            if dirs and isinstance(recorded, str) and recorded not in dirs:
+                errors.append(
+                    f"{p.name}: provenance {dir_key} '{recorded}' does not match "
+                    f"dataset {path_key} parent dir(s) {sorted(dirs)}")
 
         gold_dir_name = prov.get("gold_dir")
         if isinstance(gold_dir_name, str):

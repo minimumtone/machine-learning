@@ -155,8 +155,8 @@ def refresh_run_provenance(dataset: Path) -> None:
             continue
         prov["dataset_sha256"] = digest
         prov["dataset_relabel_note"] = (
-            "difficulty labels updated post hoc from the unified "
-            "structural-complexity score (compute_unified_difficulty.py) "
+            "difficulty labels updated post hoc from the post-hoc "
+            "structural-complexity proxy (compute_unified_difficulty.py) "
             "and by_difficulty re-aggregated; model outputs, per-query "
             "recalls and latencies unchanged"
         )

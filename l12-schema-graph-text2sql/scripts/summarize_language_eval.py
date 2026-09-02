@@ -8,8 +8,9 @@ recall and per-difficulty means.
 
 Difficulty labels are taken from the current dataset files (id -> difficulty),
 not from the labels stored inside the saved run records, so that label
-corrections (e.g. re-scoring the independent EN set with the unified
-complexity score) propagate to the breakdown without re-running evaluations.
+corrections (e.g. relabeling the independent EN set with the post-hoc
+structural-complexity proxy) propagate to the breakdown without re-running
+evaluations.
 """
 from __future__ import annotations
 
