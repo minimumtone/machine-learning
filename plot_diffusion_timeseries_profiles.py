@@ -120,7 +120,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no_gif", action="store_true")
     args = p.parse_args()
     if args.replot is None:
-        if args.nsteps < 2 * args.save_every:
+        if not args.skip_inverse and args.nsteps < 2 * args.save_every:
             p.error("--nsteps must be >= 2 * --save_every so that at least 3 FDM frames are saved "
                     "(needed for the time-derivative baseline of the PDE-consistency check)")
         if args.noise < 0:
