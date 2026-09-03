@@ -15,10 +15,10 @@
     "rescore_note": "re-scored deterministically from the stored generated SQL against the current gold/expected corpus by scripts/rescore_stored_results.py; no LLM call is involved (the generated SQL itself is unchanged)"
   },
   "derived_from": "multiaxis_results.json",
-  "source_result_sha256": "98d104f30a711e556f678b670ccec22d3c9b5081b97dcdf9ccaee349efc337f7",
+  "source_result_sha256": "eee1bf44a39a66f6e24b4ae183720433422fcb3cbf185d8cf3c08c711120065f",
   "derivation": "re-scored deterministically from the generated SQL stored in the canonical run by scripts/derive_main_artifacts.py; no LLM call is involved",
   "metric": "historical execution recall (row-set recall over common columns; see scripts/audit_scoring.py for the strict and exact-match co-metrics)",
-  "exact_metric": "exact_result_set_match = exact gold column list + row multiset match + row order when the gold query is ordered (evaluation.metrics_strict.exact_result_set_match)",
+  "exact_metric": "exact_result_set_match = exact gold column list + row multiset match + row order only when the expected result's semantic_ordered flag is set (evaluation.metrics_strict.exact_result_set_match)",
   "n_queries": 245,
   "overall_execution_recall": 0.8607400676050935,
   "exact_result_set_match_rate": 0.10612244897959183,

@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-02 16:27:57 UTC",
+    "generated_at": "2026-09-03 01:47:01 UTC",
     "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
@@ -49,7 +49,56 @@
       "hard": 30,
       "very_hard": 20
     },
-    "n_cte_queries": 5,
+    "n_cte_queries": 15,
+    "n_cte_in_ablation_subset": 5,
+    "n_cte_zero_shot": 10,
+    "main_partition": {
+      "_note": "Disjoint partition of the main evaluation corpus. The ablation subset, the independent-design 100, Variant A (prototype expansion) and the CTE-15 set are all subsets of the main corpus and are re-reported as separate runs in Sec. 4.3; Variants B/C/D and the untranslated EN-25 are distinct corpora (transfer ids do not intersect main).",
+      "n_main_queries": 245,
+      "ablation_subset": 100,
+      "independent_design": 100,
+      "independent_design_id_range": "q_expert_001-q_expert_100",
+      "variant_a_prototype": 20,
+      "variant_a_id_prefix": "q_proto_",
+      "cte_zero_shot": 10,
+      "cte_zero_shot_id_prefix": "q_cte_",
+      "residual_expert_101_115": 15,
+      "residual_ids": [
+        "q_expert_101",
+        "q_expert_102",
+        "q_expert_103",
+        "q_expert_104",
+        "q_expert_105",
+        "q_expert_106",
+        "q_expert_107",
+        "q_expert_108",
+        "q_expert_109",
+        "q_expert_110",
+        "q_expert_111",
+        "q_expert_112",
+        "q_expert_113",
+        "q_expert_114",
+        "q_expert_115"
+      ],
+      "author_designed_total": 145,
+      "n_cte15": 15,
+      "n_cte_in_ablation_subset": 5,
+      "n_re_reported_in_sec43": 135,
+      "n_transfer_b_outside_main": 20,
+      "within_main_run_recall_pct": {
+        "_note": "Recall of each re-reported subset inside the single main run (the separate reruns in Sec. 4.3 are different runs of the same questions)",
+        "independent_design": 83.4,
+        "variant_a_prototype": 85.0,
+        "cte15": 72.7,
+        "cte_in_ablation_subset": 100.0,
+        "cte_zero_shot": 59.0
+      }
+    },
+    "ordering_contracts": {
+      "_note": "exact_result_set_match enforces row order only for expected results with semantic_ordered=true; the 'ordered' scoring-audit column uses the different population of gold SQL with ORDER BY.",
+      "n_semantic_ordered_main": 39,
+      "n_gold_order_by_main": 234
+    },
     "n_fewshot_examples": 45
   },
   "database": {
@@ -1227,7 +1276,9 @@
   "transfer_evaluation_variants": {
     "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
     "A_prototype_expansion": {
-      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same normalized main schema",
+      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same normalized main schema. The 20 queries are a subset of the main 245 (q_proto_*); this is a separate run of those same questions, not a distinct corpus (see dataset.main_partition).",
+      "subset_of_main": true,
+      "within_main_run_pct": 85.0,
       "model": "gpt-5.5",
       "n_queries": 20,
       "overall_pct": 100.0,
@@ -1284,7 +1335,9 @@
     }
   },
   "cte_evaluation_15": {
-    "_note": "Original CTE patterns (few-shot covered) plus novel zero-shot patterns; counts in n_original / n_novel",
+    "_note": "Original CTE patterns (few-shot covered; inside the ablation subset) plus zero-shot patterns (inside the main 245 but outside the ablation subset); all 15 are a subset of the main 245 (see dataset.main_partition). Counts in n_original / n_novel.",
+    "subset_of_main": true,
+    "within_main_run_pct": 72.7,
     "model": "gpt-5.5",
     "n_queries": 15,
     "overall_pct": 72.7,
@@ -1338,7 +1391,7 @@
     }
   ],
   "figure_source_data": {
-    "_note": "Verbatim evaluation JSON payloads consumed by scripts/generate_figures.py",
+    "_note": "Verbatim evaluation JSON payloads consumed by generate_figures.py (paper_scripts/ in the package)",
     "ablation_multirun_stats": {
       "n_runs": 5,
       "provenance": {
@@ -13901,7 +13954,7 @@
           "latency_s": 28.9
         }
       ],
-      "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order when the gold query is ordered (normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
+      "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order only when the expected result's semantic_ordered flag is set (the question itself asks for an ordered answer; normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
     },
     "model_comparison": {
       "provenance": {

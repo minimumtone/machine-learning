@@ -370,14 +370,93 @@ def main():
 
     cte_qids = {"q_vhard_009", "q_vhard_016", "q_vhard_018",
                 "q_vhard_019", "q_vhard_020"}
-    n_cte_queries = sum(1 for q in queries if q["id"] in cte_qids)
+    n_cte_in_ablation_subset = sum(1 for q in queries if q["id"] in cte_qids)
+
+    # Disjoint partition of the main 245 into the subsets that are
+    # re-reported elsewhere in the manuscript (Sec. 4.3) plus the residual.
+    main_qids = {q["id"] for q in main_queries}
+    ablation_qids = {q["id"] for q in queries}
+    cte15_qids = {q["id"] for q in load_jsonl("evaluation/cte15_dataset.jsonl")}
+    cte_zero_shot_qids = {
+        q["id"] for q in load_jsonl("evaluation/cte_evaluation_dataset.jsonl")}
+    prototype_qids = {
+        q["id"] for q in load_jsonl("evaluation/prototype_evaluation_dataset.jsonl")}
+    transfer_qids = {
+        q["id"] for q in load_jsonl("evaluation/transfer_evaluation_dataset.jsonl")}
+    independent_design_qids = {
+        q["id"] for q in load_jsonl("evaluation/expert_evaluation_dataset.jsonl")}
+    assert ablation_qids <= main_qids and independent_design_qids <= main_qids
+    assert cte15_qids <= main_qids and prototype_qids <= main_qids
+    assert cte15_qids == (cte_qids | cte_zero_shot_qids)
+    assert cte_qids <= ablation_qids and not (cte_zero_shot_qids & ablation_qids)
+    assert not (transfer_qids & main_qids)
+    residual_qids = (main_qids - ablation_qids - independent_design_qids
+                     - prototype_qids - cte_zero_shot_qids)
+    partition_blocks = [ablation_qids, independent_design_qids, prototype_qids,
+                        cte_zero_shot_qids, residual_qids]
+    assert sum(len(b) for b in partition_blocks) == n_main_queries
+    main_partition = {
+        "_note": "Disjoint partition of the main evaluation corpus. The "
+                 "ablation subset, the independent-design 100, Variant A "
+                 "(prototype expansion) and the CTE-15 set are all subsets "
+                 "of the main corpus and are re-reported as separate runs "
+                 "in Sec. 4.3; Variants B/C/D and the untranslated EN-25 "
+                 "are distinct corpora (transfer ids do not intersect main).",
+        "n_main_queries": n_main_queries,
+        "ablation_subset": len(ablation_qids),
+        "independent_design": len(independent_design_qids),
+        "independent_design_id_range": "q_expert_001-q_expert_100",
+        "variant_a_prototype": len(prototype_qids),
+        "variant_a_id_prefix": "q_proto_",
+        "cte_zero_shot": len(cte_zero_shot_qids),
+        "cte_zero_shot_id_prefix": "q_cte_",
+        "residual_expert_101_115": len(residual_qids),
+        "residual_ids": sorted(residual_qids),
+        "author_designed_total": n_main_queries - len(independent_design_qids),
+        "n_cte15": len(cte15_qids),
+        "n_cte_in_ablation_subset": n_cte_in_ablation_subset,
+        "n_re_reported_in_sec43": len(independent_design_qids | prototype_qids
+                                        | cte15_qids),
+        "n_transfer_b_outside_main": len(transfer_qids - main_qids),
+    }
+    assert main_partition["n_re_reported_in_sec43"] == (
+        len(independent_design_qids) + len(prototype_qids) + len(cte15_qids))
+
+    def _main_run_subset_pct(qids: set[str]) -> float:
+        rows = [r for r in main_run_rows if r["qid"] in qids]
+        assert len(rows) == len(qids)
+        return pct(sum(r["execution_recall"] for r in rows) / len(rows))
+
+    main_run_rows = load_json("evaluation/main_eval_with_sql.json")["results"]
+    main_partition["within_main_run_recall_pct"] = {
+        "_note": "Recall of each re-reported subset inside the single main "
+                 "run (the separate reruns in Sec. 4.3 are different runs "
+                 "of the same questions)",
+        "independent_design": _main_run_subset_pct(independent_design_qids),
+        "variant_a_prototype": _main_run_subset_pct(prototype_qids),
+        "cte15": _main_run_subset_pct(cte15_qids),
+        "cte_in_ablation_subset": _main_run_subset_pct(cte_qids),
+        "cte_zero_shot": _main_run_subset_pct(cte_zero_shot_qids),
+    }
+
+    # Ordering contracts of the main corpus: `semantic_ordered` (the question
+    # itself asks for an ordered answer) governs the exact metric; `ORDER BY`
+    # in the gold SQL is the population of the separate `ordered` audit column.
+    order_by_re = re.compile(r"\border\s+by\b", re.IGNORECASE)
+    n_semantic_ordered_main = 0
+    n_gold_order_by_main = 0
+    for q in main_queries:
+        exp = load_json("evaluation/" + q["expected_result_path"])
+        n_semantic_ordered_main += int(bool(exp.get("semantic_ordered")))
+        gold = resolve_relpath("evaluation/" + q["gold_sql_path"]).read_text(
+            encoding="utf-8")
+        n_gold_order_by_main += int(bool(order_by_re.search(gold)))
 
     # Expert / independent evaluation dataset (a subset of the main 245)
     expert_queries = load_jsonl("evaluation/expert_evaluation_dataset.jsonl")
     n_expert_queries = len(expert_queries)
     expert_diff_counts = Counter(q["difficulty"] for q in expert_queries)
     expert_qids = {q["id"] for q in expert_queries}
-    main_run_rows = load_json("evaluation/main_eval_with_sql.json")["results"]
     expert_rows = [r for r in main_run_rows if r["qid"] in expert_qids]
     other_rows = [r for r in main_run_rows if r["qid"] not in expert_qids]
     assert len(expert_rows) == n_expert_queries
@@ -743,7 +822,7 @@ def main():
     # ==================================================================
     figure_source_data = {
         "_note": "Verbatim evaluation JSON payloads consumed by "
-                 "scripts/generate_figures.py",
+                 "generate_figures.py (paper_scripts/ in the package)",
         "ablation_multirun_stats": multirun,
         "ablation_significance_v2": sig_v2,
         "fewshot_sensitivity": load_json(
@@ -1038,7 +1117,18 @@ def main():
                 "hard": diff_counts.get("hard", 0),
                 "very_hard": diff_counts.get("very_hard", 0),
             },
-            "n_cte_queries": n_cte_queries,
+            "n_cte_queries": main_partition["n_cte15"],
+            "n_cte_in_ablation_subset": n_cte_in_ablation_subset,
+            "n_cte_zero_shot": main_partition["cte_zero_shot"],
+            "main_partition": main_partition,
+            "ordering_contracts": {
+                "_note": "exact_result_set_match enforces row order only for "
+                         "expected results with semantic_ordered=true; the "
+                         "'ordered' scoring-audit column uses the different "
+                         "population of gold SQL with ORDER BY.",
+                "n_semantic_ordered_main": n_semantic_ordered_main,
+                "n_gold_order_by_main": n_gold_order_by_main,
+            },
             "n_fewshot_examples": n_fewshot_examples,
         },
         "database": {
@@ -1061,7 +1151,7 @@ def main():
             "table": ablation_table,
             "top3_per_difficulty_deltas": ablation_deltas,
             "cte_query_results": {
-                "n_cte_queries": n_cte_queries,
+                "n_cte_queries": n_cte_in_ablation_subset,
                 "cte_categories": [
                     "CTE_single", "CTE_filter", "CTE_aggregate",
                     "CTE_multistage", "CTE_column_compare",
@@ -1143,7 +1233,13 @@ def main():
             "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
             "A_prototype_expansion": {
                 "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the "
-                         "same normalized main schema",
+                         "same normalized main schema. The 20 queries are a "
+                         "subset of the main 245 (q_proto_*); this is a "
+                         "separate run of those same questions, not a "
+                         "distinct corpus (see dataset.main_partition).",
+                "subset_of_main": True,
+                "within_main_run_pct": main_partition[
+                    "within_main_run_recall_pct"]["variant_a_prototype"],
                 **prototype_eval,
             },
             "B_oqmd_transfer": {
@@ -1163,8 +1259,14 @@ def main():
             },
         },
         "cte_evaluation_15": {
-            "_note": "Original CTE patterns (few-shot covered) plus novel "
-                     "zero-shot patterns; counts in n_original / n_novel",
+            "_note": "Original CTE patterns (few-shot covered; inside the "
+                     "ablation subset) plus zero-shot patterns (inside the "
+                     "main 245 but outside the ablation subset); all 15 are "
+                     "a subset of the main 245 (see dataset.main_partition). "
+                     "Counts in n_original / n_novel.",
+            "subset_of_main": True,
+            "within_main_run_pct": main_partition[
+                "within_main_run_recall_pct"]["cte15"],
             **cte15_eval,
         },
         "safety": {
@@ -1209,7 +1311,7 @@ def main():
     print("\n=== VERIFICATION SUMMARY ===")
     print(f"Database: {n_tables} tables, {n_views} views, "
           f"{table_counts['material_entry']} entries")
-    print(f"Dataset: {n_queries} queries ({n_cte_queries} CTE), "
+    print(f"Dataset: {n_queries} queries ({n_cte_in_ablation_subset} CTE), "
           f"{n_fewshot_examples} few-shot examples")
     print(f"Ablation conditions: {len(ablation_table)}")
     print(f"  full:         {t['full']['overall_pct']}% "

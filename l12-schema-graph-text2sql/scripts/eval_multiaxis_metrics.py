@@ -11,7 +11,9 @@ scoring_audit.json) is derived from it by
 scripts/derive_main_artifacts.py without further LLM calls.
 
 The exact metric is the canonical exact_result_set_match (exact gold
-column list + row multiset + row order when the gold query is ordered).
+column list + row multiset + row order only when the expected result's
+semantic_ordered flag is set, i.e. the question itself asks for an ordered
+answer -- not whenever the gold SQL has an ORDER BY).
 
 Output: evaluation/multiaxis_results.json
 """
@@ -372,8 +374,9 @@ def main():
         "provenance": build_provenance(DATASET_PATH),
         "exact_metric": (
             "exact_match = evaluation.metrics_strict.exact_result_set_match: "
-            "exact gold column list + row multiset match + row order when "
-            "the gold query is ordered"),
+            "exact gold column list + row multiset match + row order only "
+            "when the expected result's semantic_ordered flag is set (the "
+            "question itself asks for an ordered answer)"),
         "aggregate": agg,
         "by_difficulty": by_diff,
         "results": results,

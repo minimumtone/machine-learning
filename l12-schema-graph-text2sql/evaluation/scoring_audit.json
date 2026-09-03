@@ -1,6 +1,6 @@
 {
   "main": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + row order only when the expected result's semantic_ordered flag is set, i.e. the question itself asks for an ordered answer; the 'ordered' policy below uses the different population of gold queries with ORDER BY); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 245,
     "policies": {
       "historical": {
@@ -29,6 +29,7 @@
       }
     },
     "exact_result_set_match_pct": 10.6,
+    "n_semantic_ordered": 39,
     "common_column_exact_overlap_pct": 78.0,
     "ordered": {
       "mean_recall_pct": 54.3,
@@ -2760,7 +2761,7 @@
     }
   },
   "independent": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + row order only when the expected result's semantic_ordered flag is set, i.e. the question itself asks for an ordered answer; the 'ordered' policy below uses the different population of gold queries with ORDER BY); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 100,
     "policies": {
       "historical": {
@@ -2789,6 +2790,7 @@
       }
     },
     "exact_result_set_match_pct": 1.0,
+    "n_semantic_ordered": 3,
     "common_column_exact_overlap_pct": 71.0,
     "ordered": {
       "mean_recall_pct": 50.4,
@@ -3974,7 +3976,7 @@
     }
   },
   "transfer": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + row order only when the expected result's semantic_ordered flag is set, i.e. the question itself asks for an ordered answer; the 'ordered' policy below uses the different population of gold queries with ORDER BY); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
@@ -4003,6 +4005,7 @@
       }
     },
     "exact_result_set_match_pct": 15.0,
+    "n_semantic_ordered": 6,
     "common_column_exact_overlap_pct": 85.0,
     "ordered": {
       "mean_recall_pct": 66.5,
@@ -4252,7 +4255,7 @@
     }
   },
   "transfer_obfuscated": {
-    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + order when the gold query is ordered); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
+    "metric_naming": "the 'historical' policy is a historical execution recall (row-set recall over common columns), not a strict execution accuracy; the canonical exact metric is 'exact_result_set_match_pct' (exact gold column list + row multiset + row order only when the expected result's semantic_ordered flag is set, i.e. the question itself asks for an ordered answer; the 'ordered' policy below uses the different population of gold queries with ORDER BY); 'common_column_exact_overlap_pct' is the LEGACY lenient exact over common columns only and is kept for comparison",
     "n_queries": 20,
     "policies": {
       "historical": {
@@ -4281,6 +4284,7 @@
       }
     },
     "exact_result_set_match_pct": 20.0,
+    "n_semantic_ordered": 6,
     "common_column_exact_overlap_pct": 80.0,
     "ordered": {
       "mean_recall_pct": 57.4,
@@ -4535,14 +4539,14 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
-    "generated_at": "2026-08-30T10:32:19+00:00",
+    "git_commit": "unknown",
+    "generated_at": "2026-09-03T01:49:40+00:00",
     "rescore_note": "audit recomputed deterministically from stored generated SQL and shipped result JSONs by scripts/audit_scoring.py; no LLM call is involved"
   },
   "sources": {
     "main": {
       "source_result_file": "main_eval_with_sql.json",
-      "source_result_sha256": "82e5ba4e417e450548d7be45548a9cac14671d99a3d8eca33934caf1d2b93c57"
+      "source_result_sha256": "81043ca5f296bbc4a07a938ce388aa4a600b43be9b397ce075dbffe689207557"
     },
     "independent": {
       "source_result_file": "independent_eval_results.json",
