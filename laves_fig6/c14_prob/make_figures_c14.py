@@ -47,7 +47,7 @@ ax.plot(tri.x_Al, tri.V_bar_A3, "^", ms=13, mfc="none", mec="k", mew=2,
         label="Yamanouchi実験 (Fig. 6(a) 黒三角)")
 ax.set_xlabel(r"B副格子のAl分率 $x$ (Nb(Ni$_{1-x}$Al$_x$)$_2$)")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
-ax.set_title(r"C14-Nb(Ni$_{1-x}$Al$_x$)$_2$ の確率論的組成掃引 (Fig. 6(a) Laves枝)")
+ax.set_title(r"C14-Nb(Ni$_{1-x}$Al$_x$)$_2$ の確率論的組成掃引 (Fig. 6(a) Laves相データ)")
 ax.legend(fontsize=13)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_c14_prob_vbar.png"), dpi=150)

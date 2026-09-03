@@ -54,6 +54,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 AN = os.path.join(BASE, "analysis")
@@ -78,12 +79,34 @@ def mark_perfect_b2(ax, x, y, label="完全B2 (MLIP)"):
 df = pd.read_csv(os.path.join(AN, "b2_offstoich_volumes.csv"))
 for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_vac.csv",
               "b2_offstoich_volumes_alrich_vac_extra.csv",
+              "b2_offstoich_volumes_alrich_vac_extra_seeds.csv",
+              "b2_offstoich_volumes_alrich_vac_5x5x5_sqs.csv",
               "b2_offstoich_volumes_antisite_extra.csv",
               "b2_offstoich_volumes_50competition.csv",
-              "b2_offstoich_volumes_antisite_alrich_dense.csv"):
+              "b2_offstoich_volumes_antisite_alrich_dense.csv",
+              "b2_offstoich_volumes_antisite_alrich_dense_extra_seeds.csv",
+              "b2_offstoich_volumes_antisite_alrich_dense_extra_seeds2.csv",
+              "b2_offstoich_volumes_alrich_vac_5x5x5_sqs_extra.csv",
+              "b2_offstoich_volumes_antisite_5x5x5_sqs.csv"):
     p = os.path.join(AN, extra)
     if os.path.exists(p):
         df = pd.concat([df, pd.read_csv(p)], ignore_index=True)
+
+# Merge SRO/SQS metrics if available
+sro_path = os.path.join(AN, "b2_highAl_sqs_sro.csv")
+if os.path.exists(sro_path):
+    sro = pd.read_csv(sro_path)
+    df["sro_key"] = df["structure_id"] + ".extxyz"
+    df = pd.merge(df, sro[["structure_id", "alpha_1nn_WC", "c_defect"]],
+                  left_on="sro_key", right_on="structure_id", how="left",
+                  suffixes=("", "_sro"))
+    df.drop(columns=["sro_key", "structure_id_sro"], inplace=True, errors="ignore")
+
+# SQS/SRO quality gate: accept NaN (unmeasured) and sufficiently random configs.
+SRO_ACCEPT_MAX = 0.15
+df["sro_ok"] = True
+if "alpha_1nn_WC" in df.columns:
+    df["sro_ok"] = df["alpha_1nn_WC"].isna() | (df["alpha_1nn_WC"].abs() <= SRO_ACCEPT_MAX)
 
 exp = pd.read_csv(os.path.join(AN, "fig6a_digitized_circles.csv"))
 exp_b2 = exp[exp.region == "B2"].copy()
@@ -139,17 +162,23 @@ def ln_comb(n, k):
     return math.lgamma(n + 1) - math.lgamma(k + 1) - math.lgamma(n - k + 1)
 
 
+def n_sublattice(row):
+    """Number of sites per B2 sublattice (n_sites / 2)."""
+    return int(round(row.n_sites / 2.0))
+
+
 def n_defect(row):
+    ns = n_sublattice(row)
     if row.branch == "antisite":
         if row.x_Al_target < 0.5:
-            return int(row.n_Ni - NCELL)       # Ni on Al sublattice
+            return int(row.n_Ni - ns)       # Ni on Al sublattice
         else:
-            return int(row.n_Al - NCELL)       # Al on Ni sublattice
+            return int(row.n_Al - ns)       # Al on Ni sublattice
     elif row.branch == "vacancy":
         if row.x_Al_target < 0.5:
-            return int(NCELL - row.n_Al)       # vacancies on Al sublattice
+            return int(ns - row.n_Al)       # vacancies on Al sublattice
         else:
-            return int(NCELL - row.n_Ni)       # vacancies on Ni sublattice
+            return int(ns - row.n_Ni)       # vacancies on Ni sublattice
     return 0
 
 
@@ -166,27 +195,67 @@ def G_atom(row):
     e = row.energy_eV
     g = n_defect(row)
     n = row.n_atoms
-    return (e - MU_NI * row.n_Ni - MU_AL * row.n_Al) / n - KT_EV * ln_comb(NCELL, g) / n
+    ns = n_sublattice(row)
+    return (e - MU_NI * row.n_Ni - MU_AL * row.n_Al) / n - KT_EV * ln_comb(ns, g) / n
 
 
 df["n_defect"] = df.apply(n_defect, axis=1)
 df["G_atom_eV"] = df.apply(G_atom, axis=1)
 df["Omega_total_eV"] = df["G_atom_eV"] * df["n_atoms"]
 
-# aggregate per composition/branch
+# Prefer larger supercells when multiple sizes exist for the same target/branch
+# (e.g. 5x5x5 SQS replacing 4x4x4 in the high-Al region), because they are
+# closer to the thermodynamic limit.  Keep the perfect structure untouched.
+perfect_df = df[df.branch == "perfect"].copy()
+other_df = df[df.branch != "perfect"].copy()
+selected = []
+for (x, br), g in other_df.groupby(["x_Al_target", "branch"]):
+    g = g.sort_values("n_sites", ascending=False)
+    g = g[g.n_sites == g.n_sites.iloc[0]]
+    # Use SQS/SRO quality filter when enough seeds pass the gate.
+    if g.sro_ok.sum() >= 3:
+        g = g[g.sro_ok]
+    if not g.empty:
+        selected.append(g)
+if selected:
+    df = pd.concat([perfect_df] + selected, ignore_index=True)
+
+def robust_mean_std(vals, trim=0.2):
+    """Trimmed mean and standard deviation of a pandas Series."""
+    v = vals.dropna().to_numpy()
+    if len(v) == 0:
+        return np.nan, 0.0, 0
+    t = stats.trimboth(v, trim)
+    t_mean = float(np.mean(t))
+    t_std = float(np.std(t, ddof=1)) if len(t) > 1 else 0.0
+    return t_mean, t_std, len(t)
+
+
+# aggregate per composition/branch with SRO-aware robust averaging
 agg_rows = []
 for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
+    alpha_mean = g.alpha_1nn_WC.mean() if "alpha_1nn_WC" in g else np.nan
+    alpha_std = g.alpha_1nn_WC.std(ddof=1) if "alpha_1nn_WC" in g and len(g) > 1 else np.nan
+    n_total = len(g)
+    V, Vstd, n_eff = robust_mean_std(g.V_per_atom_A3)
+    a, astd, _ = robust_mean_std(g.a_eff_A)
+    Ef, _, _ = robust_mean_std(g.E_form_eV_atom)
+    G, Gstd, _ = robust_mean_std(g.G_atom_eV)
+    Omega, _, _ = robust_mean_std(g.Omega_total_eV)
     agg_rows.append({
         "x_Al_target": x, "branch": br,
-        "x_Al": g.x_Al.mean(), "V": g.V_per_atom_A3.mean(),
-        "Vstd": g.V_per_atom_A3.std(ddof=1) if len(g) > 1 else 0.0,
-        "a": g.a_eff_A.mean(), "astd": g.a_eff_A.std(ddof=1) if len(g) > 1 else 0.0,
-        "Ef": g.E_form_eV_atom.mean(),
-        "G": g.G_atom_eV.mean(),
-        "Gstd": g.G_atom_eV.std(ddof=1) if len(g) > 1 else 0.0,
-        "Omega_total_eV": g.Omega_total_eV.mean(),
+        "x_Al": g.x_Al.mean(), "V": V,
+        "Vstd": Vstd,
+        "a": a, "astd": astd,
+        "Ef": Ef,
+        "G": G,
+        "Gstd": Gstd,
+        "Omega_total_eV": Omega,
         "n_atoms": int(round(g.n_atoms.mean())),
-        "n": len(g),
+        "n": n_eff,
+        "n_total": n_total,
+        "alpha_mean": alpha_mean,
+        "alpha_std": alpha_std,
     })
 agg = pd.DataFrame(agg_rows)
 
