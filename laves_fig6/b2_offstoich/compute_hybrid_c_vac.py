@@ -101,6 +101,10 @@ def main():
     bm = pd.read_csv(os.path.join(AN, 'b2_offstoich_branch_means.csv'))
     br = bm[bm.branch != 'perfect'].copy()
     br['n_defect'] = br.apply(n_defect_from_row, axis=1)
+    # At x=0.50 every branch collapses to perfect B2 (zero defect).  Drop any
+    # branch rows at exact stoichiometry here so that the explicit perfect-B2
+    # row appended below is the single, unique 0.50 entry in the output.
+    br = br[np.abs(br.x_Al_target - 0.5) > 1e-6].copy()
 
     perfect_Ef = perfect_G_eV()
 
