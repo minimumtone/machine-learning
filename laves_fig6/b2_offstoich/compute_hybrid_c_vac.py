@@ -162,6 +162,10 @@ def main():
     for x in x_grid:
         c_mod = max(0.0, 1.0 - 1.0 / (2.0 * x))
         row = {'x_Al_target': round(x, 6), 'x_Al': round(x, 6), 'c_model': c_mod}
+        # At the ideal stoichiometry both defect models collapse to the same
+        # perfect B2 state.  It must be counted as a single state in the
+        # Boltzmann mixture rather than as two degenerate branches.
+        is_perfect = abs(x - 0.5) < 1e-9
         for T in T_LIST:
             kT = KB_EV * T
             gvals = {}
@@ -181,7 +185,12 @@ def main():
                 else:
                     row[f'G_{br_name}_{T:.0f}K'] = np.nan
 
-            if len(gvals) >= 2:
+            if is_perfect and len(gvals) >= 2:
+                # Single perfect B2 state: c=0, branch probabilities undefined.
+                c_hybrid = 0.0
+                p_anti = 0.0
+                probs = {}
+            elif len(gvals) >= 2:
                 gmin = min(gvals.values())
                 weights = {
                     b: math.exp(-(g - gmin) / kT)
@@ -209,7 +218,9 @@ def main():
             row[f'p_antisite_{T:.0f}K'] = p_anti
             row[f'c_total_{T:.0f}K'] = c_total
             for br_name in ('vacancy', 'antisite'):
-                row[f'prob_{br_name}_{T:.0f}K'] = probs.get(br_name, np.nan)
+                row[f'prob_{br_name}_{T:.0f}K'] = probs.get(
+                    br_name, np.nan if is_perfect else np.nan
+                )
         rows.append(row)
 
     out = pd.DataFrame(rows).sort_values('x_Al_target')

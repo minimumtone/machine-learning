@@ -49,7 +49,7 @@ MathJax = {
 <strong>主要成果物</strong>：統合レポート <span class="mono">B2_NiAl_Integrated_Report.md</span>、4SL/8SL 設計書 <span class="mono">4SL_B2_MODEL_DESIGN.md</span>、icet スクリプト <span class="mono">run_icet_b2_cluster_expansion.py</span></p>
 
 <div class="note">
-<strong>進捗（SQS/SRO + high-Al 拡張）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。今回、空孔・反サイト両モデルを \(\sim0.98\) Al まで 5×5×5 SQS で拡張し、Gibbs（Helmholtz）自由エネルギーと欠陥濃度図を高 Al 域まで埋めた。\(x_{\rm Al}\approx0.55\) の折れは整数空孔数 artifact なので、自由エネルギーと欠陥割合を PCHIP 補間で滑らかにして artifact を除去した。
+<strong>進捗（SQS/SRO + high-Al 拡張）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。今回、空孔・反サイト両モデルを \(\sim0.98\) Al まで 5×5×5 SQS で拡張し、Gibbs（Helmholtz）自由エネルギーと欠陥濃度図を高 Al 域まで埋めた。\(x_{\rm Al}\approx0.55\) の折れは整数空孔数 artifact なので、自由エネルギーと欠陥割合を PCHIP 補間で滑らかにして artifact を除去した。\(x_{\rm Al}=0.50\) では空孔・反サイトが同一の完全 B2 状態に縮退するため、Boltzmann 加重では枝確率ではなく単一状態として扱う。
 </div>
 
 <nav>
@@ -287,7 +287,7 @@ G_i = \frac{E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al}}{N_{\rm atom}}
 
 <figure>
   <img src="figures/fig_b2_gibbs_energy.png" alt="Helmholtz free energy">
-  <figcaption>Figure 5.2 1473 K における B2-Ni<sub>1−x</sub>Al<sub>x</sub> の Helmholtz 自由エネルギー（1 原子あたり）。赤線は空孔モデル、青線は反サイトモデル、黒破線は最安定選択。x<sub>Al</sub>=0.50 の完全 B2 点で両モデルは一致する。</figcaption>
+  <figcaption>Figure 5.2 1473 K における B2-Ni<sub>1−x</sub>Al<sub>x</sub> の Helmholtz 自由エネルギー（1 原子あたり）。赤線は空孔モデル、青線は反サイトモデル、黒破線は最安定選択。両モデルは x<sub>Al</sub>=0.50 の完全 B2 点を PCHIP 補間で厳密に通り、唯一の状態として一致する。高 Al 側は 5×5×5 SQS で 0.80–0.975 Al まで延長し、B2 単相限界を超える灰色背景部分は metastable 外挿。</figcaption>
 </figure>
 
 <h3 id="sec5-1">5.1 DFT 文献との孤立点欠陥比較</h3>
