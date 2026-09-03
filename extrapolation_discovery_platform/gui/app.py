@@ -1933,7 +1933,10 @@ def _handle_csv_upload(
         for col in extra_numeric_cols:
             values = pd.to_numeric(source_extra[col], errors="coerce")
             if values.notna().any():
-                features_df[col] = values
+                # Same policy as generic mode: fill NaN with column median
+                if values.isna().any():
+                    values = values.fillna(values.median())
+                features_df[col] = values.astype("float64")
                 carried_extra_cols.append(col)
         logger.info(
             "HEA CSV: carried over %d extra numeric columns: %s",

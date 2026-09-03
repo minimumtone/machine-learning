@@ -84,6 +84,44 @@ class TestT1_Stage1Reproducibility:
         assert "delta_r" not in effective
         assert "target_leak" not in effective
 
+    def test_hea_upload_imputes_partial_nan_extra_columns(self, sample_data, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.features import FeatureSetName
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+
+        _, y, comp = sample_data
+        raw = comp.copy()
+        raw["ys"] = y.to_numpy()
+        rng = np.random.default_rng(7)
+        grain = rng.uniform(1, 100, len(raw))
+        grain[::4] = np.nan
+        raw["grain_size_um"] = grain
+        raw["all_missing"] = np.nan
+        csv_path = tmp_path / "hea_nan.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(_File(), "ys", session)
+        feats = session["features_df"]
+        assert "grain_size_um" in feats.columns
+        assert "all_missing" not in feats.columns
+        assert not feats["grain_size_um"].isna().any()
+        assert feats["grain_size_um"].iloc[0] == pytest.approx(np.nanmedian(grain))
+
+        prep = stage1_preprocess(
+            features_df=feats, target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"], seeds=[42],
+            active_policies=["RandomCV"],
+        )
+        assert prep.success, prep.error_message
+        assert "grain_size_um" in prep.effective_cols[FeatureSetName.FS_BASE.value]
+
     def test_effective_cols_identical(self, sample_data):
         from extrapolation_discovery_platform.pipeline import stage1_preprocess
         from extrapolation_discovery_platform.features import FeatureSetName
