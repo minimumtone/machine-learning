@@ -49,7 +49,7 @@ MathJax = {
 <strong>主要成果物</strong>：統合レポート <span class="mono">B2_NiAl_Integrated_Report.md</span>、4SL/8SL 設計書 <span class="mono">4SL_B2_MODEL_DESIGN.md</span>、icet スクリプト <span class="mono">run_icet_b2_cluster_expansion.py</span></p>
 
 <div class="note">
-<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。
+<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。
 </div>
 
 <nav>

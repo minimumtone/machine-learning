@@ -1,0 +1,2 @@
+structure_id,branch,x_Al_target,x_Al,seed,n_Ni,n_Al,n_atoms,n_sites,energy_eV,volume_A3,V_per_atom_A3,a_eff_A,E_form_eV_atom,converged
+b2_x0.500_vacNi_perfect,vacancy,0.5,0.5,0,64,64,128,128,-694.0398846214761,1532.7395257641238,11.974527545032217,2.882456714930723,-0.6920193068237968,True
