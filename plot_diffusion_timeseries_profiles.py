@@ -39,6 +39,7 @@ import html
 import importlib.util
 import io
 import json
+import math
 import os
 import sys
 import time
@@ -66,6 +67,13 @@ _OMEGA_WIDTH = 0.02
 _PHASE_WIDTH = 0.02
 _RT = 1.0
 
+# Display-only settings.  They are stored in the results NPZ, so --replot keeps the
+# values of the original run unless they are given explicitly on the command line.
+_DEFAULT_ANNEALING_TIME_H = 160.0
+_DEFAULT_SPAN_UM = 800.0
+_DEFAULT_N_TIME_SLICES = 8
+_LR_FLOOR_FRACTION = 0.03  # cosine decay floor, relative to each parameter group's initial lr
+
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -85,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--warmup", type=float, default=0.3, help="Physics-loss warmup fraction")
     p.add_argument("--n_obs", type=int, default=1500)
-    p.add_argument("--n_f", type=int, default=2000)
+    p.add_argument("--n_f", type=int, default=2000, help="Collocation points per epoch (forward and inverse PINN)")
     p.add_argument("--omega", type=float, nargs=3, default=[1.0, 1.0, 1.0], help="True Omega [CoNi, CoTa, NiTa]")
     p.add_argument("--mobility_diag", type=float, nargs="+", default=[1.0e-2, 4.0e-3],
                    help="True mobility diagonal [M_Ni, M_Ta] (one value = same for both)")
@@ -100,12 +108,41 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--save_every", type=int, default=100, help="RS FDM frame interval (frames = nsteps/save_every + 1)")
     p.add_argument("--noise", type=float, default=0.02, help="Pseudo-experimental noise (mole fraction)")
     p.add_argument("--n_exp_points", type=int, default=24, help="Pseudo-experimental points per time slice")
-    p.add_argument("--n_time_slices", type=int, default=8, help="Number of pseudo-experimental time slices (= panels)")
+    p.add_argument("--n_time_slices", type=int, default=None,
+                   help=f"Number of pseudo-experimental time slices (= panels); default {_DEFAULT_N_TIME_SLICES}, "
+                        "--replot keeps the saved value")
     p.add_argument("--onsager", action="store_true", help="Use Onsager-form PDE residual instead of Fick form")
-    p.add_argument("--annealing_time_h", type=float, default=160.0, help="Physical annealing time mapped to final frame")
-    p.add_argument("--span_um", type=float, default=800.0, help="Physical distance span mapped to x in [0, 1]")
+    p.add_argument("--annealing_time_h", type=float, default=None,
+                   help=f"Physical annealing time mapped to final frame; default {_DEFAULT_ANNEALING_TIME_H}, "
+                        "--replot keeps the saved value")
+    p.add_argument("--span_um", type=float, default=None,
+                   help=f"Physical distance span mapped to x in [0, 1]; default {_DEFAULT_SPAN_UM}, --replot keeps the saved value")
     p.add_argument("--no_gif", action="store_true")
-    return p.parse_args()
+    args = p.parse_args()
+    if args.replot is None:
+        if not args.skip_inverse and args.nsteps < 2 * args.save_every:
+            p.error("--nsteps must be >= 2 * --save_every so that at least 3 FDM frames are saved "
+                    "(needed for the time-derivative baseline of the PDE-consistency check)")
+        if args.noise < 0:
+            p.error("--noise must be >= 0")
+        if args.noise == 0 and not args.skip_inverse:
+            p.error("--noise 0 has no likelihood: the Gaussian NLL of Step 3 divides by sigma^2. "
+                    "Use --noise > 0, or --skip_inverse for a noise-free forward-only run")
+    return args
+
+
+def _resolve_display_settings(args: argparse.Namespace, saved: dict | None) -> None:
+    """Fill annealing_time_h / span_um / n_time_slices: CLI value > saved NPZ config > default."""
+    saved = saved or {}
+    if args.annealing_time_h is None:
+        v = saved.get("annealing_time_h")
+        args.annealing_time_h = float(v) if v is not None else _DEFAULT_ANNEALING_TIME_H
+    if args.span_um is None:
+        v = saved.get("span_um")
+        args.span_um = float(v) if v is not None else _DEFAULT_SPAN_UM
+    if args.n_time_slices is None:
+        v = saved.get("n_time_slices")
+        args.n_time_slices = int(v) if v is not None else _DEFAULT_N_TIME_SLICES
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +325,13 @@ def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarr
 
     net_params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.Adam([{"params": net_params, "lr": args.lr}, {"params": [log_M], "lr": args.lr_m}])
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(epochs, 1), eta_min=args.lr * 0.03)
+    T = max(epochs, 1)
+
+    def _cosine_factor(step: int) -> float:
+        # same relative decay (1 -> _LR_FLOOR_FRACTION) for the network and the log M group
+        return _LR_FLOOR_FRACTION + (1.0 - _LR_FLOOR_FRACTION) * 0.5 * (1.0 + math.cos(math.pi * min(step, T) / T))
+
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda=[_cosine_factor, _cosine_factor])
     warmup_end = max(1, int(epochs * args.warmup))
     rng = np.random.default_rng(args.seed + 1)
     rows = []
@@ -300,8 +343,8 @@ def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarr
         opt.zero_grad()
         loss_data = F.mse_loss(model(x_obs, t_obs), c_obs)
         loss_ic = F.mse_loss(model(x_ic, t_ic), c_ic)
-        x_col = torch.tensor(rng.uniform(x_lo, x_hi, size=(2000, 1)), dtype=torch.float32, device=device)
-        t_col = torch.tensor(rng.uniform(t_lo, t_hi, size=(2000, 1)), dtype=torch.float32, device=device)
+        x_col = torch.tensor(rng.uniform(x_lo, x_hi, size=(args.n_f, 1)), dtype=torch.float32, device=device)
+        t_col = torch.tensor(rng.uniform(t_lo, t_hi, size=(args.n_f, 1)), dtype=torch.float32, device=device)
         M_eff = torch.diag(torch.exp(log_M)) * t_scale
         res = _fick_residual_trainable_M(mod, model, x_col, t_col, M_eff, theta_int_t, args.mu_floor)
         loss_phys = torch.mean(res ** 2)
@@ -421,6 +464,11 @@ def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[s
     theta_int = mod._reorder_theta_display_to_internal(omega_true)
     valid = np.where(t_grid >= float(data.t_start) - 1e-12)[0]
     fr = [i for i in valid if 1 <= i <= len(t_grid) - 2]
+    if not fr:  # too few frames after t_start: fall back to every interior frame
+        fr = list(range(1, len(t_grid) - 1))
+    if not fr:
+        raise ValueError(f"PDE-consistency check needs >= 3 saved FDM frames (got {len(t_grid)}); "
+                         "decrease --save_every or increase --nsteps")
     ct_f, rate_f, cmin_f = [], [], []
     dx = float(x_grid[1] - x_grid[0])
     for i in fr:
@@ -565,7 +613,7 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
     model, history_df, _ = mod.train_pinn_rs(
         data=data, model=model, mobility=mobility,
         epochs=args.epochs, lr=args.lr, weights=weights,
-        n_collocation=2000, adaptive_weights=False,
+        n_collocation=args.n_f, adaptive_weights=False,
         phys_warmup_fraction=args.warmup,
     )
     t_pinn = time.time() - t0
@@ -1631,7 +1679,7 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
         ["PINN 構造", "4 層 × 64 ユニット, tanh, 時間 Fourier 特徴 4, 出力は simplex 制約付き"],
         ["損失重み w_data / w_ic / w_phys", f"{cfg['w_data']} / {cfg['w_ic']} / {cfg['w_phys']} (物理損失は最初の {int(cfg['warmup'] * 100)}% の epoch で線形に立ち上げ)"],
         ["学習率 / epochs", f"{cfg['lr']} (cosine 減衰) / {cfg['epochs']}"],
-        ["コロケーション点 / 観測点", f"2000 点 (毎 epoch 再サンプル) / {cfg['n_obs']} 点 + 疑似実験点"],
+        ["コロケーション点 / 観測点", f"{cfg['n_f']} 点 (毎 epoch 再サンプル) / {cfg['n_obs']} 点 + 疑似実験点"],
         ["デバイス / 計算時間", f"{cfg['device']} / " + ", ".join(f"{k}: {v:.1f} s" for k, v in timing.items())],
     ], "表 1. 計算条件"))
 
@@ -1899,12 +1947,14 @@ def main() -> None:
     if args.replot:
         res = load_results(args.replot)
         print(f"[replot] loaded {args.replot}")
+        cfg = json.loads(str(res["config"]))
+        _resolve_display_settings(args, cfg)
     else:
+        _resolve_display_settings(args, None)
         res = run_computation(args)
         save_results(args.outdir, res)
         print(f"[saved] results to {args.outdir}")
-
-    cfg = json.loads(str(res["config"]))
+        cfg = json.loads(str(res["config"]))
     cfg["annealing_time_h"] = args.annealing_time_h
     cfg["span_um"] = args.span_um
     cfg["n_time_slices"] = args.n_time_slices
