@@ -48,6 +48,10 @@ MathJax = {
 <p><strong>リポジトリ</strong>：<span class="mono">minimumtone/machine-learning/laves_fig6/b2_offstoich</span><br>
 <strong>主要成果物</strong>：統合レポート <span class="mono">B2_NiAl_Integrated_Report.md</span>、4SL/8SL 設計書 <span class="mono">4SL_B2_MODEL_DESIGN.md</span>、icet スクリプト <span class="mono">run_icet_b2_cluster_expansion.py</span></p>
 
+<div class="note">
+<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。
+</div>
+
 <nav>
 <ul>
   <li><a href="#sec1">1. 問題設定：B2-NiAl の Ni 過剰・Al 過剰構造欠陥</a></li>
@@ -172,13 +176,17 @@ G_i = \frac{E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al}}{N_{\rm atom}}
 
 <figure>
   <img src="figures/fig_b2_offstoich_vbar_full.png" alt="vbar_full">
-  <figcaption>Figure 3.1 0.20 \(\le x_{\rm Al} \le\) 0.80 の原子体積の全レンジ。Ni 過剰側では反サイト、Al 過剰側では Ni 空孔が支配的。完全 B2 の \(\bar V=11.97\) Å³/atom を中心に、Al 過剰側で急激に体積が増大する。</figcaption>
+  <figcaption>Figure 3.1 0.20 \(\le x_{\rm Al} \le\) 0.80 の原子体積の全レンジ。赤は空孔（Ni 副格子）モデル、青は反サイトモデル、黒破線は最安定欠陥モデル選択。高 Al 側では空孔モデルを \(x_{\rm Al}=0.80\) まで延長（B2 単相域を超える領域は熱力学的に metastable な仮定）。緑・灰破線は fcc / bcc A2 Vegard 線、緑丸は純 fcc Ni/Al、灰四角は純 bcc A2 Ni/Al（MACE）。完全 B2 の \(\bar V=11.97\) Å³/atom は、fcc Vegard の \(\bar V\approx13.77\) Å³/atom より約 13 % 小さく、B2 規則化による強い体積収縮を示す。</figcaption>
 </figure>
 
 <figure>
   <img src="figures/fig_b2_offstoich_vbar.png" alt="vbar zoom">
-  <figcaption>Figure 3.2 0.45 \(\le x_{\rm Al} \le\) 0.60 の拡大図。実験との差は MACE-MP-0 の体積精度の床（0.5–1.5 %）に到達している。</figcaption>
+  <figcaption>Figure 3.2 0.40 \(\le x_{\rm Al} \le\) 0.82 の拡大図。赤は Ni 副格子空孔モデル、青は Al 反サイトモデル。高 Al 側（\(x_{\rm Al}=0.68\)–0.80）のばらつきを低減するため、空孔側には 5×5×5 SQS（各組成 10 シード）、反サイト側には 4×4×4 追加シード（s3–s12）を加え、Ni 副格子 1NN Warren–Cowley SRO パラメーター \(|\alpha_{1\mathrm{NN}}^{\mathrm{WC}}|\le0.15\) で外れ値を除去した。空孔側 0.70/0.72/0.74 の体積標準偏差はそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 は 0.029/0.028/0.052 Å³/atom。灰色領域（\(x_{\rm Al}\gtrsim0.66\)）は B2 単相域外のため空孔モデルは metastable な外挿である。緑・灰破線は fcc / bcc A2 Vegard 線。純元素端点は Figure 3.1 に限定。</figcaption>
 </figure>
+
+<div class="note">
+<strong>SQS / SRO による配置ばらつきの定量化</strong>：各緩和構造について、Ni 副格子の 1NN Warren–Cowley 短程秩序パラメーター \(\alpha_{1\mathrm{NN}}^{\mathrm{WC}}\) を計算し、ランダム配置（\(\alpha \approx 0\)）からのずれを定量化している。\(|\alpha|\le0.15\) を通過したシードのみを robust trimmed mean で集計することで、0.70–0.75 の体積標準偏差を 0.02–0.07 Å³/atom まで引き下げた。空孔モデルは 5×5×5 SQS 化で副近接の複数ミニマを吸収し、0.70/0.72/0.74 の標準偏差を 0.039/0.021/0.022 Å³/atom にまで縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存しており、5×5×5 大セルまたはさらに SRO しきい値を絞ることで追加低減が可能。
+</div>
 
 <h3>3.2 格子定数と傾き</h3>
 
@@ -194,7 +202,7 @@ G_i = \frac{E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al}}{N_{\rm atom}}
 
 <figure>
   <img src="figures/fig_b2_offstoich_a.png" alt="a(x) MACE vs exp">
-  <figcaption>Figure 3.3 MACE 緩和後の B2 単相格子定数 \(a(x)\)（全体像）。詳細な実験オーバーレイと局所傾きは Figure 2.1 を参照。</figcaption>
+  <figcaption>Figure 3.3 MACE 緩和後の B2 単相格子定数 \(a(x)\) と bcc A2 基準。灰破線は bcc A2 Vegard、灰四角は純 bcc A2 Ni/Al（MACE）。fcc は通常立方単位胞が 4 原子なのに対し B2/bcc A2 は 2 原子なので、同じ \(a\) 軸で直接比較すると単位胞規約の差が格子収縮に見えるため、fcc 端点は体積図（Figure 3.1）で比較する。詳細な実験オーバーレイと局所傾きは Figure 2.1 を参照。</figcaption>
 </figure>
 
 <figure>
