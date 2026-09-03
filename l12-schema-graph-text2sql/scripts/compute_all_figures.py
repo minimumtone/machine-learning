@@ -270,6 +270,90 @@ def main():
     )
     n_l12_unique_compositions = _fetchone_scalar(cur)
 
+    # Row-level source data for Table 3 (gamma'-phase candidate ranking)
+    # and Table 4 (Ni3Al lattice-constant matches).  Values are rounded to
+    # the precision printed in the manuscript tables; delta_a and the
+    # composite score are computed from unrounded values.
+    cur.execute(
+        "WITH aref AS ("
+        "  SELECT s.lattice_a AS a_ref FROM material_entry me "
+        "  JOIN structure s ON s.entry_id = me.entry_id "
+        "  WHERE me.formula = 'Ni3Al' "
+        "  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  ORDER BY s.entry_id LIMIT 1"
+        "), scored AS ("
+        "  SELECT m.formula, m.entry_id, s.lattice_a, ps.energy_above_hull, "
+        "         cp.value AS bulk_modulus, "
+        "         ABS(s.lattice_a - aref.a_ref) AS delta_a, "
+        "         (1.0 - ps.energy_above_hull / 0.05) * 0.35 "
+        "         + (1.0 - ABS(s.lattice_a - aref.a_ref) / 0.3) * 0.35 "
+        "         + (cp.value / 300.0) * 0.30 AS s_score "
+        "  FROM material_entry m "
+        "  JOIN structure s ON s.entry_id = m.entry_id "
+        "  JOIN phase_stability ps ON ps.entry_id = m.entry_id "
+        "  JOIN calculation c ON c.entry_id = m.entry_id "
+        "  AND c.calculation_type = 'relaxation' "
+        "  JOIN calculated_property cp ON cp.calculation_id = c.calculation_id "
+        "  AND cp.property_name = 'bulk_modulus' "
+        "  CROSS JOIN aref "
+        "  WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  AND ps.energy_above_hull <= 0.05"
+        "), dedup AS ("
+        "  SELECT DISTINCT ON (formula) * FROM scored "
+        "  ORDER BY formula, s_score DESC, entry_id"
+        ") "
+        "SELECT formula, entry_id, ROUND(lattice_a::numeric, 3), "
+        "       ROUND(energy_above_hull::numeric, 3), "
+        "       ROUND(bulk_modulus::numeric, 0), "
+        "       ROUND(delta_a::numeric, 3), ROUND(s_score::numeric, 3) "
+        "FROM dedup ORDER BY s_score DESC, entry_id LIMIT 10"
+    )
+    gamma_prime_top10 = [
+        {
+            "rank": i + 1,
+            "formula": r[0],
+            "entry_id": r[1],
+            "lattice_a": float(r[2]),
+            "energy_above_hull": float(r[3]),
+            "bulk_modulus_gpa": int(r[4]),
+            "delta_a": float(r[5]),
+            "composite_score": float(r[6]),
+        }
+        for i, r in enumerate(cur.fetchall())
+    ]
+
+    cur.execute(
+        "WITH aref AS ("
+        "  SELECT s.lattice_a AS a_ref FROM material_entry me "
+        "  JOIN structure s ON s.entry_id = me.entry_id "
+        "  WHERE me.formula = 'Ni3Al' "
+        "  AND (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "  ORDER BY s.entry_id LIMIT 1"
+        ") "
+        "SELECT m.formula, m.entry_id, ROUND(s.lattice_a::numeric, 3), "
+        "       ROUND(ABS(s.lattice_a - aref.a_ref)::numeric, 3), "
+        "       ROUND(ps.energy_above_hull::numeric, 3), "
+        "       ROUND(ps.formation_energy_per_atom::numeric, 3) "
+        "FROM material_entry m "
+        "JOIN structure s ON s.entry_id = m.entry_id "
+        "JOIN phase_stability ps ON ps.entry_id = m.entry_id "
+        "CROSS JOIN aref "
+        "WHERE (s.prototype = 'L12' OR s.strukturbericht = 'L12') "
+        "AND ABS(s.lattice_a - aref.a_ref) <= 0.03 "
+        "ORDER BY ABS(s.lattice_a - aref.a_ref), m.entry_id"
+    )
+    lattice_match_entries = [
+        {
+            "formula": r[0],
+            "entry_id": r[1],
+            "lattice_a": float(r[2]),
+            "abs_delta_a": float(r[3]),
+            "energy_above_hull": float(r[4]),
+            "formation_energy_per_atom": float(r[5]),
+        }
+        for r in cur.fetchall()
+    ]
+
     conn.close()
 
     # ==================================================================
@@ -286,15 +370,152 @@ def main():
 
     cte_qids = {"q_vhard_009", "q_vhard_016", "q_vhard_018",
                 "q_vhard_019", "q_vhard_020"}
-    n_cte_queries = sum(1 for q in queries if q["id"] in cte_qids)
+    n_cte_in_ablation_subset = sum(1 for q in queries if q["id"] in cte_qids)
 
-    # Expert / independent evaluation dataset
+    # Disjoint partition of the main 245 into the subsets that are
+    # re-reported elsewhere in the manuscript (Sec. 4.3) plus the residual.
+    main_qids = {q["id"] for q in main_queries}
+    ablation_qids = {q["id"] for q in queries}
+    cte15_qids = {q["id"] for q in load_jsonl("evaluation/cte15_dataset.jsonl")}
+    cte_zero_shot_qids = {
+        q["id"] for q in load_jsonl("evaluation/cte_evaluation_dataset.jsonl")}
+    prototype_qids = {
+        q["id"] for q in load_jsonl("evaluation/prototype_evaluation_dataset.jsonl")}
+    transfer_qids = {
+        q["id"] for q in load_jsonl("evaluation/transfer_evaluation_dataset.jsonl")}
+    independent_design_qids = {
+        q["id"] for q in load_jsonl("evaluation/expert_evaluation_dataset.jsonl")}
+    assert ablation_qids <= main_qids and independent_design_qids <= main_qids
+    assert cte15_qids <= main_qids and prototype_qids <= main_qids
+    assert cte15_qids == (cte_qids | cte_zero_shot_qids)
+    assert cte_qids <= ablation_qids and not (cte_zero_shot_qids & ablation_qids)
+    assert not (transfer_qids & main_qids)
+    residual_qids = (main_qids - ablation_qids - independent_design_qids
+                     - prototype_qids - cte_zero_shot_qids)
+    partition_blocks = [ablation_qids, independent_design_qids, prototype_qids,
+                        cte_zero_shot_qids, residual_qids]
+    assert sum(len(b) for b in partition_blocks) == n_main_queries
+    main_partition = {
+        "_note": "Disjoint partition of the main evaluation corpus. The "
+                 "ablation subset, the independent-design 100, Variant A "
+                 "(prototype expansion) and the CTE-15 set are all subsets "
+                 "of the main corpus and are re-reported as separate runs "
+                 "in Sec. 4.3; Variants B/C/D and the untranslated EN-25 "
+                 "are distinct corpora (transfer ids do not intersect main).",
+        "n_main_queries": n_main_queries,
+        "ablation_subset": len(ablation_qids),
+        "independent_design": len(independent_design_qids),
+        "independent_design_id_range": "q_expert_001-q_expert_100",
+        "variant_a_prototype": len(prototype_qids),
+        "variant_a_id_prefix": "q_proto_",
+        "cte_zero_shot": len(cte_zero_shot_qids),
+        "cte_zero_shot_id_prefix": "q_cte_",
+        "residual_expert_101_115": len(residual_qids),
+        "residual_ids": sorted(residual_qids),
+        "author_designed_total": n_main_queries - len(independent_design_qids),
+        "n_cte15": len(cte15_qids),
+        "n_cte_in_ablation_subset": n_cte_in_ablation_subset,
+        "n_re_reported_in_sec43": len(independent_design_qids | prototype_qids
+                                        | cte15_qids),
+        "n_transfer_b_outside_main": len(transfer_qids - main_qids),
+    }
+    assert main_partition["n_re_reported_in_sec43"] == (
+        len(independent_design_qids) + len(prototype_qids) + len(cte15_qids))
+
+    def _main_run_subset_pct(qids: set[str]) -> float:
+        rows = [r for r in main_run_rows if r["qid"] in qids]
+        assert len(rows) == len(qids)
+        return pct(sum(r["execution_recall"] for r in rows) / len(rows))
+
+    main_run_rows = load_json("evaluation/main_eval_with_sql.json")["results"]
+    main_partition["within_main_run_recall_pct"] = {
+        "_note": "Recall of each re-reported subset inside the single main "
+                 "run (the separate reruns in Sec. 4.3 are different runs "
+                 "of the same questions)",
+        "independent_design": _main_run_subset_pct(independent_design_qids),
+        "variant_a_prototype": _main_run_subset_pct(prototype_qids),
+        "cte15": _main_run_subset_pct(cte15_qids),
+        "cte_in_ablation_subset": _main_run_subset_pct(cte_qids),
+        "cte_zero_shot": _main_run_subset_pct(cte_zero_shot_qids),
+    }
+
+    # Ordering contracts of the main corpus: `semantic_ordered` (the question
+    # itself asks for an ordered answer) governs the exact metric; `ORDER BY`
+    # in the gold SQL is the population of the separate `ordered` audit column.
+    order_by_re = re.compile(r"\border\s+by\b", re.IGNORECASE)
+    n_semantic_ordered_main = 0
+    n_gold_order_by_main = 0
+    for q in main_queries:
+        exp = load_json("evaluation/" + q["expected_result_path"])
+        n_semantic_ordered_main += int(bool(exp.get("semantic_ordered")))
+        gold = resolve_relpath("evaluation/" + q["gold_sql_path"]).read_text(
+            encoding="utf-8")
+        n_gold_order_by_main += int(bool(order_by_re.search(gold)))
+
+    # Expert / independent evaluation dataset (a subset of the main 245)
     expert_queries = load_jsonl("evaluation/expert_evaluation_dataset.jsonl")
     n_expert_queries = len(expert_queries)
     expert_diff_counts = Counter(q["difficulty"] for q in expert_queries)
+    expert_qids = {q["id"] for q in expert_queries}
+    expert_rows = [r for r in main_run_rows if r["qid"] in expert_qids]
+    other_rows = [r for r in main_run_rows if r["qid"] not in expert_qids]
+    assert len(expert_rows) == n_expert_queries
+    main_diff_by_qid = {q["id"]: q["difficulty"] for q in main_queries}
+    difficulty_levels = ("easy", "medium", "hard", "very_hard")
+
+    def stratum_means(rows: list[dict]) -> dict[str, tuple[float, int]]:
+        out = {}
+        for level in difficulty_levels:
+            vals = [r["execution_recall"] for r in rows
+                    if main_diff_by_qid[r["qid"]] == level]
+            out[level] = (sum(vals) / len(vals), len(vals))
+        return out
+
+    def standardized_recall(means: dict[str, tuple[float, int]]) -> float:
+        return pct(sum(means[level][0] * main_diff_counts[level]
+                       for level in difficulty_levels)
+                   / n_main_queries)
+
+    expert_means = stratum_means(expert_rows)
+    author_means = stratum_means(other_rows)
+    expert_strata = {level: {"pct": pct(mean), "n": n}
+                     for level, (mean, n) in expert_means.items()}
+    author_strata = {level: {"pct": pct(mean), "n": n}
+                     for level, (mean, n) in author_means.items()}
+    main_run_subsets = {
+        "_note": "Within-run breakdown of the single main run: the "
+                 "independently designed queries are a subset of the main "
+                 "corpus, evaluated here in the same run",
+        "expert_subset_pct": pct(
+            sum(r["execution_recall"] for r in expert_rows)
+            / len(expert_rows)),
+        "n_expert_subset": len(expert_rows),
+        "author_designed_pct": pct(
+            sum(r["execution_recall"] for r in other_rows)
+            / len(other_rows)),
+        "n_author_designed": len(other_rows),
+        "by_difficulty": {
+            "_note": "Per-difficulty recall within the same main run, "
+                     "using the design-time difficulty labels of the "
+                     "main corpus",
+            "expert_subset": expert_strata,
+            "author_designed": author_strata,
+        },
+        "standardized_to_main_distribution": {
+            "_note": "Exploratory direct standardization: each subset's "
+                     "unrounded per-difficulty recall reweighted by the "
+                     "difficulty composition of the whole main corpus, so "
+                     "the two subsets are compared at a common difficulty "
+                     "mix",
+            "expert_subset_pct": standardized_recall(expert_means),
+            "author_designed_pct": standardized_recall(author_means),
+        },
+        "source_file": "evaluation/main_eval_with_sql.json",
+    }
 
     # Language-dependence evaluations (paired ja/en 100q + independent EN 25q)
     language_eval = load_json("evaluation/language_eval_summary.json")
+    language_paired_stats = load_json("evaluation/language_paired_stats.json")
 
     # Extended validation runs (independent 100q / transfer 20q / CTE 15q)
     independent_eval = summarize_eval_results(
@@ -601,7 +822,7 @@ def main():
     # ==================================================================
     figure_source_data = {
         "_note": "Verbatim evaluation JSON payloads consumed by "
-                 "scripts/generate_figures.py",
+                 "generate_figures.py (paper_scripts/ in the package)",
         "ablation_multirun_stats": multirun,
         "ablation_significance_v2": sig_v2,
         "fewshot_sensitivity": load_json(
@@ -868,6 +1089,12 @@ def main():
                 "evaluation/multiaxis_results.json",
                 "evaluation/model_comparison_results.json",
                 "evaluation/failure_analysis.json",
+                "evaluation/language_eval_summary.json",
+                "evaluation/language_paired_stats.json",
+                "evaluation/evaluation_dataset_en.jsonl",
+                "evaluation/independent_en_dataset.jsonl",
+                "evaluation/main_eval_with_sql.json",
+                "evaluation/independent_eval_results.json",
                 "llm/mecab_materials.csv",
                 "llm/materials_engineering_vocab.csv",
                 "llm/material_terms.yaml",
@@ -890,7 +1117,18 @@ def main():
                 "hard": diff_counts.get("hard", 0),
                 "very_hard": diff_counts.get("very_hard", 0),
             },
-            "n_cte_queries": n_cte_queries,
+            "n_cte_queries": main_partition["n_cte15"],
+            "n_cte_in_ablation_subset": n_cte_in_ablation_subset,
+            "n_cte_zero_shot": main_partition["cte_zero_shot"],
+            "main_partition": main_partition,
+            "ordering_contracts": {
+                "_note": "exact_result_set_match enforces row order only for "
+                         "expected results with semantic_ordered=true; the "
+                         "'ordered' scoring-audit column uses the different "
+                         "population of gold SQL with ORDER BY.",
+                "n_semantic_ordered_main": n_semantic_ordered_main,
+                "n_gold_order_by_main": n_gold_order_by_main,
+            },
             "n_fewshot_examples": n_fewshot_examples,
         },
         "database": {
@@ -913,7 +1151,7 @@ def main():
             "table": ablation_table,
             "top3_per_difficulty_deltas": ablation_deltas,
             "cte_query_results": {
-                "n_cte_queries": n_cte_queries,
+                "n_cte_queries": n_cte_in_ablation_subset,
                 "cte_categories": [
                     "CTE_single", "CTE_filter", "CTE_aggregate",
                     "CTE_multistage", "CTE_column_compare",
@@ -941,21 +1179,42 @@ def main():
             "n_metastable_l12": n_metastable_l12,
             "n_ni3al_lattice_match": n_ni3al_lattice_match,
             "a_ref_ni3al": a_ref_ni3al,
+            "gamma_prime_top10": gamma_prime_top10,
+            "lattice_match_entries": lattice_match_entries,
         },
         "language_evaluation": {
             "_note": "Paired ja/en robustness test: English translations of "
                      "the 100-query ablation set evaluated with identical "
                      "gold SQL, expected results, database, and pipeline "
-                     "(full condition, 3 runs per language); plus an "
-                     "independently authored 25-query English validation "
-                     "set (independent_en_dataset.jsonl) with its own gold "
-                     "SQL and expected results",
+                     "(full condition, 3 runs per language); plus a "
+                     "non-translated 25-query English validation set "
+                     "(independent_en_dataset.jsonl), newly authored in "
+                     "English without reference to the existing query sets, "
+                     "with its own gold SQL and expected results created "
+                     "after authoring and verified against the database. "
+                     "Difficulty labels of the non-translated set follow "
+                     "the post-hoc structural-complexity proxy recomputed "
+                     "from its gold SQL "
+                     "(scripts/compute_unified_difficulty.py); its "
+                     "difficulty distribution differs from the main "
+                     "evaluation, so its recall is not directly comparable "
+                     "in level to the main or paired results",
             **language_eval,
+            "paired_stats": {
+                "_note": "Per-query three-run mean recall, en - ja "
+                         "(scripts/compute_language_stats.py); exact "
+                         "Wilcoxon signed-rank on non-zero differences and "
+                         "seeded bootstrap percentile CI",
+                **language_paired_stats,
+            },
         },
         "independent_evaluation": {
             "_note": "The earlier harmonized comparison has been removed; "
-                     "use the full independent rerun below (see n_queries).",
+                     "use the full independent rerun below (see n_queries). "
+                     "These queries are a subset of the main corpus; the "
+                     "rerun below is a separate run of that same subset.",
             "n_queries": n_expert_queries,
+            "main_run_subsets": main_run_subsets,
             "difficulty_distribution": {
                 "easy": expert_diff_counts.get("easy", 0),
                 "medium": expert_diff_counts.get("medium", 0),
@@ -974,7 +1233,13 @@ def main():
             "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
             "A_prototype_expansion": {
                 "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the "
-                         "same normalized main schema",
+                         "same normalized main schema. The 20 queries are a "
+                         "subset of the main 245 (q_proto_*); this is a "
+                         "separate run of those same questions, not a "
+                         "distinct corpus (see dataset.main_partition).",
+                "subset_of_main": True,
+                "within_main_run_pct": main_partition[
+                    "within_main_run_recall_pct"]["variant_a_prototype"],
                 **prototype_eval,
             },
             "B_oqmd_transfer": {
@@ -994,8 +1259,14 @@ def main():
             },
         },
         "cte_evaluation_15": {
-            "_note": "Original CTE patterns (few-shot covered) plus novel "
-                     "zero-shot patterns; counts in n_original / n_novel",
+            "_note": "Original CTE patterns (few-shot covered; inside the "
+                     "ablation subset) plus zero-shot patterns (inside the "
+                     "main 245 but outside the ablation subset); all 15 are "
+                     "a subset of the main 245 (see dataset.main_partition). "
+                     "Counts in n_original / n_novel.",
+            "subset_of_main": True,
+            "within_main_run_pct": main_partition[
+                "within_main_run_recall_pct"]["cte15"],
             **cte15_eval,
         },
         "safety": {
@@ -1040,7 +1311,7 @@ def main():
     print("\n=== VERIFICATION SUMMARY ===")
     print(f"Database: {n_tables} tables, {n_views} views, "
           f"{table_counts['material_entry']} entries")
-    print(f"Dataset: {n_queries} queries ({n_cte_queries} CTE), "
+    print(f"Dataset: {n_queries} queries ({n_cte_in_ablation_subset} CTE), "
           f"{n_fewshot_examples} few-shot examples")
     print(f"Ablation conditions: {len(ablation_table)}")
     print(f"  full:         {t['full']['overall_pct']}% "

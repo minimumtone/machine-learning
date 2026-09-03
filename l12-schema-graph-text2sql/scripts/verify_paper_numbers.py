@@ -62,6 +62,9 @@ UNCITED_JSON_PATHS = (
     "cte_evaluation_15.avg_latency_s",
     # aggregate mean; the manuscript tables cite the per-difficulty values
     "multiaxis.aggregate_pct.select_column_precision_mean",
+    # bootstrap provenance (seed / resample count), not manuscript data values
+    "language_evaluation.paired_stats.bootstrap_seed",
+    "language_evaluation.paired_stats.bootstrap_n_resamples",
 )
 
 

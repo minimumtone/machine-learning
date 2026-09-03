@@ -17,8 +17,10 @@ reports what the same runs score once each leniency is removed:
   historical        historical execution recall — the metric used for
                     the reported numbers
   exact_result_set_match   the canonical exact metric: exact gold column
-                    list + row multiset match + row order when the gold
-                    query is ordered
+                    list + row multiset match + row order only when the
+                    expected result's semantic_ordered flag is set (the
+                    question itself asks for an ordered answer; NOT every
+                    gold ORDER BY)
   common_column_exact_overlap  the LEGACY lenient "exact": recall=1 and
                     precision=1 over the common columns only (a result
                     missing gold columns can still count)
@@ -26,7 +28,8 @@ reports what the same runs score once each leniency is removed:
   no_positional     no positional fallback when column names do not overlap
   drop_empty_gold   queries whose gold result is empty are excluded
   multiset          row multiplicity is respected
-  ordered           row order is respected (gold queries with ORDER BY only)
+  ordered           row order is respected (gold queries with ORDER BY only;
+                    a separate diagnostic population from semantic_ordered)
   strict            all of the above except ordering
 
 Usage:
@@ -152,6 +155,7 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
     common_col_exact_sum = 0.0
     canonical_exact_sum = 0.0
     ordered_sum, ordered_n = 0.0, 0
+    n_semantic_ordered = 0
     excluded: list[str] = []
     missing_cols: list[str] = []
     no_overlap: list[str] = []
@@ -189,9 +193,10 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
 
         common_col_exact_sum += 1.0 if (
             hist["recall"] == 1.0 and hist["precision"] == 1.0) else 0.0
+        semantic_ordered = bool(exp.get("semantic_ordered")) if isinstance(exp, dict) else False
+        n_semantic_ordered += int(semantic_ordered)
         canonical_exact_sum += 1.0 if exact_result_set_match(
-            got, exp_rows, cols, exp_cols,
-            ordered=bool(exp.get("semantic_ordered")) if isinstance(exp, dict) else False,
+            got, exp_rows, cols, exp_cols, ordered=semantic_ordered,
         ) else 0.0
         q_scores: dict[str, float] = {}
 
@@ -244,7 +249,10 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
             "(row-set recall over common columns), not a strict "
             "execution accuracy; the canonical exact metric is "
             "'exact_result_set_match_pct' (exact gold column list + row "
-            "multiset + order when the gold query is ordered); "
+            "multiset + row order only when the expected result's "
+            "semantic_ordered flag is set, i.e. the question itself asks "
+            "for an ordered answer; the 'ordered' policy below uses the "
+            "different population of gold queries with ORDER BY); "
             "'common_column_exact_overlap_pct' is the LEGACY lenient "
             "exact over common columns only and is kept for comparison"),
         "n_queries": n,
@@ -256,6 +264,7 @@ def audit_dataset(name: str) -> dict[str, Any] | None:
             for p in POLICIES
         },
         "exact_result_set_match_pct": round(canonical_exact_sum / n * 100, 1),
+        "n_semantic_ordered": n_semantic_ordered,
         "common_column_exact_overlap_pct": round(common_col_exact_sum / n * 100, 1),
         "ordered": {
             "mean_recall_pct": round(ordered_sum / ordered_n * 100, 1) if ordered_n else None,

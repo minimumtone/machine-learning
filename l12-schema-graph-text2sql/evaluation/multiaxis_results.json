@@ -4233,5 +4233,5 @@
       "latency_s": 28.9
     }
   ],
-  "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order when the gold query is ordered (normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
+  "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order only when the expected result's semantic_ordered flag is set (the question itself asks for an ordered answer; normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
 }

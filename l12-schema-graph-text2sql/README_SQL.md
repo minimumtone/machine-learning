@@ -1,6 +1,7 @@
-# L12 Text-to-SQL — SQL資材一式（第22次SQLレビュー対応版）
+# L12 Text-to-SQL — SQL資材一式（第23次評価契約反映版）
 
-- 生成元コミット: GIT_COMMIT ファイル参照（ブランチ devin/1788016904-sql-review-round22、第22次SQLレビュー対応済み）
+- 生成元コミット: GIT_COMMIT ファイル参照（第23次評価契約反映済み）
+- `MANIFEST.md` : `evaluation/` の各成果物（データセット・保存run・派生統計）と論文の表・図の対応表
 
 ## 一括検証（唯一の正式エントリポイント）
 
@@ -14,7 +15,7 @@
 - `scripts/verify_all.py --static-only` に question↔gold hidden-constraint lint を追加した。現在は canonical 300問すべてがこのlintを通過する。
 - generated-SQL manifest は `source_result_file` の SHA-256 と provenance 本体まで検証するよう強化した。CTE/prototype manifest の stale source hash も現 source JSON に合わせて修正した。
 - **重要:** canonical gold / expected を変更したため、hashだけを書き換えてはいけない（本patch段階では provenance check を意図的にFAILさせていた）。
-- **DB再採点済み（R22A版）:** `python scripts/check_expected_results.py` で main+transfer+難読化の285 expected をPostgreSQL 15上で再確認（ok=285 stale=0 errors=0、DML由来のexpected再計算を含む。MPを含む全300件の gold/expected 照合は `run_gold_verification.py` で ok=300）した上で、`scripts/rescore_stored_results.py` により**LLM再推論なしで保存済みgenerated SQL 6,020本を現行gold/expectedに対して再実行・再採点**し、全評価JSON・派生成果物（main_eval_with_sql / generated_sql manifest / failure_analysis / scoring_audit / ablation統計 / significance）を決定的に再生成した。再採点後の主要値（R23再採点反映済み）: main 245問 historical execution recall 86.1%（canonical exact result-set match 10.6%）/ LLM-only 78.3% / transfer 85.0% / 難読化 80.0% / MP 93.3% / 独立 81.5% / CTE 72.7% / ablation 5run full 92.5%±0.4（Holm補正後有意は no_fewshot・no_dict のみ）。再採点を経た評価JSONの provenance には `rescored_at` / `rescore_note` を記録している。
+- **DB再採点済み（R23版）:** `python scripts/check_expected_results.py` で main+transfer+難読化の285 expected をPostgreSQL 15上で再確認（ok=285 stale=0 errors=0、DML由来のexpected再計算を含む。MPを含む全300件の gold/expected 照合は `run_gold_verification.py` で ok=300）した上で、`scripts/rescore_stored_results.py` により**LLM再推論なしで保存済みgenerated SQL 6,020本を現行gold/expectedに対して再実行・再採点**し、全評価JSON・派生成果物（main_eval_with_sql / generated_sql manifest / failure_analysis / scoring_audit / ablation統計 / significance）を決定的に再生成した。再採点後の主要値（R23再採点反映済み）: main 245問 historical execution recall 86.1%（canonical exact result-set match 10.6%）/ LLM-only 78.3% / transfer 85.0% / 難読化 80.0% / MP 93.3% / 独立 81.5% / CTE 72.7% / ablation 5run full 92.5%±0.4（Holm補正後有意は no_fewshot・no_dict のみ）。再採点を経た評価JSONの provenance には `rescored_at` / `rescore_note` を記録している。
 - `paper/` 専用の figure 入力 `jp_reranker_vh_results.json`（per-query SQL を保存しておらず再採点不能な R22A 以前の比較実験）は SQL パッケージから除外し、`scripts/eval_jp_reranker_vh.py` も paper 専用スクリプトとして除外した。
 
 ## R23 評価契約の分離（意味的順序・出力列契約）
@@ -29,7 +30,7 @@
 - 実行時依存は psycopg と sqlglot の2つ（sqlglot は gold_compare.py の ORDER BY 意味論判定に必須。「psycopg のみ」ではない）。graph 系ヘルパは networkx、llm/ 設定読込は PyYAML、unit test は pytest を使用
 - 検証済みバージョンを requirements-repro.txt に固定済み: `pip install -r requirements-repro.txt`
 - MP 転用DBの再構築（scripts/build_mp_transfer_db.py）はデフォルトで同梱スナップショット db/mp_transfer_snapshot.json.gz（メタデータに SHA-256・APIエンドポイント・chemsys 一覧・件数を記録）から MP API なしで再構築できる（一時DB mp_transfer_build_tmp に構築→件数検証成功後に rename/swap する all-or-nothing 方式）。ライブ再取得は明示的な `--refresh-from-api` のみで実行され（追加で requests と MP_API_KEY が必要）、全 chemsys 成功・ページネーション完走・material_id 重複ゼロを検証してから新スナップショットを保存し、そこからDBを構築する
-- unit test 実行: `python -m pytest -q -ra`（tests/ 同梱、155件。JOIN 生成器の回帰テスト・MPスナップショット整合テストを含む）。`-ra` で skipped の内訳（DB未接続時の test_db_integrity.py のスキップ）を必ず表示させ、passed 件数だけで「全テスト成功」と判断しないこと。DB接続を必須にする厳格モードは `FULL_DB_TEST=1 python -m pytest -q -ra`（DB未接続を skip ではなく failure にする）
+- unit test 実行: `python -m pytest -q -ra`（tests/ 同梱、160件。JOIN 生成器の回帰テスト・MPスナップショット整合テストを含む）。`-ra` で skipped の内訳（DB未接続時の test_db_integrity.py のスキップ）を必ず表示させ、passed 件数だけで「全テスト成功」と判断しないこと。DB接続を必須にする厳格モードは `FULL_DB_TEST=1 python -m pytest -q -ra`（DB未接続を skip ではなく failure にする）
 - db/001_schema.sql → 002_reference_data.sql → 003_material_data.sql → 004_views.sql → 005_roles.sql → 006_integrity_checks.sql → 007_initialization_marker.sql の順で PostgreSQL 15 に適用（docker/docker-compose.yml で自動適用）
 - 注意: 005_roles.sql は所有者ロール l12_user を名指しで参照するため、POSTGRES_USER はデフォルトの l12_user のまま使用すること
 - 注意: 006_integrity_checks.sql は cross-row アサーションを `validate_fixture_integrity()` 関数として定義・実行する（再実行可能: `SELECT validate_fixture_integrity();`）。007_initialization_marker.sql は同関数の成功にゲートされてマーカーを作成し、第11次からは `schema_fingerprint` を強化し、public スキーマの列の正確な型（format_type）・NOT NULL・default・生成式・全制約（pg_get_constraintdef）・view（pg_get_viewdef）・trigger（pg_get_triggerdef）・trigger関数本体（pg_get_functiondef）の SHA-256 を記録する。あわせて `git_commit` 列を追加（ロード時に `PGOPTIONS="-c l12.git_commit=$(cat GIT_COMMIT)"` または docker compose の `GIT_COMMIT` 環境変数で伝播、未指定時は 'unknown'。docker/docker-compose.yml は `GIT_COMMIT=$(cat GIT_COMMIT) docker compose up -d` で自動伝播）。`SELECT version, schema_fingerprint, git_commit FROM schema_initialization_status;` で確認。マーカーは初期化完了マーカーであり、以後の非サポート書き込み後の整合性保証ではない
@@ -51,7 +52,7 @@
 - evaluation/gold_sql_mp/・expected_results_mp_transfer/: MP転用実験（q_mp_001〜015）の gold SQL と期待結果（第20次から gold SQL をファイル化し、run_gold_verification.py / audit_order_totality.py の検証対象に追加。MP_DSN 設定時に検証される）
 - evaluation/gold_sql_obfuscated/・expected_results_obfuscated/: 難読化転用実験の gold SQL 20件＋期待結果（db/obfuscated_transfer_mapping.json と scripts/prepare_obfuscated_transfer.py で生成）
 - evaluation/generated_sql/: LLM生成SQLログ（main/independent/cte/llm_only/prototype/transfer系/mp_transfer。各 manifest.json が参照する source_file / eval_file（main_eval_with_sql.json 等）は evaluation/ 直下に同梱）
-- evaluation/main_evaluation_dataset.jsonl（第19次新設）: 本評価245問全件の自然言語質問データセット。各行は id / question / difficulty / gold_sql_path / expected_result_path（一部は semantic_contract: 自然言語語彙→スキーマ述語の対応）を持ち、gold SQL との対応を検査可能
+- evaluation/main_evaluation_dataset.jsonl（第19次新設）: 本評価245問全件の自然言語質問データセット。各行は id / question / difficulty / gold_sql_path / expected_result_path（一部は semantic_contract: 自然言語語彙→スキーマ述語の対応）を持ち、gold SQL との対応を検査可能。注: 共同著者による独立設計100問は q_expert_001〜100（expert_evaluation_dataset.jsonl と同一で、245問の部分集合）。q_expert_101〜115 は歴史的なID命名を保持しているが独立設計100問には含まれない（著者設計）。semantic_contract フィールドは自然言語語彙とスキーマ述語の対応の明示が必要だった q_expert_014 / q_expert_038（いずれも独立設計100問側）のみに付与されており、他の行には無い（メタデータ粒度の差であり、別データセットであることを意味しない）
 - evaluation/transfer_evaluation_dataset.jsonl / transfer_obfuscated_evaluation_dataset.jsonl: 転用20問＋難読化20問の質問データセット（第19次で q_transfer_016/019/020 と難読化版の質問文を gold SQL の意味論に整合させた: 019/020 は「純元素基底状態基準へ再基準化した生成エネルギー（delta_e − Σ x_i·reference_delta_e_i）」を明示、016 は「OQMD登録の単元素構造候補数」へ修正。SQL・期待結果は不変）
 - .env.example: db/005_roles.sql が参照する環境変数例を同梱
 

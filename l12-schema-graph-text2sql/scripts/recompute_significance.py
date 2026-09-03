@@ -7,8 +7,9 @@ Problems with the test as implemented in ``scripts/eval_ablation_multirun.py``:
    is used regardless of sample size.  For ``no_graph`` only 3 query-level
    differences are non-zero and SciPy itself emits
    "Sample size too small for normal approximation".  SciPy's default
-   (``method="auto"``) selects the exact distribution for small samples and is
-   what should be used.
+   (``method="auto"``) selects the exact distribution for small samples, but
+   its choice varies across SciPy versions, so ``method="exact"`` is pinned
+   explicitly here.
 
 2. **No multiple-comparison correction.**  Six ablated conditions are each
    tested against the same ``full`` baseline at alpha = 0.05, and the result
@@ -139,7 +140,7 @@ def main() -> int:
         delta_pp = float(np.mean(diffs) * 100)
 
         if nonzero:
-            p_exact = float(wilcoxon(nonzero, method="auto").pvalue)
+            p_exact = float(wilcoxon(nonzero, method="exact").pvalue)
             with warnings.catch_warnings():
                 # Deliberately reproducing the legacy call, which SciPy warns
                 # about precisely because the sample is too small for it.
@@ -155,7 +156,8 @@ def main() -> int:
         run_cond = [r["conditions"][cond]["overall"] for r in runs]
         run_diffs = [a - b for a, b in zip(run_full, run_cond)]
         run_nonzero = [d for d in run_diffs if d != 0]
-        p_run = float(wilcoxon(run_nonzero, method="auto").pvalue) if run_nonzero else 1.0
+        p_run = (float(wilcoxon(run_nonzero, method="exact").pvalue)
+                 if run_nonzero else 1.0)
         n_pos = sum(1 for d in run_nonzero if d > 0)
         p_sign = (binomtest(n_pos, len(run_nonzero), 0.5).pvalue
                   if run_nonzero else 1.0)
@@ -218,7 +220,7 @@ def main() -> int:
             "generated_by": "scripts/recompute_significance.py",
             "n_runs": len(runs),
             "test": "Wilcoxon signed-rank on per-query mean accuracy, "
-                    "exact distribution (SciPy method='auto')",
+                    "SciPy method='exact' distribution",
             "correction": "Holm-Bonferroni across the ablated conditions",
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },

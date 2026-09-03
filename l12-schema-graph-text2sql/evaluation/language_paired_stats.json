@@ -1,0 +1,35 @@
+{
+  "n_queries": 100,
+  "mean_diff_pp": -2.0,
+  "wilcoxon_p_value": 0.193,
+  "n_nonzero_pairs": 13,
+  "bootstrap_ci95_pp": [
+    -5.8,
+    1.6
+  ],
+  "bootstrap_n_resamples": 100000,
+  "bootstrap_seed": 20260602,
+  "test": "exhaustive sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|) on per-query 3-run mean recall (en - ja)",
+  "by_difficulty": {
+    "easy": {
+      "n_queries": 20,
+      "mean_diff_pp": -1.3,
+      "n_nonzero_pairs": 2
+    },
+    "medium": {
+      "n_queries": 30,
+      "mean_diff_pp": -3.3,
+      "n_nonzero_pairs": 2
+    },
+    "hard": {
+      "n_queries": 30,
+      "mean_diff_pp": 0.2,
+      "n_nonzero_pairs": 6
+    },
+    "very_hard": {
+      "n_queries": 20,
+      "mean_diff_pp": -4.1,
+      "n_nonzero_pairs": 3
+    }
+  }
+}

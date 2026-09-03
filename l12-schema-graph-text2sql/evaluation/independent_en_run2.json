@@ -4,10 +4,9 @@
   "language": "en_independent",
   "overall_recall": 0.9520000000000001,
   "by_difficulty": {
-    "easy": 0.8333333333333334,
+    "easy": 0.9230769230769231,
     "medium": 1.0,
-    "hard": 1.0,
-    "very_hard": 0.96
+    "hard": 0.95
   },
   "results": [
     {
@@ -78,7 +77,7 @@
     },
     {
       "qid": "q_ien_007",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -89,7 +88,7 @@
     },
     {
       "qid": "q_ien_008",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -111,7 +110,7 @@
     },
     {
       "qid": "q_ien_010",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -144,7 +143,7 @@
     },
     {
       "qid": "q_ien_013",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -155,7 +154,7 @@
     },
     {
       "qid": "q_ien_014",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -166,7 +165,7 @@
     },
     {
       "qid": "q_ien_015",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -188,7 +187,7 @@
     },
     {
       "qid": "q_ien_017",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -210,7 +209,7 @@
     },
     {
       "qid": "q_ien_019",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -221,7 +220,7 @@
     },
     {
       "qid": "q_ien_020",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 0.011545862732520847,
@@ -232,7 +231,7 @@
     },
     {
       "qid": "q_ien_021",
-      "difficulty": "very_hard",
+      "difficulty": "hard",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -243,7 +242,7 @@
     },
     {
       "qid": "q_ien_022",
-      "difficulty": "very_hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -254,7 +253,7 @@
     },
     {
       "qid": "q_ien_023",
-      "difficulty": "very_hard",
+      "difficulty": "hard",
       "accuracy": 0.8,
       "recall": 0.8,
       "precision": 0.8,
@@ -265,7 +264,7 @@
     },
     {
       "qid": "q_ien_024",
-      "difficulty": "very_hard",
+      "difficulty": "medium",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -276,7 +275,7 @@
     },
     {
       "qid": "q_ien_025",
-      "difficulty": "very_hard",
+      "difficulty": "easy",
       "accuracy": 1.0,
       "recall": 1.0,
       "precision": 1.0,
@@ -288,16 +287,18 @@
   ],
   "provenance": {
     "dataset_file": "independent_en_dataset.jsonl",
-    "dataset_sha256": "83e30aefa19d2e9b6980e36587e87ca63bc774b9c22a2918198396a57dd88850",
-    "gold_dir": "gold_sql",
-    "gold_sha256": "a5022071c4a9c469b71dd7570c1fb7c8392d767d416b978edafb47633ba3564b",
+    "dataset_sha256": "7fa160b44918ca5bad5ed4e442d4191344af0fd43f9ae0dd314ac82b3898aff0",
+    "gold_dir": "gold_sql_independent_en",
+    "gold_sha256": "396419e22aa72edd8222108b4d920fb21c62f526d885e70cb77a60eb2358ca25",
     "prompt_template_file": "sql_generation_prompt.md",
     "prompt_template_sha256": "ccb63a28b89fc2383732bfd25794516c94bace3871cdab3a48b7a97b78e5d55b",
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
-    "expected_dir": "expected_results",
-    "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
+    "expected_dir": "expected_results_independent_en",
+    "expected_sha256": "30bfb52a1a9fa060335c5b18726a912255780dd43c98286f43e0b1a55f18342e",
     "git_commit": "22b1b43f20d26819a35aecabcbafc448ca8c6b4b",
     "generated_at": "2026-09-01T19:33:58+00:00",
-    "rescore_note": "run executed at repository commit 22b1b43f20d2 (descendant of the packaged revision); input identity is pinned by the dataset/gold/expected/prompt SHA-256 fields above, which match the packaged files"
+    "rescore_note": "run executed at repository commit 22b1b43f20d2 (descendant of the packaged revision); input identity is pinned by the dataset/gold/expected/prompt SHA-256 fields above, which match the packaged files",
+    "dataset_relabel_note": "difficulty labels updated post hoc from the post-hoc structural-complexity proxy (compute_unified_difficulty.py) and by_difficulty re-aggregated; model outputs, per-query recalls and latencies unchanged",
+    "provenance_fix_note": "gold_dir/expected_dir corrected post hoc: earlier provenance recorded the main-evaluation directories by mistake; this run was scored against gold_sql_independent_en/ and expected_results_independent_en/ (hashes above). Model outputs and results unchanged"
   }
 }
