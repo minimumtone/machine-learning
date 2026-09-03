@@ -293,12 +293,18 @@ def stage1_preprocess(
         # 特徴量選択は訓練 idx のスライスが必要なため、分割を先に行う。
         _seed0 = seeds[0] if seeds else 42
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
+        split_comps = compositions_df
+        if compositions_df is not None and compositions_df.isna().any().any():
+            # Fold assignment is unsupervised; fill only to define split blocks.
+            split_comps = compositions_df.fillna(
+                compositions_df.median(numeric_only=True).fillna(0.0)
+            )
 
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
                 try:
                     cb = CompositionBlockSplitter(n_folds=n_folds, seed=_seed0)
-                    folds = list(cb.split(features_df, target, compositions=compositions_df))
+                    folds = list(cb.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["CompositionBlock"] = folds
                         logger.info("Stage1: CompositionBlock %d folds", len(folds))
@@ -314,7 +320,7 @@ def stage1_preprocess(
             if compositions_df is not None:
                 try:
                     ee = ElementExclusionSplitter(target_elements=exclusion_elements)
-                    folds = list(ee.split(features_df, target, compositions=compositions_df))
+                    folds = list(ee.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["ElementExclusion"] = folds
                         logger.info("Stage1: ElementExclusion %d folds", len(folds))
@@ -331,7 +337,7 @@ def stage1_preprocess(
             for seed in seeds:
                 try:
                     rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
-                    folds = list(rc.split(features_df, target, compositions=compositions_df))
+                    folds = list(rc.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan[f"RandomCV_seed{seed}"] = folds
                         logger.info("Stage1: RandomCV seed=%d %d folds", seed, len(folds))
@@ -360,7 +366,7 @@ def stage1_preprocess(
                 "RandomCV seed=%d でフォールバック", _seed0
             )
             rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
-            folds = list(rc_fb.split(features_df, target, compositions=compositions_df))
+            folds = list(rc_fb.split(features_df, target, compositions=split_comps))
             if folds:
                 fold_plan[f"RandomCV_seed{_seed0}"] = folds
 

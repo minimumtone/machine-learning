@@ -277,7 +277,7 @@ class WorkflowLIN(BaseWorkflow):
         else:
             model_step = Ridge(alpha=self._alpha)
         steps: List[Tuple[str, Any]] = [
-            ("imputer", SimpleImputer(strategy="median")),
+            ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", model_step),
@@ -343,7 +343,7 @@ class WorkflowLASSO(BaseWorkflow):
                       len(X_train), len(X_test), X_train.shape[1])
 
         steps: List[Tuple[str, Any]] = [
-            ("imputer", SimpleImputer(strategy="median")),
+            ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", LassoCV(
@@ -411,7 +411,7 @@ class WorkflowARD(BaseWorkflow):
                       len(X_train), len(X_test), X_train.shape[1])
 
         steps: List[Tuple[str, Any]] = [
-            ("imputer", SimpleImputer(strategy="median")),
+            ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", ARDRegression(max_iter=500)),
@@ -506,7 +506,7 @@ class WorkflowXGB(BaseWorkflow):
         # features — causing WF-XGB to produce the same predictions as
         # simpler models that happened to be seeded with the same data.
         steps: List[Tuple[str, Any]] = [
-            ("imputer", SimpleImputer(strategy="median")),
+            ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             ("model", self._get_estimator(seed)),
         ]
@@ -655,7 +655,7 @@ class WorkflowENS(BaseWorkflow):
                 learning_rate=0.1,
             )
             return Pipeline([
-                ("imputer", SimpleImputer(strategy="median")),
+                ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
                 ("scaler", StandardScaler()),
                 ("model", model),
             ])
@@ -670,7 +670,7 @@ class WorkflowENS(BaseWorkflow):
                 random_state=seed,
             )
             steps: List[Tuple[str, Any]] = [
-                ("imputer", SimpleImputer(strategy="median")),
+                ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
                 ("scaler", StandardScaler()),
                 *_make_pca_step(n_features, self._dim_reduction),
                 ("model", model),
@@ -773,7 +773,7 @@ class WorkflowRF(BaseWorkflow):
         # MAGPIE features with disparate magnitudes from skewing the
         # max_features sampling step (which uses raw feature indices).
         steps: List[Tuple[str, Any]] = [
-            ("imputer", SimpleImputer(strategy="median")),
+            ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             ("model", RandomForestRegressor(
                 random_state=seed, n_jobs=_inner_jobs,
