@@ -88,7 +88,10 @@ for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_v
               "b2_offstoich_volumes_antisite_alrich_dense_extra_seeds2.csv",
               "b2_offstoich_volumes_alrich_vac_5x5x5_sqs_extra.csv",
               "b2_offstoich_volumes_antisite_5x5x5_sqs.csv",
-              "b2_offstoich_volumes_vacancy_stoichiometric.csv"):
+              "b2_offstoich_volumes_vacancy_stoichiometric.csv",
+              "b2_offstoich_volumes_vacancy_055_smooth.csv",
+              "b2_offstoich_volumes_alrich_vac_5x5x5_highal.csv",
+              "b2_offstoich_volumes_antisite_5x5x5_highal.csv"):
     p = os.path.join(AN, extra)
     if os.path.exists(p):
         df = pd.concat([df, pd.read_csv(p)], ignore_index=True)
@@ -253,6 +256,7 @@ for (x, br), g in df[df.branch != "perfect"].groupby(["x_Al_target", "branch"]):
         "Gstd": Gstd,
         "Omega_total_eV": Omega,
         "n_atoms": int(round(g.n_atoms.mean())),
+        "n_sites": int(round(g.n_sites.mean())),
         "n": n_eff,
         "n_total": n_total,
         "alpha_mean": alpha_mean,
@@ -355,7 +359,7 @@ ax.plot(_x_end, V_bcc_veg, "--", color="tab:gray", lw=1.8,
 ax.set_xlabel(r"$x_{\mathrm{Al}}$")
 ax.set_ylabel(r"平均原子体積 $\bar V$ (Å$^3$/atom)")
 ax.set_title(r"B2-Ni$_{1-x}$Al$_x$ 平均原子体積と Vegard 線")
-ax.set_xlim(0.40, 0.82)
+ax.set_xlim(0.40, 1.02)
 ax.legend(fontsize=11)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG, "fig_b2_offstoich_vbar.png"), dpi=150)

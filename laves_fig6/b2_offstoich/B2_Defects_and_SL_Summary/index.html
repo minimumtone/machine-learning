@@ -49,7 +49,7 @@ MathJax = {
 <strong>主要成果物</strong>：統合レポート <span class="mono">B2_NiAl_Integrated_Report.md</span>、4SL/8SL 設計書 <span class="mono">4SL_B2_MODEL_DESIGN.md</span>、icet スクリプト <span class="mono">run_icet_b2_cluster_expansion.py</span></p>
 
 <div class="note">
-<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。
+<strong>進捗（SQS/SRO + high-Al 拡張）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。今回、空孔・反サイト両モデルを \(\sim0.98\) Al まで 5×5×5 SQS で拡張し、Gibbs（Helmholtz）自由エネルギーと欠陥濃度図を高 Al 域まで埋めた。\(x_{\rm Al}\approx0.55\) の折れは整数空孔数 artifact なので、自由エネルギーと欠陥割合を PCHIP 補間で滑らかにして artifact を除去した。
 </div>
 
 <nav>
@@ -122,19 +122,19 @@ c_{\rm vac} = 1 - \frac{n}{2}
 <table>
 <thead><tr><th>\(x_{\rm Al}\)</th><th>\(x_{\rm Ni}\)</th><th><i>a</i><sub>T-D</sub> (Å)</th><th>\(\rho\) (g/cm³)</th><th>\(n\)/cell</th><th>\(c_{\rm vac}^{\rm exp}\)</th><th>\(c_{\rm vac}^{\rm model}\)</th><th>\(c_{\rm vac}^{\rm MLIP}\)</th><th>\(c_{\rm vac}^{\rm hybrid}\) (1473 K)</th><th>\(p_{\rm Al\,antisite}^{\rm hybrid}\) (1473 K)</th></tr></thead>
 <tbody>
-<tr><td>0.5015</td><td>0.4985</td><td>2.8863</td><td>5.873</td><td>1.989</td><td>0.0055</td><td>0.0030</td><td>0.0030</td><td>0.0018</td><td>0.0011</td></tr>
-<tr><td>0.5020</td><td>0.4980</td><td>2.8869</td><td>5.869</td><td>1.988</td><td>0.0060</td><td>0.0040</td><td>0.0040</td><td>0.0025</td><td>0.0015</td></tr>
-<tr><td>0.5040</td><td>0.4960</td><td>2.8859</td><td>5.821</td><td>1.974</td><td>0.0130</td><td>0.0079</td><td>0.0079</td><td>0.0049</td><td>0.0030</td></tr>
-<tr><td>0.5220</td><td>0.4780</td><td>2.8771</td><td>5.639</td><td>1.920</td><td>0.0400</td><td>0.0421</td><td>0.0421</td><td>0.0218</td><td>0.0213</td></tr>
-<tr><td>0.5270</td><td>0.4730</td><td>2.8739</td><td>5.556</td><td>1.893</td><td>0.0535</td><td>0.0512</td><td>0.0512</td><td>0.0276</td><td>0.0249</td></tr>
-<tr><td>0.5400</td><td>0.4600</td><td>2.8672</td><td>5.392</td><td>1.845</td><td>0.0775</td><td>0.0741</td><td>0.0740</td><td>0.0423</td><td>0.0342</td></tr>
-<tr><td>0.5471</td><td>0.4529</td><td>2.8652</td><td>5.300</td><td>1.817</td><td>0.0915</td><td>0.0861</td><td>0.0860</td><td>0.0506</td><td>0.0386</td></tr>
+<tr><td>0.5015</td><td>0.4985</td><td>2.8863</td><td>5.873</td><td>1.989</td><td>0.0055</td><td>0.0030</td><td>0.0030</td><td>0.0006</td><td>0.0024</td></tr>
+<tr><td>0.5020</td><td>0.4980</td><td>2.8869</td><td>5.869</td><td>1.988</td><td>0.0060</td><td>0.0040</td><td>0.0040</td><td>0.0007</td><td>0.0033</td></tr>
+<tr><td>0.5040</td><td>0.4960</td><td>2.8859</td><td>5.821</td><td>1.974</td><td>0.0130</td><td>0.0079</td><td>0.0079</td><td>0.0024</td><td>0.0056</td></tr>
+<tr><td>0.5220</td><td>0.4780</td><td>2.8771</td><td>5.639</td><td>1.920</td><td>0.0400</td><td>0.0421</td><td>0.0421</td><td>0.0231</td><td>0.0198</td></tr>
+<tr><td>0.5270</td><td>0.4730</td><td>2.8739</td><td>5.556</td><td>1.893</td><td>0.0535</td><td>0.0512</td><td>0.0512</td><td>0.0287</td><td>0.0237</td></tr>
+<tr><td>0.5400</td><td>0.4600</td><td>2.8672</td><td>5.392</td><td>1.845</td><td>0.0775</td><td>0.0741</td><td>0.0741</td><td>0.0430</td><td>0.0335</td></tr>
+<tr><td>0.5471</td><td>0.4529</td><td>2.8652</td><td>5.300</td><td>1.817</td><td>0.0915</td><td>0.0861</td><td>0.0861</td><td>0.0511</td><td>0.0382</td></tr>
 </tbody>
 </table>
 
 <figure>
   <img src="figures/fig_b2_vacancy_concentration.png" alt="Structural vacancy concentration">
-  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた Ni 副格子欠陥占有率。\(x_{\rm Al}=0.50\) では Ni 空孔モデル（黒線、\(c_{\rm vac}^{\rm model}=1-1/(2x)\)）も Al 反サイトモデル（緑破線、\(c_{\rm anti}^{\rm model}=x-0.5\)）も完全 B2（\(c=0\)）に一致。有限温度では 2 つの欠陥モデルを Boltzmann 加重して混合し、\(c_{\rm total}^{\rm hybrid}=c_{\rm vac}^{\rm hybrid}+p_{\rm Al\,antisite}/2\)（橙一点鎖線 1473 K、紫点線 1273 K）を与える。青破線は MACE（0 K）の最安定欠陥、赤丸は実験。細い橙線はハイブリッドの空孔分 \((c_{\rm vac}^{\rm hybrid})\)。</figcaption>
+  <figcaption>Figure 2.2 Taylor &amp; Doyle の密度と \(a(x)\) から直接求めた Ni 副格子欠陥占有率。組成軸は \(x_{\rm Al}=0.50\) から高 Al 側 \(\sim0.98\) まで拡張。\(x_{\rm Al}=0.50\) では Ni 空孔モデル（黒線、\(c_{\rm vac}^{\rm model}=1-1/(2x)\)）も Al 反サイトモデル（緑破線、\(c_{\rm anti}^{\rm model}=x-0.5\)）も完全 B2（\(c=0\)）に一致。有限温度では 2 つの欠陥モデルを Boltzmann 加重して混合し、\(c_{\rm total}^{\rm hybrid}=c_{\rm vac}^{\rm hybrid}+p_{\rm Al\,antisite}/2\)（橙一点鎖線 1473 K、紫点線 1273 K）を与える。\(x_{\rm Al}\approx0.55\) の「折れ」は整数空孔数による離散化 artifact であるため、分支間の自由エネルギーを PCHIP 補間で滑らかにした。青破線は MACE（0 K）の最安定欠陥、赤丸は実験。灰色背景は B2 単相限界（\(x_{\rm Al}\gtrsim0.62\)）を超える metastable 外挿。</figcaption>
 </figure>
 
 <div class="note">

@@ -78,6 +78,7 @@ b2_files = [
     os.path.join(AN, 'b2_offstoich_volumes.csv'),
     os.path.join(AN, 'b2_offstoich_volumes_extra_vac.csv'),
     os.path.join(AN, 'b2_offstoich_volumes_wide_vac.csv'),
+    os.path.join(AN, 'b2_offstoich_volumes_vacancy_055_smooth.csv'),
     os.path.join(AN, 'b2_offstoich_volumes_antisite_extra.csv'),
     os.path.join(AN, 'b2_offstoich_volumes_50competition.csv'),
     os.path.join(AN, 'b2_offstoich_volumes_antisite_alrich_dense.csv'),

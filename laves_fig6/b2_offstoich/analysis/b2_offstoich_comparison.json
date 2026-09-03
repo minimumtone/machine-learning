@@ -1,12 +1,12 @@
 {
   "n_exp_points_compared": 12,
-  "RMSE_V_A3": 0.1576,
-  "MAPE_V_pct": 0.989,
+  "RMSE_V_A3": 0.1577,
+  "MAPE_V_pct": 0.99,
   "RMSE_V_A3_Ni_rich": 0.0863,
   "MAPE_V_pct_Ni_rich": 0.627,
   "n_points_Ni_rich": 3,
-  "RMSE_V_A3_Al_rich": 0.175,
-  "MAPE_V_pct_Al_rich": 1.109,
+  "RMSE_V_A3_Al_rich": 0.1752,
+  "MAPE_V_pct_Al_rich": 1.111,
   "n_points_Al_rich": 9,
   "V_B2_perfect": 11.974527545032217,
   "a_B2_perfect": 2.882456714930723,
@@ -93,9 +93,15 @@
     },
     "0.54": {
       "selected_branch": "vacancy",
-      "G_atom_eV": -0.682115,
-      "Omega_total_eV": -81.171726,
-      "dG_eV": -0.038873
+      "G_atom_eV": -0.684881,
+      "Omega_total_eV": -80.815908,
+      "dG_eV": null
+    },
+    "0.55": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.678935,
+      "Omega_total_eV": -78.756405,
+      "dG_eV": null
     },
     "0.56": {
       "selected_branch": "vacancy",
@@ -174,6 +180,48 @@
       "G_atom_eV": -0.33496,
       "Omega_total_eV": -52.253706,
       "dG_eV": -0.008753
+    },
+    "0.82": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.302065,
+      "Omega_total_eV": -45.913847,
+      "dG_eV": -0.014022
+    },
+    "0.85": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.24893,
+      "Omega_total_eV": -36.59264,
+      "dG_eV": -0.002707
+    },
+    "0.88": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.207589,
+      "Omega_total_eV": -29.685185,
+      "dG_eV": -0.005038
+    },
+    "0.90": {
+      "selected_branch": "vacancy",
+      "G_atom_eV": -0.163875,
+      "Omega_total_eV": -22.778683,
+      "dG_eV": -0.003489
+    },
+    "0.93": {
+      "selected_branch": "antisite",
+      "G_atom_eV": -0.115872,
+      "Omega_total_eV": -28.968042,
+      "dG_eV": 0.003922
+    },
+    "0.95": {
+      "selected_branch": "antisite",
+      "G_atom_eV": -0.070042,
+      "Omega_total_eV": -17.510501,
+      "dG_eV": 0.003312
+    },
+    "0.97": {
+      "selected_branch": "antisite",
+      "G_atom_eV": -0.028821,
+      "Omega_total_eV": -7.20514,
+      "dG_eV": 0.014808
     }
   }
 }
