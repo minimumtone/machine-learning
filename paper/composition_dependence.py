@@ -432,7 +432,12 @@ def fig_omega_composition(bcc: list[dict], fcc: list[dict]) -> None:
         ax.set_ylabel(r"$\Omega_\mathrm{sf}(x)$ (%)")
         ax.set_title(f"{title}  $n$={len(sel)} pairs")
         ax.set_xticks(XS)
-        ax.legend(loc="best", ncol=2, framealpha=0.9)
+        ax.legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.16),
+            ncol=4,
+            framealpha=0.9,
+        )
         ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(PAPER / "fig_omega_composition.png", bbox_inches="tight")
