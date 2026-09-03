@@ -49,7 +49,7 @@ MathJax = {
 <strong>主要成果物</strong>：統合レポート <span class="mono">B2_NiAl_Integrated_Report.md</span>、4SL/8SL 設計書 <span class="mono">4SL_B2_MODEL_DESIGN.md</span>、icet スクリプト <span class="mono">run_icet_b2_cluster_expansion.py</span></p>
 
 <div class="note">
-<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。
+<strong>進捗（SQS/SRO による高 Al ばらつき低減）</strong>：空孔モデルには 5×5×5 SQS（各組成 10 シード）、反サイトモデルには 4×4×4 追加シード（s3–s12）を投入し、Ni 副格子 1NN Warren–Cowley SRO パラメーターで外れ値を除去した。robust trimmed mean 後の体積標準偏差は、空孔側 0.70/0.72/0.74 でそれぞれ 0.039/0.021/0.022 Å³/atom、反サイト側 0.69/0.71/0.75 で 0.029/0.028/0.052 Å³/atom と大幅に縮小した。反サイト 0.73 は 0.071 Å³/atom と若干残存するため、5×5×5 SQS 追加または SRO しきい値をさらに絞る対応を検討中。さらに空孔モデルの \(x_{\rm Al}=0.50\)（1:1）点を追加計算し、完全 B2（空孔ゼロ）で欠陥モデルが接続することを確認した。
 </div>
 
 <nav>
@@ -281,6 +281,13 @@ G_i = \frac{E_i - \mu_{\rm Ni}N_{\rm Ni} - \mu_{\rm Al}N_{\rm Al}}{N_{\rm atom}}
 <figure>
   <img src="figures/fig_b2_offstoich_eform.png" alt="defect formation energy">
   <figcaption>Figure 5.1 Ni/Al 欠陥形成エネルギーの組成依存性（fcc 元素を基準）。Ni-rich では Ni 反サイト、Al-rich では Ni 空孔が支配的。</figcaption>
+</figure>
+
+<p>0 K の形成エネルギーに対し、<strong>1473 K（Yamanouchi &amp; Miura の焼鈍温度）での配置エントロピーを含めた Helmholtz 自由エネルギー</strong>では、欠陥濃度の高いほうが増加する −<em>k</em><sub>B</sub><em>T</em> ln <em>g</em> 項が大きくなる。Fig. 5.2 はその Helmholtz 自由エネルギー（1 原子あたり）を示す。黒破線は各組成でより低い方の欠陥モデルを選んだ「最安定 Helmholtz 自由エネルギー」で、x<sub>Al</sub>=0.50 の完全 B2 点で空孔・反サイトが交差する。</p>
+
+<figure>
+  <img src="figures/fig_b2_gibbs_energy.png" alt="Helmholtz free energy">
+  <figcaption>Figure 5.2 1473 K における B2-Ni<sub>1−x</sub>Al<sub>x</sub> の Helmholtz 自由エネルギー（1 原子あたり）。赤線は空孔モデル、青線は反サイトモデル、黒破線は最安定選択。x<sub>Al</sub>=0.50 の完全 B2 点で両モデルは一致する。</figcaption>
 </figure>
 
 <h3 id="sec5-1">5.1 DFT 文献との孤立点欠陥比較</h3>

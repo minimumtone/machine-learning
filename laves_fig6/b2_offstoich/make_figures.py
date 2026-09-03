@@ -87,7 +87,8 @@ for extra in ("b2_offstoich_volumes_extra_vac.csv", "b2_offstoich_volumes_wide_v
               "b2_offstoich_volumes_antisite_alrich_dense_extra_seeds.csv",
               "b2_offstoich_volumes_antisite_alrich_dense_extra_seeds2.csv",
               "b2_offstoich_volumes_alrich_vac_5x5x5_sqs_extra.csv",
-              "b2_offstoich_volumes_antisite_5x5x5_sqs.csv"):
+              "b2_offstoich_volumes_antisite_5x5x5_sqs.csv",
+              "b2_offstoich_volumes_vacancy_stoichiometric.csv"):
     p = os.path.join(AN, extra)
     if os.path.exists(p):
         df = pd.concat([df, pd.read_csv(p)], ignore_index=True)
