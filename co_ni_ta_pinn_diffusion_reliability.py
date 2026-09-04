@@ -307,6 +307,17 @@ COLORS = {"Co": "black", "Ni": "#2b83ba", "Ta": "#4daf4a"}
 SYMBOLS = {"Co": "circle-open", "Ni": "square-open", "Ta": "triangle-up-open"}
 
 
+def diag_epochs(total_epochs: int, n_late: int = 10) -> set:
+    """Epochs at which to print the training diagnostic: fixed early epochs plus
+    ``n_late`` log-spaced epochs covering the rest of the run."""
+    eps = {1, 2, 5, 20, 50, 100}
+    total = int(max(total_epochs, 1))
+    if total > 100:
+        eps |= {round(e) for e in np.geomspace(200, total, num=max(n_late, 1))}
+    eps.add(total)
+    return {e for e in eps if 1 <= e <= total}
+
+
 def set_seed(seed: int) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -2281,8 +2292,15 @@ class TernaryRegularSolutionPINN(nn.Module):
         because D̃ is **detached** from the graph before computing the
         flux divergence ∂q/∂x.  This is the "frozen coefficient"
         approach: D̃ is treated as a locally-constant matrix when taking
-        the second spatial derivative, analogous to how FDM evaluates
-        D̃ at grid points and then applies finite-difference stencils.
+        the second spatial derivative.
+
+        Note that this differs from the FDM teacher: ``_rs_compute_div_flux`` builds
+        the flux on the staggered half-grid and differences it, so the spatial
+        variation of D̃ is retained there.  Freezing D̃ drops the ``∂D̃/∂x · ∂c/∂x``
+        term, i.e. the residual is ``c_t − D̃ c_xx`` rather than ``c_t − ∂_x(D̃ c_x)``.
+        With D̃ spanning two decades across the profile (1/c thermodynamic factor)
+        this is not a small correction, and fitting M against this residual biases
+        M low even on an exact field; use the Onsager form when estimating M.
 
         Gradient flow to network weights and Ω still works: the data
         loss (which compares c to observations) provides the primary
@@ -2414,6 +2432,7 @@ def train_pinn_rs(
     history_rows = []
     rng = np.random.default_rng(42)
     t0 = time.time()
+    _diag_eps_rs = diag_epochs(epochs)
 
     for epoch in range(1, epochs + 1):
         # Physics warmup: linearly ramp w_phys from 0 to target
@@ -2521,7 +2540,7 @@ def train_pinn_rs(
             max_norm=10.0,
         )
         # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
-        if epoch in (1, 2, 5, 20, 50, 100):
+        if epoch in _diag_eps_rs:
             _gn_net_rs, _gn_omega = 0.0, 0.0
             for _n, _p in model.named_parameters():
                 if _p.grad is None:
@@ -3204,6 +3223,7 @@ def train_pinn(
     w_ic = float(weights["ic"])
     w_bc = float(weights["bc"])
     w_phys = float(weights["phys"])
+    _diag_eps = diag_epochs(epochs)
 
     for ep in range(1, epochs + 1):
         opt.zero_grad(set_to_none=True)
@@ -3288,7 +3308,7 @@ def train_pinn(
             max_norm=10.0,
         )
         # --- Diagnostic: print loss breakdown & gradient norms at early epochs ---
-        if ep in (1, 2, 5, 20, 50, 100):
+        if ep in _diag_eps:
             _gn_net, _gn_D = 0.0, 0.0
             for _n, _p in model.named_parameters():
                 if _p.grad is None:
