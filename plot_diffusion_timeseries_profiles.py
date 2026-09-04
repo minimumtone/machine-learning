@@ -104,8 +104,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--nll_grid", type=int, default=11, help="Grid points per axis for the FDM likelihood map (0 = skip)")
     p.add_argument("--nll_half_decades", type=float, default=0.5, help="Half-width of the likelihood map in log10(M)")
     p.add_argument("--dt", type=float, default=1e-5, help="RS FDM time step")
-    p.add_argument("--nsteps", type=int, default=4000, help="RS FDM macro steps")
-    p.add_argument("--save_every", type=int, default=100, help="RS FDM frame interval (frames = nsteps/save_every + 1)")
+    p.add_argument("--nsteps", type=int, default=40000, help="RS FDM macro steps (t_max = dt * nsteps)")
+    p.add_argument("--save_every", type=int, default=1000, help="RS FDM frame interval (frames = nsteps/save_every + 1)")
     p.add_argument("--noise", type=float, default=0.02, help="Pseudo-experimental noise (mole fraction)")
     p.add_argument("--n_exp_points", type=int, default=24, help="Pseudo-experimental points per time slice")
     p.add_argument("--n_time_slices", type=int, default=None,
@@ -118,6 +118,18 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--span_um", type=float, default=None,
                    help=f"Physical distance span mapped to x in [0, 1]; default {_DEFAULT_SPAN_UM}, --replot keeps the saved value")
     p.add_argument("--no_gif", action="store_true")
+    p.add_argument("--noise_model", choices=["gaussian", "alr"], default="gaussian",
+                   help="Pseudo-experimental noise: 'gaussian' in composition space (clip + renormalise, biases dilute "
+                        "components); 'alr' in additive-log-ratio space (no clipping)")
+    p.add_argument("--nll_likelihood", choices=["sum3", "ind2", "alr"], default="ind2",
+                   help="Residuals in the FDM likelihood: 'sum3' sums all three components (double-counts, since "
+                        "c_Co = 1 - c_Ni - c_Ta); 'ind2' uses the two independent components; 'alr' uses log-ratios")
+    p.add_argument("--nll_grid_offset", type=float, default=0.05,
+                   help="Offset of the likelihood-map grid centre from the true log10(M) [decades], so that the true "
+                        "value does not sit exactly on a grid node")
+    p.add_argument("--inverse_residual", choices=["fick_frozen", "onsager"], default="fick_frozen",
+                   help="PDE residual of the joint PINN inverse (3a): frozen-coefficient Fick form or "
+                        "Onsager form M * d/dx(dmu/dx)")
     args = p.parse_args()
     if args.replot is None:
         if not args.skip_inverse and args.nsteps < 2 * args.save_every:
@@ -294,6 +306,35 @@ def _fick_residual_trainable_M(mod, model, x, t, M_eff, theta_int_t, mu_floor: f
     return torch.cat([c0_t - q0_x, c1_t - q1_x], dim=1)
 
 
+def _onsager_residual_trainable_M(mod, model, x, t, M_eff, theta_int_t, mu_floor: float):
+    """Onsager-form residual  ∂c/∂t − ∂/∂x[M·∂(μ_j − μ_Co)/∂x]  with a *trainable* mobility M.
+
+    Unlike the frozen-coefficient Fick form this keeps the ∂D̃/∂x·∂c/∂x term, i.e. it
+    is the same equation the FDM teacher integrates; the 1/c blow-up of ∂μ/∂c is
+    bounded by mu_floor.
+    """
+    import torch
+    x = x.clone().detach().requires_grad_(True)
+    t = t.clone().detach().requires_grad_(True)
+    C = model(x, t)
+    C_int = mod._reorder_display_to_internal(C)
+    c0, c1 = C_int[:, 0:1], C_int[:, 1:2]
+    ones = torch.ones_like(c0)
+    c0_t = torch.autograd.grad(c0, t, ones, create_graph=True, retain_graph=True)[0]
+    c1_t = torch.autograd.grad(c1, t, ones, create_graph=True, retain_graph=True)[0]
+    mu = mod.diffusion_potentials_regular_solution_torch(
+        C_int, x, theta_int_t, None, RT=_RT,
+        x_interface=_X_INTERFACE, width=_OMEGA_WIDTH, mu_floor=mu_floor,
+    )
+    mu0_x = torch.autograd.grad(mu[:, 0:1], x, ones, create_graph=True, retain_graph=True)[0]
+    mu1_x = torch.autograd.grad(mu[:, 1:2], x, ones, create_graph=True, retain_graph=True)[0]
+    q0 = M_eff[0, 0] * mu0_x + M_eff[0, 1] * mu1_x
+    q1 = M_eff[1, 0] * mu0_x + M_eff[1, 1] * mu1_x
+    q0_x = torch.autograd.grad(q0, x, ones, create_graph=True, retain_graph=True)[0]
+    q1_x = torch.autograd.grad(q1, x, ones, create_graph=True, retain_graph=True)[0]
+    return torch.cat([c0_t - q0_x, c1_t - q1_x], dim=1)
+
+
 def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarray,
                        M_true_diag: np.ndarray, epochs: int):
     """Joint PINN inverse problem: network weights + log M (Ω known)."""
@@ -346,7 +387,12 @@ def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarr
         x_col = torch.tensor(rng.uniform(x_lo, x_hi, size=(args.n_f, 1)), dtype=torch.float32, device=device)
         t_col = torch.tensor(rng.uniform(t_lo, t_hi, size=(args.n_f, 1)), dtype=torch.float32, device=device)
         M_eff = torch.diag(torch.exp(log_M)) * t_scale
-        res = _fick_residual_trainable_M(mod, model, x_col, t_col, M_eff, theta_int_t, args.mu_floor)
+        if args.inverse_residual == "onsager":
+            res = _onsager_residual_trainable_M(mod, model, x_col, t_col, M_eff,
+                                                theta_int_t, args.mu_floor)
+        else:
+            res = _fick_residual_trainable_M(mod, model, x_col, t_col, M_eff,
+                                             theta_int_t, args.mu_floor)
         loss_phys = torch.mean(res ** 2)
         loss = args.w_data * loss_data + args.w_ic * loss_ic + w_phys * loss_phys
         if not torch.isfinite(loss):
@@ -357,11 +403,12 @@ def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarr
         opt.step()
         sched.step()
         M_now = torch.exp(log_M).detach().cpu().numpy()
-        rows.append({"epoch": epoch, "loss": float(loss), "data": float(loss_data), "ic": float(loss_ic),
-                     "physics": float(loss_phys), "M_Ni": float(M_now[0]), "M_Ta": float(M_now[1])})
+        rows.append({"epoch": epoch, "loss": float(loss.detach()), "data": float(loss_data.detach()),
+                     "ic": float(loss_ic.detach()), "physics": float(loss_phys.detach()),
+                     "M_Ni": float(M_now[0]), "M_Ta": float(M_now[1])})
         if epoch % max(1, epochs // 10) == 0 or epoch == 1:
-            print(f"  [inverse ep={epoch:5d}] loss={float(loss):.3e} data={float(loss_data):.3e} "
-                  f"phys={float(loss_phys):.3e} | M_Ni={M_now[0]:.3e} M_Ta={M_now[1]:.3e} "
+            print(f"  [inverse ep={epoch:5d}] loss={rows[-1]['loss']:.3e} data={rows[-1]['data']:.3e} "
+                  f"phys={rows[-1]['physics']:.3e} | M_Ni={M_now[0]:.3e} M_Ta={M_now[1]:.3e} "
                   f"(true {M_true_diag[0]:.3e} {M_true_diag[1]:.3e})")
     hist = pd.DataFrame(rows)
     M_hat = np.exp(log_M.detach().cpu().numpy())
@@ -508,15 +555,34 @@ def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[s
     return out
 
 
-def _nll_pseudo_exp(C_model: np.ndarray, x_grid: np.ndarray, res_exp: dict, sigma: float) -> float:
-    """Gaussian NLL (constant omitted) of the pseudo-experimental points under C_model."""
+def _alr_np(c: np.ndarray, ref: int = 0) -> np.ndarray:
+    """Additive log-ratio transform (reference component `ref`)."""
+    c = np.clip(np.asarray(c, dtype=float), 1.0e-12, None)
+    return np.log(np.delete(c, ref, axis=1) / c[:, ref:ref + 1])
+
+
+def _nll_pseudo_exp(C_model: np.ndarray, x_grid: np.ndarray, res_exp: dict, sigma: float,
+                    mode: str = "ind2") -> float:
+    """Gaussian NLL (constant omitted) of the pseudo-experimental points under C_model.
+
+    mode="sum3": all three components (linearly dependent on the simplex, so the
+    quadratic form is double-counted); "ind2": independent components Ni, Ta;
+    "alr": additive-log-ratio residuals (pair with --noise_model alr).
+    """
     x_exp, c_exp, idx = res_exp["x"], res_exp["c"], res_exp["frame"]
     nll = 0.0
     for ti in np.unique(idx):
         sel = idx == ti
-        for j in range(3):
-            pred = np.interp(x_exp[sel], x_grid, C_model[ti, :, j])
-            nll += float(np.sum((c_exp[sel, j] - pred) ** 2))
+        pred = np.column_stack([np.interp(x_exp[sel], x_grid, C_model[ti, :, j]) for j in range(3)])
+        obs = c_exp[sel]
+        if mode == "sum3":
+            nll += float(np.sum((obs - pred) ** 2))
+        elif mode == "ind2":
+            nll += float(np.sum((obs[:, 1:] - pred[:, 1:]) ** 2))
+        elif mode == "alr":
+            nll += float(np.sum((_alr_np(obs) - _alr_np(pred)) ** 2))
+        else:
+            raise ValueError(f"unknown likelihood mode: {mode}")
     return nll / (2.0 * sigma ** 2)
 
 
@@ -525,8 +591,9 @@ def fdm_nll_scan(mod, args: argparse.Namespace, omega_true: np.ndarray, M_true_d
     """2-D likelihood map over (log10 M_Ni, log10 M_Ta) using repeated FDM runs."""
     n = int(args.nll_grid)
     h = float(args.nll_half_decades)
-    lg_ni = np.log10(M_true_diag[0]) + np.linspace(-h, h, n)
-    lg_ta = np.log10(M_true_diag[1]) + np.linspace(-h, h, n)
+    off = float(args.nll_grid_offset)
+    lg_ni = np.log10(M_true_diag[0]) + off + np.linspace(-h, h, n)
+    lg_ta = np.log10(M_true_diag[1]) + off + np.linspace(-h, h, n)
     Z = np.full((n, n), np.nan)
     t0 = time.time()
     for iy, lt in enumerate(lg_ta):
@@ -534,7 +601,8 @@ def fdm_nll_scan(mod, args: argparse.Namespace, omega_true: np.ndarray, M_true_d
             M = np.diag([10.0 ** ln, 10.0 ** lt])
             with contextlib.redirect_stdout(io.StringIO()):
                 _, C, _ = _fdm_forward(mod, args, omega_true, M)
-            Z[iy, ix] = _nll_pseudo_exp(C, x_grid, res_exp, args.noise)
+            Z[iy, ix] = _nll_pseudo_exp(C, x_grid, res_exp, args.noise,
+                                        mode=args.nll_likelihood)
         print(f"  [nll] row {iy + 1}/{n} (log10 M_Ta={lt:+.3f}) done, elapsed {time.time() - t0:.0f}s")
     iy, ix = np.unravel_index(np.nanargmin(Z), Z.shape)
     M_hat = np.array([10.0 ** lg_ni[ix], 10.0 ** lg_ta[iy]])
@@ -568,6 +636,11 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
     device = mod.DEVICE
     print(f"[device] {device}  ({os.cpu_count()} CPU cores, torch threads={torch.get_num_threads()})")
 
+    if args.nll_likelihood == "alr" and args.noise_model != "alr":
+        print("[WARN] --nll_likelihood alr with --noise_model gaussian: the clipped/renormalised "
+              "data contain exact zeros, whose log-ratios are enormous. Use --noise_model alr "
+              "as well, or switch the likelihood to ind2.")
+
     omega_true = np.asarray(args.omega, dtype=float)
     mobility = _mobility_from_args(args)
     M_true_diag = np.diag(mobility).copy()
@@ -589,7 +662,7 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
         pseudo_exp_time_mode="multi-time",
         pseudo_exp_time_slices=args.n_time_slices,
         append_pseudo_exp_to_training=True,
-        noise_model="gaussian", mu_floor=args.mu_floor,
+        noise_model=args.noise_model, mu_floor=args.mu_floor,
     )
     t_fdm = time.time() - t0
     t_max_phys = float(data.rs_t_max_physical) if data.rs_t_max_physical > 0 else 1.0
@@ -631,6 +704,8 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
         theta_l, _ = model.theta_display()
     omega_learned = np.asarray(theta_l, dtype=float)
 
+    _resolved_inv_epochs = args.inverse_epochs if args.inverse_epochs > 0 else args.epochs
+
     hist_cols = list(history_df.columns)
     C_fdm = np.asarray(data.C_fdm, dtype=float)
     exp_idx = np.asarray(data.exp_time_indices, dtype=int)
@@ -655,7 +730,9 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
         "history_columns": np.array(hist_cols),
         "M_true": M_true_diag,
         "D_true_final": _dtilde_profile(mod, C_fdm[-1], omega_true, mobility, args.mu_floor),
-        "config": np.array(json.dumps({**vars(args), "device": str(device), "use_fick_form": use_fick})),
+        "config": np.array(json.dumps({**vars(args), "device": str(device),
+                                       "use_fick_form": use_fick,
+                                       "inverse_epochs": int(_resolved_inv_epochs)})),
     }
     timing = {"fdm": t_fdm, "pinn": t_pinn}
 
@@ -672,7 +749,7 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
     fdm_repro = float(np.max(np.abs(C_chk - C_fdm)))
     print(f"  [check] stand-alone FDM reproduces teacher data: max|Δc| = {fdm_repro:.2e}")
 
-    inv_epochs = args.inverse_epochs if args.inverse_epochs > 0 else args.epochs
+    inv_epochs = _resolved_inv_epochs
     print(f"  3a: joint PINN inverse ({inv_epochs} epochs, trainable log M, init = {args.m_init_factor} x true)")
     t0 = time.time()
     model_inv, inv_hist, M_hat_pinn, M_init = train_inverse_pinn(mod, data, args, omega_true, M_true_diag, inv_epochs)
@@ -1374,7 +1451,21 @@ def make_animation(res, cfg, outdir, plt) -> str | None:
 # Report helpers
 # ---------------------------------------------------------------------------
 def _ci_from_profile(lg: np.ndarray, prof: np.ndarray, level: float) -> tuple[float, float]:
-    """Interval (in log10 M) where ΔNLL <= level, with linear interpolation at the crossings."""
+    """Interval (in log10 M) where ΔNLL <= level, from the curvature of the profile.
+
+    A parabola ΔNLL = a (v − v0)^2 is fitted through the three grid points around the
+    argmin and the half-width is sqrt(level / a).  Falls back to linear interpolation
+    of the crossings when the parabola is degenerate or the minimum is on the boundary.
+    """
+    lg = np.asarray(lg, dtype=float)
+    prof = np.asarray(prof, dtype=float)
+    i = int(np.nanargmin(prof))
+    if 0 < i < len(lg) - 1:
+        a, b, _ = np.polyfit(lg[i - 1:i + 2], prof[i - 1:i + 2], 2)
+        if a > 0:
+            v0 = -b / (2.0 * a)
+            half = float(np.sqrt(level / a))
+            return float(v0 - half), float(v0 + half)
     inside = np.where(prof <= level)[0]
     if len(inside) == 0:
         return float("nan"), float("nan")
@@ -1569,6 +1660,13 @@ def write_html_report(outdir: str, res, cfg, metrics, figs: dict[str, str | None
     form_label = "Fick 形式" if cfg["use_fick_form"] else "Onsager 形式"
     ok = lambda b: '<span class="ok">OK</span>' if b else '<span class="ng">NG</span>'  # noqa: E731
     f3 = lambda v: f"{v:.3e}"  # noqa: E731
+    C_fdm = res["C_fdm"]
+    dist_fdm = (res["x_grid"] - 0.5) * cfg["span_um"]
+    ni_end = C_fdm[-1, :, 1]
+    ni_lo, ni_hi = float(ni_end.min()), float(ni_end.max())
+    zone_mask = (ni_end > ni_lo + 0.05 * (ni_hi - ni_lo)) & (ni_end < ni_hi - 0.05 * (ni_hi - ni_lo))
+    zone_um = float(dist_fdm[zone_mask].max() - dist_fdm[zone_mask].min()) if zone_mask.any() else 0.0
+    edge_change = float(max(np.abs(C_fdm[-1, 0] - C_fdm[0, 0]).max(), np.abs(C_fdm[-1, -1] - C_fdm[0, -1]).max()))
 
     parts: list[str] = []
     P = parts.append
@@ -1667,9 +1765,14 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
 「係数を凍結」します (frozen coefficient)。その副作用として, <b>\(\tilde D\) 内の \(\Omega\) には勾配が流れず, 順フィットでは \(\Omega\) は初期値のまま</b>です
 (逆解析では \(M\) だけを計算グラフに残すことで \(M\) を学習可能にしています)。</div>
 <h3>2.4 無次元化と表示スケール</h3>
-<p>FDM の物理時間 \(t_{{\max}}\) = {float(res['t_max_physical']):.4f} (モデル単位) は空間 \(x\in[0,1]\) に比べて小さいため, PINN の入力時刻は
+<p>FDM の物理時間 \(t_{{\max}}\) = {float(res['t_max_physical']):.4f} (モデル単位, = dt × ステップ数) は空間 \(x\in[0,1]\) に比べて小さいため, PINN の入力時刻は
 \(\tau = t/t_{{\max}}\in[0,1]\) に正規化し, 移動度に \(t_{{\max}}\) を掛けて補正します。図の軸は見やすさのため
-\(\tau = 1 \to\) {cfg['annealing_time_h']} h, \(x\in[0,1]\to\) {cfg['span_um']} µm (界面 0 µm) の例示スケールで表示しています。</p>
+\(\tau = 1 \to\) {cfg['annealing_time_h']} h, \(x\in[0,1]\to\) {cfg['span_um']} µm (界面 0 µm) の例示スケールで表示しています
+(移動度の絶対値は無次元のモデル値なので, この時間ラベルは相対的な目安です)。</p>
+<p>\(t_{{\max}}\) は「相互拡散域が十分広がるが, 試料端 (閉鎖系のゼロフラックス境界) の組成はまだほとんど動かない」ように選んでいます。
+最終フレームで Ni が両端の値の 5–95 % の間にある領域の幅は {zone_um:.0f} µm ({zone_um / cfg['span_um']:.2f} × 試料幅),
+両端の組成変化は最大 {edge_change:.3f} (モル分率) です。拡散長 \(\sqrt{{\tilde D t}}\) は \(t\) の平方根でしか伸びないので,
+時間を 10 倍にしても拡散域は約 3 倍にしかなりません。</p>
 """)
     P(_h_table(["項目", "値"], [
         ["FDM 格子点数 / dt / ステップ数 / 保存間隔", f"{_NX_FDM} / {cfg['dt']} / {cfg['nsteps']} / {cfg['save_every']} (frames = {len(t)})"],
@@ -1686,7 +1789,9 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
     # ---- 3. Pseudo-experimental data --------------------------------------
     P(f"""<h2 id="s3">3. 疑似実験データ (FDM 順問題)</h2>
 <p>実験データの代わりに, 真の \\(M, \\Omega\\) で解いた <b>FDM (有限差分法, DICTRA 型の有限体積スキーム)</b> の解を「隠れた真値」とし,
-{len(exp_set)} 時刻 × {cfg['n_exp_points']} 点 で標準偏差 \\(\\sigma\\) = {cfg['noise']} のガウスノイズを加えたものを<b>疑似実験データ</b>とします。
+{len(exp_set)} 時刻 × {cfg['n_exp_points']} 点 で標準偏差 \\(\\sigma\\) = {cfg['noise']} のガウスノイズを
+{"ALR (additive log-ratio) 空間で加えた (クリップ不要で simplex 上に留まる)" if cfg.get('noise_model') == 'alr' else "モル分率に直接加え, [0, 1] にクリップして再規格化した (希薄成分にわずかな偏りが入る)"}
+ものを<b>疑似実験データ</b>とします。
 このほか, 学習用に \\(t\\ge t_{{\\mathrm{{start}}}}\\) の FDM 解からランダムに {cfg['n_obs']} 点をサンプルした観測点も用います
 (ノイズは同じ)。真値が分かっているので, PINN のフィットと逆解析の<b>精度を定量的に検証</b>できるのがこの構成の利点です。</p>
 <p>FDM は適応サブステップで安定化された陽解法で, 質量保存 (\\(\\sum_i c_i = 1\\), 最大偏差 {metrics['fdm_sum_dev_max']:.1e}) を満たします。</p>
@@ -1752,12 +1857,27 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
 \[ \frac{\partial c_k}{\partial \tau} = \sum_j M^{\mathrm{eff}}_{kj}\, a_j,\qquad a_j = \sum_m \Phi_{jm}(c)\,\frac{\partial^2 c_m}{\partial x^2} \]
 <p>学習済みネットワークの自動微分で \(\partial c_k/\partial\tau\) と \(\partial^2 c_m/\partial x^2\) をコロケーション点で評価すれば, \(M\) は通常の最小二乗で求まります
 (\(\Phi\) を凍結した PINN 残差と同じ形。\(1/c\) による誤差増幅を避けるため \(c_i \ge 0.05\) の点のみ使用し, 残差の大きい 5% を除外)。順フィット PINN (\(M\) を知って学習) と逆解析 PINN (\(M\) を知らずに学習) の両方に適用しました。
-順フィットの PINN から真値に近い \(M\) が復元されれば, ネットワークが PDE を「理解」している証拠になります。</p>""")
-        P(r"""<h3>5.4 方法 3c: FDM を繰り返す尤度マップ (信頼度の評価)</h3>
-<p>PINN を使わない古典的な方法として, \((\log_{10}M_{\mathrm{Ni}}, \log_{10}M_{\mathrm{Ta}})\) の格子上で FDM を解き,
-疑似実験点との<b>負の対数尤度</b> \(\mathrm{NLL} = \sum (c_{\mathrm{exp}}-c_{\mathrm{FDM}})^2/(2\sigma^2)\) を計算しました。
-最小値からの差 \(\Delta\mathrm{NLL}\) が 1.15 / 3.09 / 5.91 の等高線が 2 パラメータの 1σ / 2σ / 3σ 信頼領域に対応し,
-<b>データがどの程度 \(M\) を決めているか (identifiability)</b> が読み取れます。</p>""")
+順フィットの PINN から真値に近い \(M\) が復元されれば, ネットワークが PDE を「理解」している証拠になります。</p>
+<div class="note"><b>凍結係数形式の系統誤差:</b> 上式は \(\partial_x(\tilde D\,\partial_x c)\) のうち \(\tilde D\,\partial_x^2 c\) だけを残し,
+\(\partial_x\tilde D\cdot\partial_x c\) を落としています。FDM は交互格子上でフラックスを差分する保存形なのでこの項を含んでおり,
+\(\tilde D\) が \(1/c\) 因子で 2 桁変化するこの問題では落とした項は無視できません (誤差ゼロの FDM 場に同じ最小二乗を当てても
+\(M\) は真値の 0.3 倍 / 0.07 倍程度に出ます)。したがって 3b の推定値が低く出る分の一部は, ネットワークの誤差ではなく残差形式そのものに由来します。
+保存形または Onsager 形式 (<code>--inverse_residual onsager</code>) なら FDM 場では真値を復元しますが, PINN 場ではネットワークの微分誤差が支配的で改善しません。</div>""")
+        nll_mode = cfg.get("nll_likelihood", "sum3")
+        nll_sum_txt = {
+            "sum3": r"\(\sum_{i\in\{\mathrm{Co,Ni,Ta}\}}\) (3 成分すべて。\(c_{\mathrm{Co}}=1-c_{\mathrm{Ni}}-c_{\mathrm{Ta}}\) なので残差が線形従属になり二重計上される, 旧既定)",
+            "ind2": r"\(\sum_{i\in\{\mathrm{Ni,Ta}\}}\) (独立な 2 成分のみ。\(c_{\mathrm{Co}}=1-c_{\mathrm{Ni}}-c_{\mathrm{Ta}}\) は従属なので数えない)",
+            "alr": r"\(\sum\) over ALR (additive log-ratio) 残差",
+        }[nll_mode]
+        grid_off = float(cfg.get("nll_grid_offset", 0.0))
+        P(f"""<h3>5.4 方法 3c: FDM を繰り返す尤度マップ (信頼度の評価)</h3>
+<p>PINN を使わない古典的な方法として, \\((\\log_{{10}}M_{{\\mathrm{{Ni}}}}, \\log_{{10}}M_{{\\mathrm{{Ta}}}})\\) の格子上で FDM を解き,
+疑似実験点との<b>負の対数尤度</b> \\(\\mathrm{{NLL}} = \\sum_{{\\mathrm{{points}}}}\\sum_i (c_{{i,\\mathrm{{exp}}}}-c_{{i,\\mathrm{{FDM}}}})^2/(2\\sigma^2)\\) を計算しました
+(成分の和は {nll_sum_txt})。
+最小値からの差 \\(\\Delta\\mathrm{{NLL}}\\) が 1.15 / 3.09 / 5.91 の等高線が 2 パラメータの 1σ / 2σ / 3σ 信頼領域に対応し,
+<b>データがどの程度 \\(M\\) を決めているか (identifiability)</b> が読み取れます。
+格子の中心は真値から {grid_off:+.2f} decade ずらしてあり, 真値が格子点の上に載らないようにしています
+(ずらさないと「格子上の最小点 = 真値」が構成上保証されてしまい, 方法の精度を測れません)。</p>""")
         if "nll_Z" not in res:
             P('<p class="warn">この実行では尤度マップはスキップされました (<code>--nll_grid 0</code>)。</p>')
         P(_h_fig(figs.get("nll"), f"FDM 尤度マップ ({len(res['nll_log10_M_Ni']) if 'nll_Z' in res else 0}² 回の FDM 計算)。左: ΔNLL の対数表示と 1σ/2σ/3σ 等高線, "
@@ -1783,7 +1903,7 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
                  ok(ci_n[0] <= np.log10(M_true[0]) <= ci_n[1]), ok(ci_n[0] <= np.log10(M_pinn[0]) <= ci_n[1])],
                 [r"\(M_{\mathrm{Ta}}\)", f"{np.log10(M_true[1]):.3f}", f"{np.log10(M_pinn[1]):.3f}", f"[{ci_t[0]:.3f}, {ci_t[1]:.3f}]",
                  ok(ci_t[0] <= np.log10(M_true[1]) <= ci_t[1]), ok(ci_t[0] <= np.log10(M_pinn[1]) <= ci_t[1])],
-            ], "表 6. 尤度断面から読んだ 1σ 区間 (ΔNLL ≤ 0.5, 格子間の線形補間)"))
+            ], "表 6. 尤度断面から読んだ 1σ 区間 (ΔNLL ≤ 0.5。最小点近傍 3 点の二次フィットの曲率から算出)"))
         P(_h_fig(figs.get("summary"), "各推定法の移動度推定値 (真値との比)。破線 = 1 が真値。", num))
         n_t, n_h, n_i = inv["nll_true_hat_init"]
         P("""<h3>5.6 推定した移動度で順計算して検証する</h3>
