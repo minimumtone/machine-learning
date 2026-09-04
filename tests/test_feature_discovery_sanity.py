@@ -204,3 +204,87 @@ def test_gc_is_not_globally_disabled():
     assert gc.isenabled(), (
         "_compat.install() が循環 GC をプロセス全体で停止しています"
     )
+
+
+# ---------------------------------------------------------------------------
+# 9. 訓練スコープ（OOD 近辺のみで学習）
+# ---------------------------------------------------------------------------
+
+def test_neighborhood_plan_excludes_ood_eval_and_respects_scope(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, _y, _prep, ood = prepared
+    b = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[b.ood_indices])
+    n = len(feat)
+
+    g = compute_neighborhood_plan(feat, ood_idx, scope="global")
+    assert g.is_global and g.n_train_rows == n - len(ood_idx)
+    assert (g.copies[ood_idx] == 0).all()
+
+    nb = compute_neighborhood_plan(feat, ood_idx, scope="neighborhood",
+                                   neighborhood_quantile=0.3, min_train_rows=20)
+    assert (nb.copies[ood_idx] == 0).all()
+    assert 20 <= nb.n_train_rows < n - len(ood_idx)
+    # 近い行が残り、遠い行が落ちている
+    kept = nb.distances[nb.copies >= 1]
+    dropped = nb.distances[(nb.copies == 0) & ~np.isin(np.arange(n), ood_idx)]
+    if len(dropped):
+        assert kept.max() <= dropped.min() + 1e-12
+
+    k = compute_neighborhood_plan(feat, ood_idx, scope="kernel", kernel_max_copies=4)
+    assert (k.copies[ood_idx] == 0).all()
+    non_eval = ~np.isin(np.arange(n), ood_idx)
+    assert k.copies[non_eval].min() >= 1 and k.copies[non_eval].max() <= 4
+    # 距離が短いほど複製回数が多い（単調）
+    order = np.argsort(k.distances[non_eval])
+    c = k.copies[non_eval][order]
+    assert (np.diff(c) <= 0).all()
+
+
+def test_augment_with_plan_keeps_ood_rows_out_of_training(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, y, _prep, ood = prepared
+    b = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[b.ood_indices])
+    for scope in ("neighborhood", "kernel"):
+        plan = compute_neighborhood_plan(feat, ood_idx, scope=scope)
+        X_aug, y_aug, tr, ev = augment_dataset(feat, y, b, ood.primary_test_idx,
+                                               neighborhood_plan=plan)
+        assert len(X_aug) == len(y_aug) == plan.n_train_aug + len(ev) + (
+            len(feat) - plan.n_train_rows - len(ev))
+        assert len(np.intersect1d(tr, ev)) == 0
+        assert len(tr) == plan.n_train_aug
+        # 複製行は元行の写し
+        for j in tr[tr >= len(feat)]:
+            src = X_aug.iloc[j].to_numpy()
+            assert np.isfinite(src).all()
+
+
+def test_discovery_runs_under_each_train_scope(prepared):
+    comps, feat, y, _prep, ood = prepared
+    cands = _candidates(y, len(feat))
+    for scope in ("global", "neighborhood", "kernel"):
+        res = run_feature_discovery(
+            workflow_names=["WF-LIN"], feature_set_name="FS_ALL",
+            split_policy="CompositionBlock",
+            features_df=feat, target=y, compositions_df=comps,
+            ood_result=ood.ood_result, ood_test_idx=ood.primary_test_idx,
+            candidate_features=["informative_desc"], extra_features_df=cands,
+            seed=42, n_folds=5, quick=True, train_scope=scope,
+            include_negative_control=False,
+        )
+        assert res.success, res.error_message
+        assert res.train_scope == scope
+        assert res.n_ood_eval > 0
+        for r in res.rounds:
+            assert r.success, r.error_message
+            assert r.train_scope == scope
+            assert r.n_ood_eval == res.n_ood_eval
+            assert r.n_train_rows == res.n_train_rows
+            assert np.isfinite(r.ood_rmse)
+        base = [r for r in res.rounds if not r.candidate_feature][0]
+        assert abs(base.improvement) < 1e-9
