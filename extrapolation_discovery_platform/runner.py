@@ -164,6 +164,8 @@ def _run_job(
     X_test  = _pd.DataFrame(X_fs[job.test_idx],  columns=feature_cols)
     y_train = _pd.Series(y[job.train_idx])
     y_test  = _pd.Series(y[job.test_idx])
+    from extrapolation_discovery_platform.pipeline import impute_by_train_median
+    X_train, X_test = impute_by_train_median(X_train, X_test)
 
     # --- single source of truth: delegate to individual_runner ---
     from extrapolation_discovery_platform.individual_runner import (

@@ -395,7 +395,11 @@ def run_feature_discovery_round(
         y_ood = y_aug.iloc[ood_eval_idx]
 
         from extrapolation_discovery_platform._utils import safe_array
-        from extrapolation_discovery_platform.pipeline import apply_extrapolation_guard
+        from extrapolation_discovery_platform.pipeline import (
+            apply_extrapolation_guard,
+            impute_by_train_median,
+        )
+        X_tr, X_ood = impute_by_train_median(X_tr, X_ood)
         wf = factory(quick, True)
         run_aug = wf.run(
             pd.DataFrame(safe_array(X_tr), columns=effective_cols),
@@ -429,15 +433,19 @@ def run_feature_discovery_round(
                 result.baseline_ood_rmse = cached_ood[0]
             else:
                 base_cols = [c for c in effective_cols if c != candidate_feature]
+                X_base_tr, X_base_ood = impute_by_train_median(
+                    X_aug.iloc[train_aug_idx][base_cols],
+                    X_aug.iloc[ood_eval_idx][base_cols],
+                )
                 wf_base = factory(quick, True)
                 run_base = wf_base.run(
                     pd.DataFrame(
-                        safe_array(X_aug.iloc[train_aug_idx][base_cols]),
+                        safe_array(X_base_tr),
                         columns=base_cols,
                     ),
                     y_tr.reset_index(drop=True),
                     pd.DataFrame(
-                        safe_array(X_aug.iloc[ood_eval_idx][base_cols]),
+                        safe_array(X_base_ood),
                         columns=base_cols,
                     ),
                     y_ood.reset_index(drop=True),
