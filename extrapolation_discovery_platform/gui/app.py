@@ -1444,15 +1444,13 @@ def _handle_generic_csv(
     parts: List[pd.DataFrame] = []
     if numeric_feat_cols:
         num_df = raw_valid[numeric_feat_cols].copy()
-        # Fill NaN with column median
-        for col in num_df.columns:
-            if num_df[col].isna().any():
-                median_val = num_df[col].median()
-                num_df[col] = num_df[col].fillna(
-                    median_val if pd.notna(median_val) else 0.0
-                )
+        all_missing = [col for col in num_df.columns if num_df[col].isna().all()]
+        for col in all_missing:
+            logger.warning("列 '%s' は全行欠損のためスキップ", col)
+        num_df = num_df.drop(columns=all_missing)
         num_df = num_df.astype("float64")
-        parts.append(num_df)
+        if not num_df.empty:
+            parts.append(num_df)
 
     # 文字列列 → 元素記号列と判定してMAGPIE/周期律表プロパティに変換
     # ワンホットベクトルは元素間の化学的類似性を失うため使用しない。
@@ -1510,12 +1508,6 @@ def _handle_generic_csv(
                 prop_records.append(row_props)
 
             prop_df = pd.DataFrame(prop_records, dtype="float64")
-            # NaN を列中央値で埋める
-            for c in prop_df.columns:
-                if prop_df[c].isna().any():
-                    med = prop_df[c].median()
-                    prop_df[c] = prop_df[c].fillna(med if pd.notna(med) else 0.0)
-
             parts.append(prop_df)
             logger.info(
                 "列 '%s' を MAGPIE/周期律表プロパティ %d 列に変換しました。",
@@ -1933,9 +1925,6 @@ def _handle_csv_upload(
         for col in extra_numeric_cols:
             values = pd.to_numeric(source_extra[col], errors="coerce")
             if values.notna().any():
-                # Same policy as generic mode: fill NaN with column median
-                if values.isna().any():
-                    values = values.fillna(values.median())
                 features_df[col] = values.astype("float64")
                 carried_extra_cols.append(col)
         logger.info(
