@@ -243,6 +243,20 @@ def test_neighborhood_plan_excludes_ood_eval_and_respects_scope(prepared):
     assert (np.diff(c) <= 0).all()
 
 
+def test_neighborhood_plan_with_no_ood_eval_rows(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, _y, _prep, _ood = prepared
+    for scope in ("neighborhood", "kernel"):
+        plan = compute_neighborhood_plan(
+            feat, np.array([], dtype=int), scope=scope,
+        )
+        assert plan.copies.min() == 1
+        assert plan.n_train_rows == len(feat)
+        assert plan.n_train_aug == len(feat)
+
+
 def test_augment_with_plan_keeps_ood_rows_out_of_training(prepared):
     from extrapolation_discovery_platform.ood_feature_discovery import (
         compute_neighborhood_plan,

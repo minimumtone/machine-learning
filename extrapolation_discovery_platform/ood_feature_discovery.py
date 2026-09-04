@@ -175,6 +175,29 @@ def compute_neighborhood_plan(
     num = num.loc[:, std > 0]
     Z = ((num - num.mean()) / num.std(ddof=0)).to_numpy()
 
+    if len(ood_eval_idx) == 0 or Z.shape[1] == 0:
+        logger.warning(
+            "train_scope=%s: no OOD rows or usable numeric features; "
+            "falling back to all non-OOD rows",
+            scope,
+        )
+        copies = np.ones(n_orig, dtype=int)
+        copies[ood_eval_idx] = 0
+        distances = np.full(n_orig, np.nan)
+        plan = NeighborhoodPlan(
+            scope=scope,
+            copies=copies,
+            distances=distances,
+            bandwidth=float("nan"),
+            n_train_rows=int((copies >= 1).sum()),
+            n_train_aug=int(copies.sum()),
+        )
+        logger.info(
+            "train_scope=%s: n_ood_eval=%d  n_train_rows=%d  n_train_aug=%d",
+            scope, len(ood_eval_idx), plan.n_train_rows, plan.n_train_aug,
+        )
+        return plan
+
     distances = np.full(n_orig, np.nan)
     if len(ood_eval_idx) > 0 and Z.shape[1] > 0:
         from sklearn.neighbors import NearestNeighbors
