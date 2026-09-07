@@ -70,8 +70,18 @@ hyb = hyb[(hyb.x_Al >= 0.5) & (hyb.x_Al <= 0.98)].sort_values('x_Al')
 x_grid = np.linspace(0.5, 0.98, 300)
 c_mod = np.maximum(c_vac_model(x_grid), 0.0)
 
-c_vac_mace = np.interp(x_grid, mace.x_Al.values, mace.c_vac_mace.values, left=0.0)
-c_vac_mace = np.clip(c_vac_mace, 0.0, 1.0)
+# Build a discontinuous MACE-selected c_vac line so we do not interpolate across
+# the discrete vacancy -> antisite branch switch (e.g. x_Al ~0.9).
+mace_sorted = mace.sort_values('x_Al').reset_index(drop=True)
+x_mace_plot, c_mace_plot = [], []
+prev_branch = None
+for _, r in mace_sorted.iterrows():
+    if prev_branch is not None and r.selected_branch != prev_branch:
+        x_mace_plot.append(np.nan)
+        c_mace_plot.append(np.nan)
+    x_mace_plot.append(r.x_Al)
+    c_mace_plot.append(r.c_vac_mace)
+    prev_branch = r.selected_branch
 
 # hybrid vacancy curves connect continuously to c=0 at x=0.5
 c_hyb_1273 = np.interp(x_grid, hyb.x_Al.values, hyb.c_hybrid_1273K.values, left=0.0)
@@ -107,7 +117,7 @@ print(table.to_string(index=False))
 fig, ax = plt.subplots(figsize=(12, 7))
 fig.subplots_adjust(left=0.13, right=0.60, top=0.92, bottom=0.10)
 ax.plot(x_grid, c_mod, 'k-', lw=2.5, label='$c_{\\rm vac}^{\\rm model}$ (Ni 空孔, $1-1/(2x)$)')
-ax.plot(x_grid, c_vac_mace, '--', color='tab:blue', lw=2,
+ax.plot(x_mace_plot, c_mace_plot, 'o--', color='tab:blue', lw=2, markersize=5,
         label='$c_{\\rm vac}^{\\rm MLIP}$ (MACE 選択構造)')
 ax.plot(x_grid, c_hyb_1473, '-.', color='tab:orange', lw=2.5,
         label='$c_{\\rm vac}^{\\rm hybrid}$ (1473 K)')
