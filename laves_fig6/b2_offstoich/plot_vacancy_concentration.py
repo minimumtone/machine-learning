@@ -126,9 +126,6 @@ ax.plot(x_grid, c_hyb_1273, ':', color='tab:purple', lw=2.5,
 ax.scatter(td_al.x_Al_at / 100.0, td_al.c_vac_exp, color='tab:red', s=80, zorder=5,
            label='$c_{\\rm vac}^{\\rm exp}$ (T&D 密度, Table 2)', edgecolors='k', linewidths=0.5)
 
-# shade the metastable extrapolation region beyond the B2 single-phase field
-ax.axvspan(0.65, 0.98, color='gray', alpha=0.08, zorder=0, label='_nolegend_')
-
 ax.axhline(0.0, color='gray', lw=1.0, ls='--')
 ax.axvline(0.5, color='gray', lw=1.0, ls=':')
 ax.set_xlabel('$x_{\\rm Al}$', fontsize=18)
@@ -140,11 +137,8 @@ ax.legend(fontsize=12, loc='upper left', bbox_to_anchor=(1.02, 1.0), borderaxesp
 
 # annotation: all curves converge to perfect B2 at x=0.5
 ax.text(0.51, 0.47,
-        '化学量論組成 $x_{\\rm Al}=0.50$ では完全 B2（$c_{\\rm vac}=0$）。\n'
-        '有限温度では Boltzmann 混合した空孔率\n'
-        '$c_{\\rm vac}^{\\rm hybrid}$ が T&D 実験と\n'
-        'Ni 空孔モデルの間に位置する。\n'
-        '$x_{\\rm Al}>0.65$ は B2 単相限界外の仮想的な外挿。',
+        '化学量論組成 $x_{\\rm Al}=0.50$ では\n'
+        '完全 B2（$c_{\\rm vac}=0$）になる。',
         fontsize=12, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
 out = os.path.join(FIG, 'fig_b2_vacancy_concentration.png')
