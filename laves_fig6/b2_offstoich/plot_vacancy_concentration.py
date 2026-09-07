@@ -70,8 +70,19 @@ hyb = hyb[(hyb.x_Al >= 0.5) & (hyb.x_Al <= 0.98)].sort_values('x_Al')
 x_grid = np.linspace(0.5, 0.98, 300)
 c_mod = np.maximum(c_vac_model(x_grid), 0.0)
 
-c_vac_mace = np.interp(x_grid, mace.x_Al.values, mace.c_vac_mace.values, left=0.0)
-c_vac_mace = np.clip(c_vac_mace, 0.0, 1.0)
+# Build a discontinuous MACE-selected c_vac line so we do not interpolate across
+# the discrete vacancy -> antisite branch switch (e.g. x_Al ~0.9).
+mace_sorted = mace.sort_values('x_Al').reset_index(drop=True)
+x_mace_plot, c_mace_plot = [], []
+prev_branch = None
+for _, r in mace_sorted.iterrows():
+    if (prev_branch is not None
+            and {prev_branch, r.selected_branch} == {'vacancy', 'antisite'}):
+        x_mace_plot.append(np.nan)
+        c_mace_plot.append(np.nan)
+    x_mace_plot.append(r.x_Al)
+    c_mace_plot.append(r.c_vac_mace)
+    prev_branch = r.selected_branch
 
 # hybrid vacancy curves connect continuously to c=0 at x=0.5
 c_hyb_1273 = np.interp(x_grid, hyb.x_Al.values, hyb.c_hybrid_1273K.values, left=0.0)
@@ -107,7 +118,7 @@ print(table.to_string(index=False))
 fig, ax = plt.subplots(figsize=(12, 7))
 fig.subplots_adjust(left=0.13, right=0.60, top=0.92, bottom=0.10)
 ax.plot(x_grid, c_mod, 'k-', lw=2.5, label='$c_{\\rm vac}^{\\rm model}$ (Ni 空孔, $1-1/(2x)$)')
-ax.plot(x_grid, c_vac_mace, '--', color='tab:blue', lw=2,
+ax.plot(x_mace_plot, c_mace_plot, 'o--', color='tab:blue', lw=2, markersize=5,
         label='$c_{\\rm vac}^{\\rm MLIP}$ (MACE 選択構造)')
 ax.plot(x_grid, c_hyb_1473, '-.', color='tab:orange', lw=2.5,
         label='$c_{\\rm vac}^{\\rm hybrid}$ (1473 K)')
@@ -115,9 +126,6 @@ ax.plot(x_grid, c_hyb_1273, ':', color='tab:purple', lw=2.5,
         label='$c_{\\rm vac}^{\\rm hybrid}$ (1273 K)')
 ax.scatter(td_al.x_Al_at / 100.0, td_al.c_vac_exp, color='tab:red', s=80, zorder=5,
            label='$c_{\\rm vac}^{\\rm exp}$ (T&D 密度, Table 2)', edgecolors='k', linewidths=0.5)
-
-# shade the metastable extrapolation region beyond the B2 single-phase field
-ax.axvspan(0.65, 0.98, color='gray', alpha=0.08, zorder=0, label='_nolegend_')
 
 ax.axhline(0.0, color='gray', lw=1.0, ls='--')
 ax.axvline(0.5, color='gray', lw=1.0, ls=':')
@@ -130,11 +138,8 @@ ax.legend(fontsize=12, loc='upper left', bbox_to_anchor=(1.02, 1.0), borderaxesp
 
 # annotation: all curves converge to perfect B2 at x=0.5
 ax.text(0.51, 0.47,
-        '化学量論組成 $x_{\\rm Al}=0.50$ では完全 B2（$c_{\\rm vac}=0$）。\n'
-        '有限温度では Boltzmann 混合した空孔率\n'
-        '$c_{\\rm vac}^{\\rm hybrid}$ が T&D 実験と\n'
-        'Ni 空孔モデルの間に位置する。\n'
-        '$x_{\\rm Al}>0.65$ は B2 単相限界外の仮想的な外挿。',
+        '化学量論組成 $x_{\\rm Al}=0.50$ では\n'
+        '完全 B2（$c_{\\rm vac}=0$）になる。',
         fontsize=12, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
 out = os.path.join(FIG, 'fig_b2_vacancy_concentration.png')
