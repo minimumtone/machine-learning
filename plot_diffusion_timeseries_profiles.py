@@ -415,10 +415,12 @@ def train_inverse_pinn(mod, data, args: argparse.Namespace, omega_true: np.ndarr
     return model, hist, M_hat, M_init
 
 
-def _pinn_rate_terms(mod, model, x_np: np.ndarray, t_np: np.ndarray, omega_true: np.ndarray, mu_floor: float,
+def _pinn_rate_terms(mod, model, x_np: np.ndarray, t_np: np.ndarray, omega: np.ndarray, mu_floor: float,
                      form: str = "fick_frozen"):
     """Autograd terms of the RS PDE on a trained PINN, in the form the network was trained with.
 
+    `omega` (display order) is the Ω vector entering μ / Φ: the network's own (learned) Ω
+    when Ω was trainable, otherwise the true Ω.
     Returns (c_t, a, cmin) as numpy arrays in normalized time τ:
       c_t (N, 2) = ∂c_k/∂τ,
       a (N, 2)   = rate term per unit diagonal mobility (internal order Ni, Ta):
@@ -430,7 +432,7 @@ def _pinn_rate_terms(mod, model, x_np: np.ndarray, t_np: np.ndarray, omega_true:
     n = len(x_np)
     x = torch.tensor(np.asarray(x_np, dtype=float).reshape(-1, 1), dtype=torch.float32, device=device, requires_grad=True)
     t = torch.tensor(np.asarray(t_np, dtype=float).reshape(-1, 1), dtype=torch.float32, device=device, requires_grad=True)
-    theta_int_t = torch.tensor(mod._reorder_theta_display_to_internal(omega_true), dtype=torch.float32, device=device)
+    theta_int_t = torch.tensor(mod._reorder_theta_display_to_internal(omega), dtype=torch.float32, device=device)
     model.eval()
     C = model(x, t)
     C_int = mod._reorder_display_to_internal(C)
@@ -455,13 +457,13 @@ def _pinn_rate_terms(mod, model, x_np: np.ndarray, t_np: np.ndarray, omega_true:
     return B, A, cmin
 
 
-def estimate_mobility_least_squares(mod, model, data, omega_true: np.ndarray, mu_floor: float,
+def estimate_mobility_least_squares(mod, model, data, omega: np.ndarray, mu_floor: float,
                                     n_points: int = 6000, seed: int = 0, c_min: float = 0.05, trim: float = 0.05,
                                     form: str = "fick_frozen"):
     """Post-hoc estimate of M from a trained PINN.
 
-    With Ω known, the RS PDE  ∂c_k/∂t = Σ_j M_kj a_j  (a_j from `_pinn_rate_terms` in the
-    same form as the PINN residual the network was trained with) is *linear* in M.
+    With Ω fixed (`omega`: the network's Ω), the RS PDE  ∂c_k/∂t = Σ_j M_kj a_j  (a_j from
+    `_pinn_rate_terms` in the same form as the PINN residual the network was trained with) is *linear* in M.
     Derivatives are evaluated by autograd on the trained network, so M follows
     from linear least squares.  Points with any c < c_min (where Φ ~ 1/c amplifies
     network errors) and the `trim` fraction of rows with the largest |a| are dropped.
@@ -471,7 +473,7 @@ def estimate_mobility_least_squares(mod, model, data, omega_true: np.ndarray, mu
     rng = np.random.default_rng(seed)
     x = rng.uniform(0.02, 0.98, size=n_points)
     t = rng.uniform(float(data.t_start), float(data.t_grid[-1]), size=n_points)
-    B, A, cmin = _pinn_rate_terms(mod, model, x, t, omega_true, mu_floor, form)
+    B, A, cmin = _pinn_rate_terms(mod, model, x, t, omega, mu_floor, form)
     mask = np.isfinite(A).all(axis=1) & np.isfinite(B).all(axis=1) & (cmin > c_min)
     row_norm = np.abs(A).max(axis=1)
     if mask.sum() > 20:
@@ -489,14 +491,14 @@ def estimate_mobility_least_squares(mod, model, data, omega_true: np.ndarray, mu
 _PDE_CHECK_CMIN = 0.05
 
 
-def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[str, np.ndarray]], str]], data,
-                          omega_true: np.ndarray, mobility_true: np.ndarray, mu_floor: float,
+def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[str, np.ndarray]], str, np.ndarray]],
+                          data, omega_true: np.ndarray, mobility_true: np.ndarray, mu_floor: float,
                           n_points: int = 6000, seed: int = 0) -> dict[str, np.ndarray]:
     """How well do the trained networks satisfy the PDE for a given mobility?
 
-    Each entry of `models` is (key, label, network, [(M label, M diag), ...], residual form).
+    Each entry of `models` is (key, label, network, [(M label, M diag), ...], residual form, Ω of the network).
     For each (network, M) pair the RMS of the residual r_k = ∂c_k/∂τ − t_max Σ_j M_kj a_j,
-    in the form the network was trained with, is evaluated on random collocation points,
+    in the form (and with the Ω) the network was trained with, is evaluated on random collocation points,
     over all points and over the interface region (min_i c_i ≥ _PDE_CHECK_CMIN).
     M = 0 gives the RMS of ∂c/∂τ itself: a network is only PDE-consistent for M if
     RMS(r; M) is clearly smaller than RMS(r; 0).  The same quantities are computed for
@@ -548,8 +550,8 @@ def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[s
     prof["pde_prof_frame"] = np.array(i_mid)
     prof["pde_prof_ct_fdm"] = ct_f.reshape(len(fr), len(x_grid), 2)[fr.index(i_mid)]
 
-    for key, name, model, m_list, form in models:
-        B, A, cmin = _pinn_rate_terms(mod, model, x, t, omega_true, mu_floor, form)
+    for key, name, model, m_list, form, omega_net in models:
+        B, A, cmin = _pinn_rate_terms(mod, model, x, t, omega_net, mu_floor, form)
         m_all = np.isfinite(A).all(axis=1) & np.isfinite(B).all(axis=1)
         m_int = m_all & (cmin >= _PDE_CHECK_CMIN)
         for m_lab, M in m_list:
@@ -558,7 +560,7 @@ def pde_consistency_check(mod, models: list[tuple[str, str, object, list[tuple[s
             rms_rows.append(_rms(r, m_all) + _rms(r, m_int))
         labels.append(f"{name} | M = 0")
         rms_rows.append(_rms(B, m_all) + _rms(B, m_int))
-        Bp, Ap, _ = _pinn_rate_terms(mod, model, x_grid, np.full_like(x_grid, t_grid[i_mid]), omega_true, mu_floor, form)
+        Bp, Ap, _ = _pinn_rate_terms(mod, model, x_grid, np.full_like(x_grid, t_grid[i_mid]), omega_net, mu_floor, form)
         prof[f"pde_prof_ct_{key}"] = Bp
         prof[f"pde_prof_rate_{key}"] = t_scale * Ap * np.asarray(m_list[0][1], dtype=float)[None, :]
     out = {"pde_check_labels": np.array(labels), "pde_check_rms": np.array(rms_rows, dtype=float)}
@@ -656,6 +658,7 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
     mobility = _mobility_from_args(args)
     M_true_diag = np.diag(mobility).copy()
     use_fick = not args.onsager
+    fwd_form = "fick_frozen" if use_fick else "onsager"
 
     print("=" * 72)
     print("Step 1: RS FDM forward problem (teacher + pseudo-experimental data)")
@@ -775,7 +778,8 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
             C_pinn_inv[ti] = model_inv(x_t, torch.full_like(x_t, float(t_val))).cpu().numpy()
 
     print("  3b: post-hoc least-squares estimate of M from PINN derivatives")
-    M_ls_fwd_full, M_ls_fwd_diag, n_fwd = estimate_mobility_least_squares(mod, model, data, omega_true, args.mu_floor, seed=args.seed)
+    M_ls_fwd_full, M_ls_fwd_diag, n_fwd = estimate_mobility_least_squares(mod, model, data, omega_learned, args.mu_floor,
+                                                                          seed=args.seed, form=fwd_form)
     M_ls_inv_full, M_ls_inv_diag, n_inv = estimate_mobility_least_squares(mod, model_inv, data, omega_true, args.mu_floor,
                                                                           seed=args.seed, form=args.inverse_residual)
     print(f"      forward-fit PINN : diag {M_ls_fwd_diag}  full {M_ls_fwd_full.tolist()}  (n={n_fwd})")
@@ -793,8 +797,8 @@ def run_computation(args: argparse.Namespace) -> dict[str, np.ndarray]:
     print("  3e: PDE-consistency check of the trained networks (RMS residual vs. M)")
     pde_chk = pde_consistency_check(
         mod,
-        [("fwd", "順フィット PINN", model, [("真値", M_true_diag), ("初期推定値", M_init)], "fick_frozen"),
-         ("inv", "逆解析 PINN", model_inv, [("M̂ (3a)", M_hat_pinn), ("真値", M_true_diag)], args.inverse_residual)],
+        [("fwd", "順フィット PINN", model, [("真値", M_true_diag), ("初期推定値", M_init)], fwd_form, omega_learned),
+         ("inv", "逆解析 PINN", model_inv, [("M̂ (3a)", M_hat_pinn), ("真値", M_true_diag)], args.inverse_residual, omega_true)],
         data, omega_true, mobility, args.mu_floor, seed=args.seed,
     )
     for lab, row in zip(pde_chk["pde_check_labels"], pde_chk["pde_check_rms"]):
@@ -1939,15 +1943,19 @@ PINN では \(M\) を<b>学習可能な変数として損失関数に含める</
 \(M = 0\) のとき \(r = \partial c/\partial\tau\) なので, <b>真値の \(M\) での \(\mathrm{RMS}\,r\) が \(M=0\) より小さくなっていなければ, ネットワークは PDE を「理解」していない</b>と判断できます。
 基準として, FDM 教師データに対して同じ量を差分で評価した値も示します (ソルバ自身の流束を使うのでほぼ 0 になるはず)。</p>""")
             inv_form = cfg.get("inverse_residual", "fick_frozen")
-            if inv_form == "onsager":
-                P(r"""<p>この実行では逆解析 PINN (3a) は Onsager 形式 \(a_j = \partial^2\mu_j/\partial x^2\) で学習しているため,
-逆解析 PINN の行と 3b の最小二乗も同じ Onsager 形式で評価しています (順フィット PINN の行は凍結係数 Fick 形式)。</p>""")
+            fwd_form = "fick_frozen" if cfg["use_fick_form"] else "onsager"
+            _form_ja = {"fick_frozen": "凍結係数 Fick", "onsager": "Onsager"}
+            if "onsager" in (fwd_form, inv_form):
+                P(rf"""<p>残差 \(a_j\) は各ネットワークの学習時と同じ形式で評価しています
+(Onsager 形式: \(a_j = \partial^2\mu_j/\partial x^2\), 凍結係数 Fick 形式: \(a_j = \sum_m \Phi_{{jm}}(c)\,\partial^2 c_m/\partial x^2\))。
+この実行では順フィット PINN は {_form_ja[fwd_form]} 形式, 逆解析 PINN (3a) と 3b の最小二乗は {_form_ja[inv_form]} 形式です。
+Ω は各ネットワークが学習に用いた値 (順フィット PINN: 学習後の \(\Omega\), 逆解析 PINN と FDM 基準: 真の \(\Omega\)) を使います。</p>""")
             chk_rows = [[html.escape(str(lab)), f3(row[0]), f3(row[1]), f3(row[2]), f3(row[3])]
                         for lab, row in zip(res["pde_check_labels"], res["pde_check_rms"])]
             P(_h_table(["ネットワーク | 代入した M", r"RMS \(r_{\mathrm{Ni}}\) (全領域)", r"RMS \(r_{\mathrm{Ta}}\) (全領域)",
                         rf"RMS \(r_{{\mathrm{{Ni}}}}\) (\(\min_i c_i \ge {_PDE_CHECK_CMIN}\))", rf"RMS \(r_{{\mathrm{{Ta}}}}\) (\(\min_i c_i \ge {_PDE_CHECK_CMIN}\))"],
                        chk_rows, "表 8. PDE 整合性チェック: 固定したネットワークに対して M を変えたときの残差 RMS (残差は ∂c/∂τ の単位。"
-                                 f"逆解析 PINN の残差形式: {'Onsager' if inv_form == 'onsager' else '凍結係数 Fick'})"))
+                                 f"残差形式 — 順フィット PINN: {_form_ja[fwd_form]}, 逆解析 PINN: {_form_ja[inv_form]})"))
             r_fdm = res["pde_check_rms"]
             if np.all(r_fdm[0, :2] > r_fdm[1, :2]):
                 P(r"""<p><b>FDM 教師の「全領域」の行に注意:</b> 真の \(M\) を入れても残差が \(M=0\) より大きくなっています。これは FDM が間違っているのではなく,
