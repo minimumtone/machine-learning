@@ -134,11 +134,22 @@ class RunResult:
         }
 
 
-def _score(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+def _score(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    sample_weight: Optional[np.ndarray] = None,
+) -> Dict[str, float]:
     """Compute RMSE, MAE, R2."""
-    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-    mae = float(mean_absolute_error(y_true, y_pred))
-    r2 = float(r2_score(y_true, y_pred)) if len(y_true) >= 2 else float("nan")
+    rmse = float(np.sqrt(mean_squared_error(
+        y_true, y_pred, sample_weight=sample_weight,
+    )))
+    mae = float(mean_absolute_error(
+        y_true, y_pred, sample_weight=sample_weight,
+    ))
+    r2 = (
+        float(r2_score(y_true, y_pred, sample_weight=sample_weight))
+        if len(y_true) >= 2 else float("nan")
+    )
     return {"rmse": rmse, "mae": mae, "r2": r2}
 
 
@@ -147,9 +158,22 @@ def _score(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
 # ---------------------------------------------------------------------------
 
 
-def _safe_std_y(y_train: np.ndarray) -> float:
+def _safe_std_y(
+    y_train: np.ndarray,
+    sample_weight: Optional[np.ndarray] = None,
+) -> float:
     """Compute sample std of y, clamped to 1.0 for degenerate cases."""
-    if len(y_train) > 1:
+    if sample_weight is not None:
+        weights = np.asarray(sample_weight, dtype=float)
+        weight_sum = float(weights.sum())
+        if weight_sum > 1.0:
+            mu = float(np.average(y_train, weights=weights))
+            var = float(np.average((y_train - mu) ** 2, weights=weights))
+            var *= weight_sum / (weight_sum - 1.0)
+            std_y = float(np.sqrt(max(var, 0.0)))
+        else:
+            std_y = 0.0
+    elif len(y_train) > 1:
         std_y = float(np.std(y_train, ddof=1))
     else:
         std_y = 0.0
@@ -159,7 +183,11 @@ def _safe_std_y(y_train: np.ndarray) -> float:
 def _fit_params(sample_weight: Optional[np.ndarray]) -> Dict[str, Any]:
     if sample_weight is None:
         return {}
-    return {"model__sample_weight": np.asarray(sample_weight, dtype=float)}
+    weights = np.asarray(sample_weight, dtype=float)
+    return {
+        "model__sample_weight": weights,
+        "scaler__sample_weight": weights,
+    }
 
 
 def _coef_to_dict(
@@ -299,7 +327,7 @@ class WorkflowLIN(BaseWorkflow):
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         model = pipe.named_steps["model"]
@@ -307,7 +335,7 @@ class WorkflowLIN(BaseWorkflow):
         effective_alpha = (
             float(model.alpha_) if self._alpha is None else float(self._alpha)
         )
-        std_y = _safe_std_y(_safe_np(y_train))
+        std_y = _safe_std_y(_safe_np(y_train), sample_weight)
         coef_std = coef_raw / std_y
 
         return _make_result(
@@ -372,13 +400,13 @@ class WorkflowLASSO(BaseWorkflow):
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         model: LassoCV = pipe.named_steps["model"]
         coef_raw = model.coef_
         n_nonzero = int(np.sum(np.abs(coef_raw) > 1e-10))
-        std_y = _safe_std_y(_safe_np(y_train))
+        std_y = _safe_std_y(_safe_np(y_train), sample_weight)
         coef_std = coef_raw / std_y
 
         return _make_result(
@@ -447,14 +475,14 @@ class WorkflowARD(BaseWorkflow):
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         model: ARDRegression = pipe.named_steps["model"]
         coef_raw = model.coef_
         relevance = 1.0 / (model.lambda_ + 1e-10)
         relevance_norm = relevance / relevance.max() if relevance.max() > 0 else relevance
-        std_y = _safe_std_y(_safe_np(y_train))
+        std_y = _safe_std_y(_safe_np(y_train), sample_weight)
         coef_std = coef_raw / std_y
 
         return _make_result(
@@ -586,7 +614,7 @@ class WorkflowXGB(BaseWorkflow):
                 else:
                     (
                         X_tr_es, X_val_es, y_tr_es, y_val_es,
-                        w_tr_es, _w_val_es,
+                        w_tr_es, w_val_es,
                     ) = _tts(
                         X_tr_transformed, _safe_np(y_train),
                         np.asarray(sample_weight, dtype=float),
@@ -597,14 +625,15 @@ class WorkflowXGB(BaseWorkflow):
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
                 es_params["early_stopping_rounds"] = 20
                 es_model = XGBRegressor(**es_params)
+                es_fit_params: Dict[str, Any] = {}
+                if w_tr_es is not None:
+                    es_fit_params["sample_weight"] = w_tr_es
+                    es_fit_params["sample_weight_eval_set"] = [w_val_es]
                 es_model.fit(
                     np.ascontiguousarray(X_tr_es),
                     y_tr_es,
                     eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
-                    **(
-                        {"sample_weight": w_tr_es}
-                        if w_tr_es is not None else {}
-                    ),
+                    **es_fit_params,
                     verbose=False,
                 )
                 if (
@@ -630,7 +659,7 @@ class WorkflowXGB(BaseWorkflow):
         y_train_pred = best_pipe.predict(_safe_np(X_train))
         y_test_pred = best_pipe.predict(_safe_np(X_test))
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         model_step = best_pipe.named_steps["model"]
@@ -759,7 +788,7 @@ class WorkflowENS(BaseWorkflow):
         y_test_std = preds_arr.std(axis=0)
         y_train_pred = train_preds_arr.mean(axis=0)
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         return _make_result(
@@ -851,7 +880,7 @@ class WorkflowRF(BaseWorkflow):
         y_train_pred = best_pipe.predict(_safe_np(X_train))
         y_test_pred = best_pipe.predict(_safe_np(X_test))
 
-        train_s = _score(_safe_np(y_train), y_train_pred)
+        train_s = _score(_safe_np(y_train), y_train_pred, sample_weight)
         test_s = _score(_safe_np(y_test), y_test_pred)
 
         model_step = best_pipe.named_steps["model"]

@@ -345,6 +345,50 @@ def test_sample_weight_is_honored_by_workflows():
     assert np.isfinite(ard.rmse_test)
 
 
+def test_weighted_train_metrics_match_replication():
+    from extrapolation_discovery_platform.workflows import WorkflowLIN
+
+    rng = np.random.default_rng(31)
+    X_train = pd.DataFrame(
+        rng.normal(size=(40, 3)),
+        columns=["a", "b", "c"],
+    )
+    y_train = pd.Series(
+        2.0 * X_train["a"] - 1.5 * X_train["b"]
+        + 0.5 * X_train["c"] + rng.normal(scale=0.05, size=40)
+    )
+    X_test = pd.DataFrame(
+        rng.normal(size=(10, 3)),
+        columns=X_train.columns,
+    )
+    y_test = pd.Series(rng.normal(size=10))
+    weights = np.tile(np.array([1, 2, 3, 2]), 10)
+    rep = np.repeat(np.arange(len(X_train)), weights)
+    workflow = WorkflowLIN(alpha=1.0, dim_reduction=False)
+    weighted = workflow.run(
+        X_train, y_train, X_test, y_test, seed=42,
+        sample_weight=weights,
+    )
+    replicated = WorkflowLIN(alpha=1.0, dim_reduction=False).run(
+        X_train.iloc[rep].reset_index(drop=True),
+        y_train.iloc[rep].reset_index(drop=True),
+        X_test, y_test, seed=42,
+    )
+
+    np.testing.assert_allclose(
+        weighted.rmse_train, replicated.rmse_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.mae_train, replicated.mae_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.r2_train, replicated.r2_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.y_test_pred, replicated.y_test_pred, rtol=1e-6,
+    )
+
+
 def test_discovery_runs_under_each_train_scope(prepared):
     comps, feat, y, _prep, ood = prepared
     cands = _candidates(y, len(feat))
