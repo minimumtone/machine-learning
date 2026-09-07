@@ -76,7 +76,8 @@ mace_sorted = mace.sort_values('x_Al').reset_index(drop=True)
 x_mace_plot, c_mace_plot = [], []
 prev_branch = None
 for _, r in mace_sorted.iterrows():
-    if prev_branch is not None and r.selected_branch != prev_branch:
+    if (prev_branch is not None
+            and {prev_branch, r.selected_branch} == {'vacancy', 'antisite'}):
         x_mace_plot.append(np.nan)
         c_mace_plot.append(np.nan)
     x_mace_plot.append(r.x_Al)
