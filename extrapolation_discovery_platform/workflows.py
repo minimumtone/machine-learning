@@ -156,6 +156,12 @@ def _safe_std_y(y_train: np.ndarray) -> float:
     return std_y if std_y >= 1e-12 else 1.0
 
 
+def _fit_params(sample_weight: Optional[np.ndarray]) -> Dict[str, Any]:
+    if sample_weight is None:
+        return {}
+    return {"model__sample_weight": np.asarray(sample_weight, dtype=float)}
+
+
 def _coef_to_dict(
     columns: pd.Index,
     coef: np.ndarray,
@@ -219,6 +225,7 @@ class BaseWorkflow(ABC):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         ...
@@ -266,6 +273,7 @@ class WorkflowLIN(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -283,7 +291,10 @@ class WorkflowLIN(BaseWorkflow):
             ("model", model_step),
         ]
         pipe = Pipeline(steps)
-        pipe.fit(_safe_np(X_train), _safe_np(y_train))
+        pipe.fit(
+            _safe_np(X_train), _safe_np(y_train),
+            **_fit_params(sample_weight),
+        )
 
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
@@ -336,6 +347,7 @@ class WorkflowLASSO(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -352,7 +364,10 @@ class WorkflowLASSO(BaseWorkflow):
             )),
         ]
         pipe = Pipeline(steps)
-        pipe.fit(_safe_np(X_train), _safe_np(y_train))
+        pipe.fit(
+            _safe_np(X_train), _safe_np(y_train),
+            **_fit_params(sample_weight),
+        )
 
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
@@ -404,6 +419,7 @@ class WorkflowARD(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -417,7 +433,16 @@ class WorkflowARD(BaseWorkflow):
             ("model", ARDRegression(max_iter=500)),
         ]
         pipe = Pipeline(steps)
-        pipe.fit(_safe_np(X_train), _safe_np(y_train))
+        X_fit = _safe_np(X_train)
+        y_fit = _safe_np(y_train)
+        if sample_weight is not None:
+            rep = np.repeat(
+                np.arange(len(X_fit)),
+                np.maximum(1, np.rint(sample_weight)).astype(int),
+            )
+            X_fit = X_fit[rep]
+            y_fit = y_fit[rep]
+        pipe.fit(X_fit, y_fit)
 
         y_train_pred = pipe.predict(_safe_np(X_train))
         y_test_pred = pipe.predict(_safe_np(X_test))
@@ -493,6 +518,7 @@ class WorkflowXGB(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -522,7 +548,10 @@ class WorkflowXGB(BaseWorkflow):
             n_jobs=_inner_jobs,
             error_score=np.nan,
         )
-        grid.fit(_safe_np(X_train), _safe_np(y_train))
+        grid.fit(
+            _safe_np(X_train), _safe_np(y_train),
+            **_fit_params(sample_weight),
+        )
 
         best_pipe = grid.best_estimator_
         best_model = best_pipe.named_steps["model"]
@@ -548,10 +577,21 @@ class WorkflowXGB(BaseWorkflow):
                 else:
                     X_tr_transformed = _safe_np(X_train)
 
-                X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
-                    X_tr_transformed, _safe_np(y_train),
-                    test_size=0.2, random_state=seed,
-                )
+                if sample_weight is None:
+                    X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
+                        X_tr_transformed, _safe_np(y_train),
+                        test_size=0.2, random_state=seed,
+                    )
+                    w_tr_es = None
+                else:
+                    (
+                        X_tr_es, X_val_es, y_tr_es, y_val_es,
+                        w_tr_es, _w_val_es,
+                    ) = _tts(
+                        X_tr_transformed, _safe_np(y_train),
+                        np.asarray(sample_weight, dtype=float),
+                        test_size=0.2, random_state=seed,
+                    )
 
                 es_params = best_model.get_params()
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
@@ -561,6 +601,10 @@ class WorkflowXGB(BaseWorkflow):
                     np.ascontiguousarray(X_tr_es),
                     y_tr_es,
                     eval_set=[(np.ascontiguousarray(X_val_es), y_val_es)],
+                    **(
+                        {"sample_weight": w_tr_es}
+                        if w_tr_es is not None else {}
+                    ),
                     verbose=False,
                 )
                 if (
@@ -570,7 +614,10 @@ class WorkflowXGB(BaseWorkflow):
                     optimal_n = es_model.best_iteration + 1
                     cloned_pipe = _clone(best_pipe)
                     cloned_pipe.set_params(model__n_estimators=optimal_n)
-                    cloned_pipe.fit(_safe_np(X_train), _safe_np(y_train))
+                    cloned_pipe.fit(
+                        _safe_np(X_train), _safe_np(y_train),
+                        **_fit_params(sample_weight),
+                    )
                     best_pipe = cloned_pipe
                     used_early_stop = True
                     logger.debug(
@@ -684,6 +731,7 @@ class WorkflowENS(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -697,7 +745,10 @@ class WorkflowENS(BaseWorkflow):
         for m in range(self._n_members):
             member_seed = (seed + m * 10_000_007) % (2**31)
             pipe = self._make_member(member_seed, n_features=n_features)
-            pipe.fit(_safe_np(X_train), _safe_np(y_train))
+            pipe.fit(
+                _safe_np(X_train), _safe_np(y_train),
+                **_fit_params(sample_weight),
+            )
             preds_list.append(pipe.predict(_safe_np(X_test)))
             train_preds_list.append(pipe.predict(_safe_np(X_train)))
 
@@ -760,6 +811,7 @@ class WorkflowRF(BaseWorkflow):
         X_test: pd.DataFrame,
         y_test: pd.Series,
         seed: int = 42,
+        sample_weight: Optional[np.ndarray] = None,
         **kwargs: Any,
     ) -> RunResult:
         t0 = time.time()
@@ -790,7 +842,10 @@ class WorkflowRF(BaseWorkflow):
             n_jobs=_inner_jobs,
             error_score=np.nan,
         )
-        grid.fit(_safe_np(X_train), _safe_np(y_train))
+        grid.fit(
+            _safe_np(X_train), _safe_np(y_train),
+            **_fit_params(sample_weight),
+        )
 
         best_pipe = grid.best_estimator_
         y_train_pred = best_pipe.predict(_safe_np(X_train))

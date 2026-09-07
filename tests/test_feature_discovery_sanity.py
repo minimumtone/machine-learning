@@ -24,6 +24,7 @@ import pytest
 from extrapolation_discovery_platform.dataset import generate_hea_dataset
 from extrapolation_discovery_platform.ood_feature_discovery import (
     augment_dataset,
+    augment_dataset_weighted,
     identify_boundary_samples,
     run_feature_discovery,
 )
@@ -276,6 +277,72 @@ def test_augment_with_plan_keeps_ood_rows_out_of_training(prepared):
         for j in tr[tr >= len(feat)]:
             src = X_aug.iloc[j].to_numpy()
             assert np.isfinite(src).all()
+
+
+def test_augment_weighted_matches_replication_multiplicity(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, y, _prep, ood = prepared
+    boundary = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[boundary.ood_indices])
+    n_orig = len(feat)
+
+    for scope in ("global", "kernel"):
+        plan = compute_neighborhood_plan(feat, ood_idx, scope=scope)
+        X_rep, y_rep, train_rep, ood_rep = augment_dataset(
+            features_df=feat, target=y, boundary_info=boundary,
+            ood_test_idx=ood.primary_test_idx, neighborhood_plan=plan,
+        )
+        X_weight, y_weight, train_weight, ood_weight, sample_weight = (
+            augment_dataset_weighted(
+                features_df=feat, target=y, boundary_info=boundary,
+                ood_test_idx=ood.primary_test_idx, neighborhood_plan=plan,
+            )
+        )
+
+        assert len(X_rep) == len(y_rep)
+        assert len(X_weight) == len(y_weight) == n_orig
+        assert sample_weight.sum() == len(train_rep)
+        assert set(train_weight).isdisjoint(set(ood_weight))
+        assert len(train_weight) == (
+            plan.n_train_rows if scope == "kernel"
+            else n_orig - len(ood_rep)
+        )
+        if scope == "kernel":
+            assert sample_weight.min() >= 1
+            assert sample_weight.max() <= 4
+
+
+def test_sample_weight_is_honored_by_workflows():
+    from extrapolation_discovery_platform.individual_runner import (
+        _WORKFLOW_FACTORIES,
+    )
+
+    rng = np.random.default_rng(23)
+    X = pd.DataFrame(rng.normal(size=(40, 3)), columns=["a", "b", "c"])
+    y = pd.Series(3.0 * X["a"] - 2.0 * X["b"] + rng.normal(scale=0.1, size=40))
+    y.iloc[:5] += 20.0
+    X_train, X_test = X.iloc[:30], X.iloc[30:]
+    y_train, y_test = y.iloc[:30], y.iloc[30:]
+    weights = np.ones(len(X_train))
+    weights[:5] = 10.0
+
+    for workflow_name in ("WF-LIN", "WF-RF"):
+        plain = _WORKFLOW_FACTORIES[workflow_name](True, True).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+        weighted = _WORKFLOW_FACTORIES[workflow_name](True, True).run(
+            X_train, y_train, X_test, y_test, seed=42,
+            sample_weight=weights,
+        )
+        assert not np.allclose(plain.y_test_pred, weighted.y_test_pred)
+
+    ard = _WORKFLOW_FACTORIES["WF-ARD"](True, True).run(
+        X_train, y_train, X_test, y_test, seed=42,
+        sample_weight=weights,
+    )
+    assert np.isfinite(ard.rmse_test)
 
 
 def test_discovery_runs_under_each_train_scope(prepared):
