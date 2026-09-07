@@ -125,7 +125,7 @@ print(table.to_string(index=False))
 
 # --- plot -----------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(12, 7))
-fig.subplots_adjust(left=0.17, right=0.98, top=0.92, bottom=0.10)
+fig.subplots_adjust(left=0.13, right=0.60, top=0.92, bottom=0.10)
 ax.plot(x_grid, c_mod, 'k-', lw=2.5, label='$c_{\\rm vac}^{\\rm model}$ (Ni 空孔, $1-1/(2x)$)')
 ax.plot(x_grid, c_anti, '--', color='tab:green', lw=2.0,
         label='$c_{\\rm anti}^{\\rm model}$ (反サイト, $|x-0.5|$)')
@@ -144,7 +144,7 @@ ax.scatter(td_al.x_Al_at / 100.0, td_al.c_vac_exp, color='tab:red', s=80, zorder
            label='$c_{\\rm vac}^{\\rm exp}$ (T&D 密度, Table 2)', edgecolors='k', linewidths=0.5)
 
 # shade the metastable extrapolation region beyond the B2 single-phase field
-ax.axvspan(0.65, 0.98, color='gray', alpha=0.08, zorder=0, label='B2 単相限界を超える外挿（metastable）')
+ax.axvspan(0.65, 0.98, color='gray', alpha=0.08, zorder=0, label='_nolegend_')
 
 ax.axhline(0.0, color='gray', lw=1.0, ls='--')
 ax.axvline(0.5, color='gray', lw=1.0, ls=':')
@@ -153,7 +153,7 @@ ax.set_ylabel('Ni 副格子欠陥占有率（全サイト基準）', fontsize=16
 ax.set_title('B2-NiAl Al 過剰側：空孔・反サイト・Boltzmann 混合', fontsize=18)
 ax.set_xlim(0.50, 0.98)
 ax.set_ylim(-0.05, 0.55)
-ax.legend(fontsize=9, loc='upper left')
+ax.legend(fontsize=12, loc='upper left', bbox_to_anchor=(1.02, 1.0), borderaxespad=0.5, frameon=True)
 
 # annotation: all models converge to perfect B2 at x=0.5
 ax.text(0.51, 0.47,
