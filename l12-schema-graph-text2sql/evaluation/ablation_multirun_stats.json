@@ -1004,7 +1004,7 @@
     },
     "no_nbest": {
       "delta_pp": 0.3437310121181088,
-      "p_value": 0.75,
+      "p_value": 0.625,
       "n_nonzero": 5,
       "n_queries": 100,
       "test": "sign-permutation-exact-midranks",

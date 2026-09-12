@@ -15,12 +15,21 @@ per-query means are heavily tied (they only take the values 0, 0.2, ...,
 dynamic programme over the doubled midranks, so the result is deterministic,
 independent of SciPy's version, and feasible for any ``k`` that occurs here
 (``k <= 100``).
+
+The paired differences are means of 0/1 (or per-query recall) values, so
+mathematically equal differences can arrive with different binary
+representations (``0.2`` vs ``0.19999999999999996``).  |diff| is therefore
+rounded to ``TIE_DECIMALS`` decimals before ranking so that such values share
+a midrank; genuinely distinct differences in these data are separated by far
+more than ``10**-TIE_DECIMALS``.
 """
 from __future__ import annotations
 
 from collections.abc import Sequence
 
 from scipy.stats import rankdata
+
+TIE_DECIMALS = 9
 
 
 def sign_permutation_pvalue(nonzero: Sequence[float]) -> float:
@@ -32,7 +41,8 @@ def sign_permutation_pvalue(nonzero: Sequence[float]) -> float:
     if not diffs:
         return 1.0
     # Midranks of |diff|; doubling makes them integers (ties give .5 ranks).
-    ranks2 = [int(round(2 * r)) for r in rankdata([abs(d) for d in diffs])]
+    magnitudes = [round(abs(d), TIE_DECIMALS) for d in diffs]
+    ranks2 = [int(round(2 * r)) for r in rankdata(magnitudes)]
     total2 = sum(ranks2)
     w_plus2 = sum(r for r, d in zip(ranks2, diffs) if d > 0)
     observed2 = min(w_plus2, total2 - w_plus2)

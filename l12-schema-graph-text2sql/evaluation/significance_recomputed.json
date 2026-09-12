@@ -21,8 +21,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "ab25c94ddc32b3d25e81a68ca630cc615c71efd6",
-    "generated_at": "2026-09-12T15:43:27+00:00",
+    "git_commit": "5305d7db386de323c9312adefbe6507c56cf8daa",
+    "generated_at": "2026-09-12T15:53:08+00:00",
     "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
@@ -74,7 +74,7 @@
       "delta_pp": 0.3437310121181088,
       "n_queries": 100,
       "n_nonzero": 5,
-      "p_value": 0.75,
+      "p_value": 0.625,
       "p_value_scipy_exact_untied": 0.8125,
       "p_value_approx_legacy": 0.6844698210251553,
       "run_level": {

@@ -30,6 +30,19 @@ def test_hand_checkable_values():
     assert sign_permutation_pvalue([0.4, -0.2]) == 1.0
 
 
+def test_float_representations_of_equal_diffs_share_a_midrank():
+    # Means of five 0/1 runs: 0.2 can also arrive as 1.0 - 0.8 = 0.19999999999999996.
+    # The observed no_nbest differences (three |diff| = 0.2 tied) give 0.625;
+    # splitting the tie into midranks 3.5 / 5 / 3.5 would give 0.75.
+    a = 0.2
+    b = 1.0 - 0.8
+    assert a != b
+    nonzero = [-0.038279569892473164, b, 0.18201058201058207, -a, b]
+    assert sign_permutation_pvalue(nonzero) == 0.625
+    assert sign_permutation_pvalue([-0.038279569892473164, a, 0.18201058201058207,
+                                    -a, a]) == 0.625
+
+
 def test_matches_brute_force_enumeration_with_ties():
     rng = np.random.default_rng(20260602)
     for _ in range(300):
