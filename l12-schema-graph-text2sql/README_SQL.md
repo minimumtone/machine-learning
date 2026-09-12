@@ -2,6 +2,7 @@
 
 - 生成元コミット: GIT_COMMIT ファイル参照（第23次評価契約反映済み）
 - `MANIFEST.md` : `evaluation/` の各成果物（データセット・保存run・派生統計）と論文の表・図の対応表
+- クエリ単位の結果表（旧補足表S3/S4の機械可読代替）: `python scripts/build_per_query_tables.py` が保存run（`ablation_run_1..5.json`）と `query_catalog.csv` のみから `evaluation/per_query_results.csv`・`per_query_by_condition.csv`・`per_query_by_condition_mean5.csv`・`per_query_tables_provenance.json` を決定的に再生成する（LLM・DB不要、再実行でバイト同一）
 
 ## 一括検証（唯一の正式エントリポイント）
 
