@@ -618,7 +618,7 @@ E01--E05は、禁止キーワード検出、マルチステートメント検出
 \subsection{材料工学評価}
 \label{sec:materials_evaluation}
 
-材料工学の観点から、次の3つの探索を実行した。本節の表~\ref{tab:gamma_prime}・表~\ref{tab:lattice_match}に示す数値は、SSOT生成スクリプトが検証済みSQL（ゴールドSQLと同型の決定的SQL）をDBに対して実行した結果であり、パイプラインが生成したSQLの出力そのものではない（同型の質問はパイプライン評価ではクエリにより成功・失敗の双方がある；補足資料~\ref{sec:sup_query_detail}の表~\ref{tab:sup_query_detail}）。両表の行データは集約データに収録され、数値整合検証の対象である。
+材料工学の観点から、次の3つの探索を実行した。本節の表~\ref{tab:gamma_prime}・表~\ref{tab:lattice_match}に示す数値は、SSOT生成スクリプトが検証済みSQL（ゴールドSQLと同型の決定的SQL）をDBに対して実行した結果であり、パイプラインが生成したSQLの出力そのものではない（同型の質問はパイプライン評価ではクエリにより成功・失敗の双方がある；補足資料~\ref{sec:sup_query_detail}の表~\ref{tab:sup_query_detail}および同梱の\texttt{evaluation/per\_query\_results.csv}）。両表の行データは集約データに収録され、数値整合検証の対象である。
 \begin{enumerate}
   \item $\gamma'$相候補ランキング：安定性・格子マッチング・体積弾性率の3指標加重複合スコアで255のユニークL1$_2$組成をランク付けした（157の安定/準安定候補のうちNi$_3$Alが1位）。
   \item Ni$_3$Al近傍の格子定数候補抽出：$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を満たす26のユニーク組成（27エントリ）を抽出した。
@@ -1158,138 +1158,40 @@ LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_l
 \section{100の評価クエリに関する詳細結果}
 \label{sec:sup_query_detail}
 
-表~\ref{tab:sup_query_detail}には、すべての100の評価クエリ（著者設計、E=20/M=30/H=30/VH=20）が、その質問テキスト、実行再現率（行一致リコール）、レイテンシ、および合格/不合格（実行再現率が$\geq 0.8$の場合は$\checkmark$）とともに示されている。すべての値は、アブレーションフル条件の第1ラン（このランの全体値は92.7\%；表~\ref{tab:sup_ablation_diff}と同一ラン）から得られたものであり、したがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。クエリは元の日本語で示されている。
-\begin{footnotesize}
-\begin{longtable}{lp{8.1cm}ccl}
-  \caption{100の評価クエリに関する詳細な結果（アブレーションfull条件の第1ラン；このランの全体値は92.7\%で、表~\ref{tab:sup_ablation_diff}と同一ラン。表~\ref{tab:ablation}の5ラン平均とは一致しない）。クエリは元の日本語である。}
-  \label{tab:sup_query_detail} \\
+アブレーション用100クエリ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結果（質問テキスト、実行再現率（行一致リコール）、レイテンシ、合格/不合格（実行再現率$\geq 0.8$で$\checkmark$））は、同梱の機械可読ファイル \texttt{evaluation/per\_query\_results.csv}（質問文・難易度は \texttt{evaluation/query\_catalog.csv} と同一）に全100行を収録している。すべての値は、アブレーションフル条件の第1ラン（このランの全体値は92.7\%；補足資料~\ref{sec:sup_ablation_diff}と同一ラン）から得られたものであり、したがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。表~\ref{tab:sup_query_detail}には難易度層ごとにバランスさせた代表10行（各層の成功例と、失敗・部分一致の例を含む）のみを抜粋する。クエリは元の日本語で示されている。
+\begin{table*}[htbp]
+\centering
+\caption{100の評価クエリに関する詳細結果の抜粋（10行；アブレーションfull条件の第1ラン。全100行は \texttt{evaluation/per\_query\_results.csv}）。P/F: 実行再現率$\geq 0.8$で$\checkmark$。}
+\label{tab:sup_query_detail}
+\footnotesize
+\begin{tabular}{lp{8.1cm}ccl}
   \toprule
   ID & クエリ & 実行再現率 & 秒 & P/F \\
   \midrule
-  \endfirsthead
-  \toprule
-  ID & クエリ & 実行再現率 & 秒 & P/F \\
-  \midrule
-  \endhead
-  \midrule
-  \multicolumn{5}{r}{\textit{次のページに続く}} \\
-  \endfoot
-  \bottomrule
-  \endlastfoot
-    \midrule
     \multicolumn{5}{l}{Easy ($n$=20)} \\
     \midrule
     q\_easy\_001 & L1$_{\mathrm{2}}$構造を持つ化合物を一覧にして。 & 1.00 & 24.1 & $\checkmark$ \\
-    q\_easy\_002 & Niを含むL1$_{\mathrm{2}}$型金属間化合物を抽出して。 & 1.00 & 33.0 & $\checkmark$ \\
-    q\_easy\_003 & A$_{\mathrm{3}}$B型組成を持つ化合物を表示して。 & 1.00 & 30.3 & $\checkmark$ \\
-    q\_easy\_004 & L12型化合物の格子定数を一覧にして。 & 1.00 & 10.2 & $\checkmark$ \\
-    q\_easy\_005 & Coを含む化合物を表示して。 & 1.00 & 19.6 & $\checkmark$ \\
-    q\_easy\_006 & cubic構造の化合物を一覧にして。 & 1.00 & 16.2 & $\checkmark$ \\
-    q\_easy\_007 & L1$_{\mathrm{2}}$型化合物のリストを出して。 & 1.00 & 18.1 & $\checkmark$ \\
-    q\_easy\_008 & Alを含む化合物を抽出して。 & 1.00 & 17.4 & $\checkmark$ \\
-    q\_easy\_009 & 空間群番号221の化合物を表示して。 & 1.00 & 16.4 & $\checkmark$ \\
-    q\_easy\_010 & Tiを含むL1$_{\mathrm{2}}$型化合物を一覧にして。 & 1.00 & 24.6 & $\checkmark$ \\
-    q\_easy\_011 & 全化合物のformula一覧を出して。 & 1.00 & 16.4 & $\checkmark$ \\
-    q\_easy\_012 & L12型化合物の数を教えて。 & 1.00 & 15.2 & $\checkmark$ \\
-    q\_easy\_013 & Ptを含む化合物を表示して。 & 1.00 & 22.0 & $\checkmark$ \\
     q\_easy\_014 & NiとAlの両方を含む化合物を抽出して。 & 1.00 & 29.8 & $\checkmark$ \\
-    q\_easy\_015 & Gaを含むL1$_{\mathrm{2}}$型化合物を表示して。 & 1.00 & 32.8 & $\checkmark$ \\
-    q\_easy\_016 & Feを含む化合物を一覧にして。 & 1.00 & 18.6 & $\checkmark$ \\
-    q\_easy\_017 & Aサイトの元素を一覧にして。 & 1.00 & 21.2 & $\checkmark$ \\
-    q\_easy\_018 & 化合物の元素系を表示して。 & 1.00 & 21.5 & $\checkmark$ \\
-    q\_easy\_019 & L1$_{\mathrm{2}}$型でcubic構造の化合物を出して。 & 1.00 & 24.0 & $\checkmark$ \\
-    q\_easy\_020 & Wを含むL1$_{\mathrm{2}}$型化合物を表示して。 & 1.00 & 35.1 & $\checkmark$ \\
     \midrule
     \multicolumn{5}{l}{Medium ($n$=30)} \\
     \midrule
     q\_medium\_001 & Niを含む安定なL1$_{\mathrm{2}}$型化合物を抽出して。 & 1.00 & 35.3 & $\checkmark$ \\
-    q\_medium\_002 & 形成エネルギーが負のL1$_{\mathrm{2}}$型化合物を元素組み合わせごとに整理して。 & 1.00 & 31.0 & $\checkmark$ \\
-    q\_medium\_003 & Alを含む安定なL1$_{\mathrm{2}}$型金属間化合物を抽出して。 & 1.00 & 42.9 & $\checkmark$ \\
-    q\_medium\_004 & Ni$_{\mathrm{3}}$Alに近い格子定数を持つL1$_{\mathrm{2}}$化合物を探して。 & 1.00 & 34.9 & $\checkmark$ \\
-    q\_medium\_005 & 安定なL1$_{\mathrm{2}}$型化合物を形成エネルギーが低い順に出して。 & 1.00 & 33.7 & $\checkmark$ \\
-    q\_medium\_006 & 準安定なL1$_{\mathrm{2}}$型化合物を抽出して。 & 1.00 & 32.8 & $\checkmark$ \\
-    q\_medium\_007 & L1$_{\mathrm{2}}$型化合物の形成エネルギー分布を教えて。 & 1.00 & 29.8 & $\checkmark$ \\
-    q\_medium\_008 & Co含有L1$_{\mathrm{2}}$型化合物を安定性の高い順に表示して。 & 1.00 & 29.8 & $\checkmark$ \\
-    q\_medium\_009 & 格子定数が3.5\AA{}以上のL1$_{\mathrm{2}}$化合物を出して。 & 1.00 & 25.5 & $\checkmark$ \\
-    q\_medium\_010 & NiまたはCoを含むL1$_{\mathrm{2}}$型化合物を一覧にして。 & 1.00 & 41.1 & $\checkmark$ \\
-    q\_medium\_011 & 形成エネルギーが-0.4以下のL1$_{\mathrm{2}}$型化合物を出して。 & 1.00 & 31.3 & $\checkmark$ \\
     q\_medium\_012 & energy above hullが0.01以下のL1$_{\mathrm{2}}$型化合物を表示して。 & 1.00 & 36.4 & $\checkmark$ \\
-    q\_medium\_013 & Ti含有L1$_{\mathrm{2}}$型化合物の格子定数と形成エネルギーを表示して。 & 1.00 & 30.8 & $\checkmark$ \\
-    q\_medium\_014 & L1$_{\mathrm{2}}$化合物の格子定数を小さい順にソートして。 & 1.00 & 24.8 & $\checkmark$ \\
-    q\_medium\_015 & 化学系Al-Niに属するL1$_{\mathrm{2}}$化合物を抽出して。 & 1.00 & 21.8 & $\checkmark$ \\
-    q\_medium\_016 & 安定で格子定数が3.6\AA{}未満のL1$_{\mathrm{2}}$化合物を出して。 & 1.00 & 26.6 & $\checkmark$ \\
-    q\_medium\_017 & Nbを含むL1$_{\mathrm{2}}$型化合物の安定性情報を出して。 & 1.00 & 35.1 & $\checkmark$ \\
-    q\_medium\_018 & Scを含むL1$_{\mathrm{2}}$型化合物を格子定数と共に表示して。 & 1.00 & 24.5 & $\checkmark$ \\
-    q\_medium\_019 & L1$_{\mathrm{2}}$型化合物のうちis$_{\mathrm{stable}}$がtrueのものを出して。 & 1.00 & 25.5 & $\checkmark$ \\
-    q\_medium\_020 & Ni-Al系以外のL1$_{\mathrm{2}}$型化合物を一覧にして。 & 1.00 & 22.6 & $\checkmark$ \\
-    q\_medium\_021 & Aサイト元素ごとのL1$_{\mathrm{2}}$型化合物数を集計して。 & 1.00 & 24.3 & $\checkmark$ \\
-    q\_medium\_022 & 形成エネルギーが最も低いL1$_{\mathrm{2}}$型化合物TOP5を出して。 & 1.00 & 21.2 & $\checkmark$ \\
-    q\_medium\_023 & 格子定数が4.0\AA{}以上のL1$_{\mathrm{2}}$化合物を出して。 & 1.00 & 21.0 & $\checkmark$ \\
-    q\_medium\_024 & Pdを含むL1$_{\mathrm{2}}$型化合物を形成エネルギー順に出して。 & 1.00 & 28.6 & $\checkmark$ \\
-    q\_medium\_025 & Cu含有のL1$_{\mathrm{2}}$型化合物を安定性で分類して。 & 1.00 & 32.8 & $\checkmark$ \\
     q\_medium\_026 & Bサイト元素ごとの平均形成エネルギーを出して。 & 0.00 & 29.9 &  \\
-    q\_medium\_027 & 格子体積が12\AA{}$^3$/atom以下のL1$_{\mathrm{2}}$化合物を出して。 & 1.00 & 25.5 & $\checkmark$ \\
-    q\_medium\_028 & Ir含有L1$_{\mathrm{2}}$型化合物の一覧を出して。 & 1.00 & 24.8 & $\checkmark$ \\
-    q\_medium\_029 & 2元素系のL1$_{\mathrm{2}}$型化合物をchemical$_{\mathrm{system}}$で分類して。 & 1.00 & 21.4 & $\checkmark$ \\
-    q\_medium\_030 & 安定なL1$_{\mathrm{2}}$型化合物のうち格子定数が大きい順に並べて。 & 1.00 & 31.0 & $\checkmark$ \\
     \midrule
     \multicolumn{5}{l}{Hard ($n$=30)} \\
     \midrule
     q\_hard\_001 & Ni基超合金の$\gamma$'相候補として有望な、安定または準安定なL1$_{\mathrm{2}}$型化合物を抽出して。 & 0.03 & 39.4 &  \\
-    q\_hard\_002 & L1$_{\mathrm{2}}$型化合物において、Aサイト元素とBサイト元素の組み合わせが形成エネルギーに与える傾向を調べて。 & 1.00 & 31.5 & $\checkmark$ \\
-    q\_hard\_003 & L1$_{\mathrm{2}}$構造を持つ化合物のうち、格子定数aがNi$_{\mathrm{3}}$Al（3.57\AA{}）との差0.1\AA{}以内の候補を、形成エネルギーが低い順に抽出して。 & 1.00 & 25.5 & $\checkmark$ \\
-    q\_hard\_004 & 安定なL1$_{\mathrm{2}}$型化合物のバルクモジュラスを高い順に表示して。 & 1.00 & 27.5 & $\checkmark$ \\
-    q\_hard\_005 & NiまたはCoを含む安定なL1$_{\mathrm{2}}$化合物を形成エネルギー順に並べて。 & 1.00 & 24.3 & $\checkmark$ \\
-    q\_hard\_006 & Aサイト元素別にL1$_{\mathrm{2}}$型化合物の平均格子定数を集計して。 & 1.00 & 23.7 & $\checkmark$ \\
-    q\_hard\_007 & 形成エネルギーが-0.3以下で格子定数が3.5〜3.7\AA{}のL1$_{\mathrm{2}}$化合物を抽出して。 & 1.00 & 23.4 & $\checkmark$ \\
-    q\_hard\_008 & L1$_{\mathrm{2}}$型化合物でバルクモジュラスが180GPa以上のものを抽出して。 & 1.00 & 30.0 & $\checkmark$ \\
     q\_hard\_009 & Co基L1$_{\mathrm{2}}$化合物のうち、Ni$_{\mathrm{3}}$Alに近い格子定数のものを安定性順に出して。 & 1.00 & 45.2 & $\checkmark$ \\
-    q\_hard\_010 & Bサイト元素がAlまたはTiのL1$_{\mathrm{2}}$化合物を形成エネルギー順に出して。 & 1.00 & 31.6 & $\checkmark$ \\
-    q\_hard\_011 & L1$_{\mathrm{2}}$化合物のせん断弾性率を表示して。 & 1.00 & 27.5 & $\checkmark$ \\
-    q\_hard\_012 & 安定で形成エネルギーが最も低いL1$_{\mathrm{2}}$化合物のトップ10を出して。 & 1.00 & 29.4 & $\checkmark$ \\
-    q\_hard\_013 & Ni含有L1$_{\mathrm{2}}$化合物のバルクモジュラスと形成エネルギーの関係を出して。 & 1.00 & 33.2 & $\checkmark$ \\
     q\_hard\_014 & 安定なL1$_{\mathrm{2}}$化合物をAサイト元素でグループ化し、各グループの平均形成エネルギーを出して。 & 0.00 & 37.4 &  \\
-    q\_hard\_015 & 格子定数aが3.55\AA{}付近（$|$a$-$3.55$|$$\leq$0.1\AA{}）でバルクモジュラスの高いL1$_{\mathrm{2}}$化合物を探して。 & 1.00 & 29.1 & $\checkmark$ \\
-    q\_hard\_016 & L1$_{\mathrm{2}}$型化合物の格子定数と形成エネルギーの相関を見たい。 & 1.00 & 22.7 & $\checkmark$ \\
-    q\_hard\_017 & Co3TiとNi3Alの格子定数差を計算して。 & 1.00 & 32.9 & $\checkmark$ \\
-    q\_hard\_018 & Al系L1$_{\mathrm{2}}$化合物のうち安定なものとそうでないものの数を出して。 & 0.00 & 36.8 &  \\
-    q\_hard\_019 & 準安定L1$_{\mathrm{2}}$化合物をenergy above hull順にランキングして。 & 1.00 & 34.2 & $\checkmark$ \\
-    q\_hard\_020 & Bサイト元素ごとの安定L1$_{\mathrm{2}}$化合物数を集計して。 & 1.00 & 25.5 & $\checkmark$ \\
-    q\_hard\_021 & DFT計算で得られたL1$_{\mathrm{2}}$化合物の物性一覧を出して。 & 1.00 & 31.4 & $\checkmark$ \\
-    q\_hard\_022 & PBE汎関数で計算されたL1$_{\mathrm{2}}$化合物のバルクモジュラスを表示して。 & 1.00 & 27.9 & $\checkmark$ \\
-    q\_hard\_023 & L1$_{\mathrm{2}}$化合物の格子ミスマッチ（Ni3Alとの差）を計算して小さい順に表示して。 & 1.00 & 23.2 & $\checkmark$ \\
-    q\_hard\_024 & Fe含有L1$_{\mathrm{2}}$化合物の安定性と弾性特性を同時に表示して。 & 0.00 & 35.1 &  \\
-    q\_hard\_025 & 安定なL1$_{\mathrm{2}}$化合物でバルクモジュラスが160GPa以上のものを抽出して。 & 1.00 & 30.5 & $\checkmark$ \\
-    q\_hard\_026 & L1$_{\mathrm{2}}$化合物で安定性と格子定数の両面でNi3Alに近い候補を出して。 & 1.00 & 34.2 & $\checkmark$ \\
-    q\_hard\_027 & Aサイト元素がNiまたはCoで、Bサイト元素がAlまたはTiのL1$_{\mathrm{2}}$化合物を出して。 & 1.00 & 31.7 & $\checkmark$ \\
-    q\_hard\_028 & L1$_{\mathrm{2}}$型化合物の体積あたり原子数と格子定数の関係を出して。 & 1.00 & 20.0 & $\checkmark$ \\
-    q\_hard\_029 & L1$_{\mathrm{2}}$化合物でenergy above hullが0で形成エネルギーが-0.4以下のものを出して。 & 1.00 & 31.2 & $\checkmark$ \\
-    q\_hard\_030 & 遷移金属を含むL1$_{\mathrm{2}}$型化合物のうち安定なものを出して。 & 1.00 & 51.4 & $\checkmark$ \\
     \midrule
     \multicolumn{5}{l}{Very Hard ($n$=20)} \\
     \midrule
-    q\_vhard\_001 & L1$_{\mathrm{2}}$型金属間化合物のうち、energy above hullが0.05 eV/atom以下でバルクモジュラスが計算されているものを、析出強化相候補としてenergy above hull昇順・Ni$_{\mathrm{3}}$Al（3.57\AA{}）との格子定数差昇順で抽出して。 & 1.00 & 34.2 & $\checkmark$ \\
-    q\_vhard\_002 & Ni$_{\mathrm{3}}$Al代替またはCo基$\gamma$'相候補として、energy above hullが0.05 eV/atom以下でバルクモジュラスが計算されているL1$_{\mathrm{2}}$型金属間化合物を、形成エネルギー昇順・Ni$_{\mathrm{3}}$Al（3.57\AA{}）との格子定数差昇順で探索して。 & 1.00 & 47.9 & $\checkmark$ \\
     q\_vhard\_003 & $\gamma$'相候補のランキングを重み付きスコア (1 $-$ E$_{\mathrm{hull}}$/0.05)$\times$0.4 + (1 $-$ $|$a $-$ 3.57$|$/0.3)$\times$0.3 + (B/300)$\times$0.3（E$_{\mathrm{hull}}$ $\leq$ 0.05 eV/atomのL1$_{\mathrm{2}}$のみ対象、a: 格子定数\AA{}、B: 体積弾性率GPa）で出して。 & 0.42 & 40.0 &  \\
-    q\_vhard\_004 & NiまたはCo含有で安定かつバルクモジュラスが高いL1$_{\mathrm{2}}$化合物トップ10を出して。 & 1.00 & 31.6 & $\checkmark$ \\
-    q\_vhard\_005 & L1$_{\mathrm{2}}$型化合物の元素組み合わせと安定性の関係をAサイト・Bサイト別に集計して材料設計の指針を得たい。 & 1.00 & 41.4 & $\checkmark$ \\
-    q\_vhard\_006 & Ni3Alの格子定数（3.57 \AA{}）に近く、バルクモジュラスが高く、安定（is$_{\mathrm{stable}}$）なL1$_{\mathrm{2}}$候補を総合スコア (1 $-$ E$_{\mathrm{hull}}$/0.05)$\times$0.35 + (1 $-$ $|$a $-$ 3.57$|$/0.3)$\times$0.35 + (B/300)$\times$0.30 でランキングして。 & 1.00 & 35.5 & $\checkmark$ \\
-    q\_vhard\_007 & 析出強化に適したL1$_{\mathrm{2}}$化合物（E$_{\mathrm{hull}}$ $\leq$ 0.05 eV/atom）をスコア (1 $-$ E$_{\mathrm{hull}}$/0.05)$\times$0.35 + (1 $-$ min($|$a $-$ 3.57$|$, 0.3)/0.3)$\times$0.35 + (min(B, 300)/300)$\times$0.30 で評価して上位候補を出して。 & 0.42 & 50.1 &  \\
-    q\_vhard\_008 & Co基超合金の$\gamma$'相候補として、Co含有で安定なL1$_{\mathrm{2}}$化合物をNi3Alとの比較で評価して。 & 1.00 & 29.3 & $\checkmark$ \\
-    q\_vhard\_009 & Co3Tiの生成エンタルピーを純物質基準エネルギーから計算して。 & 1.00 & 34.1 & $\checkmark$ \\
-    q\_vhard\_010 & 準安定域まで（energy$_{\mathrm{above}}$$_{\mathrm{hull}}$ $\leq$ 0.05 eV/atom）のL1$_{\mathrm{2}}$型化合物について、安定性マップ用データ（formation energy・energy above hull・弾性率）を出力して。 & 1.00 & 36.9 & $\checkmark$ \\
-    q\_vhard\_011 & L1$_{\mathrm{2}}$型化合物を凸包からの距離（energy above hull）が小さい順にランキングし、安定性クラス（stable/metastable/unstable）を付けて出して。 & 1.00 & 26.5 & $\checkmark$ \\
-    q\_vhard\_012 & Ni基超合金の$\gamma$'相代替候補として、Ni-Al系以外の安定（is$_{\mathrm{stable}}$）なL1$_{\mathrm{2}}$化合物を設計スコア (1 $-$ min(E$_{\mathrm{hull}}$, 0.05)/0.05)$\times$0.30 + (1 $-$ min($|$a $-$ 3.57$|$, 0.3)/0.3)$\times$0.25 + (min(B, 300)/300)$\times$0.25 + (形成エネルギー < $-$0.3 eV/atomなら0.20、それ以外は0.10) でランキングして。 & 0.00 & 56.8 &  \\
-    q\_vhard\_013 & 安定（energy$_{\mathrm{above}}$$_{\mathrm{hull}}$ $\leq$ 0.001 eV/atom）かつ形成エネルギー $\leq$ $-$0.3 eV/atomかつ体積弾性率 $\geq$ 150 GPaのL1$_{\mathrm{2}}$型化合物について、体積弾性率と格子定数を散布図データとして出力して。 & 1.00 & 35.1 & $\checkmark$ \\
-    q\_vhard\_014 & 元素周期の観点から、3d遷移金属（第4周期dブロック）と4d/5d遷移金属（第5・6周期dブロック）をAサイトに持つL1$_{\mathrm{2}}$化合物の安定性傾向（件数・平均energy above hull・stable割合・平均形成エネルギー）を比較して。 & 1.00 & 53.2 & $\checkmark$ \\
-    q\_vhard\_015 & L1$_{\mathrm{2}}$化合物のうち形成エネルギーがNi3Alより低く、バルクモジュラスがNi3Alより高い候補を出して。 & 1.00 & 46.4 & $\checkmark$ \\
     q\_vhard\_016 & 安定なL1$_{\mathrm{2}}$化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。 & 1.00 & 30.8 & $\checkmark$ \\
-    q\_vhard\_017 & 全L1$_{\mathrm{2}}$化合物について、複合スコア (1 $-$ min(E$_{\mathrm{hull}}$, 0.05)/0.05)$\times$0.30 + (1 $-$ min($|$a $-$ 3.57$|$, 0.3)/0.3)$\times$0.30 + (min(B, 300)/300)$\times$0.20 + ($-$$\Delta$E$_{\mathrm{f}}$/1.0)$\times$0.20（$\Delta$E$_{\mathrm{f}}$: 形成エネルギー eV/atom）を計算して上位20件をランキングして。 & 0.85 & 75.6 & $\checkmark$ \\
-    q\_vhard\_018 & 安定なL1$_{\mathrm{2}}$化合物のA-site元素ごとに純元素基底状態基準に再基準化した生成エネルギーの平均を計算して。 & 1.00 & 40.3 & $\checkmark$ \\
-    q\_vhard\_019 & 安定なL1$_{\mathrm{2}}$化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、Ni含有のもので再基準化生成エネルギーが低い5件を出して。 & 1.00 & 48.8 & $\checkmark$ \\
-    q\_vhard\_020 & L1$_{\mathrm{2}}$化合物の形成エネルギーが加重純物質基準より0.1 eV/atom以上低い化合物を出して。 & 1.00 & 27.9 & $\checkmark$ \\
-\end{longtable}
-\end{footnotesize}
+  \bottomrule
+\end{tabular}
+\end{table*}
 % =====================================================================
 \section{アブレーション条件間の精度差クエリ}
 
