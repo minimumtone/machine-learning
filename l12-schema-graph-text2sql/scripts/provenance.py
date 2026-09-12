@@ -49,7 +49,13 @@ def _git_commit() -> str:
             capture_output=True, text=True, check=True,
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
-        return "unknown"
+        pass
+    commit_file = PROJECT / "GIT_COMMIT"
+    if commit_file.is_file():
+        stamped = commit_file.read_text(encoding="utf-8").strip()
+        if stamped:
+            return stamped
+    return "unknown"
 
 
 def build_provenance(dataset_path: Path,
