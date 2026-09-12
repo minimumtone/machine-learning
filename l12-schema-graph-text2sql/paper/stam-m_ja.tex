@@ -1020,56 +1020,8 @@ SQL検証、意図分類、採点メトリクス、カバレッジ／パーサ�
 \section{生成されたSQLの例}
 \label{sec:sup_sql_examples}
 
-代表的なクエリに対する生成されたSQLの例を、3つのメソッド構成（LLMのみ、フルスキーマ、提案手法）で比較する。これは、各構成における出力SQLの質的な違いを具体的に示すことで、表~\ref{tab:ablation}における定量的比較を補完する。
+代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する生成SQLを、3つのメソッド構成（LLMのみ、フルスキーマ、提案手法）で比較し、表~\ref{tab:ablation}の定量比較を質的に補完する。生成SQLの全文は、主評価245問・独立設計・CTE・転移A--D・LLMのみについては同梱の \texttt{evaluation/generated\_sql/<suite>/}（クエリ単位の\texttt{.sql}ファイルと\texttt{manifest.json}）に、アブレーション・感度分析・言語対比較など各評価ランについては対応するランJSONの \texttt{sql} フィールドに収録している（対応表は \texttt{MANIFEST.md}）。
 
-\subsection{``Niを含む安定なL1$_2$化合物のリスト''}
-
-\paragraph*{LLMのみ（スキーマなし）:}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
-SELECT formula, stability
-FROM materials
-WHERE element = 'Ni'
-  AND structure_type = 'L12'
-  AND stability = 'stable';
--- テーブルの幻影: materials, stability などは存在しない
--- 実行不可（ERROR: relation "materials" does not exist）
-\end{lstlisting}
-
-\paragraph*{フルスキーマ（プロンプト内にスキーマ、少数ショット例なし）:}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
-SELECT m.formula, ps.is_stable
-FROM material_entry m
-  JOIN composition c ON c.entry_id = m.entry_id
-  JOIN structure s ON s.entry_id = m.entry_id
-  JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE c.element = 'Ni'
-  AND s.strukturbericht = 'L12'
-  AND ps.is_stable = true;
--- 実行可能だが不完全（is_stableはE_hull<=0.001の派生列で
--- 提案法の安定性条件と等価）:
--- (1) プロトタイプ条件なし（L12がstrukturberichtにない場合を見逃す）
--- (2) DISTINCT/LIMITなし
--- (3) lattice_aのような実質的に有用な列を選択しない
-\end{lstlisting}
-
-\paragraph*{提案手法（スキーマグラフ + 少数ショット + 辞書）:}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
-SELECT DISTINCT m.entry_id, m.formula,
-  s.prototype, s.lattice_a, s.space_group
-FROM material_entry m
-  JOIN composition c ON c.entry_id = m.entry_id
-  JOIN structure s ON s.entry_id = m.entry_id
-  JOIN phase_stability ps ON ps.entry_id = m.entry_id
-WHERE (s.prototype = 'L12'
-    OR s.strukturbericht = 'L12')
-  AND c.element = 'Ni'
-  AND ps.energy_above_hull <= 0.001
-LIMIT 10000;
--- スキーマグラフのトラバースにより3つのJOINのみ必要
--- テーブルの幻影なし、DISTINCTとLIMITを含む
-\end{lstlisting}
-
-\subsection{``NiとAlの両方を含むL1$_2$化合物のリスト''}
 
 \paragraph*{LLMのみ（スキーマなし）:}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
