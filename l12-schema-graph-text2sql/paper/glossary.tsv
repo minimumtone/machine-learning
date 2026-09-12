@@ -1,0 +1,51 @@
+日本語	英語	備考
+実行再現率	execution recall	主指標（historical execution recall を含む）
+厳密な完全結果集合一致	Exact Result-Set Match	exact；semantic_ordered 契約に基づく順序照合（39/245）
+緩い完全一致	lenient exact match	
+順序付き一致	ordered match	ORDER BY 付きゴールド234問を母集団とする別指標
+strict採点	strict scoring	n=241
+貪欲最短経路連結	greedy shortest-path connector	Algorithm S1
+条件抽出器	condition extractor	
+スキーマ写像辞書	schema mapping dictionary	
+スキーマリンク	schema linking	
+スキーマグラフ	schema graph	
+少数ショット例	few-shot example	
+部分集合の再掲	re-reported subset	表1「再掲」列・§4.3冒頭の一括開示
+難易度層	difficulty tier	Easy/Medium/Hard/Very-hard
+非同点ペア	non-tied pairs (n_nz)	差0のペアを除いた件数
+符号置換検定	sign-permutation test	Wilcoxon符号順位統計量の全符号置換検定
+全符号置換	exhaustive sign permutation	2^{n_nz} 通りの符号割当を全列挙
+中央順位	midrank	同順位の|差|の処理
+Holm補正	Holm–Bonferroni correction	
+独立設計クエリ	independently designed queries	q_expert_001–100
+主評価	main evaluation	245問
+アブレーション	ablation	100問サブセット・5ラン
+意図分類器	intent classifier	
+リランカー	reranker	
+修復ループ	repair loop	
+n-best生成	n-best generation	
+幻覚	hallucination	テーブル/カラム/JOIN幻覚
+過剰取得	over-retrieval	スーパーセット検出
+スーパーセット検出	superset detection	
+ゼロショット	zero-shot	few-shot 例のないCTEパターン10問
+転移	transfer	転移バリアントA–D
+難読化	obfuscation	難読化スキーマ（Variant C）
+単一情報源	single source of truth (SSOT)	paper_data.json
+数値整合検証プログラム	numeric consistency verifier	verify_paper_numbers.py
+結果集約プログラム	result aggregation script	compute_all_figures.py
+テストゲート	test gate	pytest 全件合格を SSOT 生成の前提とする
+再現ワークフロー	reproduction workflow	S10
+期待結果	expected results	expected_results/*.json
+ゴールドSQL	gold SQL	
+構文妥当性	syntax validity	
+列一致	column match	
+生成エンタルピー	formation enthalpy	
+凸包	convex hull	E_hull
+プロトタイプ	prototype	結晶構造プロトタイプ（L1$_2$ 等）
+材料辞書	materials dictionary	MeCab ユーザー辞書
+形態素解析	morphological analysis	
+意味的整合性スコア	semantic consistency score	リランカー
+安全性検査	safety check	SQLGuard
+読み取り専用実行	read-only execution	
+検出力	statistical power	検出力注記（INV-3）
+ブートストラップ信頼区間	bootstrap confidence interval	seed=20260602
