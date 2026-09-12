@@ -184,7 +184,7 @@ def main() -> int:
                 "p_sign_test": float(p_sign),
             },
             "bootstrap_ci95_pp": [lo, hi],
-            "legacy_p_value": shipped.get(cond, {}).get("p_value"),
+            "p_value_stored_before_run": shipped.get(cond, {}).get("p_value"),
         }
 
     adjusted = holm(raw)
@@ -193,31 +193,32 @@ def main() -> int:
         d["significant_holm"] = adjusted[cond] < 0.05
         d["stars_holm"] = stars(adjusted[cond])
 
-    hdr = (f"{'condition':14s}{'n_nz':>5s}{'Δpp':>8s}{'legacy p':>12s}{'':>5s}"
+    hdr = (f"{'condition':14s}{'n_nz':>5s}{'Δpp':>8s}{'scipy exact':>12s}{'':>5s}"
            f"{'perm p':>12s}{'Holm p':>12s}{'':>6s}{'run-level p':>13s}"
            f"{'bootstrap 95% CI (pp)':>26s}")
     print(hdr)
     print("-" * len(hdr))
     changed = []
     for cond, d in detail.items():
-        legacy = d["legacy_p_value"]
+        legacy = d["p_value_scipy_exact_untied"]
         lo, hi = d["bootstrap_ci95_pp"]
         print(f"{cond:14s}{d['n_nonzero']:5d}{d['delta_pp']:8.2f}"
-              f"{(f'{legacy:.3e}' if legacy is not None else '--'):>12s}"
+              f"{legacy:12.3e}"
               f"{stars(legacy):>5s}"
               f"{d['p_value']:12.3e}{d['p_value_holm']:12.3e}"
               f"{d['stars_holm']:>6s}"
               f"{d['run_level']['p_wilcoxon']:13.3f}"
               f"{f'[{lo:+.2f}, {hi:+.2f}]':>26s}")
-        if legacy is not None and (legacy < 0.05) != d["significant_holm"]:
+        if (legacy < 0.05) != d["significant_holm"]:
             changed.append(cond)
 
     print()
     if changed:
         print(f"Conclusions that change after correction: {', '.join(changed)}")
     else:
-        print("No conclusion changes: the same conditions are significant before "
-              "and after switching to the sign-permutation test and applying Holm.")
+        print("No conclusion changes: the same conditions are significant under "
+              "the uncorrected SciPy exact test and under the sign-permutation "
+              "test with Holm correction.")
     print("Note: 'run-level p' has n = number of runs (5), so its smallest "
           "attainable value is 0.0625; it is reported as a sanity check on the "
           "sign of the effect, not as the primary test.")

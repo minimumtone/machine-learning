@@ -21,8 +21,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "2011f87dcbf407897bb050f1f1f9d45e6f9a6d23",
-    "generated_at": "2026-09-12T15:11:14+00:00",
+    "git_commit": "ab25c94ddc32b3d25e81a68ca630cc615c71efd6",
+    "generated_at": "2026-09-12T15:43:27+00:00",
     "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
@@ -43,7 +43,7 @@
         -2.7399848828460533e-05,
         3.4460572562358265
       ],
-      "legacy_p_value": 0.1484375,
+      "p_value_stored_before_run": 0.1484375,
       "p_value_holm": 0.4453125,
       "significant_holm": false,
       "stars_holm": "n.s."
@@ -65,7 +65,7 @@
         1.9367204301075267,
         11.184417233267574
       ],
-      "legacy_p_value": 0.01953125,
+      "p_value_stored_before_run": 0.01953125,
       "p_value_holm": 0.078125,
       "significant_holm": false,
       "stars_holm": "n.s."
@@ -87,7 +87,7 @@
         -0.4000000000000001,
         1.1460317460317457
       ],
-      "legacy_p_value": 0.8125,
+      "p_value_stored_before_run": 0.75,
       "p_value_holm": 1.0,
       "significant_holm": false,
       "stars_holm": "n.s."
@@ -109,7 +109,7 @@
         4.741407858015,
         15.521870976650927
       ],
-      "legacy_p_value": 0.0001049041748046875,
+      "p_value_stored_before_run": 9.918212890625e-05,
       "p_value_holm": 0.00049591064453125,
       "significant_holm": true,
       "stars_holm": "***"
@@ -131,7 +131,7 @@
         11.271199735449734,
         20.958201954258403
       ],
-      "legacy_p_value": 4.513278639706186e-12,
+      "p_value_stored_before_run": 1.330380250408325e-12,
       "p_value_holm": 7.98228150244995e-12,
       "significant_holm": true,
       "stars_holm": "***"
@@ -153,7 +153,7 @@
         -0.11483870967741948,
         0.5999999999999999
       ],
-      "legacy_p_value": 1.0,
+      "p_value_stored_before_run": 1.0,
       "p_value_holm": 1.0,
       "significant_holm": false,
       "stars_holm": "n.s."
