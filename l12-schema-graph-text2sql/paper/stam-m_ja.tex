@@ -948,6 +948,13 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 % =====================================================================
 \clearpage
 \onecolumn
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
 
 \appendix
 \renewcommand{\thesection}{S\arabic{section}}
@@ -1197,7 +1204,7 @@ VH層（78.7\%）がHard層（70.2\%）よりも高いのは、14のVery Hardク
 
 本節は、主論文セクション~\ref{sec:method}の各コンポーネントの実装詳細を補足する。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{検証データベースの構成。テーブル36のうち1つはスキーマ初期化状態の管理表（\texttt{schema\_initialization\_status}、1行）であり、材料概念テーブルは35である。}
 \label{tab:db_stats}
@@ -1217,7 +1224,7 @@ VH層（78.7\%）がHard層（70.2\%）よりも高いのは、14のVery Hardク
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
   \centering
   \caption{評価クエリ設計（合計100クエリ）。}
   \label{tab:query_design}
@@ -1405,7 +1412,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 
 パーサは、5つのパターンを介して数値比較式を認識する（表~\ref{tab:numeric_patterns}）。プロパティからカラムへのマッピングは、内部辞書（\texttt{\_PROPERTY\_COLUMN\_MAP}）によって管理される。浮動小数点比較の場合、「近い」や「比較可能」といった表現は、プロパティ固有の許容範囲を呼び出す（格子定数：$\pm 0.03$~\AA{}{}; $E_\text{hull}$：$\pm 0.001$~eV/atom）。
 
-\begin{table}[t]
+\begin{table}[htbp]
   \centering
   \caption{数値条件パーサパターン。}
   \label{tab:numeric_patterns}
@@ -1446,7 +1453,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 
 カスタム辞書を使用することで、402の材料用語の単一トークン率は30.6\%（デフォルト）から100.0\%に改善された（表~\ref{tab:mecab}）。ここでの「単一トークン率」とは、MeCab 形態素解析器によって 1 つの見出し語に分割される材料用語の割合である。改善された用語数は279、劣化した用語数は0である。代表的な改善例には「生成エンタルピー」（デフォルト2トークン $\to$ カスタム1トークン）や「ニッケル系超合金」（7トークン $\to$ 1トークン）が含まれる。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{MeCab材料辞書がトークン化に与える影響。
 402の材料用語に対する単一トークン率。}
@@ -1527,7 +1534,7 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 本節は、主論文セクション~\ref{sec:results}の詳細な表・図を提供する。
 
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{マルチ軸評価指標（245クエリ主評価）。「厳密な完全結果集合一致」はExact Result-Set Match（ゴールド列リスト、行の多重集合、および期待結果の\texttt{semantic\_ordered}契約が真の39クエリについては行順序まで一致）であり、共通列射影上でPrecision=Recall=1となる旧来の緩い完全一致（同一ランの採点監査\texttt{scoring\_audit.json}で78.0\%）とは別指標である。
 SELECT col.\ = 生成されたSQL SELECT列がゴールドSQL列と一致する割合；JOINマッチ = 生成されたSQLに存在するゴールドSQL JOINテーブルの割合。
@@ -1550,7 +1557,7 @@ JOINマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
   \centering
   \caption{アブレーション条件による誤差分析（100クエリ）。
   テーブルの幻覚 = スキーマに解決できないテーブル参照（静的照合による診断値）;
@@ -1572,7 +1579,7 @@ JOINマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\
   \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は集約データの未丸め値から算出しており、表~\ref{tab:ablation}の表示値同士の差とは末尾桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。}
 \label{tab:ablation-detail}
@@ -1588,7 +1595,7 @@ no\_reranker  & $+$0.2  & $-$13.0 & $-$6.5  & $-$1.8  \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{各アブレーション条件におけるクエリごとの平均レイテンシ（秒）、Table~\ref{tab:ablation}と同じ5回の実験で測定。$n$-best = 1に設定すると、精度の明確な損失なしにレイテンシが約70\%削減される。条件間の小差はLLM応答時間のラン間変動を含む。}
 \label{tab:latency}
@@ -1613,7 +1620,7 @@ no\_graph & 31.4 \\
 
 設定と解釈はセクション~\ref{sec:fewshot_sensitivity}に示した。少数ショット例数 $k$（セクション~\ref{sec:fewshot}）を1, 3, 5, 10, 15に変化させた別の感度実行（単一ラン）の結果を表~\ref{tab:fewshot_k}・図~\ref{fig:fewshot_k}に示す。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{少数ショット数 $k$ と精度の関係（別の感度実行で測定）。
 精度とレイテンシのバランスに最適なのは $k=3$ である。
@@ -1634,21 +1641,12 @@ $k$ & 全体 & Easy & Medium & Hard & VH & レイテンシ (s) \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.6\columnwidth]{figures/fewshot_sensitivity.png}
-\caption{少数ショット数 $k$ の関数としての難易度層ごとの精度。
-Easy/Medium 層は $k$ によらず飽和し、
-VH 層は $k=3$ と $k=15$ で最大（88.4\%）となる。}
-\label{fig:fewshot_k}
-\end{figure}
-
 
 \subsection{ドメイン辞書サイズの影響（詳細）}
 
 設定と解釈はセクション~\ref{sec:dict_sensitivity}に示した。スキーマ写像辞書（61エントリ；表~\ref{tab:schema_map_dict}）と用語辞書を同時にフル／50\%（30）／25\%（15）／10\%（6）／0\%（辞書なし）の5水準に削減した単一ラン（本アブレーションと同一プロトコル）の結果を表~\ref{tab:dict_size}・図~\ref{fig:dict_size}に示す。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{スキーマ写像辞書（61エントリ）および用語辞書のサイズ感度（2辞書を同じ割合で同時削減；本アブレーションと同一プロトコルの単一ラン）。観測される低下は61エントリ辞書単独の寄与ではない。全体値は未丸め値から算出している。
 削減はコア用語（プロトタイプ、元素、安定性など）の保持を優先する。}
@@ -1667,12 +1665,23 @@ VH 層は $k=3$ と $k=15$ で最大（88.4\%）となる。}
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.6\columnwidth]{figures/dict_sensitivity.png}
+\begin{minipage}[t]{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/fewshot_sensitivity.png}
+\caption{少数ショット数 $k$ の関数としての難易度層ごとの精度。
+Easy/Medium 層は $k$ によらず飽和し、
+VH 層は $k=3$ と $k=15$ で最大（88.4\%）となる。}
+\label{fig:fewshot_k}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/dict_sensitivity.png}
 \caption{ドメイン辞書サイズと難易度層ごとの精度の関係。
 辞書サイズの影響はVH層で最も顕著である。}
 \label{fig:dict_size}
+\end{minipage}
 \end{figure}
 
 
@@ -1680,7 +1689,7 @@ VH 層は $k=3$ と $k=15$ で最大（88.4\%）となる。}
 
 設定と解釈はセクション~\ref{sec:model_comparison}に示した。表~\ref{tab:model_comp}・図~\ref{fig:model_comp}はGPT-5.5（表~\ref{tab:ablation}のfull条件、5ラン平均）とGPT-4o（別の単一ラン）の比較である。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{LLMモデルの比較。GPT-5.5行は表~\ref{tab:ablation}のfull条件（5ラン平均）、GPT-4o行は別の単一ランで測定した。全体値は未丸め値から算出しており、表示された層別値の加重平均と末尾桁が一致しない場合がある。
 GPT-4oは大幅に速く、全体・VHともGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラン比較のため統計的同等性は評価していない）；レイテンシは測定条件が異なるため
@@ -1697,22 +1706,23 @@ GPT-4o  & 91.7 & 100.0 & 93.3 & 91.8 & 81.0 &  2.1 \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.6\columnwidth]{figures/model_comparison.png}
+\begin{minipage}[t]{0.48\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/model_comparison.png}
 \caption{難易度層ごとのGPT-5.5とGPT-4oの精度比較。
 全体・各層とも差は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラン比較のため統計的同等性は評価していない）。}
 \label{fig:model_comp}
-\end{figure}
-
-
-\begin{figure}[t]
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\columnwidth}
 \centering
-\includegraphics[width=0.6\columnwidth]{figures/multiaxis_radar.png}
+\includegraphics[width=\linewidth]{figures/multiaxis_radar.png}
 \caption{難易度層ごとのマルチ軸評価レーダーチャート。
 構文と実行の有効性はすべての層で100\%である。
 VH層は厳密な完全結果集合一致（Exact軸）が1.6\%と低いが、77.2\%のリコールは多くの部分的に正しい結果を示している。}
 \label{fig:radar}
+\end{minipage}
 \end{figure}
 
 
@@ -1720,9 +1730,9 @@ VH層は厳密な完全結果集合一致（Exact軸）が1.6\%と低いが、77
 
 保存されたfull条件ラン（245クエリ多軸評価ラン）でリコールが0.8未満であったのは39クエリであり、難易度別の内訳はVery Hard 17・Hard 15・Medium 5・Easy 2である。失敗は高難易度層に集中し、スキーマグラフのトラバースが正しいJOINパスを提供しているにもかかわらず、LLMが導出量や複合スコア式を含むSELECT句を正確に構成できないケースが残っている。
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.6\columnwidth]{figures/error_distribution.png}
+\includegraphics[width=0.5\columnwidth]{figures/error_distribution.png}
 \caption{保存されたfull条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だった39件における誤差タイプの分布。1ケースに複数の誤差タイプを付与し得るため、ラベルの合計（66）はケース数（39）を上回る。}
 \label{fig:error_dist}
 \end{figure}
@@ -1734,7 +1744,7 @@ VH層は厳密な完全結果集合一致（Exact軸）が1.6\%と低いが、77
 
 SQLGuardの15の検証項目（セクション~\ref{sec:sqlguard}）は複数の脅威ベクトルに対する深層防御を提供する。禁止キーワードの検出は正規表現ベースであり、テーブルのホワイトリストはスキーマメタデータから自動生成される。
 
-\begin{table}[t]
+\begin{table}[htbp]
   \centering
   \caption{SQLインジェクションと安全性テスト結果（すべて安全に処理された）。}
   \label{tab:injection_results}
@@ -1759,7 +1769,7 @@ SQLGuardの15の検証項目（セクション~\ref{sec:sqlguard}）は複数の
 
 本文セクション~\ref{sec:metrics}に述べた採点プロトコルの寛容性（共通列射影・列位置フォールバック・0行一致への満点付与・順序と多重度の無視）の影響を、保存済み評価結果（生成SQL付き保存ラン）に対して同梱の監査スクリプトで定量化した。監査スクリプトは起動時に、現行方針（historical）で同梱のper-queryスコアを完全再現できることを4データセットすべてで自己検査する（LLM・APIキー不要）。表~\ref{tab:scoring_audit}に採点方針別の値を示す。
 
-\begin{table}[t]
+\begin{table}[htbp]
   \centering
   \caption{採点方針別の実行再現率（\%）。historical＝本文の採点方式。require all＝全ゴールド列の存在を要求。no positional＝列位置フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複度を照合。exact＝厳密な完全結果集合一致（ゴールド列リスト、行の多重集合を照合し、行順序は期待結果の\texttt{semantic\_ordered}契約が真のクエリ（主評価では245件中39件）に限り照合）。ordered＝exactとは母集団の異なる別指標で、各データセットの\texttt{ORDER BY}付きゴールドクエリ（主評価では234件）に対する順序照合Recall；この列の定義は\texttt{semantic\_ordered}契約とは独立である。緩い完全一致（共通列射影上でPrecision=Recall=1；78.0\%）は本表の列には含めず、同梱の\texttt{scoring\_audit.json}に\texttt{common\_column\_exact\_overlap\_pct}として収録する。同JSONは、全ゴールド列必須・位置フォールバック無効・ゴールド0行除外・多重集合照合を同時に課す（順序照合のみ課さない）strict方針（主評価25.5\%、$n=241$）も収録する。いずれも生成SQL付き保存ラン（main: 245クエリ、historical Recall 86.1\%の単一ラン）に基づく。}
   \label{tab:scoring_audit}
@@ -1787,7 +1797,7 @@ SQLGuardの15の検証項目（セクション~\ref{sec:sqlguard}）は複数の
 
 few-shot例でカバーされた既知5パターンは、シンプルCTE（導出量計算）・CTE＋フィルター・CTE＋集約・マルチステージCTE（2段階以上）・CTE＋クロスカラム比較の5カテゴリをカバーする。表~\ref{tab:cte_results}は、CTEマルチステップ計算15クエリ（既知5パターン＋新規10ゼロショットパターン；いずれも主評価245クエリに含まれ、既知5はアブレーション用100クエリサブセット内、新規10はサブセット外）の精度を示している。
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \caption{CTEマルチステップ計算クエリの精度。上段はfull条件の15クエリ（既知5＋新規10）、下段は既知5パターンに対するアブレーション条件別精度（5ラン平均）である。few-shot例でカバーされた既知5パターンは100\%を維持する一方、例のない新規10パターンは59.0\%にとどまり、マルチステップ計算サポートの範囲がfew-shot例のパターンカバレッジに規定されることを示す。}
 \label{tab:cte_results}
