@@ -903,7 +903,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \vspace{1.0em}
 
 \noindent
-この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクション~\ref{sec:sup_test_categories}はユニットテストカテゴリ、セクション~\ref{sec:sup_sql_examples}は方法構成別の生成SQL例、セクション~\ref{sec:sup_llm_config}はLLMモードの設定を示す。セクション~\ref{sec:sup_query_detail}--\ref{sec:sup_expert_queries}は100評価クエリの詳細結果・アブレーション条件間の精度差・独立クエリプールの結果を、セクション~\ref{sec:sup_method_details}--\ref{sec:sup_discussion_details}は方法・結果・考察の詳細をそれぞれ与える。アブレーション、転送、およびコア検証メトリクスは数値集約データから取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれの保存済み評価出力からフォーマットされる。最終セクション（\ref{sec:sup_workflow}）では、配布パッケージの再現ワークフローの概要を示す。
+この補足資料は、主論文で提案したText-to-SQLパイプラインの検証と評価に関する詳細情報を提供する。セクション~\ref{sec:sup_test_categories}はユニットテストカテゴリ、セクション~\ref{sec:sup_sql_examples}は提案手法の生成SQL例、セクション~\ref{sec:sup_llm_config}はLLMモードの設定を示す。セクション~\ref{sec:sup_query_detail}--\ref{sec:sup_expert_queries}は100評価クエリの詳細結果・アブレーション条件間の精度差・独立クエリプールの結果を、セクション~\ref{sec:sup_method_details}--\ref{sec:sup_discussion_details}は方法・結果・考察の詳細をそれぞれ与える。アブレーション、転送、およびコア検証メトリクスは数値集約データから取得され、感度分析、モデル比較、および多軸メトリクスはそれぞれの保存済み評価出力からフォーマットされる。最終セクション（\ref{sec:sup_workflow}）では、配布パッケージの再現ワークフローの概要を示す。
 
 % =====================================================================
 
@@ -918,29 +918,8 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 \section{生成されたSQLの例}
 \label{sec:sup_sql_examples}
 
-代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する生成SQLを、3つのメソッド構成（LLMのみ、フルスキーマ、提案手法）で比較し、表~\ref{tab:ablation}の定量比較を質的に補完する。生成SQLの全文は、主評価245問・独立設計・CTE・転移A--D・LLMのみについては同梱の \texttt{evaluation/generated\_sql/<suite>/}（クエリ単位の\texttt{.sql}ファイルと\texttt{manifest.json}）に、アブレーション・感度分析・言語対比較など各評価ランについては対応するランJSONの \texttt{sql} フィールドに収録している（対応表は \texttt{MANIFEST.md}）。
+代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する提案手法の生成SQLを示し、表~\ref{tab:ablation}の定量比較を質的に補完する。同じクエリに対し、LLMのみ（スキーマなし）構成は存在しないテーブル・列（\texttt{compounds}、\texttt{elements}）を参照するSQLを生成し（テーブルの幻影）、フルスキーマ（少数ショット例なし）構成は \texttt{WHERE c.element = 'Ni' AND c.element = 'Al'} のように単一行では同時に満たせない条件を生成して常に0行を返した（セクション~\ref{sec:multi_element}）。生成SQLの全文は、主評価245問・独立設計・CTE・転移A--D・LLMのみについては同梱の \texttt{evaluation/generated\_sql/<suite>/}（クエリ単位の\texttt{.sql}ファイルと\texttt{manifest.json}）に、アブレーション・感度分析・言語対比較など各評価ランについては対応するランJSONの \texttt{sql} フィールドに収録している（対応表は \texttt{MANIFEST.md}）。
 
-
-\paragraph*{LLMのみ（スキーマなし）:}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
-SELECT * FROM compounds
-WHERE elements LIKE '%Ni%' AND elements LIKE '%Al%'
-  AND crystal_structure = 'L12';
--- テーブルの幻影: compounds, elements列は存在しない
-\end{lstlisting}
-
-\paragraph*{フルスキーマ（少数ショット例なし）:}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
-SELECT m.entry_id, m.formula
-FROM material_entry m
-  JOIN composition c ON c.entry_id = m.entry_id
-  JOIN structure s ON s.entry_id = m.entry_id
-WHERE c.element = 'Ni' AND c.element = 'Al'
-  AND s.prototype = 'L12';
--- 致命的: 単一の行が両方の条件を同時に満たすことはできない -> 常に0行
-\end{lstlisting}
-
-\paragraph*{提案手法（EXISTSサブクエリ）:}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 SELECT DISTINCT m.entry_id, m.formula
 FROM material_entry m
@@ -954,7 +933,6 @@ AND EXISTS (
   SELECT 1 FROM composition
   WHERE entry_id = m.entry_id AND element = 'Al')
 LIMIT 10000;
--- EXISTSサブクエリによる正確な多元素AND
 \end{lstlisting}
 
 % =====================================================================
