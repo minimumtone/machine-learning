@@ -90,22 +90,24 @@ def n_defect_from_row(row):
         return max(n_sub - n_Ni, 0)       # vacancies on Ni sublattice
 
 
-def perfect_G_eV():
-    """Return the per-atom formation energy (G at T=0) for perfect B2."""
+def perfect_props():
+    """Return perfect-B2 E_form, a_eff, and V_per_atom."""
     vol_path = os.path.join(AN, 'b2_offstoich_volumes.csv')
     if os.path.exists(vol_path):
         vol = pd.read_csv(vol_path)
         p = vol[vol.branch == 'perfect']
         if not p.empty:
-            return float(p.iloc[0].E_form_eV_atom)
+            return (float(p.iloc[0].E_form_eV_atom),
+                    float(p.iloc[0].a_eff_A),
+                    float(p.iloc[0].V_per_atom_A3))
     raise FileNotFoundError(
-        "Perfect B2 formation energy not found; provide analysis/b2_offstoich_volumes.csv"
+        "Perfect B2 properties not found; provide analysis/b2_offstoich_volumes.csv"
     )
 
 
 def main():
     bm = pd.read_csv(os.path.join(AN, 'b2_offstoich_branch_means.csv'))
-    perfect_Ef = perfect_G_eV()
+    perfect_Ef, perfect_a, perfect_V = perfect_props()
 
     # Build the working branch table (no perfect row) and add per-row quantities.
     br = bm[bm.branch != 'perfect'].copy()
@@ -118,10 +120,12 @@ def main():
     # n_sites does not matter here because n_defect=0 (ln C=0).
     perfect_rows = pd.DataFrame([
         {'branch': 'vacancy', 'x_Al_target': 0.5, 'x_Al': 0.5,
-         'Ef': perfect_Ef, 'n_atoms': 128, 'n_sites': 128,
+         'Ef': perfect_Ef, 'a': perfect_a, 'V': perfect_V,
+         'n_atoms': 128, 'n_sites': 128,
          'n_defect': 0, 'c_vac': 0.0},
         {'branch': 'antisite', 'x_Al_target': 0.5, 'x_Al': 0.5,
-         'Ef': perfect_Ef, 'n_atoms': 128, 'n_sites': 128,
+         'Ef': perfect_Ef, 'a': perfect_a, 'V': perfect_V,
+         'n_atoms': 128, 'n_sites': 128,
          'n_defect': 0, 'c_vac': 0.0},
     ])
     br = pd.concat([br, perfect_rows], ignore_index=True)
@@ -134,12 +138,14 @@ def main():
             axis=1,
         )
 
-    # Build monotone PCHIP interpolators per branch for G(T) and c_vac(x).
+    # Build monotone PCHIP interpolators per branch for a, V, G(T), and c_vac(x).
     splines = {}
     for br_name in ('vacancy', 'antisite'):
         sub = br[br.branch == br_name].sort_values('x_Al').copy()
         sub = sub.groupby('x_Al', as_index=False).agg({
             'c_vac': 'mean',
+            'a': 'mean',
+            'V': 'mean',
             **{f'G_{T:.0f}': 'mean' for T in T_LIST},
         })
         x = sub.x_Al.values
@@ -148,6 +154,8 @@ def main():
             'xmin': float(x.min()),
             'xmax': float(x.max()),
             'c': PchipInterpolator(x, sub['c_vac'].values, extrapolate=False),
+            'a': PchipInterpolator(x, sub['a'].values, extrapolate=False),
+            'V': PchipInterpolator(x, sub['V'].values, extrapolate=False),
         }
         for T in T_LIST:
             splines[br_name][T] = PchipInterpolator(
@@ -170,15 +178,21 @@ def main():
             kT = KB_EV * T
             gvals = {}
             cvals = {}
+            avals = {}
+            vvals = {}
             for br_name in ('vacancy', 'antisite'):
                 s = splines[br_name]
                 in_dom = (x + 1e-9 >= s['xmin']) and (x - 1e-9 <= s['xmax'])
                 if in_dom:
                     g_val = float(s[T](x))
                     c_val = float(s['c'](x))
+                    a_val = float(s['a'](x))
+                    v_val = float(s['V'](x))
                     if not (np.isnan(g_val) or np.isnan(c_val)):
                         gvals[br_name] = g_val
                         cvals[br_name] = c_val
+                        avals[br_name] = a_val
+                        vvals[br_name] = v_val
                         row[f'G_{br_name}_{T:.0f}K'] = g_val
                     else:
                         row[f'G_{br_name}_{T:.0f}K'] = np.nan
@@ -186,8 +200,10 @@ def main():
                     row[f'G_{br_name}_{T:.0f}K'] = np.nan
 
             if is_perfect and len(gvals) >= 2:
-                # Single perfect B2 state: c=0, branch probabilities undefined.
+                # Single perfect B2 state: c=0, probabilities undefined.
                 c_hybrid = 0.0
+                a_hybrid = perfect_a
+                v_hybrid = perfect_V
                 p_anti = 0.0
                 probs = {}
             elif len(gvals) >= 2:
@@ -201,6 +217,8 @@ def main():
                 # antisite branch has c_vac=0, vacancy branch has the structural
                 # vacancy fraction from the PCHIP c_vac(x) estimator.
                 c_hybrid = sum(probs[b] * cvals.get(b, 0.0) for b in probs)
+                a_hybrid = sum(probs[b] * avals.get(b, 0.0) for b in probs)
+                v_hybrid = sum(probs[b] * vvals.get(b, 0.0) for b in probs)
                 if x > 0.5:
                     # n_sub cancels in p_Al_antisite_from_c; use 64 as a dummy.
                     p_anti = p_Al_antisite_from_c(c_hybrid, x, 64)
@@ -210,11 +228,15 @@ def main():
                     p_anti = 0.0
             else:
                 c_hybrid = np.nan
+                a_hybrid = np.nan
+                v_hybrid = np.nan
                 p_anti = np.nan
                 probs = {}
 
             c_total = c_hybrid + p_anti / 2.0 if not pd.isna(p_anti) else np.nan
             row[f'c_hybrid_{T:.0f}K'] = c_hybrid
+            row[f'a_hybrid_{T:.0f}K'] = a_hybrid
+            row[f'V_hybrid_{T:.0f}K'] = v_hybrid
             row[f'p_antisite_{T:.0f}K'] = p_anti
             row[f'c_total_{T:.0f}K'] = c_total
             for br_name in ('vacancy', 'antisite'):

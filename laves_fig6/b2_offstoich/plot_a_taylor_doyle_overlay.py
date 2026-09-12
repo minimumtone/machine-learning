@@ -41,6 +41,10 @@ mix = pd.read_csv(os.path.join(AN, 'b2_offstoich_boltzmann_mix.csv'))
 mask_b2 = (mix.x_Al >= 0.35) & (mix.x_Al <= 0.66)
 mace = mix[mask_b2].copy().sort_values('x_Al')
 
+# --- Boltzmann hybrid lattice constant -----------------------------------------
+hyb = pd.read_csv(os.path.join(AN, 'b2_offstoich_hybrid_c_vac.csv'))
+hyb_b2 = hyb[(hyb.x_Al >= 0.50) & (hyb.x_Al <= 0.66)].copy().sort_values('x_Al')
+
 # --- slope comparison (use the raw T&D points and the MACE branch) --------------
 def slope(df, col, x0, x1):
     sub = df[(df.x_Al >= x0) & (df.x_Al <= x1)]
@@ -107,6 +111,10 @@ print(pd.DataFrame(comp).to_string(index=False))
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(mace.x_Al, mace.a_mix, '-', color='tab:blue', lw=2,
         label='MACE 安定モデル ($G$ per atom)')
+ax.plot(hyb_b2.x_Al, hyb_b2.a_hybrid_1273K, '--', color='tab:purple', lw=2,
+        label='MACE Boltzmann hybrid (1273 K)')
+ax.plot(hyb_b2.x_Al, hyb_b2.a_hybrid_1473K, ':', color='tab:olive', lw=2,
+        label='MACE Boltzmann hybrid (1473 K)')
 
 al = td[td.x_Al_at > 50.0]
 ni = td[td.x_Al_at <= 50.0]
