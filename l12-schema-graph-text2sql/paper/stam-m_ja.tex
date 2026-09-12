@@ -687,7 +687,7 @@ SQLGuard（$-$0.2\,pp、95\%CI $[-0.6, +0.1]$\,pp）、$n$-best（$-$0.3\,pp、$
 \subsubsection{独立に設計されたクエリによる評価}
 \label{sec:independent_eval}
 
-パイプラインの辞書・少数ショット例を設計した著者自身が評価クエリも作成すると、クエリの表現や対象テーブルがパイプラインの得意なパターンに無意識に寄り、精度を過大評価する可能性がある（自己参照バイアス）。これを緩和するため、主評価245クエリの統合コーパス（セクション~\ref{sec:query_design}）には、パイプラインの実装に関与していない共同著者が独立に設計した100クエリが含まれている（すなわち、この100クエリは主評価245クエリの部分集合であり、「245クエリとは別の追加100クエリ」ではない）。本項では、この独立設計100クエリを単独で別ラン再評価した結果を報告する。難易度分布はEasy 18 / Medium 34 / Hard 34 / Very Hard 14で、基本検索から材料設計・統計まで10カテゴリにわたる（カテゴリ内訳は補足資料~\ref{sec:sup_expert_queries}）。スコアリングはアブレーションと同じ実行再現率メトリックと難易度分類で行った。
+パイプラインの辞書・少数ショット例を設計した著者自身が評価クエリも作成すると、クエリの表現や対象テーブルがパイプラインの得意なパターンに無意識に寄り、精度を過大評価する可能性がある（自己参照バイアス）。これを緩和するため、主評価245クエリの統合コーパス（セクション~\ref{sec:query_design}）には、パイプラインの実装に関与していない共同著者が独立に設計した100クエリが含まれている（表~\ref{tab:main_partition}の部分集合）。本項では、この独立設計100クエリを単独で別ラン再評価した結果を報告する。難易度分布はEasy 18 / Medium 34 / Hard 34 / Very Hard 14で、基本検索から材料設計・統計まで10カテゴリにわたる（カテゴリ内訳は補足資料~\ref{sec:sup_expert_queries}）。スコアリングはアブレーションと同じ実行再現率メトリックと難易度分類で行った。
 
 この別ランの全体実行再現率は81.5\%（Easy 87.8\% / Medium 90.5\% / Hard 70.2\% / Very Hard 78.7\%；平均レイテンシ29.9\,s）であった。なお、この100クエリは主評価245クエリに含まれるため、主評価全体（86.1\%）との単純差4.6\,ppを「著者設計と独立設計の差」と解釈することはできない：主評価の単一ラン内では、同じ独立設計100クエリ部分が83.4\%、残りの著者設計145クエリが87.9\%であり、主評価全体との差には同一100クエリのラン間変動（83.4\% 対 81.5\%）も混ざる。したがって自己参照バイアスの定量値としては、同一ラン内の部分集合比較（独立設計83.4\% 対 著者設計87.9\%、4.5\,pp）のほうが適切であり、これも問題分布の差を含む探索的な観察にとどまる。なお、この差が難易度分布の違い（著者設計145クエリはVH比率が高い：50/145 対 14/100）による見かけでないことを確認するため、両部分集合の難易度層別実行再現率を主評価コーパス全体の難易度構成（43/69/69/64）へ直接標準化して比較すると、独立設計83.9\% 対 著者設計89.4\%（5.5\,pp）と差はむしろ広がる（層別ではEasy 87.8\% 対 100.0\%、Medium 90.5\% 対 97.1\%、Hard 73.2\% 対 88.6\%、VH 85.7\% 対 74.8\%で、VHのみ逆転）。したがって、少なくとも4層の難易度構成比の違いだけでは、この差は説明されない。ただし、同一層内の構造的複雑さ（SQL長・テーブル数・サブクエリ数）や少数ショット例の被覆度等の差は統制されておらず、この標準化比較も同一ランの層別再集計に基づく探索的な観察である。独立設計クエリが著者設計クエリより低い傾向は、(1)~独立クエリが\texttt{elastic\_tensor}や\texttt{magnetic\_property}等の少数ショット例がまばらな周辺テーブルを参照するテーブルカバレッジバイアス、(2)~著者設計クエリの固定パターン（「L1$_2$」明示）に最適化された少数ショット例、(3)~より暗黙的な条件指定を含む語彙の多様性、に起因すると考えられる。ただし周辺テーブル参照だけでは説明できない：非翻訳英語25問（セクション~\ref{sec:language_eval}）も\texttt{magnetic\_property}や\texttt{surface\_energy}等の周辺テーブルを参照するが$96.5$\%であり、両データセットは要求テーブル数・CTE・サブクエリ・SQL長などの構造的複雑さが異なる別のクエリ母集団である。周辺テーブル参照は難しさに寄与し得る一因であり、構造的複雑さと組み合わさって差を生むと解釈する。
 
@@ -916,7 +916,7 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 
 SQL検証、意図分類、採点メトリクス、カバレッジ／パーサー等のユニットテストを構築した（表~\ref{tab:sup_test_categories}）。報告時スナップショットではpytestが160件を収集した（表の内訳の合計と一致する）。再現スクリプトはcollect-onlyではなくテスト本体を実行し、1件でも失敗した場合は再現処理を停止する。SQLインジェクション（DROP・DELETE・ピギーバック攻撃等）や直接SQL入力の棄却といった安全性関連のテストケースはSQL検証・意図分類カテゴリに含まれ、個々のクエリ文は配布パッケージのテストコードに含まれる。
 
-\begin{table*}[htbp]
+\begin{table}[htbp]
 \centering
 \caption{ユニットテストカテゴリ（テストモジュール別、報告時スナップショットで計160件を収集。再現時はpytestで全件を再実行する）。}
 \label{tab:sup_test_categories}
@@ -940,7 +940,7 @@ SQL検証、意図分類、採点メトリクス、カバレッジ／パーサ�
   スキーマパーサー & 3 & DDL解析 \\
   \bottomrule
 \end{tabularx}
-\end{table*}
+\end{table}
 
 % =====================================================================
 
@@ -1038,7 +1038,7 @@ LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_l
 \label{sec:sup_query_detail}
 
 アブレーション用100クエリ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結果（質問テキスト、実行再現率（行一致リコール）、レイテンシ、合格/不合格（実行再現率$\geq 0.8$で$\checkmark$））は、同梱の機械可読ファイル \texttt{evaluation/per\_query\_results.csv}（質問文・難易度は \texttt{evaluation/query\_catalog.csv} と同一）に全100行を収録している。すべての値は、アブレーションフル条件の第1ラン（このランの全体値は92.7\%；補足資料~\ref{sec:sup_ablation_diff}と同一ラン）から得られたものであり、したがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。表~\ref{tab:sup_query_detail}には難易度層ごとにバランスさせた代表10行（各層の成功例と、失敗・部分一致の例を含む）のみを抜粋する。クエリは元の日本語で示されている。
-\begin{table*}[htbp]
+\begin{table}[htbp]
 \centering
 \caption{100の評価クエリに関する詳細結果の抜粋（10行；アブレーションfull条件の第1ラン。全100行は \texttt{evaluation/per\_query\_results.csv}）。P/F: 実行再現率$\geq 0.8$で$\checkmark$。}
 \label{tab:sup_query_detail}
@@ -1070,7 +1070,7 @@ LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_l
     q\_vhard\_016 & 安定なL1$_{\mathrm{2}}$化合物の純元素基底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。 & 1.00 & 30.8 & $\checkmark$ \\
   \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 % =====================================================================
 \section{アブレーション条件間の精度差クエリ}
 
@@ -1428,7 +1428,7 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 
 公開されているOQMDデータモデルは、少数の広いエントリ中心のテーブル（例：\texttt{entries}、\texttt{element\_ratios}、\texttt{formation\_energies}、\texttt{reference\_states}、および\texttt{elements}）で表現できる。このレイアウトは高スループットデータの蓄積に効率的だが、構造的に異なる情報（組成、結晶構造、熱的安定性、電子特性）を、\texttt{delta\_e}や\texttt{composition\_formula}のような一般的なカラムに格納している。自然言語インターフェースにおいて、これは曖昧さを引き起こす。「エネルギー」は生成エネルギー、ハル距離、またはバンドギャップを指す可能性がある。「Ti」は構成元素または特性フィルターのターゲットである可能性がある。
 
-\begin{table*}[htbp]
+\begin{table}[htbp]
 \centering
 \caption{OQMDスタイルのフラットソースレイアウトと正規化された検証スキーマの比較。フラットレイアウトはテーブル数を最小限に抑え、正規化されたレイアウトは材料科学の概念を分離してカラム名の曖昧さを減少させる。}
 \label{tab:schema_comparison}
@@ -1444,7 +1444,7 @@ SELECT * の禁止、JOIN時のDISTINCT推奨、UNION/INTERSECT句の独立検�
 計算された特性 & タイプ別に分離されていない & \path{band_structure}、\path{density_of_states}、\path{elastic_tensor}、\path{magnetic_property}、\path{thermal_property}、\path{surface_energy}、\path{grain_boundary}など & 特性クラスごとに1つのテーブルが明確なカラム名と単位を提供する。 \\
 \bottomrule
 \end{tabularx}
-\end{table*}
+\end{table}
 
 
 % =====================================================================
@@ -1620,7 +1620,7 @@ $k$ & 全体 & Easy & Medium & Hard & VH & レイテンシ (s) \\
 
 \begin{figure}[htbp]
 \centering
-\begin{minipage}[t]{0.48\columnwidth}
+\begin{minipage}[t]{0.40\columnwidth}
 \centering
 \includegraphics[width=\linewidth]{figures/fewshot_sensitivity.png}
 \caption{少数ショット数 $k$ の関数としての難易度層ごとの精度。
@@ -1628,7 +1628,7 @@ Easy/Medium 層は $k$ によらず飽和し、
 VH 層は $k=3$ と $k=15$ で最大（88.4\%）となる。}
 \label{fig:fewshot_k}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.48\columnwidth}
+\begin{minipage}[t]{0.40\columnwidth}
 \centering
 \includegraphics[width=\linewidth]{figures/dict_sensitivity.png}
 \caption{ドメイン辞書サイズと難易度層ごとの精度の関係。
@@ -1661,20 +1661,26 @@ GPT-4o  & 91.7 & 100.0 & 93.3 & 91.8 & 81.0 &  2.1 \\
 
 \begin{figure}[htbp]
 \centering
-\begin{minipage}[t]{0.48\columnwidth}
+\begin{minipage}[t]{0.32\columnwidth}
 \centering
 \includegraphics[width=\linewidth]{figures/model_comparison.png}
 \caption{難易度層ごとのGPT-5.5とGPT-4oの精度比較。
 全体・各層とも差は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラン比較のため統計的同等性は評価していない）。}
 \label{fig:model_comp}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.48\columnwidth}
+\begin{minipage}[t]{0.32\columnwidth}
 \centering
 \includegraphics[width=\linewidth]{figures/multiaxis_radar.png}
 \caption{難易度層ごとのマルチ軸評価レーダーチャート。
 構文と実行の有効性はすべての層で100\%である。
 VH層は厳密な完全結果集合一致（Exact軸）が1.6\%と低いが、77.2\%のリコールは多くの部分的に正しい結果を示している。}
 \label{fig:radar}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\columnwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/error_distribution.png}
+\caption{保存されたfull条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だった39件における誤差タイプの分布。1ケースに複数の誤差タイプを付与し得るため、ラベルの合計（66）はケース数（39）を上回る。}
+\label{fig:error_dist}
 \end{minipage}
 \end{figure}
 
@@ -1682,13 +1688,6 @@ VH層は厳密な完全結果集合一致（Exact軸）が1.6\%と低いが、77
 \subsection{失敗ケースの内訳分析}
 
 保存されたfull条件ラン（245クエリ多軸評価ラン）でリコールが0.8未満であったのは39クエリであり、難易度別の内訳はVery Hard 17・Hard 15・Medium 5・Easy 2である。失敗は高難易度層に集中し、スキーマグラフのトラバースが正しいJOINパスを提供しているにもかかわらず、LLMが導出量や複合スコア式を含むSELECT句を正確に構成できないケースが残っている。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.5\columnwidth]{figures/error_distribution.png}
-\caption{保存されたfull条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だった39件における誤差タイプの分布。1ケースに複数の誤差タイプを付与し得るため、ラベルの合計（66）はケース数（39）を上回る。}
-\label{fig:error_dist}
-\end{figure}
 
 図~\ref{fig:error_dist}は、この39失敗ケースにおける誤差タイプの分布を示す（誤ったカラム選択24、JOIN不一致24、GROUP BY欠如14、値不一致4）。誤ったカラム選択とJOIN不一致が主要であり、ここでのJOIN不一致はゴールドが参照するテーブルの一部が生成SQLに欠けること（主に導出計算用参照テーブルや特性ピボット用JOINの欠落）を意味し、FKに基づかない不正JOINではない（表~\ref{tab:error_analysis}）。
 
