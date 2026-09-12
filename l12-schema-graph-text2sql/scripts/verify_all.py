@@ -539,19 +539,25 @@ def check_provenance() -> tuple[str, list[str]]:
                     if line.strip()
                 ]
 
-        # The recorded gold/expected directories must be the ones the
-        # dataset itself points at, not merely directories whose hashes
-        # check out (guards against build_provenance() being called with
-        # default directories for a non-default dataset).
+        # The recorded gold/expected directory must be the single directory
+        # the dataset itself points at, not merely a directory whose hash
+        # checks out (guards against build_provenance() being called with
+        # default directories for a non-default dataset).  A dataset whose
+        # rows span several directories cannot be covered by one recorded
+        # hash and is rejected outright.
         for path_key, dir_key in (("gold_sql_path", "gold_dir"),
                                   ("expected_result_path", "expected_dir")):
             dirs = {Path(row[path_key]).parent.as_posix()
                     for row in dataset_rows if isinstance(row.get(path_key), str)}
             recorded = prov.get(dir_key)
-            if dirs and isinstance(recorded, str) and recorded not in dirs:
+            if len(dirs) > 1:
+                errors.append(
+                    f"{p.name}: dataset {path_key} spans multiple dirs "
+                    f"{sorted(dirs)}; a single provenance {dir_key} cannot cover them")
+            elif dirs and isinstance(recorded, str) and dirs != {recorded}:
                 errors.append(
                     f"{p.name}: provenance {dir_key} '{recorded}' does not match "
-                    f"dataset {path_key} parent dir(s) {sorted(dirs)}")
+                    f"dataset {path_key} parent dir {sorted(dirs)}")
 
         gold_dir_name = prov.get("gold_dir")
         if isinstance(gold_dir_name, str):

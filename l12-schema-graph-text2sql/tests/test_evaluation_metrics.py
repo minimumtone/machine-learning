@@ -292,6 +292,27 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
                        match="does not match dataset gold_sql_path"):
         va.check_provenance()
 
+    # a dataset whose rows span several gold directories cannot be covered
+    # by a single recorded gold_dir, even if that dir is one of them
+    dataset.write_text(
+        '{"id": "q1", "question": "x",'
+        ' "gold_sql_path": "gold_sql/q1.sql",'
+        ' "expected_result_path": "expected_results/q1.json"}\n'
+        '{"id": "q2", "question": "y",'
+        ' "gold_sql_path": "gold_sql_other/q1.sql",'
+        ' "expected_result_path": "expected_results/q1.json"}\n')
+    prov3 = build_provenance(dataset, gold_dir=gold, prompt_path=prompt,
+                             expected_dir=expected)
+    prov3["git_commit"] = "deadbeef"
+    result.write_text(json.dumps({
+        "model": "m", "provenance": prov3,
+        "results": [{"qid": "q1", "sql": "SELECT 1;"},
+                    {"qid": "q2", "sql": "SELECT 2;"}],
+    }))
+    with pytest.raises(va.VerifyError,
+                       match="spans multiple dirs"):
+        va.check_provenance()
+
 
 def test_model_comparison_config_hash_staleness():
     import pytest
