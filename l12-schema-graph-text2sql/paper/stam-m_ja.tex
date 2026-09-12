@@ -708,24 +708,7 @@ SQLGuard（$-$0.2\,pp、95\%CI $[-0.6, +0.1]$\,pp）、$n$-best（$-$0.3\,pp、$
 \subsubsection{列間比較クエリの取り扱い}
 \label{sec:column_comparison}
 
-本項は、著者設計の主評価クエリに含まれる列間比較型クエリへの対応を述べる。多段階計算に加えて、列間比較は材料研究で頻繁に遭遇する代表的なクエリパターンである。「値Aが値Bより小さいエントリを見つける」という形式のクエリは、同じ行内の異なる列の値を比較する条件式を用いたSQL生成を必要とするため、単一の閾値フィルタリング（\texttt{WHERE col > 0.5}）とは異なる（\texttt{WHERE col\_a > col\_b}）。
-
-本パイプラインは、3種類の列間比較パターンをカバーする少数ショットの例を提供する。  
-\begin{enumerate}  
-  \item テーブル内比較：  
-    同じテーブル内の2つの列の直接比較。  
-    例：\texttt{formation\_energy\_per\_atom < energy\_above\_hull}（\texttt{phase\_stability}テーブル内）；  
-    \texttt{bulk\_modulus\_vrh > 2.0 * shear\_modulus\_vrh}（\texttt{elastic\_tensor}テーブル内、Pugh延性メトリック）。  
-  \item テーブル間比較：  
-    JOINを介して異なるテーブルの列を比較。  
-    例：\texttt{thermal\_property.debye\_temperature\_k > magnetic\_property.curie\_temperature\_k}；  
-    総磁化対絶対生成エネルギー。  
-  \item 集約関数を用いた比較：  
-    GROUP BY--HAVINGと組み合わせて、構成要素間の電気陰性度差などの導出量に対する閾値評価を行う。  
-    例：\texttt{HAVING MAX(electronegativity) - MIN(electronegativity) > 0.5}。  
-\end{enumerate}
-
-これらのパターンは、定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成するのが難しい。特にテーブル間比較は、スキーマ情報から各比較列がどのテーブルに属するかを正確に特定する必要がある。本研究では、主に列間比較パターンを追加して少数ショットの例プールを45例に拡張し、LLMがそのようなパターンを学習できるようにした。
+多段階計算に加えて、「値Aが値Bより小さいエントリ」のように同一行内の異なる列を比較する条件式（\texttt{WHERE col\_a > col\_b}）は材料研究で頻出するが、定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成しにくく、特にテーブル間比較では各比較列の所属テーブルを正確に特定する必要がある。本パイプラインは、テーブル内比較・テーブル間比較・集約関数を用いた比較の3種の列間比較パターンを少数ショット例で供給しており（例プールを主にこのパターンで45例に拡張）、各パターンのSQL断片は補足資料~\ref{sec:sup_column_comparison}に示す。
 
 \subsubsection{異なる適応条件における一般化評価}
 \label{sec:transfer_eval}
@@ -774,25 +757,7 @@ D & MP実データ（MP専用prompt + few-shot） & 15 & 93.3\% \\
 \subsection{RDBスキーマ設計とText-to-SQLコスト}
 \label{sec:schema_design_cost}
 
-RDB自体のテーブル構造はText-to-SQL精度を決める上流要因である。
-
-高度に正規化されたスキーマでは、単一のクエリに対して複数のテーブルJOINが必要であり、LLMが生成しなければならないSQLの複雑さが増す。本データベースにおける生成エンタルピー計算（セクション~\ref{sec:multistep_query}）では、\texttt{phase\_stability}、\texttt{composition}、および\texttt{pure\_element\_reference}の3テーブルJOINが必要であり、さらにCTEベースの集約計算が必要であった。少数ショットの例なしでの精度の$-$16.1\,ppの低下は、より複雑なテーブル間結合パターンがLLMによる正確なSQL生成をより困難にすることを確認している。
-
-T2SQLを前提とする場合、以下のスキーマ設計戦略が適用できる：
-\begin{enumerate}
-  \item ビューによる複雑さの隠蔽：
-    よく使用される多段階JOINパターンをビューまたはマテリアライズドビューとして定義し、LLMに対して単一のSELECTでクエリ可能なインターフェースを提供する。この研究における\texttt{formation\_enthalpy}ビューがその例である。
-  \item クエリ頻度に基づく非正規化：
-    よく参照されるテーブルグループ（例：\texttt{composition}と\texttt{element}）を事前に結合されたテーブルとして提供し、JOINの数を減らす。
-  \item 自己記述的な列名付け：
-    列名にテーブルのコンテキストを埋め込み（例：\texttt{energy} $\to$ \texttt{formation\_energy\_per\_atom}）、LLMがスキーマ情報から適切な列を選択する確率を高める。
-  \item 明示的なFK制約定義：
-    本実装の貪欲最短経路連結はFK関係に基づいてJOIN経路を構成する。大域的な最小JOINパスを保証せず、FK制約が欠如しているスキーマでは自動JOIN解決が困難になる。T2SQL準備が設計目標である場合、包括的なFK制約の定義が必要である。
-\end{enumerate}
-
-要約すると、Text-to-SQLシステムの精度を向上させるには、パイプライン側の改善だけでなく、データベーススキーマ設計段階でのNLインターフェースの互換性を考慮する必要がある。この視点は、この研究で使用された検証DBだけでなく、類似の正規化スキーマを持つ無機材料RDB（OQMD、Materials Project、AFLOWなど）や、Text-to-SQLが適用されるドメイン特化型RDBに一般的に適用可能な設計ガイドラインとして機能する。
-
-OQMD、Materials Project、AFLOW等の大規模無機材料RDBはいずれも正規化スキーマとFKメタデータを持つため、本パイプラインはFKイントロスペクションと辞書・少数ショット例の差し替えという軽量なスキーマ固有設定でこれらに適応でき、実際に一般化試験DではMP実データへの軽量適応が成立することを確認した（セクション~\ref{sec:transfer_eval}）。さらに、上記のスキーマ設計戦略をDB側が採用すれば、Text-to-SQL側の辞書・例の整備コストを削減しつつ精度を高められるという相互補完が期待できる。
+RDB自体のテーブル構造はText-to-SQL精度を決める上流要因である。高度に正規化されたスキーマでは単一の質問に複数のJOINが必要となり、生成すべきSQLの複雑さが増す。本データベースの生成エンタルピー計算（セクション~\ref{sec:multistep_query}）は\texttt{phase\_stability}・\texttt{composition}・\texttt{pure\_element\_reference}の3テーブルJOINとCTEによる集約を要し、少数ショット例なしでの$-$16.1\,ppの低下は、複雑な結合パターンほどLLMによる正確なSQL生成が困難になることを示す。T2SQLを前提とする場合、(1) 多段階JOINをビュー（本研究の\texttt{formation\_enthalpy}ビューがその例）として隠蔽し単一SELECTで問い合わせ可能にすること、(2) 頻繁に参照されるテーブル群（例：\texttt{composition}と\texttt{element}）を事前結合して非正規化すること、(3) 列名にテーブル文脈を埋め込む自己記述的命名（\texttt{energy} $\to$ \texttt{formation\_energy\_per\_atom}）、(4) 明示的なFK制約の定義、が適用できる。特に(4)は本実装の貪欲最短経路連結がFK関係のみからJOIN経路を構成するため必須であり、FK制約を欠くスキーマでは自動JOIN解決が困難になる。OQMD、Materials Project、AFLOW等の大規模無機材料RDBはいずれも正規化スキーマとFKメタデータを持つため、本パイプラインはFKイントロスペクションと辞書・少数ショット例の差し替えという軽量なスキーマ固有設定で適応でき（一般化試験D、セクション~\ref{sec:transfer_eval}）、DB側が上記の設計戦略を採用すればText-to-SQL側の辞書・例の整備コストを削減しつつ精度を高める相互補完が期待できる。
 
 \subsection{類似無機材料RDBへの拡張性}
 \label{sec:extensibility}
@@ -1828,6 +1793,24 @@ no\_graph & 5 & 100.0\% \\
 実際のMaterials Project RESTデータから27の二元系（299エントリ）を取得し、新しい3テーブルPostgreSQLスキーマ（\texttt{mp\_entries}, \texttt{mp\_elements}, \texttt{mp\_element\_ratios}）を構築した。15の日本語クエリに対し、MPスキーマ用に書いた8件のfew-shot例とMP専用プロンプトを与えたが、パイプラインコード自体は変更していない。実行再現率は全体93.3\%（Easy/Medium/Hard 100\%、Very Hard 66.7\%）であった。
 
 これらの結果は条件を変えてもパイプラインを適用できる可能性を示すが、一般化の根拠はバリアントごとに異なり、特にDはMP専用few-shot例を要するため軽量適応の実証と位置付ける。転送テストは元スキーマ固有のハードコーディングを発見・削減する検証ツールとしても機能したが、条件カテゴリとテーブル名の対応表など元スキーマを前提とする要素が一部残るため、「完全にスキーマ非依存」とは主張しない。
+
+\subsection{列間比較クエリの3パターン}
+\label{sec:sup_column_comparison}
+
+セクション~\ref{sec:column_comparison}で述べた列間比較クエリについて、少数ショット例がカバーする3パターンとSQL断片を示す。
+\begin{enumerate}  
+  \item テーブル内比較：  
+    同じテーブル内の2つの列の直接比較。  
+    例：\texttt{formation\_energy\_per\_atom < energy\_above\_hull}（\texttt{phase\_stability}テーブル内）；  
+    \texttt{bulk\_modulus\_vrh > 2.0 * shear\_modulus\_vrh}（\texttt{elastic\_tensor}テーブル内、Pugh延性メトリック）。  
+  \item テーブル間比較：  
+    JOINを介して異なるテーブルの列を比較。  
+    例：\texttt{thermal\_property.debye\_temperature\_k > magnetic\_property.curie\_temperature\_k}；  
+    総磁化対絶対生成エネルギー。  
+  \item 集約関数を用いた比較：  
+    GROUP BY--HAVINGと組み合わせて、構成要素間の電気陰性度差などの導出量に対する閾値評価を行う。  
+    例：\texttt{HAVING MAX(electronegativity) - MIN(electronegativity) > 0.5}。  
+\end{enumerate}
 
 \subsection{あいまい・矛盾クエリの例}
 \label{sec:sup_ambiguous}
