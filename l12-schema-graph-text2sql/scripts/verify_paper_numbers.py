@@ -226,7 +226,9 @@ def main(argv: list[str] | None = None) -> int:
         "--report",
         type=Path,
         default=None,
-        help="Optional TSV report path.  If omitted, only stdout summary is printed.",
+        help="Optional TSV report path listing every TeX numeric token "
+        "(tex_in_json / tex_not_in_json) and JSON values absent from TeX.  "
+        "If omitted, only stdout summary is printed.",
     )
     parser.add_argument(
         "--tex-only",
@@ -298,12 +300,15 @@ def main(argv: list[str] | None = None) -> int:
     # 3. TeX -> JSON (informational)
     tex_numbers = extract_tex_numbers(combined_tex_clean)
     tex_not_in_json: list[tuple[str, float | int, str]] = []
+    tex_in_json: list[tuple[str, float | int, str]] = []
     for raw, val, start, end in tex_numbers:
+        ctx_start = max(0, start - 25)
+        ctx_end = min(len(combined_tex_clean), end + 25)
+        ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
         if val not in json_numbers:
-            ctx_start = max(0, start - 25)
-            ctx_end = min(len(combined_tex_clean), end + 25)
-            ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
             tex_not_in_json.append((raw, val, ctx))
+        else:
+            tex_in_json.append((raw, val, ctx))
 
     print(f"TeX files audited: {len(file_map)} ({', '.join(name for name, _, _ in file_map)})")
     print(f"JSON numeric values: {len(json_numbers)}")
@@ -331,6 +336,8 @@ def main(argv: list[str] | None = None) -> int:
         rows = []
         for n, paths in missing_in_tex:
             rows.append(("json_missing_in_tex", str(n), "", ";".join(paths[:5])))
+        for raw, val, ctx in tex_in_json:
+            rows.append(("tex_in_json", raw, str(val), ctx))
         for raw, val, ctx in tex_not_in_json:
             rows.append(("tex_not_in_json", raw, str(val), ctx))
         with open(args.report, "w", encoding="utf-8") as f:
