@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-01 19:47:02 UTC",
+    "generated_at": "2026-09-03 01:47:01 UTC",
     "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
@@ -21,6 +21,12 @@
       "evaluation/multiaxis_results.json",
       "evaluation/model_comparison_results.json",
       "evaluation/failure_analysis.json",
+      "evaluation/language_eval_summary.json",
+      "evaluation/language_paired_stats.json",
+      "evaluation/evaluation_dataset_en.jsonl",
+      "evaluation/independent_en_dataset.jsonl",
+      "evaluation/main_eval_with_sql.json",
+      "evaluation/independent_eval_results.json",
       "llm/mecab_materials.csv",
       "llm/materials_engineering_vocab.csv",
       "llm/material_terms.yaml",
@@ -43,7 +49,56 @@
       "hard": 30,
       "very_hard": 20
     },
-    "n_cte_queries": 5,
+    "n_cte_queries": 15,
+    "n_cte_in_ablation_subset": 5,
+    "n_cte_zero_shot": 10,
+    "main_partition": {
+      "_note": "Disjoint partition of the main evaluation corpus. The ablation subset, the independent-design 100, Variant A (prototype expansion) and the CTE-15 set are all subsets of the main corpus and are re-reported as separate runs in Sec. 4.3; Variants B/C/D and the untranslated EN-25 are distinct corpora (transfer ids do not intersect main).",
+      "n_main_queries": 245,
+      "ablation_subset": 100,
+      "independent_design": 100,
+      "independent_design_id_range": "q_expert_001-q_expert_100",
+      "variant_a_prototype": 20,
+      "variant_a_id_prefix": "q_proto_",
+      "cte_zero_shot": 10,
+      "cte_zero_shot_id_prefix": "q_cte_",
+      "residual_expert_101_115": 15,
+      "residual_ids": [
+        "q_expert_101",
+        "q_expert_102",
+        "q_expert_103",
+        "q_expert_104",
+        "q_expert_105",
+        "q_expert_106",
+        "q_expert_107",
+        "q_expert_108",
+        "q_expert_109",
+        "q_expert_110",
+        "q_expert_111",
+        "q_expert_112",
+        "q_expert_113",
+        "q_expert_114",
+        "q_expert_115"
+      ],
+      "author_designed_total": 145,
+      "n_cte15": 15,
+      "n_cte_in_ablation_subset": 5,
+      "n_re_reported_in_sec43": 135,
+      "n_transfer_b_outside_main": 20,
+      "within_main_run_recall_pct": {
+        "_note": "Recall of each re-reported subset inside the single main run (the separate reruns in Sec. 4.3 are different runs of the same questions)",
+        "independent_design": 83.4,
+        "variant_a_prototype": 85.0,
+        "cte15": 72.7,
+        "cte_in_ablation_subset": 100.0,
+        "cte_zero_shot": 59.0
+      }
+    },
+    "ordering_contracts": {
+      "_note": "exact_result_set_match enforces row order only for expected results with semantic_ordered=true; the 'ordered' scoring-audit column uses the different population of gold SQL with ORDER BY.",
+      "n_semantic_ordered_main": 39,
+      "n_gold_order_by_main": 234
+    },
     "n_fewshot_examples": 45
   },
   "database": {
@@ -90,8 +145,8 @@
         "vhard_std": 6.0,
         "delta_pp": -16.1,
         "avg_latency_s": 26.5,
-        "p_value": 1.426901054601353e-09,
-        "p_value_holm": 8.561406327608118e-09,
+        "p_value": 4.513278639706186e-12,
+        "p_value_holm": 2.7079671838237118e-11,
         "n_nonzero": 55,
         "significant": true,
         "stats_v2": {
@@ -701,10 +756,330 @@
     "n_stable_l12": 7,
     "n_metastable_l12": 150,
     "n_ni3al_lattice_match": 26,
-    "a_ref_ni3al": 3.572
+    "a_ref_ni3al": 3.572,
+    "gamma_prime_top10": [
+      {
+        "rank": 1,
+        "formula": "Ni3Al",
+        "entry_id": "entry_00001",
+        "lattice_a": 3.572,
+        "energy_above_hull": 0.0,
+        "bulk_modulus_gpa": 180,
+        "delta_a": 0.0,
+        "composite_score": 0.88
+      },
+      {
+        "rank": 2,
+        "formula": "Co3Ti",
+        "entry_id": "entry_00004",
+        "lattice_a": 3.55,
+        "energy_above_hull": 0.0,
+        "bulk_modulus_gpa": 190,
+        "delta_a": 0.022,
+        "composite_score": 0.864
+      },
+      {
+        "rank": 3,
+        "formula": "Cr3In",
+        "entry_id": "entry_00068",
+        "lattice_a": 3.547,
+        "energy_above_hull": 0.012,
+        "bulk_modulus_gpa": 249,
+        "delta_a": 0.025,
+        "composite_score": 0.839
+      },
+      {
+        "rank": 4,
+        "formula": "Hf3V",
+        "entry_id": "entry_00170",
+        "lattice_a": 3.59,
+        "energy_above_hull": 0.006,
+        "bulk_modulus_gpa": 196,
+        "delta_a": 0.018,
+        "composite_score": 0.834
+      },
+      {
+        "rank": 5,
+        "formula": "Pt3Sc",
+        "entry_id": "entry_00251",
+        "lattice_a": 3.608,
+        "energy_above_hull": 0.003,
+        "bulk_modulus_gpa": 194,
+        "delta_a": 0.035,
+        "composite_score": 0.833
+      },
+      {
+        "rank": 6,
+        "formula": "Cu3Al",
+        "entry_id": "entry_00214",
+        "lattice_a": 3.537,
+        "energy_above_hull": 0.006,
+        "bulk_modulus_gpa": 204,
+        "delta_a": 0.035,
+        "composite_score": 0.825
+      },
+      {
+        "rank": 7,
+        "formula": "Co3V",
+        "entry_id": "entry_00197",
+        "lattice_a": 3.611,
+        "energy_above_hull": 0.007,
+        "bulk_modulus_gpa": 215,
+        "delta_a": 0.039,
+        "composite_score": 0.822
+      },
+      {
+        "rank": 8,
+        "formula": "Ag3Ti",
+        "entry_id": "entry_00326",
+        "lattice_a": 3.575,
+        "energy_above_hull": 0.018,
+        "bulk_modulus_gpa": 235,
+        "delta_a": 0.003,
+        "composite_score": 0.808
+      },
+      {
+        "rank": 9,
+        "formula": "V3Sn",
+        "entry_id": "entry_00100",
+        "lattice_a": 3.616,
+        "energy_above_hull": 0.007,
+        "bulk_modulus_gpa": 197,
+        "delta_a": 0.043,
+        "composite_score": 0.798
+      },
+      {
+        "rank": 10,
+        "formula": "Pt3Ti",
+        "entry_id": "entry_00110",
+        "lattice_a": 3.506,
+        "energy_above_hull": 0.012,
+        "bulk_modulus_gpa": 247,
+        "delta_a": 0.066,
+        "composite_score": 0.785
+      }
+    ],
+    "lattice_match_entries": [
+      {
+        "formula": "Ni3Al",
+        "entry_id": "entry_00001",
+        "lattice_a": 3.572,
+        "abs_delta_a": 0.0,
+        "energy_above_hull": 0.0,
+        "formation_energy_per_atom": -0.42
+      },
+      {
+        "formula": "Ag3Ti",
+        "entry_id": "entry_00326",
+        "lattice_a": 3.575,
+        "abs_delta_a": 0.003,
+        "energy_above_hull": 0.018,
+        "formation_energy_per_atom": 0.074
+      },
+      {
+        "formula": "Cr3Sb",
+        "entry_id": "entry_00178",
+        "lattice_a": 3.575,
+        "abs_delta_a": 0.003,
+        "energy_above_hull": 0.096,
+        "formation_energy_per_atom": -0.061
+      },
+      {
+        "formula": "Au3Sb",
+        "entry_id": "entry_00118",
+        "lattice_a": 3.576,
+        "abs_delta_a": 0.004,
+        "energy_above_hull": 0.005,
+        "formation_energy_per_atom": -0.471
+      },
+      {
+        "formula": "Ni3Ti",
+        "entry_id": "entry_00191",
+        "lattice_a": 3.578,
+        "abs_delta_a": 0.006,
+        "energy_above_hull": 0.068,
+        "formation_energy_per_atom": 0.0
+      },
+      {
+        "formula": "Fe3Sn",
+        "entry_id": "entry_00354",
+        "lattice_a": 3.58,
+        "abs_delta_a": 0.008,
+        "energy_above_hull": 0.053,
+        "formation_energy_per_atom": -0.456
+      },
+      {
+        "formula": "Fe3Sb",
+        "entry_id": "entry_00227",
+        "lattice_a": 3.563,
+        "abs_delta_a": 0.009,
+        "energy_above_hull": 0.031,
+        "formation_energy_per_atom": 0.078
+      },
+      {
+        "formula": "Zr3Al",
+        "entry_id": "entry_00107",
+        "lattice_a": 3.583,
+        "abs_delta_a": 0.011,
+        "energy_above_hull": 0.094,
+        "formation_energy_per_atom": -0.091
+      },
+      {
+        "formula": "Ag3Y",
+        "entry_id": "entry_00310",
+        "lattice_a": 3.561,
+        "abs_delta_a": 0.011,
+        "energy_above_hull": 0.061,
+        "formation_energy_per_atom": -0.487
+      },
+      {
+        "formula": "Ta3Ga",
+        "entry_id": "entry_00070",
+        "lattice_a": 3.584,
+        "abs_delta_a": 0.012,
+        "energy_above_hull": 0.032,
+        "formation_energy_per_atom": 0.031
+      },
+      {
+        "formula": "Fe3Mg",
+        "entry_id": "entry_00059",
+        "lattice_a": 3.586,
+        "abs_delta_a": 0.014,
+        "energy_above_hull": 0.057,
+        "formation_energy_per_atom": -0.083
+      },
+      {
+        "formula": "Co3Ge",
+        "entry_id": "entry_00337",
+        "lattice_a": 3.554,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.069,
+        "formation_energy_per_atom": -0.067
+      },
+      {
+        "formula": "Pd3Ga",
+        "entry_id": "entry_00234",
+        "lattice_a": 3.59,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.054,
+        "formation_energy_per_atom": -0.027
+      },
+      {
+        "formula": "Hf3V",
+        "entry_id": "entry_00170",
+        "lattice_a": 3.59,
+        "abs_delta_a": 0.018,
+        "energy_above_hull": 0.006,
+        "formation_energy_per_atom": -0.292
+      },
+      {
+        "formula": "Hf3Si",
+        "entry_id": "entry_00303",
+        "lattice_a": 3.553,
+        "abs_delta_a": 0.019,
+        "energy_above_hull": 0.027,
+        "formation_energy_per_atom": -0.194
+      },
+      {
+        "formula": "Mo3Sn",
+        "entry_id": "entry_00053",
+        "lattice_a": 3.552,
+        "abs_delta_a": 0.02,
+        "energy_above_hull": 0.095,
+        "formation_energy_per_atom": -0.489
+      },
+      {
+        "formula": "Nb3Sn",
+        "entry_id": "entry_00112",
+        "lattice_a": 3.593,
+        "abs_delta_a": 0.021,
+        "energy_above_hull": 0.107,
+        "formation_energy_per_atom": 0.079
+      },
+      {
+        "formula": "Mo3Nb",
+        "entry_id": "entry_00362",
+        "lattice_a": 3.551,
+        "abs_delta_a": 0.021,
+        "energy_above_hull": 0.065,
+        "formation_energy_per_atom": -0.496
+      },
+      {
+        "formula": "Co3Ti",
+        "entry_id": "entry_00004",
+        "lattice_a": 3.55,
+        "abs_delta_a": 0.022,
+        "energy_above_hull": 0.0,
+        "formation_energy_per_atom": -0.45
+      },
+      {
+        "formula": "Ru3Mn",
+        "entry_id": "entry_00018",
+        "lattice_a": 3.595,
+        "abs_delta_a": 0.023,
+        "energy_above_hull": 0.063,
+        "formation_energy_per_atom": -0.275
+      },
+      {
+        "formula": "Ag3Ge",
+        "entry_id": "entry_00341",
+        "lattice_a": 3.548,
+        "abs_delta_a": 0.024,
+        "energy_above_hull": 0.009,
+        "formation_energy_per_atom": 0.0
+      },
+      {
+        "formula": "Cr3In",
+        "entry_id": "entry_00068",
+        "lattice_a": 3.547,
+        "abs_delta_a": 0.025,
+        "energy_above_hull": 0.012,
+        "formation_energy_per_atom": 0.023
+      },
+      {
+        "formula": "Ta3Sn",
+        "entry_id": "entry_00247",
+        "lattice_a": 3.547,
+        "abs_delta_a": 0.025,
+        "energy_above_hull": 0.093,
+        "formation_energy_per_atom": -0.159
+      },
+      {
+        "formula": "Cu3Ge",
+        "entry_id": "entry_00285",
+        "lattice_a": 3.544,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.089,
+        "formation_energy_per_atom": -0.524
+      },
+      {
+        "formula": "Zr3Al",
+        "entry_id": "entry_00238",
+        "lattice_a": 3.544,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.061,
+        "formation_energy_per_atom": -0.436
+      },
+      {
+        "formula": "Rh3Y",
+        "entry_id": "entry_00366",
+        "lattice_a": 3.601,
+        "abs_delta_a": 0.028,
+        "energy_above_hull": 0.024,
+        "formation_energy_per_atom": -0.089
+      },
+      {
+        "formula": "Pt3Ga",
+        "entry_id": "entry_00020",
+        "lattice_a": 3.602,
+        "abs_delta_a": 0.03,
+        "energy_above_hull": 0.077,
+        "formation_energy_per_atom": 0.003
+      }
+    ]
   },
   "language_evaluation": {
-    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus an independently authored 25-query English validation set (independent_en_dataset.jsonl) with its own gold SQL and expected results",
+    "_note": "Paired ja/en robustness test: English translations of the 100-query ablation set evaluated with identical gold SQL, expected results, database, and pipeline (full condition, 3 runs per language); plus a non-translated 25-query English validation set (independent_en_dataset.jsonl), newly authored in English without reference to the existing query sets, with its own gold SQL and expected results created after authoring and verified against the database. Difficulty labels of the non-translated set follow the post-hoc structural-complexity proxy recomputed from its gold SQL (scripts/compute_unified_difficulty.py); its difficulty distribution differs from the main evaluation, so its recall is not directly comparable in level to the main or paired results",
     "paired_ja": {
       "n_runs": 3,
       "n_queries": 100,
@@ -715,6 +1090,12 @@
         91.4,
         92.7
       ],
+      "difficulty_counts": {
+        "easy": 20,
+        "hard": 30,
+        "medium": 30,
+        "very_hard": 20
+      },
       "by_difficulty_mean_pct": {
         "easy": 99.7,
         "hard": 88.9,
@@ -732,6 +1113,12 @@
         90.4,
         87.8
       ],
+      "difficulty_counts": {
+        "easy": 20,
+        "hard": 30,
+        "medium": 30,
+        "very_hard": 20
+      },
       "by_difficulty_mean_pct": {
         "easy": 98.3,
         "hard": 89.1,
@@ -749,17 +1136,109 @@
         95.2,
         99.2
       ],
+      "difficulty_counts": {
+        "easy": 13,
+        "hard": 4,
+        "medium": 8
+      },
       "by_difficulty_mean_pct": {
-        "easy": 88.9,
-        "hard": 100.0,
-        "medium": 100.0,
-        "very_hard": 96.0
+        "easy": 94.9,
+        "hard": 95.0,
+        "medium": 100.0
+      }
+    },
+    "paired_stats": {
+      "_note": "Per-query three-run mean recall, en - ja (scripts/compute_language_stats.py); exact Wilcoxon signed-rank on non-zero differences and seeded bootstrap percentile CI",
+      "n_queries": 100,
+      "mean_diff_pp": -2.0,
+      "wilcoxon_p_value": 0.193,
+      "n_nonzero_pairs": 13,
+      "bootstrap_ci95_pp": [
+        -5.8,
+        1.6
+      ],
+      "bootstrap_n_resamples": 100000,
+      "bootstrap_seed": 20260602,
+      "test": "exhaustive sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|) on per-query 3-run mean recall (en - ja)",
+      "by_difficulty": {
+        "easy": {
+          "n_queries": 20,
+          "mean_diff_pp": -1.3,
+          "n_nonzero_pairs": 2
+        },
+        "medium": {
+          "n_queries": 30,
+          "mean_diff_pp": -3.3,
+          "n_nonzero_pairs": 2
+        },
+        "hard": {
+          "n_queries": 30,
+          "mean_diff_pp": 0.2,
+          "n_nonzero_pairs": 6
+        },
+        "very_hard": {
+          "n_queries": 20,
+          "mean_diff_pp": -4.1,
+          "n_nonzero_pairs": 3
+        }
       }
     }
   },
   "independent_evaluation": {
-    "_note": "The earlier harmonized comparison has been removed; use the full independent rerun below (see n_queries).",
+    "_note": "The earlier harmonized comparison has been removed; use the full independent rerun below (see n_queries). These queries are a subset of the main corpus; the rerun below is a separate run of that same subset.",
     "n_queries": 100,
+    "main_run_subsets": {
+      "_note": "Within-run breakdown of the single main run: the independently designed queries are a subset of the main corpus, evaluated here in the same run",
+      "expert_subset_pct": 83.4,
+      "n_expert_subset": 100,
+      "author_designed_pct": 87.9,
+      "n_author_designed": 145,
+      "by_difficulty": {
+        "_note": "Per-difficulty recall within the same main run, using the design-time difficulty labels of the main corpus",
+        "expert_subset": {
+          "easy": {
+            "pct": 87.8,
+            "n": 18
+          },
+          "medium": {
+            "pct": 90.5,
+            "n": 34
+          },
+          "hard": {
+            "pct": 73.2,
+            "n": 34
+          },
+          "very_hard": {
+            "pct": 85.7,
+            "n": 14
+          }
+        },
+        "author_designed": {
+          "easy": {
+            "pct": 100.0,
+            "n": 25
+          },
+          "medium": {
+            "pct": 97.1,
+            "n": 35
+          },
+          "hard": {
+            "pct": 88.6,
+            "n": 35
+          },
+          "very_hard": {
+            "pct": 74.8,
+            "n": 50
+          }
+        }
+      },
+      "standardized_to_main_distribution": {
+        "_note": "Exploratory direct standardization: each subset's unrounded per-difficulty recall reweighted by the difficulty composition of the whole main corpus, so the two subsets are compared at a common difficulty mix",
+        "expert_subset_pct": 83.9,
+        "author_designed_pct": 89.4
+      },
+      "source_file": "evaluation/main_eval_with_sql.json"
+    },
     "difficulty_distribution": {
       "easy": 18,
       "medium": 34,
@@ -797,7 +1276,9 @@
   "transfer_evaluation_variants": {
     "_note": "Transfer/generalization tests A--D; A is same-schema data expansion, B/C are code-unchanged schema transfer, D is lightweight MP adaptation (dedicated prompt plus a small few-shot set)",
     "A_prototype_expansion": {
-      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same normalized main schema",
+      "_note": "B2/NaCl/NiAs/BiF$_3$ prototype expansion on the same normalized main schema. The 20 queries are a subset of the main 245 (q_proto_*); this is a separate run of those same questions, not a distinct corpus (see dataset.main_partition).",
+      "subset_of_main": true,
+      "within_main_run_pct": 85.0,
       "model": "gpt-5.5",
       "n_queries": 20,
       "overall_pct": 100.0,
@@ -854,7 +1335,9 @@
     }
   },
   "cte_evaluation_15": {
-    "_note": "Original CTE patterns (few-shot covered) plus novel zero-shot patterns; counts in n_original / n_novel",
+    "_note": "Original CTE patterns (few-shot covered; inside the ablation subset) plus zero-shot patterns (inside the main 245 but outside the ablation subset); all 15 are a subset of the main 245 (see dataset.main_partition). Counts in n_original / n_novel.",
+    "subset_of_main": true,
+    "within_main_run_pct": 72.7,
     "model": "gpt-5.5",
     "n_queries": 15,
     "overall_pct": 72.7,
@@ -908,7 +1391,7 @@
     }
   ],
   "figure_source_data": {
-    "_note": "Verbatim evaluation JSON payloads consumed by scripts/generate_figures.py",
+    "_note": "Verbatim evaluation JSON payloads consumed by generate_figures.py (paper_scripts/ in the package)",
     "ablation_multirun_stats": {
       "n_runs": 5,
       "provenance": {
@@ -921,8 +1404,8 @@
         "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
         "expected_dir": "expected_results",
         "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-        "git_commit": "a66e18a79b184ca92fff2de6e88cdeb5da1504b2",
-        "generated_at": "2026-08-30T10:32:12+00:00",
+        "git_commit": "unknown",
+        "generated_at": "2026-09-02T09:59:42+00:00",
         "rescore_note": "aggregated deterministically from stored ablation_run_*.json; the per-run provenance in those files identifies the inference revision"
       },
       "conditions": {
@@ -1894,58 +2377,64 @@
       },
       "significance_tests": {
         "no_graph": {
-          "delta_pp": 1.4241353960939211,
+          "delta_pp": 1.424135396093921,
           "p_value": 0.1484375,
+          "n_nonzero": 8,
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
           "p_value_holm": 0.4453125,
           "significant": false,
-          "n_nonzero": 8,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "correction": "holm-bonferroni"
         },
         "no_reranker": {
-          "delta_pp": 6.191358133141957,
+          "delta_pp": 6.191358133141956,
           "p_value": 0.01953125,
+          "n_nonzero": 9,
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
           "p_value_holm": 0.078125,
           "significant": false,
-          "n_nonzero": 9,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "correction": "holm-bonferroni"
         },
         "no_nbest": {
           "delta_pp": 0.3437310121181088,
           "p_value": 0.8125,
+          "n_nonzero": 5,
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
           "p_value_holm": 1.0,
           "significant": false,
-          "n_nonzero": 5,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "correction": "holm-bonferroni"
         },
         "no_dict": {
-          "delta_pp": 9.782284997814951,
+          "delta_pp": 9.782284997814953,
           "p_value": 0.0001049041748046875,
+          "n_nonzero": 20,
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
           "p_value_holm": 0.0005245208740234375,
           "significant": true,
-          "n_nonzero": 20,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "correction": "holm-bonferroni"
         },
         "no_fewshot": {
-          "delta_pp": 16.122196620583715,
-          "p_value": 1.426901054601353e-09,
-          "p_value_holm": 8.561406327608118e-09,
-          "significant": true,
+          "delta_pp": 16.122196620583708,
+          "p_value": 4.513278639706186e-12,
           "n_nonzero": 55,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
+          "p_value_holm": 2.7079671838237118e-11,
+          "significant": true,
+          "correction": "holm-bonferroni"
         },
         "no_guard": {
           "delta_pp": 0.1617204301075268,
           "p_value": 1.0,
+          "n_nonzero": 2,
+          "n_queries": 100,
+          "test": "wilcoxon-signed-rank-exact",
           "p_value_holm": 1.0,
           "significant": false,
-          "n_nonzero": 2,
-          "test": "wilcoxon-exact",
-          "correction": "holm"
+          "correction": "holm-bonferroni"
         }
       }
     },
@@ -13465,7 +13954,7 @@
           "latency_s": 28.9
         }
       ],
-      "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order when the gold query is ordered (normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
+      "exact_metric": "exact_match = evaluation.metrics_strict.exact_result_set_match: exact gold column list + row multiset match + row order only when the expected result's semantic_ordered flag is set (the question itself asks for an ordered answer; normalized deterministically from the stored SQL by scripts/derive_main_artifacts.py)"
     },
     "model_comparison": {
       "provenance": {

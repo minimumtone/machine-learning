@@ -13,9 +13,12 @@ exactly the canonical gold-SQL corpus (gold_sql/ + gold_sql_obfuscated/
 expert_evaluation_dataset.jsonl, cte15_dataset.jsonl, ...) overlap with
 the main corpus and are intentionally NOT concatenated here.
 
-Each query gets: id, question, eval set, category, difficulty (CTE queries
-are folded into very_hard), CTE flag, tables used, table count, join count,
-aggregation flag, subquery flag, and SQL feature tags.
+Each query gets: id, question, eval set, category, difficulty (the
+``difficulty_cte_folded`` column keeps the original design-time label and
+only folds CTE queries into very_hard; it is unrelated to the post-hoc
+structural-complexity score of ``compute_unified_difficulty.py``), CTE
+flag, tables used, table count, join count, aggregation flag, subquery
+flag, and SQL feature tags.
 """
 
 import csv
@@ -164,7 +167,7 @@ def main() -> None:
             feats = parse_sql_features(sql)
             is_cte_set = eval_set in ("cte15", "cte_pattern")
             difficulty = rec["difficulty"]
-            unified_difficulty = "very_hard" if (is_cte_set or feats["has_cte"]) else difficulty
+            cte_folded_difficulty = "very_hard" if (is_cte_set or feats["has_cte"]) else difficulty
             if eval_set == "main":
                 cat = categorize(feats["tables"], feats["has_cte"])
             else:
@@ -176,7 +179,7 @@ def main() -> None:
                 "category": cat,
                 "category_ja": CATEGORY_JA[cat],
                 "difficulty_original": difficulty,
-                "difficulty_unified": unified_difficulty,
+                "difficulty_cte_folded": cte_folded_difficulty,
                 "is_cte": feats["has_cte"] or is_cte_set,
                 "tables": ";".join(feats["tables"]),
                 "n_tables": feats["n_tables"],
@@ -207,8 +210,8 @@ def main() -> None:
 
     matrix: dict[str, dict[str, int]] = {}
     for r in rows:
-        matrix.setdefault(r["category_ja"], {}).setdefault(r["difficulty_unified"], 0)
-        matrix[r["category_ja"]][r["difficulty_unified"]] += 1
+        matrix.setdefault(r["category_ja"], {}).setdefault(r["difficulty_cte_folded"], 0)
+        matrix[r["category_ja"]][r["difficulty_cte_folded"]] += 1
     by_set: dict[str, int] = {}
     for r in rows:
         by_set[r["eval_set"]] = by_set.get(r["eval_set"], 0) + 1

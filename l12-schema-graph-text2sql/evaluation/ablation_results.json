@@ -1,4 +1,5 @@
 {
+  "_note": "Single-run ablation artefact: per-query rows here feed the query-level CTE/error-analysis aggregation in compute_all_figures.py. The manuscript's Table 1 ablation numbers are 5-run means from ablation_run_1.json..ablation_run_5.json (ablation_multirun_stats.json), so per-condition percentages in this file differ from Table 1.",
   "model": "gpt-5.5",
   "provenance": {
     "dataset_file": "evaluation_dataset.jsonl",

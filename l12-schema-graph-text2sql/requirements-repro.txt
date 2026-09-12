@@ -12,6 +12,9 @@ networkx==3.4.2
 PyYAML==6.0.3
 # Dev dependency (unit tests only):
 pytest==9.1.1
+# Paired-language statistics (scripts/compute_language_stats.py):
+numpy==2.2.6
+scipy==1.14.1
 # Optional: scripts/build_mp_transfer_db.py rebuilds the MP transfer DB from
 # the bundled snapshot (db/mp_transfer_snapshot.json.gz) with no extra
 # dependencies. Only the explicit live refresh (--refresh-from-api)

@@ -78,7 +78,11 @@ def main() -> None:
         "overall_recall": total,
         "by_difficulty": {d: sum(v) / len(v) for d, v in by_diff.items()},
         "results": results,
-        "provenance": build_provenance(DATASET),
+        "provenance": build_provenance(
+            DATASET,
+            gold_dir=EVAL_DIR / "gold_sql_independent_en",
+            expected_dir=EVAL_DIR / "expected_results_independent_en",
+        ),
     }
     with open(out_path, "w") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)

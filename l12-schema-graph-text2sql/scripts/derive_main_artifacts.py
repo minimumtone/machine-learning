@@ -16,8 +16,9 @@ Per-query scores are recomputed by executing the stored SQL against the
 fixture (READ ONLY + REPEATABLE READ + fixture guard + SAVEPOINT) and
 are self-checked against the recall stored in the canonical run; any
 mismatch is a hard failure.  The canonical exact-result-set metric
-(exact column list + row multiset + row order when the gold query is
-ordered) is computed here as well.
+(exact column list + row multiset + row order only when the expected
+result's semantic_ordered flag is set, i.e. the question itself asks for
+an ordered answer) is computed here as well.
 
 The exact_match field of the canonical run itself is also normalized to
 the canonical exact_result_set_match definition (recomputed from the
@@ -160,9 +161,11 @@ def main() -> int:
             r["exact_match"] = exact_by_qid[r["qid"]]
             changed = True
     note = ("exact_match = evaluation.metrics_strict.exact_result_set_match: "
-            "exact gold column list + row multiset match + row order when "
-            "the gold query is ordered (normalized deterministically from "
-            "the stored SQL by scripts/derive_main_artifacts.py)")
+            "exact gold column list + row multiset match + row order only "
+            "when the expected result's semantic_ordered flag is set (the "
+            "question itself asks for an ordered answer; normalized "
+            "deterministically from the stored SQL by "
+            "scripts/derive_main_artifacts.py)")
     if canonical.get("exact_metric") != note:
         canonical["exact_metric"] = note
         changed = True
@@ -203,9 +206,9 @@ def main() -> int:
                   "common columns; see scripts/audit_scoring.py for the "
                   "strict and exact-match co-metrics)",
         "exact_metric": "exact_result_set_match = exact gold column list "
-                        "+ row multiset match + row order when the gold "
-                        "query is ordered (evaluation.metrics_strict."
-                        "exact_result_set_match)",
+                        "+ row multiset match + row order only when the "
+                        "expected result's semantic_ordered flag is set "
+                        "(evaluation.metrics_strict.exact_result_set_match)",
         "n_queries": n,
         "overall_execution_recall": total,
         "exact_result_set_match_rate": exact_rate,

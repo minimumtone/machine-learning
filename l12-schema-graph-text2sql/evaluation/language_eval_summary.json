@@ -9,6 +9,12 @@
       91.4,
       92.7
     ],
+    "difficulty_counts": {
+      "easy": 20,
+      "hard": 30,
+      "medium": 30,
+      "very_hard": 20
+    },
     "by_difficulty_mean_pct": {
       "easy": 99.7,
       "hard": 88.9,
@@ -26,6 +32,12 @@
       90.4,
       87.8
     ],
+    "difficulty_counts": {
+      "easy": 20,
+      "hard": 30,
+      "medium": 30,
+      "very_hard": 20
+    },
     "by_difficulty_mean_pct": {
       "easy": 98.3,
       "hard": 89.1,
@@ -43,11 +55,15 @@
       95.2,
       99.2
     ],
+    "difficulty_counts": {
+      "easy": 13,
+      "hard": 4,
+      "medium": 8
+    },
     "by_difficulty_mean_pct": {
-      "easy": 88.9,
-      "hard": 100.0,
-      "medium": 100.0,
-      "very_hard": 96.0
+      "easy": 94.9,
+      "hard": 95.0,
+      "medium": 100.0
     }
   }
 }

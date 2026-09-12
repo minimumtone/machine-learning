@@ -25,7 +25,7 @@ INCLUDE_DIRS = [
     "safety", "scripts", "tests",
 ]
 INCLUDE_FILES = [
-    ".env.example", "README_SQL.md", "few_shot_examples.json",
+    ".env.example", "README_SQL.md", "MANIFEST.md", "few_shot_examples.json",
     "pytest.ini", "requirements-repro.txt",
 ]
 
@@ -40,6 +40,11 @@ EXCLUDE_SCRIPTS = {
     # predates the R22A gold fixes and stores no per-query SQL, so it cannot
     # be deterministically re-scored without new inference).
     "eval_jp_reranker_vh.py",
+    # Paper-manuscript editing tools (frontmatter repair / EN->JA
+    # translation); not part of the SQL reproduction workflow, and
+    # repair_stam_ja.py would restore an obsolete manuscript revision.
+    "repair_stam_ja.py",
+    "translate_stam_ja_v2.py",
 }
 
 EXCLUDE_DIR_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache"}

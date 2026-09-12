@@ -155,7 +155,9 @@ def common_column_exact_overlap(
     only a subset of the gold columns can still score 1.0 here.  The
     canonical exact metric is
     evaluation.metrics_strict.exact_result_set_match (exact gold column
-    list + row multiset + row order when the gold query is ordered).
+    list + row multiset + row order only when the expected result's
+    ``semantic_ordered`` flag is set, i.e. the question itself asks for an
+    ordered answer -- not whenever the gold SQL merely has an ORDER BY).
     """
     m = execution_accuracy_full(
         result_rows, expected_rows, result_columns, expected_columns,

@@ -266,6 +266,31 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
     exp_file.write_text('{"rows": [[2]], "columns": ["v"], "ordered": false}')
     with pytest.raises(va.VerifyError, match="expected_sha256"):
         va.check_provenance()
+    exp_file.write_text('{"rows": [[1]], "columns": ["v"], "ordered": false}')
+
+    # provenance directories must be the ones the dataset itself points
+    # at, even when the recorded directories' hashes are self-consistent
+    gold2 = eval_dir / "gold_sql_other"
+    expected2 = eval_dir / "expected_results_other"
+    gold2.mkdir()
+    expected2.mkdir()
+    (gold2 / "q1.sql").write_text("SELECT 2;\n")
+    (expected2 / "q1.json").write_text(
+        '{"rows": [[2]], "columns": ["v"], "ordered": false}')
+    dataset.write_text(
+        '{"id": "q1", "question": "x",'
+        ' "gold_sql_path": "gold_sql_other/q1.sql",'
+        ' "expected_result_path": "expected_results_other/q1.json"}\n')
+    prov2 = build_provenance(dataset, gold_dir=gold, prompt_path=prompt,
+                             expected_dir=expected)
+    prov2["git_commit"] = "deadbeef"
+    result.write_text(json.dumps({
+        "model": "m", "provenance": prov2,
+        "results": [{"qid": "q1", "sql": "SELECT 1;"}],
+    }))
+    with pytest.raises(va.VerifyError,
+                       match="does not match dataset gold_sql_path"):
+        va.check_provenance()
 
 
 def test_model_comparison_config_hash_staleness():
