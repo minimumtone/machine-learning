@@ -17,13 +17,16 @@ from __future__ import annotations
 
 import json
 import statistics
-from itertools import product
+import sys
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import rankdata
 
 PROJECT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT))
+
+from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
+
 EVAL_DIR = PROJECT / "evaluation"
 SEED = 20260602
 N_BOOT = 100_000
@@ -59,23 +62,6 @@ def per_query_means(lang: str) -> tuple[dict[str, float], dict[str, str]]:
     if bad:
         raise ValueError(f"{lang}: qids without exactly {N_RUNS} observations: {bad}")
     return {q: statistics.mean(v) for q, v in acc.items()}, diff_map
-
-
-def sign_permutation_pvalue(nonzero: np.ndarray) -> float:
-    """Two-sided p-value of the Wilcoxon signed-rank statistic under the
-    exact sign-permutation null: enumerate all 2^k sign assignments of the
-    midranks of |diff| and count assignments whose positive-rank sum is at
-    least as extreme (min(W+, W-) <= observed min)."""
-    ranks = rankdata(np.abs(nonzero))
-    total = ranks.sum()
-    w_plus = ranks[nonzero > 0].sum()
-    observed = min(w_plus, total - w_plus)
-    n_extreme = 0
-    for signs in product((0.0, 1.0), repeat=len(ranks)):
-        w = float(np.dot(signs, ranks))
-        if min(w, total - w) <= observed + 1e-12:
-            n_extreme += 1
-    return n_extreme / 2 ** len(ranks)
 
 
 def main() -> None:

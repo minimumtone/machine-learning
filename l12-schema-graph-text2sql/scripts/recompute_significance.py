@@ -6,10 +6,13 @@ Problems with the test as implemented in ``scripts/eval_ablation_multirun.py``:
 1. **The normal approximation is forced.**  ``wilcoxon(..., method="approx")``
    is used regardless of sample size.  For ``no_graph`` only 3 query-level
    differences are non-zero and SciPy itself emits
-   "Sample size too small for normal approximation".  SciPy's default
-   (``method="auto"``) selects the exact distribution for small samples, but
-   its choice varies across SciPy versions, so ``method="exact"`` is pinned
-   explicitly here.
+   "Sample size too small for normal approximation".  SciPy's
+   ``method="exact"`` avoids that but uses the untied signed-rank table, which
+   is not exact for the heavily tied per-query means (see 3.).  The primary
+   p-value is therefore the exact sign-permutation p-value of the signed-rank
+   statistic with midranks (``scripts/sign_permutation.py``), the same test
+   used for the EN/JA language comparison.  SciPy's ``method="exact"`` and
+   ``method="approx"`` values are kept alongside for traceability only.
 
 2. **No multiple-comparison correction.**  Six ablated conditions are each
    tested against the same ``full`` baseline at alpha = 0.05, and the result
@@ -48,6 +51,9 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.provenance import build_provenance  # noqa: E402
+from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
+
+TEST_LABEL = "sign-permutation-exact-midranks"
 EVAL = PROJECT / "evaluation"
 STATS_FILE = EVAL / "ablation_multirun_stats.json"
 
@@ -137,18 +143,19 @@ def main() -> int:
         qids = sorted(set(full_mean) & set(pq_mean[cond]))
         diffs = [full_mean[q] - pq_mean[cond][q] for q in qids]
         nonzero = [d for d in diffs if d != 0]
-        delta_pp = float(np.mean(diffs) * 100)
+        delta_pp = float(sum(diffs) / len(diffs) * 100)  # same expression as eval_ablation_multirun
 
+        p_perm = sign_permutation_pvalue(nonzero)
         if nonzero:
-            p_exact = float(wilcoxon(nonzero, method="exact").pvalue)
+            p_scipy_exact = float(wilcoxon(nonzero, method="exact").pvalue)
             with warnings.catch_warnings():
                 # Deliberately reproducing the legacy call, which SciPy warns
                 # about precisely because the sample is too small for it.
                 warnings.simplefilter("ignore")
                 p_approx = float(wilcoxon(nonzero, method="approx").pvalue)
         else:
-            p_exact = p_approx = 1.0
-        raw[cond] = p_exact
+            p_scipy_exact = p_approx = 1.0
+        raw[cond] = p_perm
 
         # Run-level paired analysis (n = number of runs), which keeps the run
         # structure instead of collapsing it.
@@ -156,8 +163,7 @@ def main() -> int:
         run_cond = [r["conditions"][cond]["overall"] for r in runs]
         run_diffs = [a - b for a, b in zip(run_full, run_cond)]
         run_nonzero = [d for d in run_diffs if d != 0]
-        p_run = (float(wilcoxon(run_nonzero, method="exact").pvalue)
-                 if run_nonzero else 1.0)
+        p_run = sign_permutation_pvalue(run_nonzero)
         n_pos = sum(1 for d in run_nonzero if d > 0)
         p_sign = (binomtest(n_pos, len(run_nonzero), 0.5).pvalue
                   if run_nonzero else 1.0)
@@ -168,7 +174,8 @@ def main() -> int:
             "delta_pp": delta_pp,
             "n_queries": len(qids),
             "n_nonzero": len(nonzero),
-            "p_value_exact": p_exact,
+            "p_value": p_perm,
+            "p_value_scipy_exact_untied": p_scipy_exact,
             "p_value_approx_legacy": p_approx,
             "run_level": {
                 "n_runs": len(runs),
@@ -187,7 +194,7 @@ def main() -> int:
         d["stars_holm"] = stars(adjusted[cond])
 
     hdr = (f"{'condition':14s}{'n_nz':>5s}{'Δpp':>8s}{'legacy p':>12s}{'':>5s}"
-           f"{'exact p':>12s}{'Holm p':>12s}{'':>6s}{'run-level p':>13s}"
+           f"{'perm p':>12s}{'Holm p':>12s}{'':>6s}{'run-level p':>13s}"
            f"{'bootstrap 95% CI (pp)':>26s}")
     print(hdr)
     print("-" * len(hdr))
@@ -198,7 +205,7 @@ def main() -> int:
         print(f"{cond:14s}{d['n_nonzero']:5d}{d['delta_pp']:8.2f}"
               f"{(f'{legacy:.3e}' if legacy is not None else '--'):>12s}"
               f"{stars(legacy):>5s}"
-              f"{d['p_value_exact']:12.3e}{d['p_value_holm']:12.3e}"
+              f"{d['p_value']:12.3e}{d['p_value_holm']:12.3e}"
               f"{d['stars_holm']:>6s}"
               f"{d['run_level']['p_wilcoxon']:13.3f}"
               f"{f'[{lo:+.2f}, {hi:+.2f}]':>26s}")
@@ -210,7 +217,7 @@ def main() -> int:
         print(f"Conclusions that change after correction: {', '.join(changed)}")
     else:
         print("No conclusion changes: the same conditions are significant before "
-              "and after switching to the exact test and applying Holm.")
+              "and after switching to the sign-permutation test and applying Holm.")
     print("Note: 'run-level p' has n = number of runs (5), so its smallest "
           "attainable value is 0.0625; it is reported as a sanity check on the "
           "sign of the effect, not as the primary test.")
@@ -219,8 +226,10 @@ def main() -> int:
         "_meta": {
             "generated_by": "scripts/recompute_significance.py",
             "n_runs": len(runs),
-            "test": "Wilcoxon signed-rank on per-query mean accuracy, "
-                    "SciPy method='exact' distribution",
+            "test": "exact sign-permutation test of the Wilcoxon signed-rank "
+                    "statistic (midranks for tied |diff|) on per-query mean "
+                    "accuracy, full - condition (scripts/sign_permutation.py)",
+            "test_label": TEST_LABEL,
             "correction": "Holm-Bonferroni across the ablated conditions",
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },
@@ -242,12 +251,13 @@ def main() -> int:
         stats["significance_tests"] = {
             cond: {
                 "delta_pp": d["delta_pp"],
-                "p_value": d["p_value_exact"],
+                "p_value": d["p_value"],
+                "n_nonzero": d["n_nonzero"],
+                "n_queries": d["n_queries"],
+                "test": TEST_LABEL,
                 "p_value_holm": d["p_value_holm"],
                 "significant": d["significant_holm"],
-                "n_nonzero": d["n_nonzero"],
-                "test": "wilcoxon-exact",
-                "correction": "holm",
+                "correction": "holm-bonferroni",
             }
             for cond, d in detail.items()
         }

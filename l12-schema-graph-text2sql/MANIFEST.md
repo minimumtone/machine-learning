@@ -72,9 +72,9 @@
 
 | ファイル | 内容 | 使用箇所 |
 |---|---|---|
-| `ablation_multirun_stats.json` | 5ラン平均±SD | 表 tab:ablation |
-| `ablation_significance_v2.json` | Wilcoxon（SciPy method='exact'）＋Holm補正p値 | 表 tab:ablation |
-| `significance_recomputed.json` | 統計再計算のprovenance付き成果物 | 表 tab:ablation のp値検証 |
+| `ablation_multirun_stats.json` | 5ラン平均±SD＋`significance_tests`（Wilcoxon符号順位統計量の全符号置換p値・中央順位・Holm補正；`scripts/sign_permutation.py`、言語評価と同一検定） | 表 tab:ablation |
+| `significance_recomputed.json` | 上記p値のprovenance付き再計算（SciPy exact/approx値・ラン単位検定・ブートストラップCIを併記） | 表 tab:ablation のp値検証 |
+| `ablation_significance_v2.json` | 別手法統計（平均差のsign-flip検定・rank-biserial・クエリ単位ブートストラップ20,000再標本の95%CI） | 表 tab:ablation の95%CI列 |
 | `language_paired_stats.json` | 日英paired統計（符号置換p=0.193・bootstrap CI） | 表 tab:language_eval・§4.3.2 |
 | `language_eval_summary.json` | 言語評価の難易度別集計 | 表 tab:language_eval |
 | `scoring_audit.json` | 採点方式監査（historical/exact/lenient/ordered/strict） | 表 tab:scoring_audit（strict 25.5%・n=241 は本文言及） |

@@ -21,6 +21,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.provenance import build_provenance  # noqa: E402
+from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_FILE = EVAL_DIR / "ablation_results.json"
@@ -120,22 +121,23 @@ def _holm(pvalues: dict) -> dict:
 
 
 def compute_significance(stats: dict) -> dict:
-    """Wilcoxon signed-rank test of full vs each ablated condition.
+    """Sign-permutation test of the signed-rank statistic, full vs each condition.
 
     Paired samples are the per-query mean accuracies across runs.  Zero
-    differences are dropped and the *exact* signed-rank distribution is used
-    (SciPy ``method="exact"``, pinned explicitly because ``auto`` picks
-    different methods across SciPy versions), as several conditions leave fewer than ten
-    non-zero differences, for which the normal approximation is invalid --
-    SciPy emits "Sample size too small for normal approximation" when it is
-    forced.  Because every ablated condition is compared against the same
-    ``full`` baseline, a Holm-Bonferroni correction is applied across
-    conditions and ``significant`` refers to the corrected p-value.
+    differences are dropped and the two-sided p-value is the exact
+    sign-permutation p-value of the Wilcoxon signed-rank statistic with
+    midranks for tied |diff| (``scripts/sign_permutation.py``).  The per-query
+    means take only the values {0, 0.2, ..., 1.0}, so the differences are
+    heavily tied and SciPy's untied ``method="exact"`` table is not exact for
+    them; the enumeration is deterministic and SciPy-version independent, and
+    it is the same test used for the EN/JA language comparison.  Because every
+    ablated condition is compared against the same ``full`` baseline, a
+    Holm-Bonferroni correction is applied across conditions and
+    ``significant`` refers to the corrected p-value.
 
-    ``p_value`` is the uncorrected exact p-value and ``p_value_holm`` the
-    corrected one; report the corrected value when claiming significance.
+    ``p_value`` is the uncorrected p-value and ``p_value_holm`` the corrected
+    one; report the corrected value when claiming significance.
     """
-    from scipy.stats import wilcoxon
 
     full_pq = stats["full"]["per_query_mean"]
     raw: dict = {}
@@ -148,17 +150,14 @@ def compute_significance(stats: dict) -> dict:
         diffs = [full_pq[q] - cond_pq[q] for q in qids]
         nonzero = [d for d in diffs if d != 0]
         delta_pp = float(sum(diffs) / len(diffs) * 100)
-        if len(nonzero) == 0:
-            p_value = 1.0
-        else:
-            p_value = float(wilcoxon(nonzero, method="exact").pvalue)
+        p_value = sign_permutation_pvalue(nonzero)
         raw[cond] = p_value
         significance[cond] = {
             "delta_pp": delta_pp,
             "p_value": p_value,
             "n_nonzero": len(nonzero),
             "n_queries": len(qids),
-            "test": "wilcoxon-signed-rank-exact",
+            "test": "sign-permutation-exact-midranks",
         }
 
     adjusted = _holm(raw)
