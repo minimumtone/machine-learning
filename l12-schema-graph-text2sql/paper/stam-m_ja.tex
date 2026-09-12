@@ -546,6 +546,7 @@ no\_guard・no\_nbestでEasy～Hard層の値がfullとほぼ一致するのは�
 \caption{LLM-onlyベースライン（GPT-5.5、245クエリ、単一ラン）。再現率・適合率・F1は行集合照合による平均（\%）。未解決参照・JOIN列は該当クエリ数（カラム：スキーマに解決できない修飾カラム名＝静的スキーマ未解決参照、JOIN：FK関係に基づかない結合）。未解決参照の計上はSQLテキストの静的照合（AST/エイリアス解決に基づくスキーマ許可リストとの突合）による診断であり、有効なCTE名や派生テーブル等の参照も計上し得るため、真の幻覚件数の上限的な診断値であって実行時エラー件数（実行成功率）とは一対一に対応しない。}
 \label{tab:llm_only}
 \footnotesize
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 難易度 & $n$ & 再現率 & 適合率 & F1 & \shortstack{未解決\\カラム参照} & JOIN幻覚 \\
@@ -558,6 +559,7 @@ VH        & 64  & 74.6 & 81.8 & 76.4 & 44 & 30 \\
 全体      & 245 & 78.3 & 83.9 & 79.4 & 87 & 115 \\
 \bottomrule
 \end{tabular}
+}% end resizebox
 \end{table}
 
 結果を表~\ref{tab:llm_only}に示す。全体の実行再現率は78.3\%（適合率83.9\%、F1 79.4\%）であり、245クエリ主評価（セクション~\ref{sec:multiaxis}、再現率86.1\%）より7.8\,pp低い。なお、この実行再現率は期待行の回収を測る行レベル指標であり、生成SQLの出力が期待結果と完全同一であった割合（厳密な完全結果集合一致10.6\%、セクション~\ref{sec:multiaxis}）とは区別される。構文妥当性は100\%、実行成功率は99.6\%（VH層のみ98.4\%）であった。
@@ -736,6 +738,7 @@ D & MP実データ（MP専用prompt + few-shot） & 15 & 93.3\% \\
 \caption{言語依存性検証（paired比較）の結果。100クエリ・full条件・各言語3ランの行レベル実行再現率（3ラン平均、\%）。gold SQL・期待結果・データベース・パイプライン構成は両言語で同一。}
 \label{tab:language_eval}
 \footnotesize
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 言語 & 全体（mean $\pm$ SD） & Easy & Medium & Hard & Very Hard \\ \midrule
@@ -743,6 +746,7 @@ D & MP実データ（MP専用prompt + few-shot） & 15 & 93.3\% \\
 英語 & $90.0 \pm 2.0$ & 98.3 & 93.3 & 89.1 & 77.8 \\
 \bottomrule
 \end{tabular}
+}% end resizebox
 \end{table}
 
 第二に、翻訳ベース評価の限界を補うため、既存の評価セットを参照せずに英語で新規作問した非翻訳英語検証セット25問を作成し、作問後にgold SQLと期待結果を作成してデータベース上で検証したうえで、同一パイプライン・同一採点で評価した（3ラン）。難易度ラベルはgold SQLからセクション~\ref{sec:query_design}の設計時難易度層のpost-hoc複雑さ指標で機械的に算出し（再現パッケージの\texttt{compute\_unified\_difficulty.py}。同スクリプトは設計時の構造的複雑さ基準を再現可能に近似する事後指標の実装であり、著者が設計時に付与した主評価245問の既存ラベルとは144/245で一致、不一致101件のうち92件（91.1\%）は隣接層間のずれである）、Easy 13・Medium 8・Hard 4・Very Hard 0である。実行再現率は$96.5 \pm 2.3$\%（95.2／95.2／99.2\%）であった。ただし、この25問は難易度分布が主評価と大きく異なり（Very Hardを含まず、テーブル数・CTE・SQL長などの構造的複雑さも主評価のHard／Very Hard層より低い）、$96.5$\%を主評価86.1\%やpaired日本語92.0\%と性能水準として直接比較することはできない。この評価の位置付けは、翻訳を経ずに自然に作問された英語クエリでもパイプラインが機能することの補助的な確認である。なお、この25問には\texttt{expected\_tables}等の多軸メタデータを付与しておらず、多軸指標（SELECT列精度・JOIN一致率等）は算出していない。両評価のデータセット・gold SQL・期待結果・評価スクリプト・実行ログは再現パッケージに含まれる。
@@ -1207,6 +1211,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 \label{tab:schema_map_dict}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{ll@{\hspace{1.5em}}ll}
   \toprule
   条件キー & 参照テーブル & 条件キー & 参照テーブル \\
@@ -1244,6 +1249,7 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
     \texttt{surface\_reconstruction} & \texttt{surface\_energy} & & \\
   \bottomrule
 \end{tabular}
+}% end resizebox
 \end{table}
 
 \subsubsection{数値条件パーサ}
