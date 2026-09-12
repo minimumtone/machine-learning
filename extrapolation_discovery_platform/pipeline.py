@@ -63,6 +63,14 @@ from extrapolation_discovery_platform.workflows import RunResult
 logger = logging.getLogger(__name__)
 
 
+def impute_by_train_median(
+    X_train: pd.DataFrame, *others: pd.DataFrame
+) -> Tuple[pd.DataFrame, ...]:
+    """Fill NaN using medians of X_train only (0.0 if a column is all-NaN in train)."""
+    med = X_train.median(axis=0, skipna=True).fillna(0.0)
+    return tuple(df.fillna(med) for df in (X_train, *others))
+
+
 # ---------------------------------------------------------------------------
 # 結果コンテナ
 # ---------------------------------------------------------------------------
@@ -207,9 +215,13 @@ def stage1_preprocess(
 
     try:
         # ── Step 1: 多重共線性・リーク検出 ───────────────────────────
+        # Diagnostics-only fill; raw features remain unchanged for fitting.
+        diag_df = features_df.fillna(
+            features_df.median(numeric_only=True).fillna(0.0)
+        )
         if generic_csv_mode:
             # generic CSV モード: features_df 全列に直接 VIF + リーク検出を適用
-            mc_reports = _run_generic_mc(features_df, target, leak_corr_threshold)
+            mc_reports = _run_generic_mc(diag_df, target, leak_corr_threshold)
             fs_key_list = ["generic"]
         else:
             # HEA モード: FeatureSetName ベースで各 FS の MC 解析を実行
@@ -221,7 +233,7 @@ def stage1_preprocess(
                     logger.warning("Stage1: 未知の FS '%s' をスキップ", name)
             mc_reports = (
                 run_phase0_multicollinearity(
-                    features_df, fs_enums, workflow_names, len(features_df),
+                    diag_df, fs_enums, workflow_names, len(features_df),
                     target=target,
                     leak_corr_threshold=leak_corr_threshold,
                 ) if fs_enums else {}
@@ -281,12 +293,18 @@ def stage1_preprocess(
         # 特徴量選択は訓練 idx のスライスが必要なため、分割を先に行う。
         _seed0 = seeds[0] if seeds else 42
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
+        split_comps = compositions_df
+        if compositions_df is not None and compositions_df.isna().any().any():
+            # Fold assignment is unsupervised; fill only to define split blocks.
+            split_comps = compositions_df.fillna(
+                compositions_df.median(numeric_only=True).fillna(0.0)
+            )
 
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
                 try:
                     cb = CompositionBlockSplitter(n_folds=n_folds, seed=_seed0)
-                    folds = list(cb.split(features_df, target, compositions=compositions_df))
+                    folds = list(cb.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["CompositionBlock"] = folds
                         logger.info("Stage1: CompositionBlock %d folds", len(folds))
@@ -302,7 +320,7 @@ def stage1_preprocess(
             if compositions_df is not None:
                 try:
                     ee = ElementExclusionSplitter(target_elements=exclusion_elements)
-                    folds = list(ee.split(features_df, target, compositions=compositions_df))
+                    folds = list(ee.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["ElementExclusion"] = folds
                         logger.info("Stage1: ElementExclusion %d folds", len(folds))
@@ -319,7 +337,7 @@ def stage1_preprocess(
             for seed in seeds:
                 try:
                     rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
-                    folds = list(rc.split(features_df, target, compositions=compositions_df))
+                    folds = list(rc.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan[f"RandomCV_seed{seed}"] = folds
                         logger.info("Stage1: RandomCV seed=%d %d folds", seed, len(folds))
@@ -348,7 +366,7 @@ def stage1_preprocess(
                 "RandomCV seed=%d でフォールバック", _seed0
             )
             rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
-            folds = list(rc_fb.split(features_df, target, compositions=compositions_df))
+            folds = list(rc_fb.split(features_df, target, compositions=split_comps))
             if folds:
                 fold_plan[f"RandomCV_seed{_seed0}"] = folds
 
@@ -365,7 +383,7 @@ def stage1_preprocess(
             def _select_cols(fs_key: str, cols: List[str],
                              train_idx: np.ndarray) -> Tuple[List[str], Any]:
                 """train_idx のみを使った特徴量選択。(選択列, summary) を返す。"""
-                X_tr = features_df.iloc[train_idx][cols]
+                X_tr, = impute_by_train_median(features_df.iloc[train_idx][cols])
                 y_tr = target.iloc[train_idx]
                 summary = run_feature_selection(
                     X_tr, y_tr,
@@ -591,6 +609,7 @@ def stage2_train(
                     fold_cols = cand
             X_tr = pd.DataFrame(safe_array(X.iloc[train_idx][fold_cols]), columns=fold_cols)
             X_te = pd.DataFrame(safe_array(X.iloc[test_idx][fold_cols]),  columns=fold_cols)
+            X_tr, X_te = impute_by_train_median(X_tr, X_te)
             y_tr = y.iloc[train_idx].reset_index(drop=True)
             y_te = y.iloc[test_idx].reset_index(drop=True)
 
@@ -743,6 +762,7 @@ def stage3_detect_ood(
                 actual_k = min(10, len(tr_idx) - 1)
                 X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
                 X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                X_tr, X_te = impute_by_train_median(X_tr, X_te)
 
                 # 各 fold で独立 fit（train が変われば OOD も変わる）
                 detector = OODDetector(k=actual_k)
@@ -768,6 +788,7 @@ def stage3_detect_ood(
                     try:
                         X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
                         X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                        X_tr, X_te = impute_by_train_median(X_tr, X_te)
                         det = OODDetector(k=min(10, len(tr_idx) - 1))
                         det.fit(X_tr)
                         primary_res = det.score(X_te)

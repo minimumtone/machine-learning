@@ -84,6 +84,202 @@ class TestT1_Stage1Reproducibility:
         assert "delta_r" not in effective
         assert "target_leak" not in effective
 
+    def test_hea_upload_keeps_partial_nan_and_pipeline_runs(self, sample_data, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.features import FeatureSetName
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess, stage2_train
+
+        _, y, comp = sample_data
+        raw = comp.copy()
+        raw["ys"] = y.to_numpy()
+        rng = np.random.default_rng(7)
+        grain = rng.uniform(1, 100, len(raw))
+        grain[::4] = np.nan
+        raw["grain_size_um"] = grain
+        raw["all_missing"] = np.nan
+        csv_path = tmp_path / "hea_nan.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(_File(), "ys", session)
+        feats = session["features_df"]
+        assert "grain_size_um" in feats.columns
+        assert "all_missing" not in feats.columns
+        assert feats["grain_size_um"].isna().sum() == np.isnan(grain).sum()
+
+        prep = stage1_preprocess(
+            features_df=feats, target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"], seeds=[42],
+            active_policies=["RandomCV"],
+        )
+        assert prep.success, prep.error_message
+        assert "grain_size_um" in prep.effective_cols[FeatureSetName.FS_BASE.value]
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "RandomCV", "FS_BASE",
+            quick=True, seed=42,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
+    def test_impute_by_train_median_uses_train_only(self):
+        from extrapolation_discovery_platform.pipeline import impute_by_train_median
+
+        train = pd.DataFrame({"a": [1.0, np.nan, 3.0, 5.0], "b": [np.nan] * 4})
+        test = pd.DataFrame({"a": [np.nan, 100.0], "b": [2.0, np.nan]})
+        imputed_train, imputed_test = impute_by_train_median(train, test)
+
+        assert imputed_train.loc[1, "a"] == pytest.approx(3.0)
+        assert imputed_test.loc[0, "a"] == pytest.approx(3.0)
+        assert imputed_train["b"].eq(0.0).all()
+        assert imputed_test.loc[1, "b"] == pytest.approx(0.0)
+
+    def test_workflow_keeps_all_nan_column_alignment(self):
+        from extrapolation_discovery_platform.workflows import WorkflowLIN, WorkflowRF
+
+        rng = np.random.default_rng(12)
+        a_train = rng.normal(size=40)
+        c_train = rng.normal(size=40)
+        X_train = pd.DataFrame({
+            "a": a_train,
+            "b": np.nan,
+            "c": c_train,
+        })
+        X_test = pd.DataFrame({
+            "a": rng.normal(size=10),
+            "b": np.nan,
+            "c": rng.normal(size=10),
+        })
+        y_train = pd.Series(2.0 * a_train + c_train + rng.normal(scale=0.01, size=40))
+        y_test = pd.Series(rng.normal(size=10))
+
+        lin = WorkflowLIN(dim_reduction=False).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+        rf = WorkflowRF(quick=True, dim_reduction=False).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+
+        assert set(lin.artifacts["coef_raw"]) == {"a", "b", "c"}
+        assert set(rf.artifacts["feature_importance"]) == {"a", "b", "c"}
+        assert abs(lin.artifacts["coef_raw"]["a"]) > abs(lin.artifacts["coef_raw"]["b"])
+
+    def test_generic_upload_keeps_nan_and_pipeline_runs(self, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess,
+            stage2_train,
+        )
+
+        rng = np.random.default_rng(11)
+        n = 60
+        raw = pd.DataFrame({
+            "feature_a": rng.normal(size=n),
+            "feature_b": rng.normal(size=n),
+            "feature_c": rng.normal(size=n),
+        })
+        raw.loc[::5, "feature_b"] = np.nan
+        raw["target"] = (
+            2.0 * raw["feature_a"].fillna(0.0)
+            - raw["feature_c"]
+            + rng.normal(scale=0.1, size=n)
+        )
+        csv_path = tmp_path / "generic_nan.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(
+            _File(),
+            "target",
+            session,
+            selected_features=["feature_a", "feature_b", "feature_c"],
+            force_generic=True,
+        )
+        feats = session["features_df"]
+        assert feats["feature_b"].isna().sum() == raw["feature_b"].isna().sum()
+
+        prep = stage1_preprocess(
+            features_df=feats,
+            target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=["generic"],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["RandomCV"],
+            generic_csv_mode=True,
+        )
+        assert prep.success, prep.error_message
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "RandomCV", "generic",
+            quick=True, seed=42, generic_csv_mode=True,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
+    def test_generic_nan_composition_block_split_runs(self, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess,
+            stage2_train,
+        )
+
+        rng = np.random.default_rng(11)
+        n = 60
+        raw = pd.DataFrame({
+            "feature_a": rng.normal(size=n),
+            "feature_b": rng.normal(size=n),
+            "feature_c": rng.normal(size=n),
+        })
+        raw.loc[::5, "feature_b"] = np.nan
+        raw["target"] = (
+            2.0 * raw["feature_a"].fillna(0.0)
+            - raw["feature_c"]
+            + rng.normal(scale=0.1, size=n)
+        )
+        csv_path = tmp_path / "generic_nan_composition_block.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(
+            _File(),
+            "target",
+            session,
+            selected_features=["feature_a", "feature_b", "feature_c"],
+            force_generic=True,
+        )
+        feats = session["features_df"]
+        prep = stage1_preprocess(
+            features_df=feats,
+            target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=["generic"],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["CompositionBlock"],
+            generic_csv_mode=True,
+        )
+        assert prep.success, prep.error_message
+        assert "CompositionBlock" in prep.fold_plan
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "CompositionBlock", "generic",
+            quick=True, seed=42, generic_csv_mode=True,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
     def test_effective_cols_identical(self, sample_data):
         from extrapolation_discovery_platform.pipeline import stage1_preprocess
         from extrapolation_discovery_platform.features import FeatureSetName
