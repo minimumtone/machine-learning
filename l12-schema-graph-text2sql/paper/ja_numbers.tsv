@@ -1164,7 +1164,7 @@ tex_in_json	61	61	的な条件$\to$カラム対応表（スキーマ写像辞書
 tex_in_json	61	61	ef{tab:schema_map_dict}に全61エントリの条件キーと参照テーブルを示す。  \be
 tex_in_json	61	61	ering \caption{スキーマ写像辞書の全61エントリ（条件キー$\to$参照テーブル；2列に分
 tex_in_json	2	2	の全61エントリ（条件キー$\to$参照テーブル；2列に分けて掲載）。} \label{tab:sch
-tex_in_json	3	3	e \setlength{\tabcolsep}{3pt} \begin{tabular}{ll@{\
+tex_in_json	3	3	e \setlength{\tabcolsep}{3pt} \resizebox{\textwidth
 tex_in_json	1.5	1.5	gin{tabular}{ll@{\hspace{1.5em}}ll}   \toprule   条件キー
 tex_in_json	5	5	ubsection{数値条件パーサ}  パーサは、5つのパターンを介して数値比較式を認識する（表~\r
 tex_in_json	0.03	0.03	ティ固有の許容範囲を呼び出す（格子定数：$\pm 0.03$~\AA{}{}; $E_\text{hull}
