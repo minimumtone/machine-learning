@@ -31,7 +31,6 @@ json_missing_in_tex	0.3333333333333333		ablation.table.no_guard.stats_v2.rank_bi
 json_missing_in_tex	-0.11483870967741948		ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[0]
 json_missing_in_tex	0.5999999999999999		ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[1]
 json_missing_in_tex	0.3437310121181088		ablation.table.no_nbest.stats_v2.delta_pp
-json_missing_in_tex	0.625		ablation.table.no_nbest.stats_v2.p_exact_sign_flip
 json_missing_in_tex	0.0625		ablation.table.no_nbest.stats_v2.min_attainable_p
 json_missing_in_tex	-0.4179894179894179		ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[0]
 json_missing_in_tex	1.1437310121181086		ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[1]
@@ -355,13 +354,13 @@ tex_in_json	0.9	0.9	\\ no\_nbest     & 92.1 (0.9) & 100.0 & 96.0 & 86.8 &
 tex_in_json	100.0	100.0	nbest     & 92.1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.
 tex_in_json	96.0	96.0	  & 92.1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0
 tex_in_json	86.8	86.8	1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5
-tex_in_json	86.6	86.6	 & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.75
-tex_in_json	2.7	2.7	.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.7500 & 
-tex_in_json	-0.3	-0.3	.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.7500 & 1.000 & 
-tex_in_json	5	5	8 & 86.6 (2.7) & -0.3  & 5 & 0.7500 & 1.000 & $[-1.
-tex_in_json	0.7500	0.75	86.6 (2.7) & -0.3  & 5 & 0.7500 & 1.000 & $[-1.1, +0.4]$
-tex_in_json	1.000	1.0	) & -0.3  & 5 & 0.7500 & 1.000 & $[-1.1, +0.4]$ \\ no\_
-tex_in_json	0.4	0.4	.7500 & 1.000 & $[-1.1, +0.4]$ \\ no\_graph     & 91.
+tex_in_json	86.6	86.6	 & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.62
+tex_in_json	2.7	2.7	.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 
+tex_in_json	-0.3	-0.3	.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & 
+tex_in_json	5	5	8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.
+tex_in_json	0.6250	0.625	86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.1, +0.4]$
+tex_in_json	1.000	1.0	) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.1, +0.4]$ \\ no\_
+tex_in_json	0.4	0.4	.6250 & 1.000 & $[-1.1, +0.4]$ \\ no\_graph     & 91.
 tex_in_json	91.1	91.1	0.4]$ \\ no\_graph     & 91.1 (0.9) & 100.0 & 96.7 & 8
 tex_in_json	0.9	0.9	\\ no\_graph     & 91.1 (0.9) & 100.0 & 96.7 & 86.4 &
 tex_in_json	100.0	100.0	graph     & 91.1 (0.9) & 100.0 & 96.7 & 86.4 & 80.7 (4.
@@ -635,10 +634,10 @@ tex_in_json	14.5	14.5	ラン）では、あり92.2%対なし77.7%（$+$14.5pp；
 tex_in_json	-0.2	-0.2	-best・貪欲最短経路連結} SQLGuard（-0.2pp、95%CI $[-0.6, +0.1]$pp
 tex_in_json	95%	95	欲最短経路連結} SQLGuard（-0.2pp、95%CI $[-0.6, +0.1]$pp）、$n$-
 tex_in_json	0.1	0.1	rd（-0.2pp、95%CI $[-0.6, +0.1]$pp）、$n$-best（-0.3pp、$p=
-tex_in_json	-0.3	-0.3	-0.6, +0.1]$pp）、$n$-best（-0.3pp、$p=0.75$、95%CI $[-1.1,
-tex_in_json	0.75	0.75	]$pp）、$n$-best（-0.3pp、$p=0.75$、95%CI $[-1.1, +0.4]$pp）
-tex_in_json	95%	95	$n$-best（-0.3pp、$p=0.75$、95%CI $[-1.1, +0.4]$pp）、貪欲最短
-tex_in_json	0.4	0.4	、$p=0.75$、95%CI $[-1.1, +0.4]$pp）、貪欲最短経路連結（-1.4pp、$p=
+tex_in_json	-0.3	-0.3	-0.6, +0.1]$pp）、$n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1
+tex_in_json	0.625	0.625	]$pp）、$n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1, +0.4]$pp）
+tex_in_json	95%	95	n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1, +0.4]$pp）、貪欲最短
+tex_in_json	0.4	0.4	$p=0.625$、95%CI $[-1.1, +0.4]$pp）、貪欲最短経路連結（-1.4pp、$p=
 tex_in_json	-1.4	-1.4	-1.1, +0.4]$pp）、貪欲最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.
 tex_in_json	95%	95	最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.4, -0.002]$pp）はいず
 tex_in_json	2	2	Guardと$n$-bestは非同点ペアがそれぞれ2・5件と少なく検出力不足のため有意性判定を行わず（
@@ -949,7 +948,7 @@ tex_in_json	5	5	英語25クエリの各データセット）、アブレーシ�
 tex_in_json	3	3	結果、言語依存性評価の保存結果（日英paired各3ラン・非翻訳英語3ラン）、MeCab材料辞書、日本
 tex_in_json	3	3	価の保存結果（日英paired各3ラン・非翻訳英語3ラン）、MeCab材料辞書、日本語リランカー比較結
 tex_in_json	7	7	lcoxon符号順位検定・ブートストラップCI）、7件の安全性ケース、およびユニットテスト実行結果を再
-tex_in_json	165	165	ーなしで再実行できる。報告時のスナップショットでは165件のユニットテストを対象とした。完全なソースコード
+tex_in_json	166	166	ーなしで再実行できる。報告時のスナップショットでは166件のユニットテストを対象とした。完全なソースコード
 tex_in_json	245	245	ス構築、実験、および執筆。  末松 知恵: 主評価245クエリに含まれる100クエリの独立設計、結果のクロ
 tex_in_json	100	100	筆。  末松 知恵: 主評価245クエリに含まれる100クエリの独立設計、結果のクロスチェック、および原稿
 tex_in_json	0.9	0.9	newcommand{\topfraction}{0.9} \renewcommand{\bottomfr
@@ -972,8 +971,8 @@ tex_in_json	1	1	ォーム、物質・材料研究機構（NIMS）、\\   1-1 Nam
 tex_in_json	1.0	1.0	p}} \end{center} \vspace{1.0em} \noindent\hrulefill \
 tex_in_json	1.0	1.0	indent\hrulefill \vspace{1.0em}  \noindent この補足資料は、主論
 tex_in_json	100	100	{sec:sup_expert_queries}は100評価クエリの詳細結果・アブレーション条件間の精度差
-tex_in_json	165	165	スナップショットでpytestが収集した件数；合計165件）：SQL検証（36；禁止キーワード・マルチステ
-tex_in_json	36	36	estが収集した件数；合計165件）：SQL検証（36；禁止キーワード・マルチステートメント・恒真条件・
+tex_in_json	166	166	スナップショットでpytestが収集した件数；合計166件）：SQL検証（36；禁止キーワード・マルチステ
+tex_in_json	36	36	estが収集した件数；合計166件）：SQL検証（36；禁止キーワード・マルチステートメント・恒真条件・
 tex_in_json	20	20	証、SQLインジェクション例を含む）、意図分類器（20；有効クエリ／曖昧・矛盾入力／直接SQL入力の分類
 tex_in_json	18	18	類、DROP等の攻撃入力を含む）、採点メトリクス（18；実行再現率・完全一致・列一致等の採点関数）、カバ
 tex_in_json	15	15	一致・列一致等の採点関数）、カバレッジ/パーサー（15；数値条件・化学式・カバレッジスコア）、スーパーセ
@@ -987,7 +986,7 @@ tex_in_json	5	5	・複雑性上限・実行前検査）、MPスナップショ�
 tex_in_json	4	4	；転用評価用スナップショットの整合）、グラフ構築（4）、スキーマパーサー（3；DDL解析）、数値整合検
 tex_in_json	3	3	ットの整合）、グラフ構築（4）、スキーマパーサー（3；DDL解析）、数値整合検証プログラム（2；監査対
 tex_in_json	2	2	ーサー（3；DDL解析）、数値整合検証プログラム（2；監査対象TeXの既定選択と明示指定欠落時の失敗）
-tex_in_json	3	3	の既定選択と明示指定欠落時の失敗）、符号置換検定（3；全列挙との一致・同順位なしでのSciPy exa
+tex_in_json	4	4	の既定選択と明示指定欠落時の失敗）、符号置換検定（4；全列挙との一致・同順位なしでのSciPy exa
 tex_in_json	1	1	ollect-onlyではなくテスト本体を実行し、1件でも失敗した場合は再現処理を停止する。安全性関連
 tex_in_json	1	1	es}  代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する提案手法の生成SQ
 tex_in_json	2	2	  代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する提案手法の生成SQLを示
@@ -1842,8 +1841,8 @@ tex_in_json	5	5	から決定的に再生成される：ステップ5では各ク
 tex_in_json	100	100	される：ステップ5では各クエリの5ラン平均（$n=100$）に対するWilcoxon符号順位統計量の両側全
 tex_in_json	95%	95	しない）・Holm補正・クエリ単位ブートストラップ95%CI（20000再標本）を算出し、ステップ6の結果
 tex_in_json	6	6	プ95%CI（20000再標本）を算出し、ステップ6の結果集約プログラムが単一情報源（SSOT）を生成
-tex_in_json	165	165	結果集約プログラムは冒頭でユニットテストスイート（165件）を実行して1件でも失敗すれば停止し（テストゲー
-tex_in_json	1	1	冒頭でユニットテストスイート（165件）を実行して1件でも失敗すれば停止し（テストゲート）、ステップ7
+tex_in_json	166	166	結果集約プログラムは冒頭でユニットテストスイート（166件）を実行して1件でも失敗すれば停止し（テストゲー
+tex_in_json	1	1	冒頭でユニットテストスイート（166件）を実行して1件でも失敗すれば停止し（テストゲート）、ステップ7
 tex_in_json	7	7	1件でも失敗すれば停止し（テストゲート）、ステップ7の数値整合検証プログラムはSSOTと原稿TeX中の
 tex_not_in_json	12.5	12.5	tfontsize\normalsize{10}{12.5}    \abovedisplayskip 13
 tex_not_in_json	16	16	} \setlength{\columnsep}{16pt}  \usepackage{graphicx
