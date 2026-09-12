@@ -304,33 +304,15 @@ def identify_boundary_samples(
 # Step 2: データセット拡張
 # ---------------------------------------------------------------------------
 
-def augment_dataset(
+
+def _prepare_base(
     features_df: pd.DataFrame,
     target: pd.Series,
     boundary_info: BoundarySampleInfo,
     ood_test_idx: Optional[np.ndarray],
     extra_features_df: Optional[pd.DataFrame] = None,
     candidate_col: Optional[str] = None,
-    neighborhood_plan: Optional[NeighborhoodPlan] = None,
 ) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray]:
-    """境界サンプルを訓練データに追加した拡張データセットを構築する。
-
-    neighborhood_plan が None または scope="global" のときは従来どおり
-    「全行 + 境界サンプル複製」。それ以外では plan.copies に従って
-    訓練行を選択・複製し、境界複製は行わない（plan が近傍性を担う）。
-
-    Returns
-    -------
-    X_aug : pd.DataFrame
-        拡張後の特徴量行列（元データ + 境界サンプルの重複を除去）
-    y_aug : pd.Series
-        拡張後のターゲット
-    train_idx_aug : np.ndarray
-        拡張データ内の訓練インデックス。OOD 評価行は含まない
-        （元データから OOD 評価行を除いた行 + 境界サンプルの複製行）。
-    ood_eval_idx : np.ndarray
-        OOD 評価用インデックス（拡張データ内での位置）。train_idx_aug と素。
-    """
     n_orig = len(features_df)
 
     # 追加特徴量を結合
@@ -359,16 +341,55 @@ def augment_dataset(
         if ood_test_idx is not None
         else boundary_info.boundary_indices
     )
-    # 有効なインデックスのみ
     boundary_orig_idx = boundary_orig_idx[boundary_orig_idx < n_orig]
 
-    # OOD 評価行（元インデックス内の OOD サンプル）— 訓練から完全に除外する
+    # OOD 評価行（元インデックス内の OOD サンプル）—訓練から完全に除外する
     ood_orig_idx = (
         ood_test_idx[boundary_info.ood_indices]
         if ood_test_idx is not None
         else boundary_info.ood_indices
     )
     ood_orig_idx = np.unique(ood_orig_idx[ood_orig_idx < n_orig])
+
+    return X_base, y_base, boundary_orig_idx, ood_orig_idx
+
+
+def augment_dataset(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    boundary_info: BoundarySampleInfo,
+    ood_test_idx: Optional[np.ndarray],
+    extra_features_df: Optional[pd.DataFrame] = None,
+    candidate_col: Optional[str] = None,
+    neighborhood_plan: Optional[NeighborhoodPlan] = None,
+) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray]:
+    """境界サンプルを訓練データに追加した拡張データセットを構築する。
+
+    neighborhood_plan が None または scope="global" のときは従来どおり
+    「全行 + 境界サンプル複製」。それ以外では plan.copies に従って
+    訓練行を選択・複製し、境界複製は行わない（plan が近傍性を担う）。
+
+    Returns
+    -------
+    X_aug : pd.DataFrame
+        拡張後の特徴量行列（元データ + 境界サンプルの重複を除去）
+    y_aug : pd.Series
+        拡張後のターゲット
+    train_idx_aug : np.ndarray
+        拡張データ内の訓練インデックス。OOD 評価行は含まない
+        （元データから OOD 評価行を除いた行 + 境界サンプルの複製行）。
+    ood_eval_idx : np.ndarray
+        OOD 評価用インデックス（拡張データ内での位置）。train_idx_aug と素。
+    """
+    X_base, y_base, boundary_orig_idx, ood_orig_idx = _prepare_base(
+        features_df=features_df,
+        target=target,
+        boundary_info=boundary_info,
+        ood_test_idx=ood_test_idx,
+        extra_features_df=extra_features_df,
+        candidate_col=candidate_col,
+    )
+    n_orig = len(X_base)
 
     # ── 局所訓練スコープ（neighborhood / kernel）────────────────────
     if neighborhood_plan is not None and not neighborhood_plan.is_global:
@@ -429,6 +450,51 @@ def augment_dataset(
     )
 
     return X_aug, y_aug, train_idx, ood_eval_idx
+
+
+def augment_dataset_weighted(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    boundary_info: BoundarySampleInfo,
+    ood_test_idx: Optional[np.ndarray],
+    extra_features_df: Optional[pd.DataFrame] = None,
+    candidate_col: Optional[str] = None,
+    neighborhood_plan: Optional[NeighborhoodPlan] = None,
+) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray, np.ndarray]:
+    """Build an unreplicated training set and return its row multiplicities."""
+    X_base, y_base, boundary_orig_idx, ood_orig_idx = _prepare_base(
+        features_df=features_df,
+        target=target,
+        boundary_info=boundary_info,
+        ood_test_idx=ood_test_idx,
+        extra_features_df=extra_features_df,
+        candidate_col=candidate_col,
+    )
+    n_orig = len(X_base)
+
+    if neighborhood_plan is not None and not neighborhood_plan.is_global:
+        if len(neighborhood_plan.copies) != n_orig:
+            raise ValueError(
+                f"neighborhood_plan.copies の長さ ({len(neighborhood_plan.copies)}) が "
+                f"features_df の行数 ({n_orig}) と一致しません"
+            )
+        copies = neighborhood_plan.copies.copy()
+        copies[ood_orig_idx] = 0
+        train_idx = np.flatnonzero(copies >= 1)
+        sample_weight = np.asarray(copies[train_idx])
+    else:
+        boundary_orig_idx = np.setdiff1d(boundary_orig_idx, ood_orig_idx)
+        train_idx = np.setdiff1d(np.arange(n_orig), ood_orig_idx)
+        sample_weight = np.ones(len(train_idx), dtype=int)
+        sample_weight[np.isin(train_idx, boundary_orig_idx)] += 1
+
+    logger.info(
+        "augment_weighted[%s]: n_orig=%d  n_train_rows=%d  "
+        "n_train_aug=%.0f  n_ood_eval=%d",
+        neighborhood_plan.scope if neighborhood_plan else "global",
+        n_orig, len(train_idx), sample_weight.sum(), len(ood_orig_idx),
+    )
+    return X_base, y_base, train_idx, ood_orig_idx, sample_weight
 
 
 # ---------------------------------------------------------------------------
@@ -528,19 +594,20 @@ def run_feature_discovery_round(
         )
 
         # ── 拡張データセット構築 ─────────────────────────────────────────
-        X_aug, y_aug, train_aug_idx, ood_eval_idx = augment_dataset(
-            features_df=features_df,
-            target=target,
-            boundary_info=boundary,
-            ood_test_idx=ood_test_idx,
-            extra_features_df=extra_features_df,
-            candidate_col=candidate_feature if candidate_feature else None,
-            neighborhood_plan=neighborhood_plan,
+        X_aug, y_aug, train_aug_idx, ood_eval_idx, sample_weight = (
+            augment_dataset_weighted(
+                features_df=features_df,
+                target=target,
+                boundary_info=boundary,
+                ood_test_idx=ood_test_idx,
+                extra_features_df=extra_features_df,
+                candidate_col=candidate_feature if candidate_feature else None,
+                neighborhood_plan=neighborhood_plan,
+            )
         )
         result.train_scope = neighborhood_plan.scope if neighborhood_plan else "global"
-        result.n_train_aug = int(len(train_aug_idx))
-        # 複製行（>= n_orig）は元行の写しなので、元行部分だけ数える
-        result.n_train_rows = int((np.asarray(train_aug_idx) < len(features_df)).sum())
+        result.n_train_aug = int(round(sample_weight.sum()))
+        result.n_train_rows = int(len(train_aug_idx))
         result.n_ood_eval = int(len(ood_eval_idx))
 
         if len(ood_eval_idx) == 0:
@@ -550,16 +617,11 @@ def run_feature_discovery_round(
             return result
 
         # ── 拡張データで再学習 ───────────────────────────────────────────
-        # 有効列を取得（追加特徴量を含む）。
-        # 列の選別（近ゼロ分散・共線性・リーク）は複製前の元行だけで行う。
-        # 複製行を含めると、局所スコープで OOD 近辺の行が多重化された結果、
-        # 近辺に存在しない元素列などが「近ゼロ分散」として落ちてしまい、
-        # スコープ間で特徴量集合が変わって比較にならない。
+        # 有効列を取得（追加特徴量を含む）。行は複製せず、重みだけを渡す。
         aug_fs_name = "generic" if generic_csv_mode else feature_set_name
-        n_orig_rows = len(features_df)
         prep_aug = stage1_preprocess(
-            features_df=X_aug.iloc[:n_orig_rows].reset_index(drop=True),
-            target=y_aug.iloc[:n_orig_rows].reset_index(drop=True),
+            features_df=X_aug.reset_index(drop=True),
+            target=y_aug.reset_index(drop=True),
             compositions_df=compositions_df,
             feature_set_names=[feature_set_name],
             workflow_names=[workflow_name],
@@ -605,6 +667,7 @@ def run_feature_discovery_round(
             pd.DataFrame(safe_array(X_ood), columns=effective_cols),
             y_ood.reset_index(drop=True),
             seed=seed,
+            sample_weight=sample_weight,
             feature_set=aug_fs_name,
             split_policy=split_policy,
             fold=0,
@@ -648,6 +711,7 @@ def run_feature_discovery_round(
                     ),
                     y_ood.reset_index(drop=True),
                     seed=seed,
+                    sample_weight=sample_weight,
                     feature_set=aug_fs_name,
                     split_policy=split_policy,
                     fold=0,
