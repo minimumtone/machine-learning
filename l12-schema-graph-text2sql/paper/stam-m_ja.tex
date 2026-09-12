@@ -861,7 +861,9 @@ L1$_2$型金属間化合物のDFT計算データは、Open Quantum Materials Dat
 
 \bibliographystyle{tfnlm}
 
+{\footnotesize
 \bibliography{references}
+}
 
 % =====================================================================
 % 補足資料（本文と統合して単一のPDFに）
@@ -1126,6 +1128,8 @@ VH層（78.7\%）がHard層（70.2\%）よりも高いのは、14のVery Hardク
 
 \begin{table}[htbp]
 \centering
+\begin{minipage}[t]{0.50\textwidth}
+\centering
 \caption{検証データベースの構成。テーブル36のうち1つはスキーマ初期化状態の管理表（\texttt{schema\_initialization\_status}、1行）であり、材料概念テーブルは35である。}
 \label{tab:db_stats}
 \footnotesize
@@ -1142,10 +1146,9 @@ VH層（78.7\%）がHard層（70.2\%）よりも高いのは、14のVery Hardク
 全公開テーブルの総行数 & 21{,}703（約2.2万行） \\
 \bottomrule
 \end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-  \centering
+\end{minipage}\hfill
+\begin{minipage}[t]{0.46\textwidth}
+\centering
   \caption{評価クエリ設計（合計100クエリ）。}
   \label{tab:query_design}
   \footnotesize
@@ -1159,6 +1162,7 @@ VH層（78.7\%）がHard層（70.2\%）よりも高いのは、14のVery Hardク
     Very Hard & 20 & $\geq 17$ & 材料設計クエリ \\
     \bottomrule
   \end{tabular}
+\end{minipage}
 \end{table}
 
 \subsection{貪欲最短経路JOIN連結の詳細}
@@ -1250,83 +1254,50 @@ Unicode下付き文字（U+2080--U+2089）は、マッチングの前にASCII数
 
 用語辞書とは別に、抽出された条件キーを参照テーブル（および対応するカラム・SQL断片）へ写像する静的な条件$\to$カラム対応表（スキーマ写像辞書、61エントリ；実装では\texttt{CONDITION\_TABLE\_MAP}）を用いる。これはセクション~\ref{sec:schema_link}のLLMベースのスキーマリンクとは独立したルールベースの資源である。表~\ref{tab:schema_map_dict}に全61エントリの条件キーと参照テーブルを示す。
 
-\begin{footnotesize}
-\begin{longtable}{ll}
-  \caption{スキーマ写像辞書の全61エントリ（条件キー$\to$参照テーブル）。}
-  \label{tab:schema_map_dict} \\
+\begin{table}[htbp]
+\centering
+\caption{スキーマ写像辞書の全61エントリ（条件キー$\to$参照テーブル；2列に分けて掲載）。}
+\label{tab:schema_map_dict}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{ll@{\hspace{1.5em}}ll}
   \toprule
-  条件キー & 参照テーブル \\
+  条件キー & 参照テーブル & 条件キー & 参照テーブル \\
   \midrule
-  \endfirsthead
-  \toprule
-  条件キー & 参照テーブル \\
-  \midrule
-  \endhead
+    \texttt{prototype} & \texttt{structure} & \texttt{grain\_boundary\_energy} & \texttt{grain\_boundary} \\
+    \texttt{contains\_elements} & \texttt{composition} & \texttt{vacancy\_formation} & \texttt{material\_defect, defect\_type} \\
+    \texttt{stability} & \texttt{phase\_stability} & \texttt{interstitial} & \texttt{material\_defect, defect\_type} \\
+    \texttt{lattice\_reference} & \texttt{structure} & \texttt{defect} & \texttt{material\_defect, defect\_type} \\
+    \texttt{lattice\_constant} & \texttt{structure} & \texttt{dopant} & \texttt{material\_defect, element} \\
+    \texttt{lattice\_c} & \texttt{structure} & \texttt{formula} & \texttt{material\_entry} \\
+    \texttt{volume} & \texttt{structure} & \texttt{chemical\_system} & \texttt{material\_entry} \\
+    \texttt{crystal\_system} & \texttt{structure} & \texttt{number\_of\_elements} & \texttt{material\_entry} \\
+    \texttt{space\_group} & \texttt{structure} & \texttt{source\_db} & \texttt{material\_entry} \\
+    \texttt{formation\_energy} & \texttt{phase\_stability} & \texttt{atomic\_number} & \texttt{composition, element} \\
+    \texttt{band\_gap} & \texttt{phase\_stability} & \texttt{electronegativity} & \texttt{composition, element} \\
+    \texttt{bulk\_modulus} & \texttt{calculation, calculated\_property} & \texttt{element\_property} & \texttt{composition, element} \\
+    \texttt{shear\_modulus} & \texttt{calculation, calculated\_property} & \texttt{synthesis} & \texttt{material\_synthesis, synthesis\_method} \\
+    \texttt{youngs\_modulus} & \texttt{calculation, calculated\_property} & \texttt{ball\_milling} & \texttt{material\_synthesis, synthesis\_method} \\
+    \texttt{poisson\_ratio} & \texttt{elastic\_tensor} & \texttt{arc\_melting} & \texttt{material\_synthesis, synthesis\_method} \\
+    \texttt{elastic\_stability} & \texttt{elastic\_tensor} & \texttt{experimental} & \texttt{material\_synthesis} \\
+    \texttt{total\_magnetization} & \texttt{magnetic\_property} & \texttt{doi} & \texttt{material\_reference, literature\_reference} \\
+    \texttt{magnetic\_ordering} & \texttt{magnetic\_property} & \texttt{literature} & \texttt{material\_reference, literature\_reference} \\
+    \texttt{curie\_temperature} & \texttt{magnetic\_property} & \texttt{reference} & \texttt{material\_reference, literature\_reference} \\
+    \texttt{magnetic\_anisotropy} & \texttt{magnetic\_property} & \texttt{application} & \texttt{material\_application, application\_domain} \\
+    \texttt{debye\_temperature} & \texttt{thermal\_property} & \texttt{functional} & \texttt{calculation} \\
+    \texttt{thermal\_conductivity} & \texttt{thermal\_property} & \texttt{site\_label} & \texttt{composition} \\
+    \texttt{gruneisen\_parameter} & \texttt{thermal\_property} & \texttt{calculation\_method} & \texttt{calculation} \\
+    \texttt{dos\_at\_fermi} & \texttt{density\_of\_states} & \texttt{phase\_diagram} & \texttt{phase\_diagram\_entry} \\
+    \texttt{is\_metallic} & \texttt{density\_of\_states} & \texttt{alloy\_system} & \texttt{material\_alloy\_system, alloy\_system} \\
+    \texttt{spin\_polarized} & \texttt{density\_of\_states} & \texttt{pure\_element} & \texttt{pure\_element\_reference} \\
+    \texttt{direct\_gap} & \texttt{band\_structure} & \texttt{reference\_energy} & \texttt{pure\_element\_reference} \\
+    \texttt{surface\_energy} & \texttt{surface\_energy} & \texttt{ground\_state} & \texttt{pure\_element\_reference} \\
+    \texttt{work\_function} & \texttt{surface\_energy} & \texttt{polymorph} & \texttt{pure\_element\_reference} \\
+    \texttt{miller\_index} & \texttt{surface\_energy} & \texttt{formation\_enthalpy} & \texttt{phase\_stability, pure\_element\_reference} \\
+    \texttt{surface\_reconstruction} & \texttt{surface\_energy} & & \\
   \bottomrule
-  \endfoot
-    \texttt{prototype} & \texttt{structure} \\
-    \texttt{contains\_elements} & \texttt{composition} \\
-    \texttt{stability} & \texttt{phase\_stability} \\
-    \texttt{lattice\_reference} & \texttt{structure} \\
-    \texttt{lattice\_constant} & \texttt{structure} \\
-    \texttt{lattice\_c} & \texttt{structure} \\
-    \texttt{volume} & \texttt{structure} \\
-    \texttt{crystal\_system} & \texttt{structure} \\
-    \texttt{space\_group} & \texttt{structure} \\
-    \texttt{formation\_energy} & \texttt{phase\_stability} \\
-    \texttt{band\_gap} & \texttt{phase\_stability} \\
-    \texttt{bulk\_modulus} & \texttt{calculation, calculated\_property} \\
-    \texttt{shear\_modulus} & \texttt{calculation, calculated\_property} \\
-    \texttt{youngs\_modulus} & \texttt{calculation, calculated\_property} \\
-    \texttt{poisson\_ratio} & \texttt{elastic\_tensor} \\
-    \texttt{elastic\_stability} & \texttt{elastic\_tensor} \\
-    \texttt{total\_magnetization} & \texttt{magnetic\_property} \\
-    \texttt{magnetic\_ordering} & \texttt{magnetic\_property} \\
-    \texttt{curie\_temperature} & \texttt{magnetic\_property} \\
-    \texttt{magnetic\_anisotropy} & \texttt{magnetic\_property} \\
-    \texttt{debye\_temperature} & \texttt{thermal\_property} \\
-    \texttt{thermal\_conductivity} & \texttt{thermal\_property} \\
-    \texttt{gruneisen\_parameter} & \texttt{thermal\_property} \\
-    \texttt{dos\_at\_fermi} & \texttt{density\_of\_states} \\
-    \texttt{is\_metallic} & \texttt{density\_of\_states} \\
-    \texttt{spin\_polarized} & \texttt{density\_of\_states} \\
-    \texttt{direct\_gap} & \texttt{band\_structure} \\
-    \texttt{surface\_energy} & \texttt{surface\_energy} \\
-    \texttt{work\_function} & \texttt{surface\_energy} \\
-    \texttt{miller\_index} & \texttt{surface\_energy} \\
-    \texttt{surface\_reconstruction} & \texttt{surface\_energy} \\
-    \texttt{grain\_boundary\_energy} & \texttt{grain\_boundary} \\
-    \texttt{vacancy\_formation} & \texttt{material\_defect, defect\_type} \\
-    \texttt{interstitial} & \texttt{material\_defect, defect\_type} \\
-    \texttt{defect} & \texttt{material\_defect, defect\_type} \\
-    \texttt{dopant} & \texttt{material\_defect, element} \\
-    \texttt{formula} & \texttt{material\_entry} \\
-    \texttt{chemical\_system} & \texttt{material\_entry} \\
-    \texttt{number\_of\_elements} & \texttt{material\_entry} \\
-    \texttt{source\_db} & \texttt{material\_entry} \\
-    \texttt{atomic\_number} & \texttt{composition, element} \\
-    \texttt{electronegativity} & \texttt{composition, element} \\
-    \texttt{element\_property} & \texttt{composition, element} \\
-    \texttt{synthesis} & \texttt{material\_synthesis, synthesis\_method} \\
-    \texttt{ball\_milling} & \texttt{material\_synthesis, synthesis\_method} \\
-    \texttt{arc\_melting} & \texttt{material\_synthesis, synthesis\_method} \\
-    \texttt{experimental} & \texttt{material\_synthesis} \\
-    \texttt{doi} & \texttt{material\_reference, literature\_reference} \\
-    \texttt{literature} & \texttt{material\_reference, literature\_reference} \\
-    \texttt{reference} & \texttt{material\_reference, literature\_reference} \\
-    \texttt{application} & \texttt{material\_application, application\_domain} \\
-    \texttt{functional} & \texttt{calculation} \\
-    \texttt{site\_label} & \texttt{composition} \\
-    \texttt{calculation\_method} & \texttt{calculation} \\
-    \texttt{phase\_diagram} & \texttt{phase\_diagram\_entry} \\
-    \texttt{alloy\_system} & \texttt{material\_alloy\_system, alloy\_system} \\
-    \texttt{pure\_element} & \texttt{pure\_element\_reference} \\
-    \texttt{reference\_energy} & \texttt{pure\_element\_reference} \\
-    \texttt{ground\_state} & \texttt{pure\_element\_reference} \\
-    \texttt{polymorph} & \texttt{pure\_element\_reference} \\
-    \texttt{formation\_enthalpy} & \texttt{phase\_stability, pure\_element\_reference} \\
-\end{longtable}
-\end{footnotesize}
+\end{tabular}
+\end{table}
 
 \subsubsection{数値条件パーサ}
 
@@ -1501,6 +1472,8 @@ JOINマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\
 
 \begin{table}[htbp]
 \centering
+\begin{minipage}[t]{0.55\textwidth}
+\centering
 \caption{上位3つのコンポーネントに対する難易度レベルの$\Delta$（pp）。値は集約データの未丸め値から算出しており、表~\ref{tab:ablation}の表示値同士の差とは末尾桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。}
 \label{tab:ablation-detail}
 \footnotesize
@@ -1513,9 +1486,8 @@ no\_dict      & $+$0.1  & $-$1.3  & $-$7.7  & $-$35.5 \\
 no\_reranker  & $+$0.2  & $-$13.0 & $-$6.5  & $-$1.8  \\
 \bottomrule
 \end{tabular}
-\end{table}
-
-\begin{table}[htbp]
+\end{minipage}\hfill
+\begin{minipage}[t]{0.40\textwidth}
 \centering
 \caption{各アブレーション条件におけるクエリごとの平均レイテンシ（秒）、Table~\ref{tab:ablation}と同じ5回の実験で測定。$n$-best = 1に設定すると、精度の明確な損失なしにレイテンシが約70\%削減される。条件間の小差はLLM応答時間のラン間変動を含む。}
 \label{tab:latency}
@@ -1533,6 +1505,7 @@ no\_nbest & 8.6 \\
 no\_graph & 31.4 \\
 \bottomrule
 \end{tabular}
+\end{minipage}
 \end{table}
 
 
@@ -1754,7 +1727,7 @@ few-shot例でカバーされた既知5パターンは、シンプルCTE（導�
 \caption{CTEマルチステップ計算クエリの精度。上段はfull条件の15クエリ（既知5＋新規10）、下段は既知5パターンに対するアブレーション条件別精度（5ラン平均）である。few-shot例でカバーされた既知5パターンは100\%を維持する一方、例のない新規10パターンは59.0\%にとどまり、マルチステップ計算サポートの範囲がfew-shot例のパターンカバレッジに規定されることを示す。}
 \label{tab:cte_results}
 \footnotesize
-\begin{tabular}{@{}lrr@{}}
+\begin{tabular}[t]{@{}lrr@{}}
 \toprule
 サブセット & $n$ & 実行再現率 \\
 \midrule
@@ -1762,8 +1735,13 @@ few-shot例でカバーされた既知5パターンは、シンプルCTE（導�
 新規10パターン（ゼロショット） & 10 & 59.0\% \\
 \midrule
 全体 & 15 & 72.7\% \\
-\midrule
+\bottomrule
+\end{tabular}\hspace{2em}
+\begin{tabular}[t]{@{}lrr@{}}
+\toprule
 \multicolumn{3}{@{}l}{条件別精度（既知5パターン、5ラン平均）} \\
+条件 & $n$ & 実行再現率 \\
+\midrule
 full & 5 & 100.0\% \\
 no\_fewshot & 5 & 60.0\% \\
 no\_dict & 5 & 80.0\% \\
