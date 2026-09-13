@@ -1,0 +1,78 @@
+{
+  "_note": "Derived deterministically from saved artifacts only (no LLM, no DB). Replaces former supplementary Table S3 (per_query_results.csv) and Table S4 (per_query_by_condition.csv). All 100 rows are the ablation subset of the 245-query main evaluation.",
+  "generator": "scripts/build_per_query_tables.py",
+  "inputs": {
+    "query_catalog.csv": "db137ee29e3b6c8c7c35e6d7b79a319cd5ddf2e0bfe74cc17abf8f038448dc58",
+    "ablation_run_1.json": "c2e00df4ab737804c1442fa0c73bb755a74b0ec1ce59a116a192f34b4805eb4c",
+    "ablation_run_2.json": "0913994d3bcf1df7cb58ed8e258dad721da6b55eff51042a5f8460fe1c244bad",
+    "ablation_run_3.json": "2808819e6711424cbda4ebac2a8c147a754a06719fbf8a1565a9832fbb76030c",
+    "ablation_run_4.json": "42a9daf9390bc8c305e2ef5e28f79aeb095f0706cc3c06ca33d9b5ee53334ccf",
+    "ablation_run_5.json": "038471236ece5db2a2c791f4d361c86eb1fc06f0f083b902f916197303fc2efc"
+  },
+  "dataset_file": "evaluation_dataset.jsonl",
+  "dataset_sha256": "71726110962b1fa03472b4fd92cfc7b1c13bca7691015801ac916bf9b7bf6909",
+  "model": "gpt-5.5",
+  "pass_threshold": 0.8,
+  "n_queries": 100,
+  "difficulty_counts": {
+    "easy": 20,
+    "medium": 30,
+    "hard": 30,
+    "very_hard": 20
+  },
+  "run1_full_overall_pct": 92.7,
+  "run1_n_passed": 92,
+  "run1_n_queries_differing_across_conditions": 34,
+  "overall_pct_by_run_and_condition": {
+    "run_1": {
+      "full": 92.7,
+      "no_fewshot": 77.3,
+      "no_dict": 82.8,
+      "no_reranker": 85.9,
+      "no_guard": 90.8,
+      "no_nbest": 90.7,
+      "no_graph": 92.0
+    },
+    "run_2": {
+      "full": 92.7,
+      "no_fewshot": 68.7,
+      "no_dict": 83.0,
+      "no_reranker": 85.9,
+      "no_guard": 92.7,
+      "no_nbest": 92.8,
+      "no_graph": 91.0
+    },
+    "run_3": {
+      "full": 92.7,
+      "no_fewshot": 78.9,
+      "no_dict": 83.9,
+      "no_reranker": 86.8,
+      "no_guard": 92.7,
+      "no_nbest": 92.7,
+      "no_graph": 90.5
+    },
+    "run_4": {
+      "full": 92.5,
+      "no_fewshot": 80.3,
+      "no_dict": 81.9,
+      "no_reranker": 85.9,
+      "no_guard": 92.7,
+      "no_nbest": 92.7,
+      "no_graph": 90.0
+    },
+    "run_5": {
+      "full": 91.8,
+      "no_fewshot": 76.7,
+      "no_dict": 81.9,
+      "no_reranker": 86.8,
+      "no_guard": 92.7,
+      "no_nbest": 91.8,
+      "no_graph": 92.0
+    }
+  },
+  "outputs": {
+    "per_query_results.csv": "e589130c84e7bd04d5497bde2d3b19d6875d5e12e0e9dc317275fd0b4fe53381",
+    "per_query_by_condition.csv": "bca34d6236eb61c74dbea6a963ed52a5d501a594794bec44780944a9687fc09c",
+    "per_query_by_condition_mean5.csv": "1dcc80b0628c33e337c7ddb1f1c6b0bb92abf04908fe053e8b17515cbfbbb961"
+  }
+}

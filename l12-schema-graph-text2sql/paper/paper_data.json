@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-03 01:47:01 UTC",
-    "git_commit": "48a6cb01d7a5d86d523bb1587c92c828db60865f",
+    "generated_at": "2026-09-12 15:53:43 UTC",
+    "git_commit": "5305d7db386de323c9312adefbe6507c56cf8daa",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -145,8 +145,8 @@
         "vhard_std": 6.0,
         "delta_pp": -16.1,
         "avg_latency_s": 26.5,
-        "p_value": 4.513278639706186e-12,
-        "p_value_holm": 2.7079671838237118e-11,
+        "p_value": 1.330380250408325e-12,
+        "p_value_holm": 7.98228150244995e-12,
         "n_nonzero": 55,
         "significant": true,
         "stats_v2": {
@@ -178,8 +178,8 @@
         "vhard_std": 2.2,
         "delta_pp": -9.8,
         "avg_latency_s": 30.9,
-        "p_value": 0.0001049041748046875,
-        "p_value_holm": 0.0005245208740234375,
+        "p_value": 9.918212890625e-05,
+        "p_value_holm": 0.00049591064453125,
         "n_nonzero": 20,
         "significant": true,
         "stats_v2": {
@@ -277,7 +277,7 @@
         "vhard_std": 2.7,
         "delta_pp": -0.3,
         "avg_latency_s": 8.6,
-        "p_value": 0.8125,
+        "p_value": 0.625,
         "p_value_holm": 1.0,
         "n_nonzero": 5,
         "significant": false,
@@ -1354,7 +1354,7 @@
     "all_handled": true
   },
   "testing": {
-    "n_unit_tests": 160
+    "n_unit_tests": 166
   },
   "pipeline_components": [
     {
@@ -2381,7 +2381,7 @@
           "p_value": 0.1484375,
           "n_nonzero": 8,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
+          "test": "sign-permutation-exact-midranks",
           "p_value_holm": 0.4453125,
           "significant": false,
           "correction": "holm-bonferroni"
@@ -2391,38 +2391,38 @@
           "p_value": 0.01953125,
           "n_nonzero": 9,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
+          "test": "sign-permutation-exact-midranks",
           "p_value_holm": 0.078125,
           "significant": false,
           "correction": "holm-bonferroni"
         },
         "no_nbest": {
           "delta_pp": 0.3437310121181088,
-          "p_value": 0.8125,
+          "p_value": 0.625,
           "n_nonzero": 5,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
+          "test": "sign-permutation-exact-midranks",
           "p_value_holm": 1.0,
           "significant": false,
           "correction": "holm-bonferroni"
         },
         "no_dict": {
           "delta_pp": 9.782284997814953,
-          "p_value": 0.0001049041748046875,
+          "p_value": 9.918212890625e-05,
           "n_nonzero": 20,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
-          "p_value_holm": 0.0005245208740234375,
+          "test": "sign-permutation-exact-midranks",
+          "p_value_holm": 0.00049591064453125,
           "significant": true,
           "correction": "holm-bonferroni"
         },
         "no_fewshot": {
           "delta_pp": 16.122196620583708,
-          "p_value": 4.513278639706186e-12,
+          "p_value": 1.330380250408325e-12,
           "n_nonzero": 55,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
-          "p_value_holm": 2.7079671838237118e-11,
+          "test": "sign-permutation-exact-midranks",
+          "p_value_holm": 7.98228150244995e-12,
           "significant": true,
           "correction": "holm-bonferroni"
         },
@@ -2431,7 +2431,7 @@
           "p_value": 1.0,
           "n_nonzero": 2,
           "n_queries": 100,
-          "test": "wilcoxon-signed-rank-exact",
+          "test": "sign-permutation-exact-midranks",
           "p_value_holm": 1.0,
           "significant": false,
           "correction": "holm-bonferroni"

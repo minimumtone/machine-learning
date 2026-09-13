@@ -1,0 +1,2035 @@
+type	raw	value	context
+json_missing_in_tex	724		database.n_unique_formulas
+json_missing_in_tex	3.8		ablation.table.no_fewshot.hard_std
+json_missing_in_tex	1.330380250408325e-12		ablation.table.no_fewshot.p_value
+json_missing_in_tex	7.98228150244995e-12		ablation.table.no_fewshot.p_value_holm
+json_missing_in_tex	16.122196620583715		ablation.table.no_fewshot.stats_v2.delta_pp
+json_missing_in_tex	4.9999750001249995e-06		ablation.table.no_fewshot.stats_v2.p_exact_sign_flip
+json_missing_in_tex	5.551115123125783e-17		ablation.table.no_fewshot.stats_v2.min_attainable_p
+json_missing_in_tex	0.9253246753246753		ablation.table.no_fewshot.stats_v2.rank_biserial
+json_missing_in_tex	11.205259941969619		ablation.table.no_fewshot.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	21.101587301587298		ablation.table.no_fewshot.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	20260602		ablation.table.no_fewshot.stats_v2.seed;ablation.table.no_dict.stats_v2.seed;ablation.table.no_reranker.stats_v2.seed;ablation.table.no_guard.stats_v2.seed;ablation.table.no_nbest.stats_v2.seed
+json_missing_in_tex	9.918212890625e-05		ablation.table.no_dict.p_value
+json_missing_in_tex	0.00049591064453125		ablation.table.no_dict.p_value_holm
+json_missing_in_tex	9.782284997814951		ablation.table.no_dict.stats_v2.delta_pp
+json_missing_in_tex	0.0001201629638671875		ablation.table.no_dict.stats_v2.p_exact_sign_flip
+json_missing_in_tex	1.9073486328125e-06		ablation.table.no_dict.stats_v2.min_attainable_p
+json_missing_in_tex	0.8952380952380953		ablation.table.no_dict.stats_v2.rank_biserial
+json_missing_in_tex	4.710736211688976		ablation.table.no_dict.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	15.513659522121502		ablation.table.no_dict.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	0.01953125		ablation.table.no_reranker.p_value
+json_missing_in_tex	0.078125		ablation.table.no_reranker.p_value_holm
+json_missing_in_tex	6.191358133141957		ablation.table.no_reranker.stats_v2.delta_pp
+json_missing_in_tex	0.015625		ablation.table.no_reranker.stats_v2.p_exact_sign_flip
+json_missing_in_tex	0.00390625		ablation.table.no_reranker.stats_v2.min_attainable_p
+json_missing_in_tex	0.8666666666666667		ablation.table.no_reranker.stats_v2.rank_biserial
+json_missing_in_tex	1.9486842105263156		ablation.table.no_reranker.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	11.141368291902687		ablation.table.no_reranker.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	0.1617204301075268		ablation.table.no_guard.stats_v2.delta_pp
+json_missing_in_tex	0.3333333333333333		ablation.table.no_guard.stats_v2.rank_biserial
+json_missing_in_tex	-0.11483870967741948		ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	0.5999999999999999		ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	0.3437310121181088		ablation.table.no_nbest.stats_v2.delta_pp
+json_missing_in_tex	0.0625		ablation.table.no_nbest.stats_v2.min_attainable_p
+json_missing_in_tex	-0.4179894179894179		ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	1.1437310121181086		ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	0.1484375		ablation.table.no_graph.p_value
+json_missing_in_tex	0.4453125		ablation.table.no_graph.p_value_holm
+json_missing_in_tex	1.4241353960939211		ablation.table.no_graph.stats_v2.delta_pp
+json_missing_in_tex	0.1015625		ablation.table.no_graph.stats_v2.p_exact_sign_flip
+json_missing_in_tex	0.0078125		ablation.table.no_graph.stats_v2.min_attainable_p
+json_missing_in_tex	0.6111111111111112		ablation.table.no_graph.stats_v2.rank_biserial
+json_missing_in_tex	0.0020416118060121225		ablation.table.no_graph.stats_v2.bootstrap_ci95_pp[0]
+json_missing_in_tex	3.3877120211883978		ablation.table.no_graph.stats_v2.bootstrap_ci95_pp[1]
+json_missing_in_tex	100000		language_evaluation.paired_stats.bootstrap_n_resamples
+json_missing_in_tex	30.5		transfer_evaluation_variants.A_prototype_expansion.avg_latency_s
+json_missing_in_tex	54.1		cte_evaluation_15.avg_latency_s
+tex_in_json	10	10	\@setfontsize\normalsize{10}{12.5}    \abovedisplays
+tex_in_json	13	13	.5}    \abovedisplayskip 13\p@ \@plus2\p@ minus.5pt 
+tex_in_json	2	2	edisplayskip 13\p@ \@plus2\p@ minus.5pt    \abovedi
+tex_in_json	13	13	kip    \belowdisplayskip 13\p@ \@plus2\p@ minus.5pt 
+tex_in_json	2	2	wdisplayskip 13\p@ \@plus2\p@ minus.5pt    \belowdi
+tex_in_json	20	20	alsize  \geometry{margin=20mm} \usepackage{url} \use
+tex_in_json	0	0	f\toprule{\noalign{\ifnum0=`}\fi   \@aboverulesep=\
+tex_in_json	0	0	f\midrule{\noalign{\ifnum0=`}\fi   \@aboverulesep=\
+tex_in_json	0	0	ottomrule{\noalign{\ifnum0=`}\fi   \@aboverulesep=\
+tex_in_json	50	50	ommentstyle=\color{green!50!black},   stringstyle=\c
+tex_in_json	150	150	。材料工学の観点では、「安定な化合物」「体積弾性率150 GPa以上」のような専門用語・物性条件を含む日本
+tex_in_json	5	5	ることなく自然言語から実行できる枠組みを提供する。5プロトタイプ（L1$_2$/B2/NaCl/NiA
+tex_in_json	1	1	から実行できる枠組みを提供する。5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$
+tex_in_json	2	2	行できる枠組みを提供する。5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）・3
+tex_in_json	2	2	枠組みを提供する。5プロトタイプ（L1$_2$/B2/NaCl/NiAs/BiF$_3$）・36テーブ
+tex_in_json	3	3	L1$_2$/B2/NaCl/NiAs/BiF$_3$）・36テーブルのRDBを用いた多軸評価において
+tex_in_json	36	36	2$/B2/NaCl/NiAs/BiF$_3$）・36テーブルのRDBを用いた多軸評価において、245の
+tex_in_json	245	245	）・36テーブルのRDBを用いた多軸評価において、245の自然言語クエリに対し行レベルの実行再現率86.1
+tex_in_json	86.1%	86.1	、245の自然言語クエリに対し行レベルの実行再現率86.1%を達成し（この指標は期待行の検索を評価するものであ
+tex_in_json	4	4	た。さらに、行レベル実行再現率は、適応条件の異なる4種の一般化試験で80.0--100.0%であった。
+tex_in_json	80.0	80.0	ル実行再現率は、適応条件の異なる4種の一般化試験で80.0--100.0%であった。主評価245クエリには実
+tex_in_json	245	245	般化試験で80.0--100.0%であった。主評価245クエリには実装に関与していない共同著者が独立に設計
+tex_in_json	100	100	リには実装に関与していない共同著者が独立に設計した100クエリが含まれ、この100クエリの別ラン再評価で8
+tex_in_json	100	100	共同著者が独立に設計した100クエリが含まれ、この100クエリの別ラン再評価で81.5%であった。加えて、
+tex_in_json	81.5%	81.5	0クエリが含まれ、この100クエリの別ラン再評価で81.5%であった。加えて、アブレーション用100クエリサブ
+tex_in_json	100	100	評価で81.5%であった。加えて、アブレーション用100クエリサブセットの日英paired評価では日本語$
+tex_in_json	92.0	92.0	クエリサブセットの日英paired評価では日本語$92.0 \pm 0.7$%・英語$90.0 \pm 2.
+tex_in_json	0.7	0.7	日英paired評価では日本語$92.0 \pm 0.7$%・英語$90.0 \pm 2.0$%を示し（差
+tex_in_json	90.0	90.0	価では日本語$92.0 \pm 0.7$%・英語$90.0 \pm 2.0$%を示し（差の95%信頼区間は0
+tex_in_json	2.0	2.0	.0 \pm 0.7$%・英語$90.0 \pm 2.0$%を示し（差の95%信頼区間は0を含む）、翻訳を
+tex_in_json	95%	95	%・英語$90.0 \pm 2.0$%を示し（差の95%信頼区間は0を含む）、翻訳を用いず英語で新規作問し
+tex_in_json	0	0	0 \pm 2.0$%を示し（差の95%信頼区間は0を含む）、翻訳を用いず英語で新規作問した25クエリ
+tex_in_json	25	25	頼区間は0を含む）、翻訳を用いず英語で新規作問した25クエリでも$96.5 \pm 2.3$%を得た（こ
+tex_in_json	96.5	96.5	）、翻訳を用いず英語で新規作問した25クエリでも$96.5 \pm 2.3$%を得た（この25問は難易度分布
+tex_in_json	2.3	2.3	語で新規作問した25クエリでも$96.5 \pm 2.3$%を得た（この25問は難易度分布が主評価と異なる
+tex_in_json	25	25	エリでも$96.5 \pm 2.3$%を得た（この25問は難易度分布が主評価と異なるため、水準の直接比較
+tex_in_json	1.5	1.5	ス \end{keywords} \vspace{1.5em} }]   \section{はじめに} \
+tex_in_json	3	3	がどの程度処理できるかを検討する。  本研究で扱う3つのドメイン特有の課題は次のとおりである： \be
+tex_in_json	1	1	m ドメイン用語の曖昧さ：     結晶構造名やL1$_2$、$\gamma'$相、B2のような特性用
+tex_in_json	2	2	メイン用語の曖昧さ：     結晶構造名やL1$_2$、$\gamma'$相、B2のような特性用語は、
+tex_in_json	2	2	結晶構造名やL1$_2$、$\gamma'$相、B2のような特性用語は、一般的なLLMのトレーニングデ
+tex_in_json	4	4	 \end{enumerate}  本研究の貢献は4つある： \begin{enumerate}[la
+tex_in_json	1	1	する。   \item 多軸定量評価：     L1$_2$を中心に5プロトタイプを含む36テーブル・
+tex_in_json	2	2	   \item 多軸定量評価：     L1$_2$を中心に5プロトタイプを含む36テーブル・総行数
+tex_in_json	5	5	em 多軸定量評価：     L1$_2$を中心に5プロトタイプを含む36テーブル・総行数約2.2万行
+tex_in_json	36	36	     L1$_2$を中心に5プロトタイプを含む36テーブル・総行数約2.2万行の検証RDB（設計はセ
+tex_in_json	2.2	2.2	を中心に5プロトタイプを含む36テーブル・総行数約2.2万行の検証RDB（設計はセクション~\ref{se
+tex_in_json	245	245	f{sec:evaluation}で説明）に対する245クエリの多軸評価（厳密な完全結果集合一致 / SE
+tex_in_json	100	100	 SELECT列精度 / JOIN一致率）に加え、100クエリサブセットでの7条件$\times$5回の統
+tex_in_json	7	7	JOIN一致率）に加え、100クエリサブセットでの7条件$\times$5回の統計的アブレーション（ク
+tex_in_json	5	5	、100クエリサブセットでの7条件$\times$5回の統計的アブレーション（クエリ単位の対応ありWi
+tex_in_json	95%	95	ありWilcoxon符号順位検定とブートストラップ95%信頼区間）、少数ショットの$k$感度、辞書サイズ感
+tex_in_json	-16.1	-16.1	メイン知識の定量的効果：     少数ショット例（-16.1pp, $p<0.001$）が最大の寄与を持ち、材
+tex_in_json	-9.8	-9.8	$p<0.001$）が最大の寄与を持ち、材料辞書（-9.8pp, $p=1.0\times10^{-4}$）
+tex_in_json	1.0	1.0	最大の寄与を持ち、材料辞書（-9.8pp, $p=1.0\times10^{-4}$）もHolm補正後有意
+tex_in_json	10	10	材料辞書（-9.8pp, $p=1.0\times10^{-4}$）もHolm補正後有意であることを示し
+tex_in_json	-6.2	-6.2	もHolm補正後有意であることを示し（リランカーは-6.2ppで未補正$p=0.0195$だがHolm補正後
+tex_in_json	5	5	の異なる四つの一般化試験---A~同一スキーマ上の5プロトタイプ横断クエリ（主評価の部分集合の別ラン；
+tex_in_json	100.0%	100.0	プロトタイプ横断クエリ（主評価の部分集合の別ラン；100.0%）、B~OQMD風の名前変更（85.0%）、C~ラ
+tex_in_json	85.0%	85.0	別ラン；100.0%）、B~OQMD風の名前変更（85.0%）、C~ランダム化された難読化（80.0%）、D~
+tex_in_json	80.0%	80.0	前変更（85.0%）、C~ランダム化された難読化（80.0%）、D~Materials Project実データ
+tex_in_json	93.3%	93.3	als Project実データを用いた別スキーマ（93.3%）---を比較する。これらは、特定の36テーブル構
+tex_in_json	36	36	マ（93.3%）---を比較する。これらは、特定の36テーブル構成以外へ拡張できる可能性を示す一方、Aは
+tex_in_json	100	100	ec:transfer_eval}）。さらに、同一100クエリ・同一gold SQLの日英paired評価
+tex_in_json	25	25	gold SQLの日英paired評価と非翻訳英語25クエリにより、質問文言語への依存性を検証する（セク
+tex_in_json	1	1	n{検証データベース}  提案手法の検証のため、L1$_2$型金属間化合物を題材としつつ無機材料データ
+tex_in_json	2	2	証データベース}  提案手法の検証のため、L1$_2$型金属間化合物を題材としつつ無機材料データベース
+tex_in_json	36	36	・機械的特性・表面特性など材料RDBに普遍な概念を36の正規化テーブル（うち1つはスキーマ初期化状態の管
+tex_in_json	1	1	材料RDBに普遍な概念を36の正規化テーブル（うち1つはスキーマ初期化状態の管理表\texttt{sc
+tex_in_json	1	1	initialization\_status}）と1つのビューに配置し、\texttt{materia
+tex_in_json	36	36	ルのER図は図~\ref{fig:er}；テーブル36、ビュー1、\texttt{material\_e
+tex_in_json	1	1	図~\ref{fig:er}；テーブル36、ビュー1、\texttt{material\_entry}
+tex_in_json	5	5	ed\_property} 4410、プロトタイプ5種などの統計は補足資料~\ref{sec:sup_
+tex_in_json	0.9	0.9	p] \centering \resizebox{0.9\textwidth}{!}{  } \capti
+tex_in_json	36	36	xtwidth}{!}{  } \caption{36テーブル検証データベースの主要テーブルのER図。 
+tex_in_json	2	2	接続されている。   計算された特性と電子構造には2つの経路がある：   直接FKと\texttt{c
+tex_in_json	6	6	ーブルを対象とする。評価用SQLは平均3.4、最大6テーブルの結合と多段階CTEを要し、データベースの
+tex_in_json	245	245	:query_design}  本研究の主評価では245クエリの統合評価コーパス（Easy 43 / Me
+tex_in_json	43	43	評価では245クエリの統合評価コーパス（Easy 43 / Medium 69 / Hard 69 / 
+tex_in_json	69	69	合評価コーパス（Easy 43 / Medium 69 / Hard 69 / Very Hard 64
+tex_in_json	69	69	sy 43 / Medium 69 / Hard 69 / Very Hard 64；以下 Very H
+tex_in_json	64	64	69 / Hard 69 / Very Hard 64；以下 Very Hard を VH と略記）を使
+tex_in_json	145	145	 を VH と略記）を使用した。このコーパスのうち145クエリは著者が設計し、残りの100クエリはパイプラ
+tex_in_json	100	100	のコーパスのうち145クエリは著者が設計し、残りの100クエリはパイプラインの実装に関与していない共同著者
+tex_in_json	245	245	c:independent_eval}で述べる）。245クエリは表~\ref{tab:main_parti
+tex_in_json	5	5	f{tab:main_partition}のとおり5群に重複なく分割される（著者設計145＝100+2
+tex_in_json	145	145	ion}のとおり5群に重複なく分割される（著者設計145＝100+20+10+15）。このうち独立設計10
+tex_in_json	100	100	のとおり5群に重複なく分割される（著者設計145＝100+20+10+15）。このうち独立設計100・バリ
+tex_in_json	20	20	5群に重複なく分割される（著者設計145＝100+20+10+15）。このうち独立設計100・バリアント
+tex_in_json	10	10	重複なく分割される（著者設計145＝100+20+10+15）。このうち独立設計100・バリアントA 2
+tex_in_json	15	15	く分割される（著者設計145＝100+20+10+15）。このうち独立設計100・バリアントA 20・C
+tex_in_json	100	100	45＝100+20+10+15）。このうち独立設計100・バリアントA 20・CTE 15（アブレーション
+tex_in_json	20	20	0+15）。このうち独立設計100・バリアントA 20・CTE 15（アブレーション用サブセット内の5＋
+tex_in_json	15	15	のうち独立設計100・バリアントA 20・CTE 15（アブレーション用サブセット内の5＋ゼロショット1
+tex_in_json	5	5	20・CTE 15（アブレーション用サブセット内の5＋ゼロショット10）の計135クエリは、セクション
+tex_in_json	10	10	5（アブレーション用サブセット内の5＋ゼロショット10）の計135クエリは、セクション~\ref{sec
+tex_in_json	135	135	ーション用サブセット内の5＋ゼロショット10）の計135クエリは、セクション~\ref{sec:addit
+tex_in_json	245	245	}で同一問題の別ランとして再掲する部分集合であり、245クエリの外に追加したコーパスではない。アブレーショ
+tex_in_json	100	100	スではない。アブレーション・感度分析にはこのうちの100クエリのサブセット（Easy 20 / Mediu
+tex_in_json	20	20	にはこのうちの100クエリのサブセット（Easy 20 / Medium 30 / Hard 30 / 
+tex_in_json	30	30	リのサブセット（Easy 20 / Medium 30 / Hard 30 / VH 20；表~\ref
+tex_in_json	30	30	sy 20 / Medium 30 / Hard 30 / VH 20；表~\ref{tab:query
+tex_in_json	20	20	Medium 30 / Hard 30 / VH 20；表~\ref{tab:query_design}
+tex_in_json	20%	20	28.2%/VH 26.1%に対しサブセットはE 20%/M 30%/H 30%/VH 20%）、クエリ単
+tex_in_json	30%	30	VH 26.1%に対しサブセットはE 20%/M 30%/H 30%/VH 20%）、クエリ単位の対応あり
+tex_in_json	30%	30	1%に対しサブセットはE 20%/M 30%/H 30%/VH 20%）、クエリ単位の対応あり検定（Wil
+tex_in_json	20%	20	セットはE 20%/M 30%/H 30%/VH 20%）、クエリ単位の対応あり検定（Wilcoxon符号
+tex_in_json	100	100	対応あり検定（Wilcoxon符号順位検定、$n=100$）とブートストラップ信頼区間によって主要コンポー
+tex_in_json	100	100	:multiaxis}）に用いる。アブレーション用100クエリサブセットについては、必要テーブルおよびJO
+tex_in_json	1	1	築した。クエリは以下の原則に従って設計された： (1) 実際の材料研究で生じる質問をシミュレートする（
+tex_in_json	2	2	トする（例：安定相の検索、組成と特性の相関）、 (2) 難易度は、ゴールドSQLの構造的複雑さを基準と
+tex_in_json	4	4	、ゴールドSQLの構造的複雑さを基準として設計時に4つの層（Easy／Medium／Hard／VH）へ
+tex_in_json	3	3	類した。その際の目安として、必要なテーブルごとに$3$ + WHERE/HAVING条件ごとに$1$ 
+tex_in_json	1	1	に$3$ + WHERE/HAVING条件ごとに$1$ + GROUP BYごとに$2$ + EXIS
+tex_in_json	2	2	NG条件ごとに$1$ + GROUP BYごとに$2$ + EXISTSサブクエリごとに$3$ + 派
+tex_in_json	3	3	Yごとに$2$ + EXISTSサブクエリごとに$3$ + 派生サブクエリごとに$3$を加算する複雑さ
+tex_in_json	3	3	サブクエリごとに$3$ + 派生サブクエリごとに$3$を加算する複雑さスコア（Easy $<8$、Me
+tex_in_json	8	8	ごとに$3$を加算する複雑さスコア（Easy $<8$、Medium $8$--$11$、Hard $
+tex_in_json	8	8	複雑さスコア（Easy $<8$、Medium $8$--$11$、Hard $12$--$16$、V
+tex_in_json	8	8	2$--$16$、VH $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく
+tex_in_json	20	20	から機械的に導いたものではなく、層の件数バランス（20/30/30/20）を考慮して著者が事前に設定した
+tex_in_json	30	30	械的に導いたものではなく、層の件数バランス（20/30/30/20）を考慮して著者が事前に設定した値であ
+tex_in_json	30	30	導いたものではなく、層の件数バランス（20/30/30/20）を考慮して著者が事前に設定した値である）を
+tex_in_json	20	20	ものではなく、層の件数バランス（20/30/30/20）を考慮して著者が事前に設定した値である）を用いた
+tex_in_json	245	245	既存ラベルの決定式ではない：設計時に付与した主評価245問のラベルとは144/245で一致し、不一致101
+tex_in_json	245	245	設計時に付与した主評価245問のラベルとは144/245で一致し、不一致101件のうち92件（91.1%）
+tex_in_json	92	92	ルとは144/245で一致し、不一致101件のうち92件（91.1%）は隣接層間のずれである（構文要素の
+tex_in_json	91.1%	91.1	44/245で一致し、不一致101件のうち92件（91.1%）は隣接層間のずれである（構文要素のカウント規則の
+tex_in_json	9	9	文要素のカウント規則の解釈差による。非隣接のずれは9件）。非翻訳英語25問（セクション~\ref{se
+tex_in_json	25	25	則の解釈差による。非隣接のずれは9件）。非翻訳英語25問（セクション~\ref{sec:language
+tex_in_json	3	3	l}）のラベルのみ同スクリプトで機械算出した、 (3) 主評価クエリを構成する7つの内容カテゴリ（組成
+tex_in_json	7	7	トで機械算出した、 (3) 主評価クエリを構成する7つの内容カテゴリ（組成、構造、安定性、電子構造・磁
+tex_in_json	4	4	多段計算）にわたるバランスの取れたカバレッジ、 (4) 高度な分析パターンを評価するために15のCTE
+tex_in_json	15	15	ッジ、 (4) 高度な分析パターンを評価するために15のCTEマルチステップ計算クエリ（アブレーション用
+tex_in_json	5	5	ップ計算クエリ（アブレーション用サブセット内の既知5パターン＋少数ショット例のないゼロショット10パタ
+tex_in_json	10	10	の既知5パターン＋少数ショット例のないゼロショット10パターン；セクション~\ref{sec:cte_e
+tex_in_json	245	245	\centering   \caption{主評価245クエリの内訳（重複なしの分割）。クエリIDの接頭辞
+tex_in_json	55	55	告されることを示す。一般化バリアントB/C/D（計55クエリ）と非翻訳英語25クエリは245クエリに含ま
+tex_in_json	25	25	化バリアントB/C/D（計55クエリ）と非翻訳英語25クエリは245クエリに含まれない別コーパスである。
+tex_in_json	245	245	B/C/D（計55クエリ）と非翻訳英語25クエリは245クエリに含まれない別コーパスである。}   \la
+tex_in_json	100	100	/medium/hard/vhard\_*} & 100 & 表~\ref{tab:ablation}（う
+tex_in_json	5	5	\ref{tab:ablation}（うちCTE 5件は表~\ref{tab:cte_results}
+tex_in_json	001	1	著者） & \texttt{q\_expert\_001}--\texttt{q\_expert\_100
+tex_in_json	100	100	001}--\texttt{q\_expert\_100} & 100 & セクション~\ref{sec:
+tex_in_json	100	100	texttt{q\_expert\_100} & 100 & セクション~\ref{sec:indepen
+tex_in_json	20	20	& \texttt{q\_proto\_*} & 20 & 表~\ref{tab:transfer_ev
+tex_in_json	10	10	E & \texttt{q\_cte\_*} & 10 & 表~\ref{tab:cte_results
+tex_in_json	10	10	~\ref{tab:cte_results}（新規10） \\     著者設計（追加） & \text
+tex_in_json	115	115	101}--\texttt{q\_expert\_115} & 15 & --- \\     \midr
+tex_in_json	15	15	texttt{q\_expert\_115} & 15 & --- \\     \midrule   
+tex_in_json	245	245	     \midrule     合計 & & 245 & 再掲135（100+20+15） \\   
+tex_in_json	135	135	drule     合計 & & 245 & 再掲135（100+20+15） \\     \botto
+tex_in_json	100	100	e     合計 & & 245 & 再掲135（100+20+15） \\     \bottomrul
+tex_in_json	20	20	  合計 & & 245 & 再掲135（100+20+15） \\     \bottomrule  
+tex_in_json	15	15	計 & & 245 & 再掲135（100+20+15） \\     \bottomrule   \e
+tex_in_json	1	1	}|/|R_\text{gen}^{C}|$ とF1も併記する。行の照合は値を文字列正規化した集合（s
+tex_in_json	1.0	1.0	れるため、生成SQLが正解列の一部しか返さなくても1.0になり得る（Precision・F1併記の理由）。
+tex_in_json	1	1	さなくても1.0になり得る（Precision・F1併記の理由）。この採点プロトコルにはさらに2つの寛
+tex_in_json	2	2	n・F1併記の理由）。この採点プロトコルにはさらに2つの寛容性がある：(a)~列名の重なりが皆無の場合
+tex_in_json	0	0	照合にフォールバックする、(b)~ゴールドSQLが0行を返すクエリでは生成SQLも0行を返せば1.0と
+tex_in_json	0	0	~ゴールドSQLが0行を返すクエリでは生成SQLも0行を返せば1.0とする（0行の一致は正しさの積極的
+tex_in_json	1.0	1.0	QLが0行を返すクエリでは生成SQLも0行を返せば1.0とする（0行の一致は正しさの積極的証拠ではない）。
+tex_in_json	0	0	すクエリでは生成SQLも0行を返せば1.0とする（0行の一致は正しさの積極的証拠ではない）。これらの寛
+tex_in_json	2	2	_scoring_audit}に報告する。本稿では2つの完全一致指標を区別する：(1)~厳密な完全結果
+tex_in_json	1	1	報告する。本稿では2つの完全一致指標を区別する：(1)~厳密な完全結果集合一致（Exact Resul
+tex_in_json	245	245	順位・順序付きの回答を要求するクエリに付与；主評価245クエリ中39クエリ）が真の場合に限り行順序まで一致
+tex_in_json	39	39	の回答を要求するクエリに付与；主評価245クエリ中39クエリ）が真の場合に限り行順序まで一致した場合のみ
+tex_in_json	1	1	クエリ）が真の場合に限り行順序まで一致した場合のみ1。ゴールドSQLが決定性確保のために付す\text
+tex_in_json	234	234	保のために付す\texttt{ORDER BY}（234クエリ）は順序照合の対象としない。表~\ref{t
+tex_in_json	2	2	radar}のExact軸はこの指標である）と、(2)~共通列射影上でPrecision=Recall
+tex_in_json	1	1	~共通列射影上でPrecision=Recall=1の場合のみ1とする緩い完全一致（lenient e
+tex_in_json	1	1	上でPrecision=Recall=1の場合のみ1とする緩い完全一致（lenient exact m
+tex_in_json	100%	100	して報告する）である。したがって、「Recall=100%」を「全クエリが完全正解」と同一視しない。評価中は
+tex_in_json	4	4	asy / Medium / Hard / VHの4難易度層に分類する（定義はセクション~\ref{s
+tex_in_json	0.9	0.9	p] \centering \resizebox{0.9\textwidth}{!}{  } \capti
+tex_in_json	1	1	エリはまず条件抽出器と材料ドメイン辞書（ステップ~1）で構造化条件に変換され、   GPT-5.5によ
+tex_in_json	2	2	  GPT-5.5によるスキーマリンク（ステップ~2）がテーブルの優先順位を付け、   少数ショット例
+tex_in_json	3	3	先順位を付け、   少数ショット例検索（ステップ~3）が類似例を選ぶ。   貪欲最短経路連結（ステップ
+tex_in_json	4	4	が類似例を選ぶ。   貪欲最短経路連結（ステップ~4）は36のテーブルから必要テーブルを連結するFK部
+tex_in_json	36	36	例を選ぶ。   貪欲最短経路連結（ステップ~4）は36のテーブルから必要テーブルを連結するFK部分グラフ
+tex_in_json	5	5	 これらをプロンプトに含めてSQL生成（ステップ~5）が$n$-best候補を出力する。   SQLG
+tex_in_json	6	6	候補を出力する。   SQLGuard（ステップ~6）は安全性を検証し、   リランキング（ステップ~
+tex_in_json	7	7	）は安全性を検証し、   リランキング（ステップ~7）は最良の候補を選ぶ。   選択されたSQLは読み
+tex_in_json	4	4	  処理は上段左から右へ進み、下段左端（ステップ~4）へ折り返す。} \label{fig:pipel
+tex_in_json	2	2	hot}  入力クエリに類似した少数ショット例は、2段階で選択される。 まず、TF-IDF~\cite
+tex_in_json	2	2	ite{salton1988tfidf}が候補を$2k$アイテムに絞り込み、 次にクロスエンコーダ（m
+tex_in_json	2	2	コーダ（ms-marco-MiniLM-L-6-v2；クエリと候補例のペアを入力して意味的類似度を採点
+tex_in_json	3	3	含める少数ショット例の数であり、デフォルトは$k=3$である（$k$の感度分析はセクション~\ref{
+tex_in_json	50	50	 クロスエンコーダはローカルで実行され、処理時間は50ms未満である。  選ばれた少数ショット例は、テー
+tex_in_json	1	1	先順序のみが変更される。例えば「Niを含む安定なL1$_2$化合物の体積弾性率」というクエリでは、組成
+tex_in_json	2	2	のみが変更される。例えば「Niを含む安定なL1$_2$化合物の体積弾性率」というクエリでは、組成（\t
+tex_in_json	1	1	abel{sec:nbest}  GPT-5.5は1回の生成呼び出しで上位$n$個（デフォルト $n$
+tex_in_json	3	3	で上位$n$個（デフォルト $n$-best = 3）のSQL候補を並列に出力し、後段のリランカーが最
+tex_in_json	1	1	SQL候補を並列に出力し、後段のリランカーが最適な1本を選択する。選択の基準は、SQLGuard検証の
+tex_in_json	36	36	label{sec:schema_graph}  36のテーブル間のFK関係は、NetworkX~\ci
+tex_in_json	36	36	c:sup_method_details}に示す。36テーブル規模（必要テーブル数 $k \leq 6$
+tex_in_json	6	6	36テーブル規模（必要テーブル数 $k \leq 6$）では連結処理はミリ秒単位で完了し、FKメタデー
+tex_in_json	1	1	べ、本節ではそれを使う抽出処理を説明する。辞書は(1)~プロトタイプエイリアス（例：\texttt{L
+tex_in_json	1	1	L12} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'
+tex_in_json	2	2	} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'$]）
+tex_in_json	3	3	rightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'$]）、(2)~元素マ
+tex_in_json	2	2	 Cu$_3$Au型, $\gamma'$]）、(2)~元素マッピング、(3)~安定性用語（「安定」$
+tex_in_json	3	3	$\gamma'$]）、(2)~元素マッピング、(3)~安定性用語（「安定」$\to$ \texttt
+tex_in_json	4	4	} $\leq 0.001$~eV/atom）、(4)~特性用語の4カテゴリをカバーする。数値条件パー
+tex_in_json	4	4	0.001$~eV/atom）、(4)~特性用語の4カテゴリをカバーする。数値条件パーサは記号比較・日
+tex_in_json	5	5	較・日本語比較・日本語後置詞・符号判定・範囲指定の5パターンを認識し、化学式トークンは文脈に応じてex
+tex_in_json	0.8	0.8	]$）がサイレント制約ドロップを防ぎ、$\geq 0.8$でルールベース、$\geq 0.5$でLLMモー
+tex_in_json	0.5	0.5	、$\geq 0.8$でルールベース、$\geq 0.5$でLLMモード、$< 0.5$でユーザー確認要求
+tex_in_json	0.5	0.5	ベース、$\geq 0.5$でLLMモード、$< 0.5$でユーザー確認要求に振り分ける。さらにルールベー
+tex_in_json	1	1	とNi系超合金などでは文脈が異なるが、本稿では L1$_2$ 原型と等価な相名として扱っている。  辞
+tex_in_json	2	2	系超合金などでは文脈が異なるが、本稿では L1$_2$ 原型と等価な相名として扱っている。  辞書は以
+tex_in_json	3	3	原型と等価な相名として扱っている。  辞書は以下の3つのソースから編纂されている： \begin{en
+tex_in_json	74	74	 \item バイリンガル用語辞書の定義ファイル：74用語   \item パイプライン語彙（DB/OQ
+tex_in_json	66	66	m パイプライン語彙（DB/OQMD特有の用語）：66用語   \item 材料工学語彙（ユーザー提供リ
+tex_in_json	525	525	\item 材料工学語彙（ユーザー提供リスト、原簿525行から重複行等を除いた402用語） \end{en
+tex_in_json	402	402	ーザー提供リスト、原簿525行から重複行等を除いた402用語） \end{enumerate} 重複を排除
+tex_in_json	492	492	erate} 重複を排除した後、編纂された語彙には492用語が含まれている。このうち、評価パイプラインの実
+tex_in_json	61	61	$テーブル・カラム・SQL断片のスキーマ写像辞書（61エントリの条件$\to$カラム対応表；セクション~
+tex_in_json	61	61	ab:dict_size}のサイズ感度実験は、この61エントリのスキーマ写像辞書と用語辞書を同時に段階的
+tex_in_json	61	61	階的に削減して測定したものであり、観測される低下を61エントリ辞書単独の因果効果とは解釈しない。  また
+tex_in_json	492	492	ントリ辞書単独の因果効果とは解釈しない。  また、492用語の語彙はMeCab形態素解析器~\cite{k
+tex_in_json	402	402	2004mecab}用カスタム辞書としても編纂し、402材料用語の単一トークン率を30.6%から100.0
+tex_in_json	30.6%	30.6	書としても編纂し、402材料用語の単一トークン率を30.6%から100.0%に改善した（表~\ref{tab:
+tex_in_json	100.0%	100.0	し、402材料用語の単一トークン率を30.6%から100.0%に改善した（表~\ref{tab:mecab}；補
+tex_in_json	15	15	JOIN・再帰CTE・参照リレーション数の制限）の15のチェックから成る（全リストは補足資料~\ref{
+tex_in_json	50	50	トの例選択にはクロスエンコーダー（ローカル、$<$50ms）を使用し、SQL候補とスキーマのスコアリング
+tex_in_json	1	1	リランカーは複数の SQL 候補を比較して最適な 1 本を選択する。Medium から Hard クラ
+tex_in_json	20	20	選択用クロスエンコーダーの英語／日本語モデル比較（20 VHクエリで日本語モデルがms-marco比-6
+tex_in_json	-6.8	-6.8	20 VHクエリで日本語モデルがms-marco比-6.8pp；差は未丸め値から算出）は補足資料~\ref{
+tex_in_json	7	7	ンポーネントの寄与をクエリタイプ別に測定するため、7つの条件下でアブレーションスタディを実施した（Ta
+tex_in_json	1	1	~\ref{tab:ablation}）。各条件は1つのコンポーネントを無効にし、100クエリのアブレ
+tex_in_json	100	100	on}）。各条件は1つのコンポーネントを無効にし、100クエリのアブレーションサブセット（セクション~\r
+tex_in_json	78.7%	78.7	難易度と必ずしも一致しない（独立設計評価ではVH 78.7% $>$ Hard 70.2%；制限事項(5)参照
+tex_in_json	70.2%	70.2	立設計評価ではVH 78.7% $>$ Hard 70.2%；制限事項(5)参照）。合計で3500回の評価（7
+tex_in_json	5	5	8.7% $>$ Hard 70.2%；制限事項(5)参照）。合計で3500回の評価（7条件 $\ti
+tex_in_json	7	7	%；制限事項(5)参照）。合計で3500回の評価（7条件 $\times$ 100クエリ $\time
+tex_in_json	100	100	合計で3500回の評価（7条件 $\times$ 100クエリ $\times$ 5回の実行）が行われた。
+tex_in_json	5	5	$\times$ 100クエリ $\times$ 5回の実行）が行われた。全体の精度だけに焦点を当てる
+tex_in_json	245	245	セクション~\ref{sec:llm_only}で245クエリの主評価と対比する。  \begin{tab
+tex_in_json	100	100	 \caption{アブレーションスタディの結果（100クエリサブセット $\times$ 7条件 $\t
+tex_in_json	7	7	の結果（100クエリサブセット $\times$ 7条件 $\times$ 5回の実行 = 3500評
+tex_in_json	5	5	ット $\times$ 7条件 $\times$ 5回の実行 = 3500評価）。表の値は実行再現率（
+tex_in_json	5	5	 = 3500評価）。表の値は実行再現率（%）で、5回の独立実行の平均、括弧内は標準偏差を示す。$\D
+tex_in_json	5	5	（pp、未丸め値から算出）。統計検定は、各クエリの5ラン平均再現率をクエリ値とし（$n=100$）、f
+tex_in_json	100	100	、各クエリの5ラン平均再現率をクエリ値とし（$n=100$）、full条件との対応あり差に対するWilco
+tex_in_json	2	2	検定（非ゼロ差$n_\mathrm{nz}$件の$2^{n_\mathrm{nz}}$通りの符号割当を
+tex_in_json	0	0	_eval}の言語比較と同一の検定）で行った。差が0のペアは除外され、非同点ペア数を$n_\mathr
+tex_in_json	95%	95	ペア数を$n_\mathrm{nz}$として示す。95%CIはクエリ単位ブートストラップ（$n=100$、
+tex_in_json	100	100	す。95%CIはクエリ単位ブートストラップ（$n=100$、20000再標本、パーセンタイル法）による$\
+tex_in_json	6	6	タイル法）による$\Delta$の信頼区間である。6比較に対する未補正p値とHolm法によるステップダ
+tex_in_json	2	2	意なのはno\_fewshotとno\_dictの2条件；no\_rerankerは未補正$p=0.0
+tex_in_json	2	2	no\_guard（$n_\mathrm{nz}=2$）とno\_nbest（$n_\mathrm{n
+tex_in_json	5	5	no\_nbest（$n_\mathrm{nz}=5$）は非同点ペアが少なく検出力不足のためCIによる
+tex_in_json	95%	95	意でないことは効果がないことや同等性を意味しない。95%CIはブートストラップによる平均差、p値は符号順位
+tex_in_json	0	0	統計量の符号置換分布に基づく別統計量のため、CIが0を含まないのにp値が非有意となる場合がある（no\
+tex_in_json	0	0	\_graph）。no\_graphのみCI上限が0を跨がないことを明示するため小数第3位まで表示する
+tex_in_json	3	3	のみCI上限が0を跨がないことを明示するため小数第3位まで表示する。} \label{tab:abla
+tex_in_json	95%	95	p$ & $p_\mathrm{Holm}$ & 95%CI (pp) \\ \midrule full 
+tex_in_json	92.5	92.5	\midrule full          & 92.5 (0.4) & 99.8 & 96.7 & 86
+tex_in_json	0.4	0.4	le full          & 92.5 (0.4) & 99.8 & 96.7 & 86.8 & 
+tex_in_json	99.8	99.8	          & 92.5 (0.4) & 99.8 & 96.7 & 86.8 & 87.5 (2.
+tex_in_json	96.7	96.7	   & 92.5 (0.4) & 99.8 & 96.7 & 86.8 & 87.5 (2.0) & --
+tex_in_json	86.8	86.8	.5 (0.4) & 99.8 & 96.7 & 86.8 & 87.5 (2.0) & ---    & 
+tex_in_json	87.5	87.5	) & 99.8 & 96.7 & 86.8 & 87.5 (2.0) & ---    & --- & -
+tex_in_json	2.0	2.0	.8 & 96.7 & 86.8 & 87.5 (2.0) & ---    & --- & --- & 
+tex_in_json	76.4	76.4	& --- \\ no\_fewshot   & 76.4 (4.5) & 97.0 & 84.0 & 62
+tex_in_json	4.5	4.5	\\ no\_fewshot   & 76.4 (4.5) & 97.0 & 84.0 & 62.1 & 
+tex_in_json	97.0	97.0	fewshot   & 76.4 (4.5) & 97.0 & 84.0 & 62.1 & 65.7 (6.
+tex_in_json	84.0	84.0	   & 76.4 (4.5) & 97.0 & 84.0 & 62.1 & 65.7 (6.0) & -1
+tex_in_json	62.1	62.1	.4 (4.5) & 97.0 & 84.0 & 62.1 & 65.7 (6.0) & -16.1 & 5
+tex_in_json	65.7	65.7	) & 97.0 & 84.0 & 62.1 & 65.7 (6.0) & -16.1 & 55 & $<$
+tex_in_json	6.0	6.0	.0 & 84.0 & 62.1 & 65.7 (6.0) & -16.1 & 55 & $<$0.001
+tex_in_json	-16.1	-16.1	.0 & 62.1 & 65.7 (6.0) & -16.1 & 55 & $<$0.001 & $<$0.0
+tex_in_json	55	55	1 & 65.7 (6.0) & -16.1 & 55 & $<$0.001 & $<$0.001 & 
+tex_in_json	82.7	82.7	1.2]$ \\ no\_dict      & 82.7 (0.8) & 99.9 & 95.3 & 79
+tex_in_json	0.8	0.8	\\ no\_dict      & 82.7 (0.8) & 99.9 & 95.3 & 79.0 & 
+tex_in_json	99.9	99.9	dict      & 82.7 (0.8) & 99.9 & 95.3 & 79.0 & 52.0 (2.
+tex_in_json	95.3	95.3	   & 82.7 (0.8) & 99.9 & 95.3 & 79.0 & 52.0 (2.2) & -9
+tex_in_json	79.0	79.0	.7 (0.8) & 99.9 & 95.3 & 79.0 & 52.0 (2.2) & -9.8  & 2
+tex_in_json	52.0	52.0	) & 99.9 & 95.3 & 79.0 & 52.0 (2.2) & -9.8  & 20 & 0.0
+tex_in_json	2.2	2.2	.9 & 95.3 & 79.0 & 52.0 (2.2) & -9.8  & 20 & 0.0001 &
+tex_in_json	-9.8	-9.8	.3 & 79.0 & 52.0 (2.2) & -9.8  & 20 & 0.0001 & 0.0005 
+tex_in_json	20	20	0 & 52.0 (2.2) & -9.8  & 20 & 0.0001 & 0.0005 & $[-1
+tex_in_json	86.3	86.3	4.7]$ \\ no\_reranker  & 86.3 (0.5) & 100.0 & 83.6 & 8
+tex_in_json	0.5	0.5	\\ no\_reranker  & 86.3 (0.5) & 100.0 & 83.6 & 80.2 &
+tex_in_json	100.0	100.0	reranker  & 86.3 (0.5) & 100.0 & 83.6 & 80.2 & 85.7 (2.
+tex_in_json	83.6	83.6	  & 86.3 (0.5) & 100.0 & 83.6 & 80.2 & 85.7 (2.5) & -6
+tex_in_json	80.2	80.2	3 (0.5) & 100.0 & 83.6 & 80.2 & 85.7 (2.5) & -6.2  & 9
+tex_in_json	85.7	85.7	 & 100.0 & 83.6 & 80.2 & 85.7 (2.5) & -6.2  & 9 & 0.01
+tex_in_json	2.5	2.5	.0 & 83.6 & 80.2 & 85.7 (2.5) & -6.2  & 9 & 0.0195 & 
+tex_in_json	-6.2	-6.2	.6 & 80.2 & 85.7 (2.5) & -6.2  & 9 & 0.0195 & 0.0781 &
+tex_in_json	9	9	2 & 85.7 (2.5) & -6.2  & 9 & 0.0195 & 0.0781 & $[-1
+tex_in_json	92.3	92.3	1.9]$ \\ no\_guard     & 92.3 (0.9) & 100.0 & 96.7 & 8
+tex_in_json	0.9	0.9	\\ no\_guard     & 92.3 (0.9) & 100.0 & 96.7 & 86.8 &
+tex_in_json	100.0	100.0	guard     & 92.3 (0.9) & 100.0 & 96.7 & 86.8 & 86.5 (4.
+tex_in_json	96.7	96.7	  & 92.3 (0.9) & 100.0 & 96.7 & 86.8 & 86.5 (4.3) & -0
+tex_in_json	86.8	86.8	3 (0.9) & 100.0 & 96.7 & 86.8 & 86.5 (4.3) & -0.2  & 2
+tex_in_json	86.5	86.5	 & 100.0 & 96.7 & 86.8 & 86.5 (4.3) & -0.2  & 2 & 1.00
+tex_in_json	4.3	4.3	.0 & 96.7 & 86.8 & 86.5 (4.3) & -0.2  & 2 & 1.000 & 1
+tex_in_json	-0.2	-0.2	.7 & 86.8 & 86.5 (4.3) & -0.2  & 2 & 1.000 & 1.000 & $
+tex_in_json	2	2	8 & 86.5 (4.3) & -0.2  & 2 & 1.000 & 1.000 & $[-0.6
+tex_in_json	1.000	1.0	86.5 (4.3) & -0.2  & 2 & 1.000 & 1.000 & $[-0.6, +0.1]$
+tex_in_json	1.000	1.0	3) & -0.2  & 2 & 1.000 & 1.000 & $[-0.6, +0.1]$ \\ no\_
+tex_in_json	0.1	0.1	1.000 & 1.000 & $[-0.6, +0.1]$ \\ no\_nbest     & 92.
+tex_in_json	92.1	92.1	0.1]$ \\ no\_nbest     & 92.1 (0.9) & 100.0 & 96.0 & 8
+tex_in_json	0.9	0.9	\\ no\_nbest     & 92.1 (0.9) & 100.0 & 96.0 & 86.8 &
+tex_in_json	100.0	100.0	nbest     & 92.1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.
+tex_in_json	96.0	96.0	  & 92.1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0
+tex_in_json	86.8	86.8	1 (0.9) & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5
+tex_in_json	86.6	86.6	 & 100.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.62
+tex_in_json	2.7	2.7	.0 & 96.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 
+tex_in_json	-0.3	-0.3	.0 & 86.8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & 
+tex_in_json	5	5	8 & 86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.
+tex_in_json	0.6250	0.625	86.6 (2.7) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.1, +0.4]$
+tex_in_json	1.000	1.0	) & -0.3  & 5 & 0.6250 & 1.000 & $[-1.1, +0.4]$ \\ no\_
+tex_in_json	0.4	0.4	.6250 & 1.000 & $[-1.1, +0.4]$ \\ no\_graph     & 91.
+tex_in_json	91.1	91.1	0.4]$ \\ no\_graph     & 91.1 (0.9) & 100.0 & 96.7 & 8
+tex_in_json	0.9	0.9	\\ no\_graph     & 91.1 (0.9) & 100.0 & 96.7 & 86.4 &
+tex_in_json	100.0	100.0	graph     & 91.1 (0.9) & 100.0 & 96.7 & 86.4 & 80.7 (4.
+tex_in_json	96.7	96.7	  & 91.1 (0.9) & 100.0 & 96.7 & 86.4 & 80.7 (4.2) & -1
+tex_in_json	86.4	86.4	1 (0.9) & 100.0 & 96.7 & 86.4 & 80.7 (4.2) & -1.4  & 8
+tex_in_json	80.7	80.7	 & 100.0 & 96.7 & 86.4 & 80.7 (4.2) & -1.4  & 8 & 0.14
+tex_in_json	4.2	4.2	.0 & 96.7 & 86.4 & 80.7 (4.2) & -1.4  & 8 & 0.1484 & 
+tex_in_json	-1.4	-1.4	.7 & 86.4 & 80.7 (4.2) & -1.4  & 8 & 0.1484 & 0.4453 &
+tex_in_json	8	8	4 & 80.7 (4.2) & -1.4  & 8 & 0.1484 & 0.4453 & $[-3
+tex_in_json	2	2	のが少数（$n_\mathrm{nz}$でそれぞれ2・5件）で、主にVH層（一部Medium・Easy
+tex_in_json	5	5	少数（$n_\mathrm{nz}$でそれぞれ2・5件）で、主にVH層（一部Medium・Easy層に
+tex_in_json	20	20	ryデータで確認）。また、層別値（特にVHは$n=20$）の0.1pp刻みの表示は行レベル部分点と5ラン
+tex_in_json	0.1	0.1	で確認）。また、層別値（特にVHは$n=20$）の0.1pp刻みの表示は行レベル部分点と5ラン平均による見
+tex_in_json	5	5	=20$）の0.1pp刻みの表示は行レベル部分点と5ラン平均による見かけの解像度であり、層別分析は探索
+tex_in_json	-35.5	-35.5	の$\Delta$（例：no\_dictはVH層で-35.5pp）と条件別平均レイテンシ（full 30.9s
+tex_in_json	30.9	30.9	-35.5pp）と条件別平均レイテンシ（full 30.9s、no\_nbest 8.6s等）は補足資料~\
+tex_in_json	8.6	8.6	テンシ（full 30.9s、no\_nbest 8.6s等）は補足資料~\ref{sec:sup_res
+tex_in_json	5	5	~\ref{tab:latency}に、棒グラフ（5回平均 $\pm$ SD）は図~\ref{fig:
+tex_in_json	5	5	caption{アブレーションスタディの棒グラフ（5回の平均 $\pm$ SD）。 赤い棒は統計的に有
+tex_in_json	44	44	た生スキーマ（テーブル・カラム・型の一覧とFKペア44件）と質問文、および主評価と同一の意味規約ノート（
+tex_in_json	245	245	n{LLM-onlyベースライン（GPT-5.5、245クエリ、単一ラン）。再現率・適合率・F1は行集合照
+tex_in_json	1	1	.5、245クエリ、単一ラン）。再現率・適合率・F1は行集合照合による平均（%）。未解決参照・JOIN
+tex_in_json	1	1	難易度 & $n$ & 再現率 & 適合率 & F1 & \shortstack{未解決\\カラム参照
+tex_in_json	43	43	 \\ \midrule Easy      & 43  & 92.4 & 93.0 & 92.7 & 
+tex_in_json	92.4	92.4	idrule Easy      & 43  & 92.4 & 93.0 & 92.7 & 1  & 14 
+tex_in_json	93.0	93.0	Easy      & 43  & 92.4 & 93.0 & 92.7 & 1  & 14 \\ Medi
+tex_in_json	92.7	92.7	   & 43  & 92.4 & 93.0 & 92.7 & 1  & 14 \\ Medium    &
+tex_in_json	1	1	  & 92.4 & 93.0 & 92.7 & 1  & 14 \\ Medium    & 69 
+tex_in_json	14	14	2.4 & 93.0 & 92.7 & 1  & 14 \\ Medium    & 69  & 82.
+tex_in_json	69	69	& 1  & 14 \\ Medium    & 69  & 82.6 & 88.0 & 83.4 & 
+tex_in_json	82.6	82.6	 14 \\ Medium    & 69  & 82.6 & 88.0 & 83.4 & 20 & 29 
+tex_in_json	88.0	88.0	Medium    & 69  & 82.6 & 88.0 & 83.4 & 20 & 29 \\ Hard
+tex_in_json	83.4	83.4	   & 69  & 82.6 & 88.0 & 83.4 & 20 & 29 \\ Hard      &
+tex_in_json	20	20	  & 82.6 & 88.0 & 83.4 & 20 & 29 \\ Hard      & 69  
+tex_in_json	29	29	2.6 & 88.0 & 83.4 & 20 & 29 \\ Hard      & 69  & 68.
+tex_in_json	69	69	& 20 & 29 \\ Hard      & 69  & 68.6 & 76.1 & 69.8 & 
+tex_in_json	68.6	68.6	 29 \\ Hard      & 69  & 68.6 & 76.1 & 69.8 & 22 & 42 
+tex_in_json	76.1	76.1	Hard      & 69  & 68.6 & 76.1 & 69.8 & 22 & 42 \\ VH  
+tex_in_json	69.8	69.8	   & 69  & 68.6 & 76.1 & 69.8 & 22 & 42 \\ VH        &
+tex_in_json	22	22	  & 68.6 & 76.1 & 69.8 & 22 & 42 \\ VH        & 64  
+tex_in_json	42	42	8.6 & 76.1 & 69.8 & 22 & 42 \\ VH        & 64  & 74.
+tex_in_json	64	64	& 22 & 42 \\ VH        & 64  & 74.6 & 81.8 & 76.4 & 
+tex_in_json	74.6	74.6	 42 \\ VH        & 64  & 74.6 & 81.8 & 76.4 & 44 & 30 
+tex_in_json	81.8	81.8	VH        & 64  & 74.6 & 81.8 & 76.4 & 44 & 30 \\ \mid
+tex_in_json	76.4	76.4	   & 64  & 74.6 & 81.8 & 76.4 & 44 & 30 \\ \midrule 全体
+tex_in_json	44	44	  & 74.6 & 81.8 & 76.4 & 44 & 30 \\ \midrule 全体     
+tex_in_json	30	30	4.6 & 81.8 & 76.4 & 44 & 30 \\ \midrule 全体      & 24
+tex_in_json	245	245	30 \\ \midrule 全体      & 245 & 78.3 & 83.9 & 79.4 & 8
+tex_in_json	78.3	78.3	\midrule 全体      & 245 & 78.3 & 83.9 & 79.4 & 87 & 115
+tex_in_json	83.9	83.9	e 全体      & 245 & 78.3 & 83.9 & 79.4 & 87 & 115 \\ \bo
+tex_in_json	79.4	79.4	   & 245 & 78.3 & 83.9 & 79.4 & 87 & 115 \\ \bottomrul
+tex_in_json	87	87	5 & 78.3 & 83.9 & 79.4 & 87 & 115 \\ \bottomrule \en
+tex_in_json	115	115	8.3 & 83.9 & 79.4 & 87 & 115 \\ \bottomrule \end{tabu
+tex_in_json	78.3%	78.3	ab:llm_only}に示す。全体の実行再現率は78.3%（適合率83.9%、F1 79.4%）であり、24
+tex_in_json	83.9%	83.9	ly}に示す。全体の実行再現率は78.3%（適合率83.9%、F1 79.4%）であり、245クエリ主評価（セ
+tex_in_json	1	1	全体の実行再現率は78.3%（適合率83.9%、F1 79.4%）であり、245クエリ主評価（セクショ
+tex_in_json	79.4%	79.4	の実行再現率は78.3%（適合率83.9%、F1 79.4%）であり、245クエリ主評価（セクション~\ref
+tex_in_json	245	245	3%（適合率83.9%、F1 79.4%）であり、245クエリ主評価（セクション~\ref{sec:mul
+tex_in_json	86.1%	86.1	ン~\ref{sec:multiaxis}、再現率86.1%）より7.8pp低い。なお、この実行再現率は期待行
+tex_in_json	10.6%	10.6	結果と完全同一であった割合（厳密な完全結果集合一致10.6%、セクション~\ref{sec:multiaxis
+tex_in_json	100%	100	multiaxis}）とは区別される。構文妥当性は100%、実行成功率は99.6%（VH層のみ98.4%）で
+tex_in_json	99.6%	99.6	とは区別される。構文妥当性は100%、実行成功率は99.6%（VH層のみ98.4%）であった。  誤り参照の発
+tex_in_json	98.4%	98.4	当性は100%、実行成功率は99.6%（VH層のみ98.4%）であった。  誤り参照の発生率は種類により異なる
+tex_in_json	245	245	により異なる。スキーマに解決できないテーブル参照は245クエリ中10件（クエリ内テーブル平均率0.7%）で
+tex_in_json	10	10	スキーマに解決できないテーブル参照は245クエリ中10件（クエリ内テーブル平均率0.7%）であった。一方
+tex_in_json	0.7%	0.7	参照は245クエリ中10件（クエリ内テーブル平均率0.7%）であった。一方、FK関係に基づかないJOINは1
+tex_in_json	115	115	%）であった。一方、FK関係に基づかないJOINは115件（クエリ内JOIN平均率23.0%）、スキーマに
+tex_in_json	23.0%	23.0	づかないJOINは115件（クエリ内JOIN平均率23.0%）、スキーマに解決できないカラム参照（静的スキーマ
+tex_in_json	87	87	解決できないカラム参照（静的スキーマ未解決参照）は87件（クエリ内カラム平均率10.3%、VHで64件中
+tex_in_json	10.3%	10.3	スキーマ未解決参照）は87件（クエリ内カラム平均率10.3%、VHで64件中44件）で発生した。これらの件数は
+tex_in_json	64	64	）は87件（クエリ内カラム平均率10.3%、VHで64件中44件）で発生した。これらの件数はSQLテキス
+tex_in_json	44	44	件（クエリ内カラム平均率10.3%、VHで64件中44件）で発生した。これらの件数はSQLテキストの静的
+tex_in_json	11.1	11.1	、実行時エラー件数とは一致しない。平均レイテンシは11.1秒であった。実行成功率は99.6%だが再現率は78
+tex_in_json	99.6%	99.6	。平均レイテンシは11.1秒であった。実行成功率は99.6%だが再現率は78.3%であり、誤りの大部分は実行エ
+tex_in_json	78.3%	78.3	.1秒であった。実行成功率は99.6%だが再現率は78.3%であり、誤りの大部分は実行エラーとしてではなく、結
+tex_in_json	115	115	コンポーネントが担う役割と対応する。JOIN幻覚（115件）にはFKグラフによる結合経路制約（セクション~
+tex_in_json	87	87	ma_graph}）が対応する。未解決カラム参照（87件）にはスキーマリンクとカラム許可リスト（セクショ
+tex_in_json	245	245	件へ翻訳する辞書と少数ショット例が対応する。同一の245クエリでの主評価と比較すると、全コンポーネントの除
+tex_in_json	0.9%	0.9	再現率は7.8pp低下した。FK非整合JOIN率は0.9%から23.0%へ、静的スキーマ未解決カラム参照率は
+tex_in_json	23.0%	23.0	8pp低下した。FK非整合JOIN率は0.9%から23.0%へ、静的スキーマ未解決カラム参照率は4.0%から1
+tex_in_json	4.0%	4.0	から23.0%へ、静的スキーマ未解決カラム参照率は4.0%から10.3%へ増加した。  \subsectio
+tex_in_json	10.3%	10.3	%へ、静的スキーマ未解決カラム参照率は4.0%から10.3%へ増加した。  \subsection{感度分析}
+tex_in_json	100	100	析はいずれも本アブレーションと同一プロトコル・同一100クエリサブセットの単一ランであり、その水準は表~\
+tex_in_json	5	5	~\ref{tab:ablation}のfull（5ラン平均92.5$\pm$0.4%）と直接比較でき
+tex_in_json	92.5	92.5	{tab:ablation}のfull（5ラン平均92.5$\pm$0.4%）と直接比較できず、単一ラン間の
+tex_in_json	0.4%	0.4	tion}のfull（5ラン平均92.5$\pm$0.4%）と直接比較できず、単一ラン間の小差はLLM非決定
+tex_in_json	15	15	定義した$k$と同一）を1, 3, 5, 10, 15に変化させた（表~\ref{tab:fewshot
+tex_in_json	1	1	\ref{fig:fewshot_k}）。$k$を1から3に増やすと全体$+$1.9pp（VH層$+$
+tex_in_json	3	3	f{fig:fewshot_k}）。$k$を1から3に増やすと全体$+$1.9pp（VH層$+$10.
+tex_in_json	10.0	10.0	から3に増やすと全体$+$1.9pp（VH層$+$10.0pp）改善し、$k=3$（全体92.6%、VH 8
+tex_in_json	3	3	.9pp（VH層$+$10.0pp）改善し、$k=3$（全体92.6%、VH 88.4%）と$k=15
+tex_in_json	92.6%	92.6	VH層$+$10.0pp）改善し、$k=3$（全体92.6%、VH 88.4%）と$k=15$（全体92.7%
+tex_in_json	88.4%	88.4	0pp）改善し、$k=3$（全体92.6%、VH 88.4%）と$k=15$（全体92.7%、VH 88.4%
+tex_in_json	15	15	=3$（全体92.6%、VH 88.4%）と$k=15$（全体92.7%、VH 88.4%）がほぼ同等の
+tex_in_json	92.7%	92.7	92.6%、VH 88.4%）と$k=15$（全体92.7%、VH 88.4%）がほぼ同等のピークである。中間
+tex_in_json	88.4%	88.4	88.4%）と$k=15$（全体92.7%、VH 88.4%）がほぼ同等のピークである。中間の$k=5$（90
+tex_in_json	5	5	88.4%）がほぼ同等のピークである。中間の$k=5$（90.7%）・$k=10$（91.7%）との差
+tex_in_json	90.7%	90.7	4%）がほぼ同等のピークである。中間の$k=5$（90.7%）・$k=10$（91.7%）との差は小さい。レイ
+tex_in_json	10	10	ークである。中間の$k=5$（90.7%）・$k=10$（91.7%）との差は小さい。レイテンシは$k$
+tex_in_json	91.7%	91.7	る。中間の$k=5$（90.7%）・$k=10$（91.7%）との差は小さい。レイテンシは$k$に対してほぼ一
+tex_in_json	23.6	23.6	の差は小さい。レイテンシは$k$に対してほぼ一定（23.6--31.6s）であり、デフォルトは$k=3$とし
+tex_in_json	3	3	23.6--31.6s）であり、デフォルトは$k=3$とした。  \subsubsection{ドメイ
+tex_in_json	61	61	t_sensitivity}  スキーマ写像辞書（61エントリ）と用語辞書を同時にフル／50%／25%／
+tex_in_json	50%	50	マ写像辞書（61エントリ）と用語辞書を同時にフル／50%／25%／10%／0%の5水準に削減して再評価した
+tex_in_json	25%	25	書（61エントリ）と用語辞書を同時にフル／50%／25%／10%／0%の5水準に削減して再評価した（表~\
+tex_in_json	10%	10	エントリ）と用語辞書を同時にフル／50%／25%／10%／0%の5水準に削減して再評価した（表~\ref{
+tex_in_json	0%	0	）と用語辞書を同時にフル／50%／25%／10%／0%の5水準に削減して再評価した（表~\ref{tab
+tex_in_json	5	5	語辞書を同時にフル／50%／25%／10%／0%の5水準に削減して再評価した（表~\ref{tab:d
+tex_in_json	91.8%	91.8	~\ref{fig:dict_size}）。フルの91.8%は表~\ref{tab:ablation}のful
+tex_in_json	0%	0	:ablation}のfullと概ね同水準であり、0%の82.9%とno\_dictの82.7%はラン間
+tex_in_json	82.9%	82.9	lation}のfullと概ね同水準であり、0%の82.9%とno\_dictの82.7%はラン間変動の範囲内
+tex_in_json	82.7%	82.7	同水準であり、0%の82.9%とno\_dictの82.7%はラン間変動の範囲内で一致する。影響はVH層で最も
+tex_in_json	0%	0	囲内で一致する。影響はVH層で最も顕著で、フルから0%への低下は-32.9pp（全体-8.9pp）。Ea
+tex_in_json	100%	100	asy/Medium層は辞書の有無にかかわらずほぼ100%/93--97%であり、辞書の利点はドメイン用語か
+tex_in_json	93	93	edium層は辞書の有無にかかわらずほぼ100%/93--97%であり、辞書の利点はドメイン用語からSQ
+tex_in_json	50%	50	件への翻訳を要する高難易度層に集中する。中間水準（50%・25%・10%）は86.0%・85.0%・85.
+tex_in_json	25%	25	訳を要する高難易度層に集中する。中間水準（50%・25%・10%）は86.0%・85.0%・85.0%であ
+tex_in_json	10%	10	る高難易度層に集中する。中間水準（50%・25%・10%）は86.0%・85.0%・85.0%である。  
+tex_in_json	86.0%	86.0	層に集中する。中間水準（50%・25%・10%）は86.0%・85.0%・85.0%である。  \subsub
+tex_in_json	85.0%	85.0	。中間水準（50%・25%・10%）は86.0%・85.0%・85.0%である。  \subsubsectio
+tex_in_json	85.0%	85.0	50%・25%・10%）は86.0%・85.0%・85.0%である。  \subsubsection{LLMモ
+tex_in_json	2.1	2.1	model_comp}）。GPT-4oはレイテンシ2.1s（GPT-5.5の約1/15）と高速で、全体91
+tex_in_json	1	1	PT-4oはレイテンシ2.1s（GPT-5.5の約1/15）と高速で、全体91.7%はGPT-5.5の
+tex_in_json	15	15	-4oはレイテンシ2.1s（GPT-5.5の約1/15）と高速で、全体91.7%はGPT-5.5のful
+tex_in_json	91.7%	91.7	.1s（GPT-5.5の約1/15）と高速で、全体91.7%はGPT-5.5のfullと概ね同水準であり、層別
+tex_in_json	5.0	5.0	別ではMediumが-3.4pp、Hardが$+$5.0pp、VHが-6.5ppと小差の入れ替わりにとどま
+tex_in_json	-6.5	-6.5	が-3.4pp、Hardが$+$5.0pp、VHが-6.5ppと小差の入れ替わりにとどまる。本パイプラインの
+tex_in_json	100%	100	adar}）。  構文の有効性と実行成功率は全層で100%であった。これはfull条件における観測結果であり
+tex_in_json	100%	100	入力に対する安全性を保証することを意味しない。この100%は、SQLGuard検証と$n$-best実行スコ
+tex_in_json	39	39	t{semantic\_ordered}契約が真の39クエリについては行順序まで一致）は10.6%であっ
+tex_in_json	10.6%	10.6	}契約が真の39クエリについては行順序まで一致）は10.6%であった。一方、共通列射影上でPrecision=
+tex_in_json	1	1	、共通列射影上でPrecision=Recall=1となる旧来の緩い完全一致（lenient exac
+tex_in_json	245	245	nient exact match）は78.0%（245クエリ、多軸評価と同一の単一ランに対する採点監査\
+tex_in_json	86.1%	86.1	あり、列追加・欠落に対する感度が大きい。リコールは86.1%（適合率86.7%、F1 85.3%）、SELEC
+tex_in_json	86.7%	86.7	に対する感度が大きい。リコールは86.1%（適合率86.7%、F1 85.3%）、SELECT列精度は61.7
+tex_in_json	1	1	大きい。リコールは86.1%（適合率86.7%、F1 85.3%）、SELECT列精度は61.7%であ
+tex_in_json	85.3%	85.3	い。リコールは86.1%（適合率86.7%、F1 85.3%）、SELECT列精度は61.7%であった。JOI
+tex_in_json	61.7%	61.7	6.7%、F1 85.3%）、SELECT列精度は61.7%であった。JOINマッチ率は全体で89.3%、VH
+tex_in_json	89.3%	89.3	精度は61.7%であった。JOINマッチ率は全体で89.3%、VH層で77.3%であり、5つ以上のテーブルを結
+tex_in_json	77.3%	77.3	った。JOINマッチ率は全体で89.3%、VH層で77.3%であり、5つ以上のテーブルを結合するクエリでは貪欲
+tex_in_json	5	5	チ率は全体で89.3%、VH層で77.3%であり、5つ以上のテーブルを結合するクエリでは貪欲最短経路連
+tex_in_json	0.2%	0.2	スの誤りが残る。静的スキーマ未解決参照率はテーブル0.2%・カラム4.0%、FK非整合JOIN率は0.9%と
+tex_in_json	4.0%	4.0	静的スキーマ未解決参照率はテーブル0.2%・カラム4.0%、FK非整合JOIN率は0.9%と低く抑えられた（
+tex_in_json	0.9%	0.9	ル0.2%・カラム4.0%、FK非整合JOIN率は0.9%と低く抑えられた（いずれもSQLテキストの静的照合
+tex_in_json	100%	100	参照も計上し得る真の幻覚率の上限であり、実行成功率100%と矛盾しない）。 \subsection{誤差分析
+tex_in_json	5	5	ゼロで、FK関係に基づかないJOINを含むクエリは5件であった（no\_graphで6件、no\_di
+tex_in_json	6	6	Nを含むクエリは5件であった（no\_graphで6件、no\_dictで4件、no\_nbestでは
+tex_in_json	4	4	った（no\_graphで6件、no\_dictで4件、no\_nbestでは実行エラー3件）。$n$
+tex_in_json	3	3	_dictで4件、no\_nbestでは実行エラー3件）。$n$-best実行スコアリングの無効化（n
+tex_in_json	245	245	機構の寄与を示す。  保存されたfull条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だったのは
+tex_in_json	0.8	0.8	ll条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だったのは39件（VH 17・Hard 15・
+tex_in_json	39	39	クエリ多軸評価ラン）でリコール0.8未満だったのは39件（VH 17・Hard 15・Medium 5・
+tex_in_json	15	15	0.8未満だったのは39件（VH 17・Hard 15・Medium 5・Easy 2）であった。機械的
+tex_in_json	5	5	39件（VH 17・Hard 15・Medium 5・Easy 2）であった。機械的な誤差タイプ分類（
+tex_in_json	2	2	17・Hard 15・Medium 5・Easy 2）であった。機械的な誤差タイプ分類（多重ラベル）で
+tex_in_json	0.5	0.5	ラベル）では、誤ったカラム選択（SELECT列精度0.5未満：24件）とゴールド参照テーブルの一部欠落（J
+tex_in_json	24	24	、誤ったカラム選択（SELECT列精度0.5未満：24件）とゴールド参照テーブルの一部欠落（JOIN不一
+tex_in_json	24	24	とゴールド参照テーブルの一部欠落（JOIN不一致：24件）が主要因で、GROUP BY欠如（14件）・値
+tex_in_json	14	14	不一致：24件）が主要因で、GROUP BY欠如（14件）・値不一致（4件）が続く。詳細（図~\ref{
+tex_in_json	4	4	要因で、GROUP BY欠如（14件）・値不一致（4件）が続く。詳細（図~\ref{fig:error
+tex_in_json	7	7	injection_safety}  本研究では、7つの敵対的入力を用いてSQLGuardの安全機能を
+tex_in_json	5	5	INSERTなどの破壊的操作を自然言語に混入させた5件（テストID E01--E05）と、SQL文をそ
+tex_in_json	01	1	壊的操作を自然言語に混入させた5件（テストID E01--E05）と、SQL文をそのまま入力した2件（同
+tex_in_json	05	5	自然言語に混入させた5件（テストID E01--E05）と、SQL文をそのまま入力した2件（同F01--
+tex_in_json	2	2	 E01--E05）と、SQL文をそのまま入力した2件（同F01--F02）である。すべての入力はSQ
+tex_in_json	01	1	-E05）と、SQL文をそのまま入力した2件（同F01--F02）である。すべての入力はSQLGuard
+tex_in_json	02	2	と、SQL文をそのまま入力した2件（同F01--F02）である。すべての入力はSQLGuardによって安
+tex_in_json	01	1	ab:injection_results}）。 E01--E05は、禁止キーワード検出、マルチステートメ
+tex_in_json	05	5	jection_results}）。 E01--E05は、禁止キーワード検出、マルチステートメント検出、
+tex_in_json	01	1	出、テーブル許可リスト等によってブロックされた。F01はSELECT文が直接入力されたケースであり、LI
+tex_in_json	02	2	LIMITが自動追加される（ブロックされない）。F02はDML検出によってブロックされる。これら7ケース
+tex_in_json	7	7	。F02はDML検出によってブロックされる。これら7ケースは同梱の検証スクリプトで決定論的に再検証でき
+tex_in_json	-0.2	-0.2	レーションのno\_guard条件では実行再現率が-0.2pp変化したが（検出力不足のため有意性判定なし）、
+tex_in_json	3	3	_evaluation}  材料工学の観点から次の3つの探索を実行した。(1) $\gamma'$相候
+tex_in_json	1	1	  材料工学の観点から次の3つの探索を実行した。(1) $\gamma'$相候補ランキング：安定性・格
+tex_in_json	3	3	補ランキング：安定性・格子マッチング・体積弾性率の3指標加重複合スコアで255のユニークL1$_2$組
+tex_in_json	255	255	格子マッチング・体積弾性率の3指標加重複合スコアで255のユニークL1$_2$組成をランク付けした（157
+tex_in_json	1	1	積弾性率の3指標加重複合スコアで255のユニークL1$_2$組成をランク付けした（157の安定/準安定
+tex_in_json	2	2	率の3指標加重複合スコアで255のユニークL1$_2$組成をランク付けした（157の安定/準安定候補の
+tex_in_json	157	157	255のユニークL1$_2$組成をランク付けした（157の安定/準安定候補のうちNi$_3$Alが1位）。
+tex_in_json	3	3	ク付けした（157の安定/準安定候補のうちNi$_3$Alが1位）。(2) Ni$_3$Al近傍の格子
+tex_in_json	1	1	（157の安定/準安定候補のうちNi$_3$Alが1位）。(2) Ni$_3$Al近傍の格子定数候補抽
+tex_in_json	2	2	安定/準安定候補のうちNi$_3$Alが1位）。(2) Ni$_3$Al近傍の格子定数候補抽出：$|a
+tex_in_json	3	3	補のうちNi$_3$Alが1位）。(2) Ni$_3$Al近傍の格子定数候補抽出：$|a - a_{\
+tex_in_json	3	3	数候補抽出：$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\A
+tex_in_json	0.03	0.03	xt{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}（$a_{\text{ref}}
+tex_in_json	3.572	3.572	AA{}{}（$a_{\text{ref}} = 3.572$~\AA{}{}）を満たす26のユニーク組成（2
+tex_in_json	26	26	f}} = 3.572$~\AA{}{}）を満たす26のユニーク組成（27エントリ）を抽出した（全27エ
+tex_in_json	3	3	ref{tab:lattice_match}）。(3) 安定/準安定候補抽出：$E_\text{hul
+tex_in_json	157	157	hull} \leq 0.05$~eV/atomの157件（安定7件（$E_\text{hull} \le
+tex_in_json	7	7	leq 0.05$~eV/atomの157件（安定7件（$E_\text{hull} \leq 0.0
+tex_in_json	150	150	xt{hull} \leq 0.001$）、準安定150件）を抽出した。表~\ref{tab:gamma_
+tex_in_json	10	10	表~\ref{tab:gamma_prime}（全10行は補足資料の表~\ref{tab:gamma_p
+tex_in_json	1	1	\begin{equation}   S = w_1 \cdot S_\text{stability}
+tex_in_json	2	2	t S_\text{stability} + w_2 \cdot S_\text{lattice} +
+tex_in_json	3	3	dot S_\text{lattice} + w_3 \cdot S_\text{bulk}   \l
+tex_in_json	1	1	\end{equation} により行った（$w_1 = 0.35$、$w_2 = 0.35$、$w_
+tex_in_json	2	2	} により行った（$w_1 = 0.35$、$w_2 = 0.35$、$w_3 = 0.30$；$S_
+tex_in_json	3	3	 = 0.35$、$w_2 = 0.35$、$w_3 = 0.30$；$S_\text{stabili
+tex_in_json	1	1	0$；$S_\text{stability} = 1 - E_\text{hull}/0.05$、$S
+tex_in_json	1	1	.05$、$S_\text{lattice} = 1 - |\Delta a|/0.3$、$S_\te
+tex_in_json	3	3	の複数エントリは$S$最大のもので代表）。Ni$_3$Alは低い$E_\text{hull}$と小さい
+tex_in_json	1	1	l}$と小さい$\Delta a$のバランスにより1位、既知の安定L1$_2$相であるCo$_3$Ti
+tex_in_json	1	1	Delta a$のバランスにより1位、既知の安定L1$_2$相であるCo$_3$Ti（$\Delta 
+tex_in_json	2	2	ta a$のバランスにより1位、既知の安定L1$_2$相であるCo$_3$Ti（$\Delta a =
+tex_in_json	3	3	により1位、既知の安定L1$_2$相であるCo$_3$Ti（$\Delta a = 0.022$~\A
+tex_in_json	0.022	0.022	相であるCo$_3$Ti（$\Delta a = 0.022$~\AA{}{}、$E_\text{hull} 
+tex_in_json	0.0	0.0	\AA{}{}、$E_\text{hull} = 0.0$）が2位であり、Co$_3$Tiは格子定数候補抽
+tex_in_json	2	2	}、$E_\text{hull} = 0.0$）が2位であり、Co$_3$Tiは格子定数候補抽出でも最
+tex_in_json	3	3	{hull} = 0.0$）が2位であり、Co$_3$Tiは格子定数候補抽出でも最も現実的な析出強化候
+tex_in_json	3	3	補抽出でも最も現実的な析出強化候補である。Cr$_3$InやPt$_3$Tiのようなエントリは、合成デ
+tex_in_json	3	3	的な析出強化候補である。Cr$_3$InやPt$_3$Tiのようなエントリは、合成データセットが大きな
+tex_in_json	7	7	弾性率を割り当てているためにのみ上位に現れる。安定7相のうち最も負の生成エネルギーはPt$_3$Al（
+tex_in_json	3	3	る。安定7相のうち最も負の生成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/ato
+tex_in_json	3	3	 = -0.550$~eV/atom）で、Al$_3$Sc（$-0.500$）、Co$_3$Ti（$-
+tex_in_json	3	3	で、Al$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Cr$_3$Fe（$-
+tex_in_json	-0.450	-0.45	3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Cr$_3$Fe（$-0.440$）、Ni$
+tex_in_json	3	3	）、Co$_3$Ti（$-0.450$）、Cr$_3$Fe（$-0.440$）、Ni$_3$Al（$-
+tex_in_json	3	3	）、Cr$_3$Fe（$-0.440$）、Ni$_3$Al（$-0.420$）が続く。  \begin
+tex_in_json	-0.420	-0.42	3$Fe（$-0.440$）、Ni$_3$Al（$-0.420$）が続く。  \begin{table}[t] 
+tex_in_json	5	5	ion{$\gamma'$-相候補ランキングの上位5行（複合スコア$S$；全10行と\texttt{e
+tex_in_json	10	10	-相候補ランキングの上位5行（複合スコア$S$；全10行と\texttt{entry\_id}・$a$・
+tex_in_json	1	1	 $S$ \\     \midrule     1 & Ni$_3$Al & 0.000 & 0.0
+tex_in_json	3	3	    \midrule     1 & Ni$_3$Al & 0.000 & 0.000 & 0.8
+tex_in_json	0.000	0.0	drule     1 & Ni$_3$Al & 0.000 & 0.000 & 0.880 \\     2
+tex_in_json	0.000	0.0	  1 & Ni$_3$Al & 0.000 & 0.000 & 0.880 \\     2 & Co$_3
+tex_in_json	0.880	0.88	$_3$Al & 0.000 & 0.000 & 0.880 \\     2 & Co$_3$Ti & 0.
+tex_in_json	2	2	0 & 0.000 & 0.880 \\     2 & Co$_3$Ti & 0.000 & 0.0
+tex_in_json	3	3	0 & 0.880 \\     2 & Co$_3$Ti & 0.000 & 0.022 & 0.8
+tex_in_json	0.000	0.0	80 \\     2 & Co$_3$Ti & 0.000 & 0.022 & 0.864 \\     3
+tex_in_json	0.022	0.022	  2 & Co$_3$Ti & 0.000 & 0.022 & 0.864 \\     3 & Cr$_3
+tex_in_json	0.864	0.864	$_3$Ti & 0.000 & 0.022 & 0.864 \\     3 & Cr$_3$In & 0.
+tex_in_json	3	3	0 & 0.022 & 0.864 \\     3 & Cr$_3$In & 0.012 & 0.0
+tex_in_json	3	3	2 & 0.864 \\     3 & Cr$_3$In & 0.012 & 0.025 & 0.8
+tex_in_json	0.012	0.012	64 \\     3 & Cr$_3$In & 0.012 & 0.025 & 0.839 \\     4
+tex_in_json	0.025	0.025	  3 & Cr$_3$In & 0.012 & 0.025 & 0.839 \\     4 & Hf$_3
+tex_in_json	0.839	0.839	$_3$In & 0.012 & 0.025 & 0.839 \\     4 & Hf$_3$V & 0.0
+tex_in_json	4	4	2 & 0.025 & 0.839 \\     4 & Hf$_3$V & 0.006 & 0.01
+tex_in_json	3	3	5 & 0.839 \\     4 & Hf$_3$V & 0.006 & 0.018 & 0.83
+tex_in_json	0.006	0.006	839 \\     4 & Hf$_3$V & 0.006 & 0.018 & 0.834 \\     5
+tex_in_json	0.018	0.018	   4 & Hf$_3$V & 0.006 & 0.018 & 0.834 \\     5 & Pt$_3
+tex_in_json	0.834	0.834	f$_3$V & 0.006 & 0.018 & 0.834 \\     5 & Pt$_3$Sc & 0.
+tex_in_json	5	5	6 & 0.018 & 0.834 \\     5 & Pt$_3$Sc & 0.003 & 0.0
+tex_in_json	3	3	8 & 0.834 \\     5 & Pt$_3$Sc & 0.003 & 0.035 & 0.8
+tex_in_json	0.003	0.003	34 \\     5 & Pt$_3$Sc & 0.003 & 0.035 & 0.833 \\     \
+tex_in_json	0.035	0.035	  5 & Pt$_3$Sc & 0.003 & 0.035 & 0.833 \\     \bottomru
+tex_in_json	0.833	0.833	$_3$Sc & 0.003 & 0.035 & 0.833 \\     \bottomrule   \en
+tex_in_json	76.4%	76.4	障壁への対処が重要である。no\_fewshot（76.4%）と no\_dict（82.7%）のいずれも f
+tex_in_json	82.7%	82.7	fewshot（76.4%）と no\_dict（82.7%）のいずれも full（92.5%）を大きく下回り
+tex_in_json	92.5%	92.5	o\_dict（82.7%）のいずれも full（92.5%）を大きく下回り（表~\ref{tab:ablat
+tex_in_json	65.7%	65.7	:ablation}）、特に VH 層ではそれぞれ65.7%、52.0%に低下する。少数ショット例と材料ドメイ
+tex_in_json	52.0%	52.0	ion}）、特に VH 層ではそれぞれ65.7%、52.0%に低下する。少数ショット例と材料ドメイン辞書の併用
+tex_in_json	92.5%	92.5	少数ショット例と材料ドメイン辞書の併用により精度は92.5%に回復し、ドメイン特有の語彙を多用する複雑なクエリ
+tex_in_json	100%	100	有の語彙を多用する複雑なクエリで向上が顕著である。100%の構文妥当性と実行成功（表~\ref{tab:mu
+tex_in_json	89.3%	89.3	功（表~\ref{tab:multiaxis}）、89.3%のJOIN一致率は主として正確性と実行健全性の証拠
+tex_in_json	-16.1	-16.1	少数ショット例の削除は最大の精度低下をもたらした（-16.1pp, $p<0.001$；Hard層-24.7p
+tex_in_json	-24.7	-24.7	（-16.1pp, $p<0.001$；Hard層-24.7pp、VH層-21.8pp、Medium層-12.
+tex_in_json	-21.8	-21.8	p<0.001$；Hard層-24.7pp、VH層-21.8pp、Medium層-12.7pp；表~\ref{
+tex_in_json	-12.7	-12.7	24.7pp、VH層-21.8pp、Medium層-12.7pp；表~\ref{tab:ablation-de
+tex_in_json	-9.8	-9.8	raph*{材料ドメイン辞書} 辞書の削除は全体で-9.8ppの低下をもたらした（$p=0.0001$、Ho
+tex_in_json	-1.3	-1.3	層に依存し、Easy層では低下がなくMedium層-1.3ppにとどまる一方、Hard層-7.7pp、VH層
+tex_in_json	-7.7	-7.7	edium層-1.3ppにとどまる一方、Hard層-7.7pp、VH層-35.5ppであった（表~\ref{
+tex_in_json	-35.5	-35.5	ppにとどまる一方、Hard層-7.7pp、VH層-35.5ppであった（表~\ref{tab:ablatio
+tex_in_json	-6.2	-6.2	ragraph*{リランカー} リランカーの削除は-6.2ppの低下（未補正$p=0.0195$だがHolm
+tex_in_json	-13.0	-13.0	781$で有意ではない）で、効果はMedium層（-13.0pp）・Hard層（-6.5pp）に集中した（表~
+tex_in_json	-6.5	-6.5	果はMedium層（-13.0pp）・Hard層（-6.5pp）に集中した（表~\ref{tab:ablat
+tex_in_json	20	20	il}）。別途実施したリランカー単独のA/B評価（20クエリ、両腕とも同一条件で再生成した単一ラン）では
+tex_in_json	92.2%	92.2	、両腕とも同一条件で再生成した単一ラン）では、あり92.2%対なし77.7%（$+$14.5pp；差は未丸め値
+tex_in_json	77.7%	77.7	件で再生成した単一ラン）では、あり92.2%対なし77.7%（$+$14.5pp；差は未丸め値から算出）で候補
+tex_in_json	14.5	14.5	ラン）では、あり92.2%対なし77.7%（$+$14.5pp；差は未丸め値から算出）で候補選択の寄与自体は
+tex_in_json	-0.2	-0.2	-best・貪欲最短経路連結} SQLGuard（-0.2pp、95%CI $[-0.6, +0.1]$pp
+tex_in_json	95%	95	欲最短経路連結} SQLGuard（-0.2pp、95%CI $[-0.6, +0.1]$pp）、$n$-
+tex_in_json	0.1	0.1	rd（-0.2pp、95%CI $[-0.6, +0.1]$pp）、$n$-best（-0.3pp、$p=
+tex_in_json	-0.3	-0.3	-0.6, +0.1]$pp）、$n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1
+tex_in_json	0.625	0.625	]$pp）、$n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1, +0.4]$pp）
+tex_in_json	95%	95	n$-best（-0.3pp、$p=0.625$、95%CI $[-1.1, +0.4]$pp）、貪欲最短
+tex_in_json	0.4	0.4	$p=0.625$、95%CI $[-1.1, +0.4]$pp）、貪欲最短経路連結（-1.4pp、$p=
+tex_in_json	-1.4	-1.4	-1.1, +0.4]$pp）、貪欲最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.
+tex_in_json	95%	95	最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.4, -0.002]$pp）はいず
+tex_in_json	2	2	Guardと$n$-bestは非同点ペアがそれぞれ2・5件と少なく検出力不足のため有意性判定を行わず（
+tex_in_json	5	5	ardと$n$-bestは非同点ペアがそれぞれ2・5件と少なく検出力不足のため有意性判定を行わず（表~
+tex_in_json	100%	100	ンや非SELECT文を実行前に排除する（構文妥当率100%はSQLGuard単独の因果効果とは解釈しない）。
+tex_in_json	1	1	の因果効果とは解釈しない）。$n$-best = 1は精度を概ね維持しつつレイテンシを30.9sから8
+tex_in_json	30.9	30.9	best = 1は精度を概ね維持しつつレイテンシを30.9sから8.6sに短縮でき（表~\ref{tab:l
+tex_in_json	8.6	8.6	1は精度を概ね維持しつつレイテンシを30.9sから8.6sに短縮でき（表~\ref{tab:latency
+tex_in_json	5	5	いJOINを含むクエリはこの保存ランではfullで5件、no\_graphで6件といずれも少なく（表~
+tex_in_json	6	6	の保存ランではfullで5件、no\_graphで6件といずれも少なく（表~\ref{tab:erro
+tex_in_json	36	36	る。全体精度に明確な差が出ない一因は、本検証DBが36テーブルでスキーマ全文がプロンプトに収まる規模だか
+tex_in_json	-1.4	-1.4	hema}と整合する。すなわちno\_graph -1.4pp（有意でない）は機構の失敗ではなくスキーマ規模
+tex_in_json	1	1	agraph*{寄与の相互作用} アブレーションは1コンポーネントずつの除去であり、相互作用のため寄与
+tex_in_json	245	245	itional_validation}  主評価（245クエリ；うち100クエリは共同著者による独立設計）
+tex_in_json	100	100	alidation}  主評価（245クエリ；うち100クエリは共同著者による独立設計）とアブレーションだ
+tex_in_json	1	1	てしまう。本節ではこれを補う追加検証群、すなわち(1)~主評価に含まれる独立設計100クエリの別ラン再
+tex_in_json	100	100	加検証群、すなわち(1)~主評価に含まれる独立設計100クエリの別ラン再評価、(2)~CTEを要する多段計
+tex_in_json	2	2	価に含まれる独立設計100クエリの別ラン再評価、(2)~CTEを要する多段計算クエリ、(3)~列間比較
+tex_in_json	3	3	ン再評価、(2)~CTEを要する多段計算クエリ、(3)~列間比較クエリ、(4)~適応条件の異なる4種の
+tex_in_json	4	4	を要する多段計算クエリ、(3)~列間比較クエリ、(4)~適応条件の異なる4種の一般化試験、(5)~質問
+tex_in_json	4	4	、(3)~列間比較クエリ、(4)~適応条件の異なる4種の一般化試験、(5)~質問文言語の依存性検証、の
+tex_in_json	5	5	エリ、(4)~適応条件の異なる4種の一般化試験、(5)~質問文言語の依存性検証、の結果をまとめて考察す
+tex_in_json	100	100	をまとめて考察する。以下の追加検証のうち、独立設計100クエリ・バリアントA 20クエリ・CTE 15クエ
+tex_in_json	20	20	加検証のうち、独立設計100クエリ・バリアントA 20クエリ・CTE 15クエリは主評価245クエリの部
+tex_in_json	15	15	計100クエリ・バリアントA 20クエリ・CTE 15クエリは主評価245クエリの部分集合（表~\ref
+tex_in_json	245	245	リアントA 20クエリ・CTE 15クエリは主評価245クエリの部分集合（表~\ref{tab:main_
+tex_in_json	135	135	ref{tab:main_partition}；計135クエリ）に対する別ラン再評価であり、245クエリの
+tex_in_json	245	245	n}；計135クエリ）に対する別ラン再評価であり、245クエリの外に追加した評価コーパスではない。一方、一
+tex_in_json	55	55	パスではない。一方、一般化バリアントB/C/D（計55クエリ）と非翻訳英語25クエリは主評価に含まれない
+tex_in_json	25	25	化バリアントB/C/D（計55クエリ）と非翻訳英語25クエリは主評価に含まれない別コーパスである。  \
+tex_in_json	245	245	る（自己参照バイアス）。これを緩和するため、主評価245クエリの統合コーパス（セクション~\ref{sec
+tex_in_json	100	100	インの実装に関与していない共同著者が独立に設計した100クエリが含まれている（表~\ref{tab:mai
+tex_in_json	100	100	tition}の部分集合）。本項では、この独立設計100クエリを単独で別ラン再評価した結果を報告する。難易
+tex_in_json	18	18	ン再評価した結果を報告する。難易度分布はEasy 18 / Medium 34 / Hard 34 / 
+tex_in_json	34	34	る。難易度分布はEasy 18 / Medium 34 / Hard 34 / Very Hard 14
+tex_in_json	34	34	sy 18 / Medium 34 / Hard 34 / Very Hard 14で、基本検索から材料
+tex_in_json	14	14	34 / Hard 34 / Very Hard 14で、基本検索から材料設計・統計まで10カテゴリにわ
+tex_in_json	10	10	 Hard 14で、基本検索から材料設計・統計まで10カテゴリにわたる（カテゴリ内訳は補足資料~\ref
+tex_in_json	81.5%	81.5	易度分類で行った。  この別ランの全体実行再現率は81.5%（Easy 87.8% / Medium 90.5
+tex_in_json	87.8%	87.8	この別ランの全体実行再現率は81.5%（Easy 87.8% / Medium 90.5% / Hard 70
+tex_in_json	90.5%	90.5	1.5%（Easy 87.8% / Medium 90.5% / Hard 70.2% / Very Hard
+tex_in_json	70.2%	70.2	8% / Medium 90.5% / Hard 70.2% / Very Hard 78.7%；平均レイテン
+tex_in_json	78.7%	78.7	/ Hard 70.2% / Very Hard 78.7%；平均レイテンシ29.9s）であった。なお、この1
+tex_in_json	29.9	29.9	/ Very Hard 78.7%；平均レイテンシ29.9s）であった。なお、この100クエリは主評価245
+tex_in_json	100	100	%；平均レイテンシ29.9s）であった。なお、この100クエリは主評価245クエリに含まれるため、主評価全
+tex_in_json	245	245	9.9s）であった。なお、この100クエリは主評価245クエリに含まれるため、主評価全体（86.1%）との
+tex_in_json	86.1%	86.1	リは主評価245クエリに含まれるため、主評価全体（86.1%）との単純差4.6ppを「著者設計と独立設計の差」
+tex_in_json	100	100	とはできない：主評価の単一ラン内では、同じ独立設計100クエリ部分が83.4%、残りの著者設計145クエリ
+tex_in_json	83.4%	83.4	価の単一ラン内では、同じ独立設計100クエリ部分が83.4%、残りの著者設計145クエリが87.9%であり、主
+tex_in_json	145	145	立設計100クエリ部分が83.4%、残りの著者設計145クエリが87.9%であり、主評価全体との差には同一
+tex_in_json	87.9%	87.9	エリ部分が83.4%、残りの著者設計145クエリが87.9%であり、主評価全体との差には同一100クエリのラン
+tex_in_json	100	100	クエリが87.9%であり、主評価全体との差には同一100クエリのラン間変動（83.4% 対 81.5%）も
+tex_in_json	83.4%	83.4	主評価全体との差には同一100クエリのラン間変動（83.4% 対 81.5%）も混ざる。したがって自己参照バイ
+tex_in_json	81.5%	81.5	には同一100クエリのラン間変動（83.4% 対 81.5%）も混ざる。したがって自己参照バイアスの定量値とし
+tex_in_json	83.4%	83.4	定量値としては、同一ラン内の部分集合比較（独立設計83.4% 対 著者設計87.9%、4.5pp）のほうが適切
+tex_in_json	87.9%	87.9	内の部分集合比較（独立設計83.4% 対 著者設計87.9%、4.5pp）のほうが適切であり、これも問題分布の
+tex_in_json	4.5	4.5	比較（独立設計83.4% 対 著者設計87.9%、4.5pp）のほうが適切であり、これも問題分布の差を含む
+tex_in_json	145	145	とどまる。なお、この差が難易度分布の違い（著者設計145クエリはVH比率が高い：50/145 対 14/1
+tex_in_json	50	50	分布の違い（著者設計145クエリはVH比率が高い：50/145 対 14/100）による見かけでないこと
+tex_in_json	145	145	違い（著者設計145クエリはVH比率が高い：50/145 対 14/100）による見かけでないことを確認す
+tex_in_json	14	14	計145クエリはVH比率が高い：50/145 対 14/100）による見かけでないことを確認するため、両
+tex_in_json	100	100	5クエリはVH比率が高い：50/145 対 14/100）による見かけでないことを確認するため、両部分集合
+tex_in_json	43	43	度層別実行再現率を主評価コーパス全体の難易度構成（43/69/69/64）へ直接標準化して比較すると、独
+tex_in_json	69	69	実行再現率を主評価コーパス全体の難易度構成（43/69/69/64）へ直接標準化して比較すると、独立設計
+tex_in_json	69	69	現率を主評価コーパス全体の難易度構成（43/69/69/64）へ直接標準化して比較すると、独立設計83.
+tex_in_json	64	64	主評価コーパス全体の難易度構成（43/69/69/64）へ直接標準化して比較すると、独立設計83.9% 
+tex_in_json	83.9%	83.9	/69/64）へ直接標準化して比較すると、独立設計83.9% 対 著者設計89.4%（5.5pp）と差はむしろ
+tex_in_json	89.4%	89.4	化して比較すると、独立設計83.9% 対 著者設計89.4%（5.5pp）と差はむしろ広がる（層別ではEasy
+tex_in_json	87.8%	87.8	5.5pp）と差はむしろ広がる（層別ではEasy 87.8% 対 100.0%、Medium 90.5% 対 
+tex_in_json	100.0%	100.0	はむしろ広がる（層別ではEasy 87.8% 対 100.0%、Medium 90.5% 対 97.1%、Har
+tex_in_json	90.5%	90.5	sy 87.8% 対 100.0%、Medium 90.5% 対 97.1%、Hard 73.2% 対 88.
+tex_in_json	97.1%	97.1	 対 100.0%、Medium 90.5% 対 97.1%、Hard 73.2% 対 88.6%、VH 85
+tex_in_json	73.2%	73.2	edium 90.5% 対 97.1%、Hard 73.2% 対 88.6%、VH 85.7% 対 74.8%
+tex_in_json	88.6%	88.6	.5% 対 97.1%、Hard 73.2% 対 88.6%、VH 85.7% 対 74.8%で、VHのみ逆転
+tex_in_json	85.7%	85.7	1%、Hard 73.2% 対 88.6%、VH 85.7% 対 74.8%で、VHのみ逆転）。したがって、少
+tex_in_json	74.8%	74.8	73.2% 対 88.6%、VH 85.7% 対 74.8%で、VHのみ逆転）。したがって、少なくとも4層の難
+tex_in_json	4	4	4.8%で、VHのみ逆転）。したがって、少なくとも4層の難易度構成比の違いだけでは、この差は説明されな
+tex_in_json	1	1	。独立設計クエリが著者設計クエリより低い傾向は、(1)~独立クエリが\texttt{elastic\_
+tex_in_json	2	2	辺テーブルを参照するテーブルカバレッジバイアス、(2)~著者設計クエリの固定パターン（「L1$_2$」
+tex_in_json	1	1	イアス、(2)~著者設計クエリの固定パターン（「L1$_2$」明示）に最適化された少数ショット例、(3
+tex_in_json	2	2	、(2)~著者設計クエリの固定パターン（「L1$_2$」明示）に最適化された少数ショット例、(3)~よ
+tex_in_json	3	3	1$_2$」明示）に最適化された少数ショット例、(3)~より暗黙的な条件指定を含む語彙の多様性、に起因
+tex_in_json	25	25	し周辺テーブル参照だけでは説明できない：非翻訳英語25問（セクション~\ref{sec:language
+tex_in_json	96.5	96.5	e\_energy}等の周辺テーブルを参照するが$96.5$%であり、両データセットは要求テーブル数・CTE
+tex_in_json	100.0%	100.0	み合わさって差を生むと解釈する。  構文の有効性（100.0%）は両セットで一貫する。VH層（78.7%）がHa
+tex_in_json	78.7%	78.7	効性（100.0%）は両セットで一貫する。VH層（78.7%）がHard層（70.2%）より高いのは、VHクエ
+tex_in_json	70.2%	70.2	ットで一貫する。VH層（78.7%）がHard層（70.2%）より高いのは、VHクエリの多くが少数ショット例で
+tex_in_json	3	3	計算する多段階クエリが含まれる。代表例``Ni$_3$Alの生成エンタルピーを純元素参照を用いて計算せ
+tex_in_json	3	3	エンタルピーを純元素参照を用いて計算せよ''には、3テーブルからの取得と$\Delta H_\math
+tex_in_json	5	5	ults}）。few-shot例でカバーされた既知5パターンは完全条件で100.0%であり、少数ショッ
+tex_in_json	100.0%	100.0	shot例でカバーされた既知5パターンは完全条件で100.0%であり、少数ショット例除去では60.0%、辞書除去
+tex_in_json	60.0%	60.0	全条件で100.0%であり、少数ショット例除去では60.0%、辞書除去では80.0%に低下する一方、リランカー
+tex_in_json	80.0%	80.0	り、少数ショット例除去では60.0%、辞書除去では80.0%に低下する一方、リランカー・SQLGuard・グラ
+tex_in_json	100%	100	ー・SQLGuard・グラフJOIN制約の除去では100%を維持し（$n$-best除去は96.0%）、少数
+tex_in_json	96.0%	96.0	の除去では100%を維持し（$n$-best除去は96.0%）、少数ショット例のパターンカバレッジがCTE構文
+tex_in_json	245	245	寄与者である。  適用限界を定量化するため、主評価245クエリに含まれるCTEクエリ15件（アブレーション
+tex_in_json	15	15	するため、主評価245クエリに含まれるCTEクエリ15件（アブレーション用サブセット内の既知5パターンと
+tex_in_json	5	5	Eクエリ15件（アブレーション用サブセット内の既知5パターンと、245クエリに含まれるがアブレーション
+tex_in_json	245	245	（アブレーション用サブセット内の既知5パターンと、245クエリに含まれるがアブレーション対象外の10クエリ
+tex_in_json	10	10	と、245クエリに含まれるがアブレーション対象外の10クエリ；後者はウィンドウ関数、2段階集約、3段階C
+tex_in_json	2	2	ーション対象外の10クエリ；後者はウィンドウ関数、2段階集約、3段階CTEなど少数ショット例のないゼロ
+tex_in_json	3	3	外の10クエリ；後者はウィンドウ関数、2段階集約、3段階CTEなど少数ショット例のないゼロショットパタ
+tex_in_json	5	5	ゼロショットパターン）を単独で別ラン評価した。既知5パターンは100%を維持したが、ゼロショット10パ
+tex_in_json	100%	100	パターン）を単独で別ラン評価した。既知5パターンは100%を維持したが、ゼロショット10パターンは59.0%
+tex_in_json	10	10	既知5パターンは100%を維持したが、ゼロショット10パターンは59.0%にとどまり（全体72.7%）、
+tex_in_json	59.0%	59.0	は100%を維持したが、ゼロショット10パターンは59.0%にとどまり（全体72.7%）、マルチステップ計算サ
+tex_in_json	72.7%	72.7	ロショット10パターンは59.0%にとどまり（全体72.7%）、マルチステップ計算サポートの範囲は少数ショット
+tex_in_json	1	1	される。逆に、新パターンへの拡張はパターンごとに約1件の例の追加で達成でき、モデルの再トレーニングを要
+tex_in_json	0.5	0.5	定数比較（\texttt{WHERE col > 0.5}）に比べてLLMが正しく生成しにくく、特にテーブ
+tex_in_json	3	3	ブル内比較・テーブル間比較・集約関数を用いた比較の3種の列間比較パターンを少数ショット例で供給しており
+tex_in_json	45	45	ット例で供給しており（例プールを主にこのパターンで45例に拡張）、各パターンのSQL断片は補足資料~\r
+tex_in_json	4	4	ータベースだけでの評価を補うため、適応条件の異なる4種類の一般化試験を実施し、表~\ref{tab:t
+tex_in_json	36	36	:transfer_eval}に要約した。Aは同一36テーブルスキーマのまま対象プロトタイプを拡張するデ
+tex_in_json	8	8	ls Project（MP）スキーマ用プロンプトと8件のMP専用few-shot例を与える軽量スキーマ
+tex_in_json	4	4	ot例を与える軽量スキーマ適応である。したがって、4条件を一括して「ゼロ適応」とは呼ばない。表の百分率
+tex_in_json	20	20	現率であり、適応条件はバリアントごとに異なる。Aの20クエリ（\texttt{q\_proto\_*}）
+tex_in_json	245	245	\texttt{q\_proto\_*}）は主評価245クエリの部分集合であり、100.0%は同一問題に対
+tex_in_json	100.0%	100.0	o\_*}）は主評価245クエリの部分集合であり、100.0%は同一問題に対する別ランの値である（主評価の単一ラ
+tex_in_json	20	20	に対する別ランの値である（主評価の単一ラン内では同20クエリは85.0%であり、差はラン間変動を含む）；
+tex_in_json	85.0%	85.0	ンの値である（主評価の単一ラン内では同20クエリは85.0%であり、差はラン間変動を含む）；B/C/Dは主評価
+tex_in_json	5	5	率 \\ \midrule A & 同一スキーマ・5プロトタイプ横断クエリ & 20 & 100.0%
+tex_in_json	20	20	 & 同一スキーマ・5プロトタイプ横断クエリ & 20 & 100.0% \\ B & OQMD風リネー
+tex_in_json	100.0%	100.0	スキーマ・5プロトタイプ横断クエリ & 20 & 100.0% \\ B & OQMD風リネーム（コード変更なし
+tex_in_json	20	20	B & OQMD風リネーム（コード変更なし） & 20 & 85.0% \\ C & 識別子難読化（コー
+tex_in_json	85.0%	85.0	QMD風リネーム（コード変更なし） & 20 & 85.0% \\ C & 識別子難読化（コード変更なし） &
+tex_in_json	20	20	\\ C & 識別子難読化（コード変更なし） & 20 & 80.0% \\ D & MP実データ（MP
+tex_in_json	80.0%	80.0	& 識別子難読化（コード変更なし） & 20 & 80.0% \\ D & MP実データ（MP専用prompt
+tex_in_json	15	15	MP専用prompt + few-shot） & 15 & 93.3% \\ \bottomrule \
+tex_in_json	93.3%	93.3	rompt + few-shot） & 15 & 93.3% \\ \bottomrule \end{tabu
+tex_in_json	2	2	が日本語であることによる言語依存性を検証するため、2種類の追加評価を行った。第一に、アブレーションで用
+tex_in_json	100	100	の追加評価を行った。第一に、アブレーションで用いた100クエリの質問文を意味等価な英語に翻訳し、gold 
+tex_in_json	3	3	るpaired比較を実施した（full条件、各言語3ラン）。行レベル実行再現率は日本語$92.0 \p
+tex_in_json	92.0	92.0	条件、各言語3ラン）。行レベル実行再現率は日本語$92.0 \pm 0.7$%（3ラン：91.8／91.4／
+tex_in_json	0.7	0.7	）。行レベル実行再現率は日本語$92.0 \pm 0.7$%（3ラン：91.8／91.4／92.7%）、英
+tex_in_json	3	3	実行再現率は日本語$92.0 \pm 0.7$%（3ラン：91.8／91.4／92.7%）、英語は日本
+tex_in_json	91.8	91.8	率は日本語$92.0 \pm 0.7$%（3ラン：91.8／91.4／92.7%）、英語は日本語より平均$2
+tex_in_json	91.4	91.4	$92.0 \pm 0.7$%（3ラン：91.8／91.4／92.7%）、英語は日本語より平均$2.0$pp
+tex_in_json	92.7%	92.7	 \pm 0.7$%（3ラン：91.8／91.4／92.7%）、英語は日本語より平均$2.0$pp低かった（$
+tex_in_json	2.0	2.0	8／91.4／92.7%）、英語は日本語より平均$2.0$pp低かった（$90.0 \pm 2.0$%、3
+tex_in_json	90.0	90.0	）、英語は日本語より平均$2.0$pp低かった（$90.0 \pm 2.0$%、3ラン：91.7／90.4／
+tex_in_json	2.0	2.0	り平均$2.0$pp低かった（$90.0 \pm 2.0$%、3ラン：91.7／90.4／87.8%；表~
+tex_in_json	3	3	0$pp低かった（$90.0 \pm 2.0$%、3ラン：91.7／90.4／87.8%；表~\ref
+tex_in_json	91.7	91.7	低かった（$90.0 \pm 2.0$%、3ラン：91.7／90.4／87.8%；表~\ref{tab:la
+tex_in_json	90.4	90.4	$90.0 \pm 2.0$%、3ラン：91.7／90.4／87.8%；表~\ref{tab:languag
+tex_in_json	87.8%	87.8	 \pm 2.0$%、3ラン：91.7／90.4／87.8%；表~\ref{tab:language_eval
+tex_in_json	92.0	92.0	tab:language_eval}）。日本語の$92.0$%は表~\ref{tab:ablation}のf
+tex_in_json	92.5	92.5	ref{tab:ablation}のfull条件$92.5 \pm 0.4$%（5ラン）とは別の3ランであり
+tex_in_json	0.4	0.4	blation}のfull条件$92.5 \pm 0.4$%（5ラン）とは別の3ランであり、両者はラン間変
+tex_in_json	5	5	n}のfull条件$92.5 \pm 0.4$%（5ラン）とは別の3ランであり、両者はラン間変動の範囲
+tex_in_json	3	3	件$92.5 \pm 0.4$%（5ラン）とは別の3ランであり、両者はラン間変動の範囲で整合する\fo
+tex_in_json	3	3	る\footnote{層別ではpaired日本語（3ラン）はHard 88.9%・Very Hard 
+tex_in_json	88.9%	88.9	{層別ではpaired日本語（3ラン）はHard 88.9%・Very Hard 81.9%で、表~\ref{
+tex_in_json	81.9%	81.9	ラン）はHard 88.9%・Very Hard 81.9%で、表~\ref{tab:ablation}のfu
+tex_in_json	5	5	~\ref{tab:ablation}のfull（5ラン）のHard 86.8%・Very Hard 
+tex_in_json	86.8%	86.8	ablation}のfull（5ラン）のHard 86.8%・Very Hard 87.5%と差があるが、クエ
+tex_in_json	87.5%	87.5	ラン）のHard 86.8%・Very Hard 87.5%と差があるが、クエリ単位で照合するとこの層別差は主
+tex_in_json	2	2	あるが、クエリ単位で照合するとこの層別差は主として2クエリ（q\_hard\_014：$0.00 \t
+tex_in_json	014	14	とこの層別差は主として2クエリ（q\_hard\_014：$0.00 \to 0.67$、q\_vhard
+tex_in_json	0.00	0.0	差は主として2クエリ（q\_hard\_014：$0.00 \to 0.67$、q\_vhard\_005：
+tex_in_json	005	5	0.00 \to 0.67$、q\_vhard\_005：$1.00 \to 0.00$）のラン間変動に由
+tex_in_json	1.00	1.0	\to 0.67$、q\_vhard\_005：$1.00 \to 0.00$）のラン間変動に由来し、層ごと
+tex_in_json	0.00	0.0	、q\_vhard\_005：$1.00 \to 0.00$）のラン間変動に由来し、層ごとの$n$が小さい（
+tex_in_json	30	30	間変動に由来し、層ごとの$n$が小さい（Hard 30・Very Hard 20）ための見かけの差である
+tex_in_json	20	20	n$が小さい（Hard 30・Very Hard 20）ための見かけの差である。}。クエリ単位の3ラン平
+tex_in_json	3	3	d 20）ための見かけの差である。}。クエリ単位の3ラン平均に対する対応あり検定では、Wilcoxon
+tex_in_json	13	13	on符号順位統計量に対する全符号置換検定（非ゼロ差13件の$2^{13}$通りの符号割当を全列挙；同順位
+tex_in_json	2	2	位統計量に対する全符号置換検定（非ゼロ差13件の$2^{13}$通りの符号割当を全列挙；同順位は中央順
+tex_in_json	13	13	量に対する全符号置換検定（非ゼロ差13件の$2^{13}$通りの符号割当を全列挙；同順位は中央順位で処理
+tex_in_json	0.193	0.193	符号割当を全列挙；同順位は中央順位で処理）で$p=0.193$、平均差のブートストラップ95%信頼区間は$[-
+tex_in_json	95%	95	理）で$p=0.193$、平均差のブートストラップ95%信頼区間は$[-5.8, +1.6]$ppで0を含
+tex_in_json	1.6	1.6	ブートストラップ95%信頼区間は$[-5.8, +1.6]$ppで0を含み、言語差は検出されなかった（ただ
+tex_in_json	0	0	95%信頼区間は$[-5.8, +1.6]$ppで0を含み、言語差は検出されなかった（ただしこれは同等
+tex_in_json	3	3	般への非依存性の証明ではない）。未丸めのクエリ単位3ラン平均に基づく層別差（EN-JA）はEasy $
+tex_in_json	-1.3	-1.3	ラン平均に基づく層別差（EN-JA）はEasy $-1.3$pp（非同点2件）、Medium $-3.3$p
+tex_in_json	2	2	（EN-JA）はEasy $-1.3$pp（非同点2件）、Medium $-3.3$pp（非同点2件）
+tex_in_json	-3.3	-3.3	 $-1.3$pp（非同点2件）、Medium $-3.3$pp（非同点2件）、Hard $+0.2$pp（
+tex_in_json	2	2	同点2件）、Medium $-3.3$pp（非同点2件）、Hard $+0.2$pp（非同点6件）、V
+tex_in_json	0.2	0.2	m $-3.3$pp（非同点2件）、Hard $+0.2$pp（非同点6件）、Very Hard $-4.
+tex_in_json	6	6	（非同点2件）、Hard $+0.2$pp（非同点6件）、Very Hard $-4.1$pp（非同点
+tex_in_json	-4.1	-4.1	0.2$pp（非同点6件）、Very Hard $-4.1$pp（非同点3件）であるが、非同点ペア数が極端に
+tex_in_json	3	3	件）、Very Hard $-4.1$pp（非同点3件）であるが、非同点ペア数が極端に少ないため探索的
+tex_in_json	0.1	0.1	値の差とはここでの丸め・集計順序の違いにより最大$0.1$pp程度ずれる）。同一のパイプライン構成が日英の
+tex_in_json	45	45	お、paired評価ではfew-shot例プール（45例、質問文はすべて日本語）を英語用に差し替えず日本
+tex_in_json	2	2	替えず日本語のまま固定した。本評価は日本語と英語の2言語に限られ、言語一般に対する非依存性を示すもので
+tex_in_json	100	100	ion{言語依存性検証（paired比較）の結果。100クエリ・full条件・各言語3ランの行レベル実行再
+tex_in_json	3	3	d比較）の結果。100クエリ・full条件・各言語3ランの行レベル実行再現率（3ラン平均、%）。gol
+tex_in_json	3	3	・full条件・各言語3ランの行レベル実行再現率（3ラン平均、%）。gold SQL・期待結果・データ
+tex_in_json	92.0	92.0	 Hard \\ \midrule 日本語 & $92.0 \pm 0.7$ & 99.7 & 96.7 &
+tex_in_json	0.7	0.7	\midrule 日本語 & $92.0 \pm 0.7$ & 99.7 & 96.7 & 88.9 & 
+tex_in_json	99.7	99.7	e 日本語 & $92.0 \pm 0.7$ & 99.7 & 96.7 & 88.9 & 81.9 \\ 
+tex_in_json	96.7	96.7	 $92.0 \pm 0.7$ & 99.7 & 96.7 & 88.9 & 81.9 \\ 英語 & $9
+tex_in_json	88.9	88.9	\pm 0.7$ & 99.7 & 96.7 & 88.9 & 81.9 \\ 英語 & $90.0 \pm
+tex_in_json	81.9	81.9	$ & 99.7 & 96.7 & 88.9 & 81.9 \\ 英語 & $90.0 \pm 2.0$ &
+tex_in_json	90.0	90.0	7 & 88.9 & 81.9 \\ 英語 & $90.0 \pm 2.0$ & 98.3 & 93.3 &
+tex_in_json	2.0	2.0	& 81.9 \\ 英語 & $90.0 \pm 2.0$ & 98.3 & 93.3 & 89.1 & 
+tex_in_json	98.3	98.3	\\ 英語 & $90.0 \pm 2.0$ & 98.3 & 93.3 & 89.1 & 77.8 \\ 
+tex_in_json	93.3	93.3	 $90.0 \pm 2.0$ & 98.3 & 93.3 & 89.1 & 77.8 \\ \bottom
+tex_in_json	89.1	89.1	\pm 2.0$ & 98.3 & 93.3 & 89.1 & 77.8 \\ \bottomrule \e
+tex_in_json	77.8	77.8	$ & 98.3 & 93.3 & 89.1 & 77.8 \\ \bottomrule \end{tabu
+tex_in_json	25	25	を参照せずに英語で新規作問した非翻訳英語検証セット25問を作成し、作問後にgold SQLと期待結果を作
+tex_in_json	3	3	したうえで、同一パイプライン・同一採点で評価した（3ラン）。難易度ラベルはgold SQLからセクショ
+tex_in_json	245	245	事後指標の実装であり、著者が設計時に付与した主評価245問の既存ラベルとは144/245で一致、不一致10
+tex_in_json	245	245	時に付与した主評価245問の既存ラベルとは144/245で一致、不一致101件のうち92件（91.1%）は
+tex_in_json	92	92	ベルとは144/245で一致、不一致101件のうち92件（91.1%）は隣接層間のずれである）、Easy
+tex_in_json	91.1%	91.1	144/245で一致、不一致101件のうち92件（91.1%）は隣接層間のずれである）、Easy 13・Med
+tex_in_json	13	13	（91.1%）は隣接層間のずれである）、Easy 13・Medium 8・Hard 4・Very Har
+tex_in_json	8	8	層間のずれである）、Easy 13・Medium 8・Hard 4・Very Hard 0である。実行
+tex_in_json	4	4	る）、Easy 13・Medium 8・Hard 4・Very Hard 0である。実行再現率は$96
+tex_in_json	0	0	edium 8・Hard 4・Very Hard 0である。実行再現率は$96.5 \pm 2.3$%
+tex_in_json	96.5	96.5	 4・Very Hard 0である。実行再現率は$96.5 \pm 2.3$%（95.2／95.2／99.2
+tex_in_json	2.3	2.3	ard 0である。実行再現率は$96.5 \pm 2.3$%（95.2／95.2／99.2%）であった。た
+tex_in_json	95.2	95.2	ある。実行再現率は$96.5 \pm 2.3$%（95.2／95.2／99.2%）であった。ただし、この25
+tex_in_json	95.2	95.2	再現率は$96.5 \pm 2.3$%（95.2／95.2／99.2%）であった。ただし、この25問は難易度
+tex_in_json	99.2%	99.2	96.5 \pm 2.3$%（95.2／95.2／99.2%）であった。ただし、この25問は難易度分布が主評価
+tex_in_json	25	25	.2／95.2／99.2%）であった。ただし、この25問は難易度分布が主評価と大きく異なり（Very H
+tex_in_json	96.5	96.5	評価のHard／Very Hard層より低い）、$96.5$%を主評価86.1%やpaired日本語92.0
+tex_in_json	86.1%	86.1	ry Hard層より低い）、$96.5$%を主評価86.1%やpaired日本語92.0%と性能水準として直接
+tex_in_json	92.0%	92.0	96.5$%を主評価86.1%やpaired日本語92.0%と性能水準として直接比較することはできない。この評
+tex_in_json	25	25	インが機能することの補助的な確認である。なお、この25問には\texttt{expected\_tabl
+tex_in_json	3	3	ure\_element\_reference}の3テーブルJOINとCTEによる集約を要し、少数ショ
+tex_in_json	-16.1	-16.1	NとCTEによる集約を要し、少数ショット例なしでの-16.1ppの低下は、複雑な結合パターンほどLLMによる正
+tex_in_json	2	2	Mによる正確なSQL生成が困難になることを示す。T2SQLを前提とする場合、(1) 多段階JOINをビ
+tex_in_json	1	1	難になることを示す。T2SQLを前提とする場合、(1) 多段階JOINをビュー（本研究の\texttt
+tex_in_json	2	2	蔽し単一SELECTで問い合わせ可能にすること、(2) 頻繁に参照されるテーブル群（例：\texttt
+tex_in_json	3	3	lement}）を事前結合して非正規化すること、(3) 列名にテーブル文脈を埋め込む自己記述的命名（\
+tex_in_json	4	4	on\_energy\_per\_atom}）、(4) 明示的なFK制約の定義、が適用できる。特に(4
+tex_in_json	4	4	4) 明示的なFK制約の定義、が適用できる。特に(4)は本実装の貪欲最短経路連結がFK関係のみからJO
+tex_in_json	4	4	約が明示されたRDBでグラフを自動構築でき、辞書の4カテゴリ構造（プロトタイプエイリアス、元素マッピン
+tex_in_json	2	2	   \caption{関連する材料NLP / T2SQL / オントロジーシステムとの比較。}   
+tex_in_json	7	7	midrule     \multicolumn{7}{l}{\textit{T2SQLベンチマーク}
+tex_in_json	2	2	lticolumn{7}{l}{\textit{T2SQLベンチマーク}} \\     データセット
+tex_in_json	7	7	midrule     \multicolumn{7}{l}{\textit{T2SQL手法}} \\
+tex_in_json	2	2	lticolumn{7}{l}{\textit{T2SQL手法}} \\     手法 & DAIL-
+tex_in_json	7	7	midrule     \multicolumn{7}{l}{\textit{材料情報学}} \\  
+tex_in_json	7	7	midrule     \multicolumn{7}{l}{\textit{オントロジー}} \\ 
+tex_in_json	1	1	an2026schemagraphsql}とは、(1)~材料ドメイン辞書による用語翻訳（除去時-9.8
+tex_in_json	-9.8	-9.8	は、(1)~材料ドメイン辞書による用語翻訳（除去時-9.8pp, $p=0.0001$）を備える点、(2)~
+tex_in_json	2	2	9.8pp, $p=0.0001$）を備える点、(2)~JOIN検索がエッジ重み最適化ではなくFKグラ
+tex_in_json	3	3	ューリスティック（最小性は保証しない）である点、(3)~ASTベースのSQL安全性検証（SQLGuar
+tex_in_json	10	10	ion{制限事項と今後の研究}  主な制限は以下の10点である。 \begin{enumerate}[n
+tex_in_json	1	1	  \item 単一データベースの検証：主評価はL1$_2$を中心に5プロトタイプを含む検証DB（36
+tex_in_json	2	2	item 単一データベースの検証：主評価はL1$_2$を中心に5プロトタイプを含む検証DB（36テーブ
+tex_in_json	5	5	一データベースの検証：主評価はL1$_2$を中心に5プロトタイプを含む検証DB（36テーブル、1ビュー
+tex_in_json	36	36	L1$_2$を中心に5プロトタイプを含む検証DB（36テーブル、1ビュー、1559エントリ、全テーブル総
+tex_in_json	1	1	中心に5プロトタイプを含む検証DB（36テーブル、1ビュー、1559エントリ、全テーブル総行数2170
+tex_in_json	2.2	2.2	1559エントリ、全テーブル総行数21703行（約2.2万行）；純元素参照エネルギー（\texttt{pu
+tex_in_json	2	2	ure\_element\_reference}、2参照セット$\times$89元素＝178行）のみ
+tex_in_json	89	89	reference}、2参照セット$\times$89元素＝178行）のみOQMD由来）に基づく。一般化
+tex_in_json	178	178	ence}、2参照セット$\times$89元素＝178行）のみOQMD由来）に基づく。一般化評価（セクシ
+tex_in_json	36	36	の無修正一般化は確認していない。   \item 36テーブル・1ビュー構成の限界：スキーマサイズは現実
+tex_in_json	1	1	は確認していない。   \item 36テーブル・1ビュー構成の限界：スキーマサイズは現実の材料RDB
+tex_in_json	5	5	  \item 統計テストの範囲：検定は各クエリの5ラン平均実行再現率をクエリ値とし（$n=100$）
+tex_in_json	100	100	クエリの5ラン平均実行再現率をクエリ値とし（$n=100$）、full条件と各除去条件の対応あり差に対する
+tex_in_json	0	0	統計量の全符号置換検定（同順位は中央順位で処理；差0のペアは除外、非同点ペア数$n_\mathrm{n
+tex_in_json	95%	95	体の$\Delta$にはクエリ単位ブートストラップ95%CIを付与した（表~\ref{tab:ablati
+tex_in_json	2	2	no\_guard（$n_\mathrm{nz}=2$）・no\_nbest（$n_\mathrm{n
+tex_in_json	5	5	no\_nbest（$n_\mathrm{nz}=5$）は非同点ペアが少なく検定の検出力が不足する。5
+tex_in_json	5	5	5$）は非同点ペアが少なく検定の検出力が不足する。5回の反復数では層別（特にVH、$n=20$）の信頼
+tex_in_json	20	20	が不足する。5回の反復数では層別（特にVH、$n=20$）の信頼区間評価には不十分であり、層別$\Del
+tex_in_json	245	245	まる。   \item クエリのカバレッジ：主評価245クエリ（著者設計145＋共同著者による独立設計10
+tex_in_json	145	145	 クエリのカバレッジ：主評価245クエリ（著者設計145＋共同著者による独立設計100）は実使用の多様なパ
+tex_in_json	100	100	45クエリ（著者設計145＋共同著者による独立設計100）は実使用の多様なパターンを網羅しない。   \i
+tex_in_json	78.7%	78.7	しさ）と常に単調には対応しない（独立設計ではVH 78.7% $>$ Hard 70.2%；LLM-onlyベ
+tex_in_json	70.2%	70.2	（独立設計ではVH 78.7% $>$ Hard 70.2%；LLM-onlyベースラインでも同傾向のVH 7
+tex_in_json	74.6%	74.6	%；LLM-onlyベースラインでも同傾向のVH 74.6% $>$ Hard 68.6%が観測され、この非単
+tex_in_json	68.6%	68.6	ンでも同傾向のVH 74.6% $>$ Hard 68.6%が観測され、この非単調性はパイプライン固有ではない
+tex_in_json	492	492	の課題である。   \item 辞書のカバレッジ：492用語の辞書はL1$_2$探索に特化しており、他系へ
+tex_in_json	1	1	\item 辞書のカバレッジ：492用語の辞書はL1$_2$探索に特化しており、他系への拡張には手動登
+tex_in_json	2	2	em 辞書のカバレッジ：492用語の辞書はL1$_2$探索に特化しており、他系への拡張には手動登録が必
+tex_in_json	90.0	90.0	age_eval}のpaired比較では英語でも$90.0 \pm 2.0$%（日本語$92.0 \pm 0
+tex_in_json	2.0	2.0	のpaired比較では英語でも$90.0 \pm 2.0$%（日本語$92.0 \pm 0.7$%、日本語
+tex_in_json	92.0	92.0	は英語でも$90.0 \pm 2.0$%（日本語$92.0 \pm 0.7$%、日本語比$-2.0$pp）を
+tex_in_json	0.7	0.7	0 \pm 2.0$%（日本語$92.0 \pm 0.7$%、日本語比$-2.0$pp）を確認し、対応あり
+tex_in_json	-2.0	-2.0	（日本語$92.0 \pm 0.7$%、日本語比$-2.0$pp）を確認し、対応あり検定では差は検出されなか
+tex_in_json	0.193	0.193	ilcoxon符号順位統計量の全符号置換検定$p=0.193$、95%CIは0を含む）。層別のMedium（$
+tex_in_json	95%	95	符号順位統計量の全符号置換検定$p=0.193$、95%CIは0を含む）。層別のMedium（$-3.3$
+tex_in_json	0	0	量の全符号置換検定$p=0.193$、95%CIは0を含む）。層別のMedium（$-3.3$pp）・
+tex_in_json	-3.3	-3.3	$、95%CIは0を含む）。層別のMedium（$-3.3$pp）・Very Hard（$-4.1$pp）の
+tex_in_json	-4.1	-4.1	ium（$-3.3$pp）・Very Hard（$-4.1$pp）の低下は非同点ペアが各2・3件の探索的観測
+tex_in_json	2	2	Hard（$-4.1$pp）の低下は非同点ペアが各2・3件の探索的観測であり、日本語比較表現向けパーサ
+tex_in_json	3	3	rd（$-4.1$pp）の低下は非同点ペアが各2・3件の探索的観測であり、日本語比較表現向けパーサ・日
+tex_in_json	25	25	（本データは依存を証明しない）。翻訳を用いない英語25問でも$96.5 \pm 2.3$%を確認したが、
+tex_in_json	96.5	96.5	依存を証明しない）。翻訳を用いない英語25問でも$96.5 \pm 2.3$%を確認したが、難易度分布が主評
+tex_in_json	2.3	2.3	。翻訳を用いない英語25問でも$96.5 \pm 2.3$%を確認したが、難易度分布が主評価と異なるため水
+tex_in_json	0	0	標の実行再現率は共通列射影・列位置フォールバック・0行一致への満点付与を含む寛容な定義であり（セクショ
+tex_in_json	1	1	udit}）。厳格化した採点方針別の値と、ゴールド1列のみの一致で満点となったクエリの目視監査結果は同
+tex_in_json	1	1	ection{今後の展望}  今後の課題として、(1)~Materials ProjectやAFLOW
+tex_in_json	2	2	など異なるスキーマを持つ無機材料RDBでの検証、(2)~現行の1559エントリ（総行数約2.2万）を大
+tex_in_json	2.2	2.2	での検証、(2)~現行の1559エントリ（総行数約2.2万）を大きく超える数万エントリ規模のデータでの検証
+tex_in_json	3	3	を大きく超える数万エントリ規模のデータでの検証、(3)~より多様な導出量パターン（相安定性図、弾性異方
+tex_in_json	4	4	、弾性異方性メトリクス等）へのCTE評価の拡張、(4)~MCPプロトコルや関数呼び出しを介したAI4S
+tex_in_json	4	4	(4)~MCPプロトコルや関数呼び出しを介したAI4SエージェントへのT2SQL統合、(5)~CALP
+tex_in_json	2	2	ルや関数呼び出しを介したAI4SエージェントへのT2SQL統合、(5)~CALPHAD自由エネルギー計
+tex_in_json	5	5	を介したAI4SエージェントへのT2SQL統合、(5)~CALPHAD自由エネルギー計算と組み合わせた
+tex_in_json	6	6	D自由エネルギー計算と組み合わせた二段階フロー、(6)~SELECT列精度・JOIN一致率・Top-$
+tex_in_json	7	7	一致率・Top-$k$精度等の多軸評価の常用化、(7)~あいまい表現を対話で確定させる問いの具体化イン
+tex_in_json	36	36	SQLを中核とする材料データアクセス基盤を設計し、36テーブルの検証RDB上で、アブレーション・多軸評価
+tex_in_json	1	1	に寄与する。   \section*{謝辞}  L1$_2$型金属間化合物のDFT計算データは、Ope
+tex_in_json	2	2	する。   \section*{謝辞}  L1$_2$型金属間化合物のDFT計算データは、Open Q
+tex_in_json	245	245	とコードの利用可能性}  評価データセット（主評価245クエリのゴールドSQLと期待結果、およびアブレーシ
+tex_in_json	100	100	のゴールドSQLと期待結果、およびアブレーション用100クエリサブセット（主評価245クエリの部分集合）・
+tex_in_json	245	245	よびアブレーション用100クエリサブセット（主評価245クエリの部分集合）・独立設計100クエリ（同じく主
+tex_in_json	100	100	ブセット（主評価245クエリの部分集合）・独立設計100クエリ（同じく主評価245クエリの部分集合）・CT
+tex_in_json	245	245	リの部分集合）・独立設計100クエリ（同じく主評価245クエリの部分集合）・CTE・一般化評価・言語依存性
+tex_in_json	100	100	集合）・CTE・一般化評価・言語依存性評価用の英訳100クエリと非翻訳英語25クエリの各データセット）、ア
+tex_in_json	25	25	価・言語依存性評価用の英訳100クエリと非翻訳英語25クエリの各データセット）、アブレーションの5回分の
+tex_in_json	5	5	英語25クエリの各データセット）、アブレーションの5回分の保存結果、言語依存性評価の保存結果（日英pa
+tex_in_json	3	3	結果、言語依存性評価の保存結果（日英paired各3ラン・非翻訳英語3ラン）、MeCab材料辞書、日本
+tex_in_json	3	3	価の保存結果（日英paired各3ラン・非翻訳英語3ラン）、MeCab材料辞書、日本語リランカー比較結
+tex_in_json	7	7	lcoxon符号順位検定・ブートストラップCI）、7件の安全性ケース、およびユニットテスト実行結果を再
+tex_in_json	166	166	ーなしで再実行できる。報告時のスナップショットでは166件のユニットテストを対象とした。完全なソースコード
+tex_in_json	245	245	ス構築、実験、および執筆。  末松 知恵: 主評価245クエリに含まれる100クエリの独立設計、結果のクロ
+tex_in_json	100	100	筆。  末松 知恵: 主評価245クエリに含まれる100クエリの独立設計、結果のクロスチェック、および原稿
+tex_in_json	0.9	0.9	newcommand{\topfraction}{0.9} \renewcommand{\bottomfr
+tex_in_json	0.7	0.7	command{\bottomfraction}{0.7} \renewcommand{\textfrac
+tex_in_json	4	4	} \setcounter{topnumber}{4} \setcounter{bottomnumbe
+tex_in_json	3	3	setcounter{bottomnumber}{3} \setcounter{totalnumber
+tex_in_json	6	6	\setcounter{totalnumber}{6}  \appendix \renewcomman
+tex_in_json	0	0	on} \setcounter{section}{0} \setcounter{table}{0} \
+tex_in_json	0	0	n}{0} \setcounter{table}{0} \setcounter{figure}{0} 
+tex_in_json	0	0	}{0} \setcounter{figure}{0} \setcounter{equation}{0
+tex_in_json	0	0	0} \setcounter{equation}{0} \makeatletter \def\@sec
+tex_in_json	1	1	etter \def\@seccntformat#1{\csname the#1\endcsname.
+tex_in_json	1	1	ccntformat#1{\csname the#1\endcsname.\hskip 0.5em} 
+tex_in_json	0.5	0.5	e the#1\endcsname.\hskip 0.5em} \makeatother  \begin{
+tex_in_json	0.8	0.8	{\LARGE\bfseries 補足資料}\\[0.8em]   {\large 無機材料データベースの
+tex_in_json	1.0	1.0	ータ検索のためのText-to-SQL基盤}\\[1.0em]   {\normalsize 源 聡$^{
+tex_in_json	1	1	ze 源 聡$^{1,*}$および末松 知恵$^{1}$}\\[0.3em]   {\small $^
+tex_in_json	1	1	$}\\[0.3em]   {\small $^{1}$材料データプラットフォーム、物質・材料研究機構
+tex_in_json	1	1	ォーム、物質・材料研究機構（NIMS）、\\   1-1 Namiki, Tsukuba, Ibara
+tex_in_json	1.0	1.0	p}} \end{center} \vspace{1.0em} \noindent\hrulefill \
+tex_in_json	1.0	1.0	indent\hrulefill \vspace{1.0em}  \noindent この補足資料は、主論
+tex_in_json	100	100	{sec:sup_expert_queries}は100評価クエリの詳細結果・アブレーション条件間の精度差
+tex_in_json	166	166	スナップショットでpytestが収集した件数；合計166件）：SQL検証（36；禁止キーワード・マルチステ
+tex_in_json	36	36	estが収集した件数；合計166件）：SQL検証（36；禁止キーワード・マルチステートメント・恒真条件・
+tex_in_json	20	20	証、SQLインジェクション例を含む）、意図分類器（20；有効クエリ／曖昧・矛盾入力／直接SQL入力の分類
+tex_in_json	18	18	類、DROP等の攻撃入力を含む）、採点メトリクス（18；実行再現率・完全一致・列一致等の採点関数）、カバ
+tex_in_json	15	15	一致・列一致等の採点関数）、カバレッジ/パーサー（15；数値条件・化学式・カバレッジスコア）、スーパーセ
+tex_in_json	13	13	・化学式・カバレッジスコア）、スーパーセット検出（13；過剰取得検出・行比率閾値）、エンティティ抽出（1
+tex_in_json	13	13	3；過剰取得検出・行比率閾値）、エンティティ抽出（13；元素・条件・プロトタイプ抽出）、DB整合性（10
+tex_in_json	10	10	13；元素・条件・プロトタイプ抽出）、DB整合性（10；スキーマ統計・派生列・fixture整合）、JO
+tex_in_json	9	9	・派生列・fixture整合）、JOIN経路生成（9；FKグラフ上の経路探索・エイリアス）、リランカー
+tex_in_json	8	8	FKグラフ上の経路探索・エイリアス）、リランカー（8；候補スコアリング・選択規則）、SQLGuard（
+tex_in_json	6	6	；候補スコアリング・選択規則）、SQLGuard（6；LIMIT付与・複雑性上限・実行前検査）、MPス
+tex_in_json	5	5	・複雑性上限・実行前検査）、MPスナップショット（5；転用評価用スナップショットの整合）、グラフ構築（
+tex_in_json	4	4	；転用評価用スナップショットの整合）、グラフ構築（4）、スキーマパーサー（3；DDL解析）、数値整合検
+tex_in_json	3	3	ットの整合）、グラフ構築（4）、スキーマパーサー（3；DDL解析）、数値整合検証プログラム（2；監査対
+tex_in_json	2	2	ーサー（3；DDL解析）、数値整合検証プログラム（2；監査対象TeXの既定選択と明示指定欠落時の失敗）
+tex_in_json	4	4	の既定選択と明示指定欠落時の失敗）、符号置換検定（4；全列挙との一致・同順位なしでのSciPy exa
+tex_in_json	1	1	ollect-onlyではなくテスト本体を実行し、1件でも失敗した場合は再現処理を停止する。安全性関連
+tex_in_json	1	1	es}  代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する提案手法の生成SQ
+tex_in_json	2	2	  代表的なクエリ「NiとAlの両方を含むL1$_2$化合物のリスト」に対する提案手法の生成SQLを示
+tex_in_json	0	0	ように単一行では同時に満たせない条件を生成して常に0行を返した（セクション~\ref{sec:mult
+tex_in_json	245	245	i_element}）。生成SQLの全文は、主評価245問・独立設計・CTE・転移A--D・LLMのみにつ
+tex_in_json	5	5	} \\     APIアクセス日 & 2026年5月～6月 \\     温度 & 指定なし（温度パ
+tex_in_json	6	6	\     APIアクセス日 & 2026年5月～6月 \\     温度 & 指定なし（温度パラメー
+tex_in_json	30	30	定値） \\     リクエストタイムアウト & 30秒 \\     リトライ & 最大3回 (指数バ
+tex_in_json	3	3	ウト & 30秒 \\     リトライ & 最大3回 (指数バックオフ) \\     $n$-be
+tex_in_json	3	3	クオフ) \\     $n$-best候補 & 3 \\     クロスエンコーダ & ms-mar
+tex_in_json	2	2	ダ & ms-marco-MiniLM-L-6-v2 \\     修復ループ & 不使用（APIサー
+tex_in_json	3	3	修復ループ & 不使用（APIサービス層のみ、最大3回） \\     \bottomrule   \
+tex_in_json	4	4	\end{table}  構造化されたプロンプトは4つのコンポーネントから構成されている：  \beg
+tex_in_json	5	5	場合がある。本論文のすべてのアブレーション結果は、5回の独立した実行からの平均$\pm$標準偏差として
+tex_in_json	100	100	:ablation}）。    \section{100の評価クエリに関する詳細結果} \label{se
+tex_in_json	100	100	p_query_detail}  アブレーション用100クエリ（著者設計、E=20/M=30/H=30/V
+tex_in_json	20	20	}  アブレーション用100クエリ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結
+tex_in_json	30	30	レーション用100クエリ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結果（質問テ
+tex_in_json	30	30	用100クエリ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結果（質問テキスト、実
+tex_in_json	20	20	リ（著者設計、E=20/M=30/H=30/VH=20）のクエリ単位の結果（質問テキスト、実行再現率（行
+tex_in_json	0.8	0.8	、レイテンシ、合格/不合格（実行再現率$\geq 0.8$で$\checkmark$））は、同梱の機械可読
+tex_in_json	100	100	uery\_catalog.csv} と同一）に全100行を収録している。すべての値は、アブレーションフル
+tex_in_json	1	1	している。すべての値は、アブレーションフル条件の第1ラン（このランの全体値は92.7%；補足資料~\r
+tex_in_json	92.7%	92.7	ブレーションフル条件の第1ラン（このランの全体値は92.7%；補足資料~\ref{sec:sup_ablati
+tex_in_json	5	5	たがって表~\ref{tab:ablation}の5回の実行の平均値とは一致しない。表~\ref{ta
+tex_in_json	10	10	detail}には難易度層ごとにバランスさせた代表10行（各層の成功例と、失敗・部分一致の例を含む）のみ
+tex_in_json	100	100	tbp] \centering \caption{100の評価クエリに関する詳細結果の抜粋（10行；アブレ
+tex_in_json	10	10	ion{100の評価クエリに関する詳細結果の抜粋（10行；アブレーションfull条件の第1ラン。全100
+tex_in_json	1	1	結果の抜粋（10行；アブレーションfull条件の第1ラン。全100行は \texttt{evaluat
+tex_in_json	100	100	（10行；アブレーションfull条件の第1ラン。全100行は \texttt{evaluation/per
+tex_in_json	0.8	0.8	ts.csv}）。P/F: 実行再現率$\geq 0.8$で$\checkmark$。} \label{t
+tex_in_json	5	5	midrule     \multicolumn{5}{l}{Easy ($n$=20)} \\   
+tex_in_json	20	20	ticolumn{5}{l}{Easy ($n$=20)} \\     \midrule     q\
+tex_in_json	001	1	   \midrule     q\_easy\_001 & L1$_{\mathrm{2}}$構造を持つ
+tex_in_json	1	1	rule     q\_easy\_001 & L1$_{\mathrm{2}}$構造を持つ化合物を一
+tex_in_json	2	2	easy\_001 & L1$_{\mathrm{2}}$構造を持つ化合物を一覧にして。 & 1.00
+tex_in_json	1.00	1.0	rm{2}}$構造を持つ化合物を一覧にして。 & 1.00 & 24.1 & $\checkmark$ \\
+tex_in_json	014	14	eckmark$ \\     q\_easy\_014 & NiとAlの両方を含む化合物を抽出して。 &
+tex_in_json	1.00	1.0	& NiとAlの両方を含む化合物を抽出して。 & 1.00 & 29.8 & $\checkmark$ \\
+tex_in_json	5	5	midrule     \multicolumn{5}{l}{Medium ($n$=30)} \\ 
+tex_in_json	30	30	column{5}{l}{Medium ($n$=30)} \\     \midrule     q\
+tex_in_json	001	1	 \midrule     q\_medium\_001 & Niを含む安定なL1$_{\mathrm{2
+tex_in_json	1	1	\_medium\_001 & Niを含む安定なL1$_{\mathrm{2}}$型化合物を抽出して。
+tex_in_json	2	2	1 & Niを含む安定なL1$_{\mathrm{2}}$型化合物を抽出して。 & 1.00 & 35
+tex_in_json	1.00	1.0	\mathrm{2}}$型化合物を抽出して。 & 1.00 & 35.3 & $\checkmark$ \\
+tex_in_json	1	1	nergy above hullが0.01以下のL1$_{\mathrm{2}}$型化合物を表示して。
+tex_in_json	2	2	hullが0.01以下のL1$_{\mathrm{2}}$型化合物を表示して。 & 1.00 & 36
+tex_in_json	1.00	1.0	\mathrm{2}}$型化合物を表示して。 & 1.00 & 36.4 & $\checkmark$ \\
+tex_in_json	026	26	kmark$ \\     q\_medium\_026 & Bサイト元素ごとの平均形成エネルギーを出して
+tex_in_json	0.00	0.0	サイト元素ごとの平均形成エネルギーを出して。 & 0.00 & 29.9 &  \\     \midrul
+tex_in_json	29.9	29.9	の平均形成エネルギーを出して。 & 0.00 & 29.9 &  \\     \midrule     \
+tex_in_json	5	5	midrule     \multicolumn{5}{l}{Hard ($n$=30)} \\   
+tex_in_json	30	30	ticolumn{5}{l}{Hard ($n$=30)} \\     \midrule     q\
+tex_in_json	001	1	   \midrule     q\_hard\_001 & Ni基超合金の$\gamma$'相候補として
+tex_in_json	1	1	mma$'相候補として有望な、安定または準安定なL1$_{\mathrm{2}}$型化合物を抽出して。
+tex_in_json	2	2	望な、安定または準安定なL1$_{\mathrm{2}}$型化合物を抽出して。 & 0.03 & 39
+tex_in_json	0.03	0.03	\mathrm{2}}$型化合物を抽出して。 & 0.03 & 39.4 &  \\     q\_hard
+tex_in_json	009	9	 39.4 &  \\     q\_hard\_009 & Co基L1$_{\mathrm{2}}$化合
+tex_in_json	1	1	\     q\_hard\_009 & Co基L1$_{\mathrm{2}}$化合物のうち、Ni$
+tex_in_json	2	2	d\_009 & Co基L1$_{\mathrm{2}}$化合物のうち、Ni$_{\mathrm{3}
+tex_in_json	3	3	{2}}$化合物のうち、Ni$_{\mathrm{3}}$Alに近い格子定数のものを安定性順に出して。
+tex_in_json	1.00	1.0	Alに近い格子定数のものを安定性順に出して。 & 1.00 & 45.2 & $\checkmark$ \\
+tex_in_json	014	14	eckmark$ \\     q\_hard\_014 & 安定なL1$_{\mathrm{2}}$化合
+tex_in_json	1	1	\     q\_hard\_014 & 安定なL1$_{\mathrm{2}}$化合物をAサイト元素
+tex_in_json	2	2	d\_014 & 安定なL1$_{\mathrm{2}}$化合物をAサイト元素でグループ化し、各グルー
+tex_in_json	0.00	0.0	し、各グループの平均形成エネルギーを出して。 & 0.00 & 37.4 &  \\     \midrul
+tex_in_json	37.4	37.4	の平均形成エネルギーを出して。 & 0.00 & 37.4 &  \\     \midrule     \
+tex_in_json	5	5	midrule     \multicolumn{5}{l}{Very Hard ($n$=20)} 
+tex_in_json	20	20	umn{5}{l}{Very Hard ($n$=20)} \\     \midrule     q\
+tex_in_json	003	3	  \midrule     q\_vhard\_003 & $\gamma$'相候補のランキングを重み付
+tex_in_json	1	1	amma$'相候補のランキングを重み付きスコア (1 - E$_{\mathrm{hull}}$/0.
+tex_in_json	0.4	0.4	hrm{hull}}$/0.05)$\times$0.4 + (1 - $|$a - 3.57$|$/0.
+tex_in_json	1	1	l}}$/0.05)$\times$0.4 + (1 - $|$a - 3.57$|$/0.3)$\t
+tex_in_json	1	1	}}$ $\leq$ 0.05 eV/atomのL1$_{\mathrm{2}}$のみ対象、a: 格子
+tex_in_json	2	2	.05 eV/atomのL1$_{\mathrm{2}}$のみ対象、a: 格子定数\AA{}、B: 体
+tex_in_json	1	1	     q\_vhard\_016 & 安定なL1$_{\mathrm{2}}$化合物の純元素基底状
+tex_in_json	2	2	d\_016 & 安定なL1$_{\mathrm{2}}$化合物の純元素基底状態基準に再基準化した生成
+tex_in_json	-0.3	-0.3	底状態基準に再基準化した生成エネルギーを計算して、-0.3 eV/atom未満のものを格子定数つきで出して。
+tex_in_json	1.00	1.0	/atom未満のものを格子定数つきで出して。 & 1.00 & 30.8 & $\checkmark$ \\
+tex_in_json	7	7	{sec:sup_ablation_diff}  7つのアブレーション条件間のクエリ単位の実行再現率（
+tex_in_json	1	1	tab:sup_query_detail}と同じ第1ラン）は、同梱の機械可読ファイル \texttt{
+tex_in_json	100	100	d, no\_nbest, no\_graph；全100行）に収録している。第1ランでは34/100クエリ
+tex_in_json	1	1	no\_graph；全100行）に収録している。第1ランでは34/100クエリが条件間で精度に差を示し
+tex_in_json	34	34	raph；全100行）に収録している。第1ランでは34/100クエリが条件間で精度に差を示した（5ラン平
+tex_in_json	100	100	h；全100行）に収録している。第1ランでは34/100クエリが条件間で精度に差を示した（5ラン平均のクエ
+tex_in_json	5	5	では34/100クエリが条件間で精度に差を示した（5ラン平均のクエリ単位内訳は \texttt{per
+tex_in_json	002	2	dium〜VH層の多数のクエリ（q\_hard\_002/003/006/008/010/021/028、
+tex_in_json	003	3	〜VH層の多数のクエリ（q\_hard\_002/003/006/008/010/021/028、q\_v
+tex_in_json	006	6	の多数のクエリ（q\_hard\_002/003/006/008/010/021/028、q\_vhard
+tex_in_json	008	8	クエリ（q\_hard\_002/003/006/008/010/021/028、q\_vhard\_00
+tex_in_json	010	10	q\_hard\_002/003/006/008/010/021/028、q\_vhard\_001/00
+tex_in_json	028	28	_002/003/006/008/010/021/028、q\_vhard\_001/002/006/00
+tex_in_json	001	1	08/010/021/028、q\_vhard\_001/002/006/007/018/019等）をゼロ
+tex_in_json	002	2	10/021/028、q\_vhard\_001/002/006/007/018/019等）をゼロ化してお
+tex_in_json	006	6	21/028、q\_vhard\_001/002/006/007/018/019等）をゼロ化しており、純効
+tex_in_json	007	7	28、q\_vhard\_001/002/006/007/018/019等）をゼロ化しており、純効果は明確
+tex_in_json	018	18	\_vhard\_001/002/006/007/018/019等）をゼロ化しており、純効果は明確に負であ
+tex_in_json	003	3	ゼロ化をVery Hard層（q\_vhard\_003/004/005/006/007/008/014等
+tex_in_json	004	4	Very Hard層（q\_vhard\_003/004/005/006/007/008/014等）に集中
+tex_in_json	005	5	 Hard層（q\_vhard\_003/004/005/006/007/008/014等）に集中させ、V
+tex_in_json	006	6	d層（q\_vhard\_003/004/005/006/007/008/014等）に集中させ、VHクエリ
+tex_in_json	007	7	\_vhard\_003/004/005/006/007/008/014等）に集中させ、VHクエリに対する
+tex_in_json	008	8	ard\_003/004/005/006/007/008/014等）に集中させ、VHクエリに対する辞書の強
+tex_in_json	014	14	_003/004/005/006/007/008/014等）に集中させ、VHクエリに対する辞書の強い効果を
+tex_in_json	004	4	anker (-RR) は、q\_medium\_004、q\_medium\_008、q\_medium
+tex_in_json	008	8	\_medium\_004、q\_medium\_008、q\_medium\_020、q\_hard\_
+tex_in_json	020	20	\_medium\_008、q\_medium\_020、q\_hard\_003、q\_hard\_02
+tex_in_json	003	3	、q\_medium\_020、q\_hard\_003、q\_hard\_026で失敗を引き起こし、候補
+tex_in_json	026	26	20、q\_hard\_003、q\_hard\_026で失敗を引き起こし、候補選択の効果を示している。 
+tex_in_json	002	2	 (-GD) の変化は小さい（q\_vhard\_002/005の2件のみ）---これは5ラン平均でno\
+tex_in_json	005	5	D) の変化は小さい（q\_vhard\_002/005の2件のみ）---これは5ラン平均でno\_gua
+tex_in_json	2	2	変化は小さい（q\_vhard\_002/005の2件のみ）---これは5ラン平均でno\_guard
+tex_in_json	5	5	hard\_002/005の2件のみ）---これは5ラン平均でno\_guardが-0.2ppとなる観
+tex_in_json	-0.2	-0.2	のみ）---これは5ラン平均でno\_guardが-0.2ppとなる観測（表~\ref{tab:ablati
+tex_in_json	100	100	ndent_eval}で報告された独立に設計された100クエリセットの難易度層に基づく結果を示している。難
+tex_in_json	100	100	   \caption{難易度別の独立に設計された100クエリの精度。難易度はセクション~\ref{sec
+tex_in_json	8	8	   \midrule     Easy ($< 8$) & 18 & 87.8 \\     Med
+tex_in_json	18	18	drule     Easy ($< 8$) & 18 & 87.8 \\     Medium ($8
+tex_in_json	87.8	87.8	     Easy ($< 8$) & 18 & 87.8 \\     Medium ($8$--$11$
+tex_in_json	8	8	8 & 87.8 \\     Medium ($8$--$11$) & 34 & 90.5 \\  
+tex_in_json	34	34	    Medium ($8$--$11$) & 34 & 90.5 \\     Hard ($12$
+tex_in_json	90.5	90.5	edium ($8$--$11$) & 34 & 90.5 \\     Hard ($12$--$16$)
+tex_in_json	34	34	     Hard ($12$--$16$) & 34 & 70.2 \\     Very Hard 
+tex_in_json	70.2	70.2	Hard ($12$--$16$) & 34 & 70.2 \\     Very Hard ($\geq 
+tex_in_json	14	14	 Very Hard ($\geq 17$) & 14 & 78.7 \\     \midrule  
+tex_in_json	78.7	78.7	 Hard ($\geq 17$) & 14 & 78.7 \\     \midrule     全体 &
+tex_in_json	100	100	\\     \midrule     全体 & 100 & 81.5 \\     \bottomrul
+tex_in_json	81.5	81.5	 \midrule     全体 & 100 & 81.5 \\     \bottomrule   \en
+tex_in_json	78.7%	78.7	abular} \end{table}  VH層（78.7%）がHard層（70.2%）よりも高いのは、14の
+tex_in_json	70.2%	70.2	table}  VH層（78.7%）がHard層（70.2%）よりも高いのは、14のVery Hardクエリが
+tex_in_json	14	14	.7%）がHard層（70.2%）よりも高いのは、14のVery Hardクエリがいくつかの短いCTEパ
+tex_in_json	10	10	テーブルを参照している。  独立したクエリプールは10のカテゴリ（A: 基本検索、B: 構成/要素、C:
+tex_in_json	10	10	、J: 比較/統計）で構成されており、各カテゴリに10のクエリがある。   \section{方法の詳細
+tex_in_json	0.50	0.5	ring \begin{minipage}[t]{0.50\textwidth} \centering \c
+tex_in_json	36	36	\caption{検証データベースの構成。テーブル36のうち1つはスキーマ初期化状態の管理表（\text
+tex_in_json	1	1	ion{検証データベースの構成。テーブル36のうち1つはスキーマ初期化状態の管理表（\texttt{s
+tex_in_json	1	1	_initialization\_status}、1行）であり、材料概念テーブルは35である。} \l
+tex_in_json	35	35	_status}、1行）であり、材料概念テーブルは35である。} \label{tab:db_stats
+tex_in_json	36	36	 & 数量 \\ \midrule テーブル & 36 \\ ビュー & 1 \\ \texttt{ma
+tex_in_json	1	1	drule テーブル & 36 \\ ビュー & 1 \\ \texttt{material\_ent
+tex_in_json	5	5	y} & 4410 \\ プロトタイプタイプ & 5（L1$_2$、B2、NaCl、NiAs、BiF$
+tex_in_json	1	1	& 4410 \\ プロトタイプタイプ & 5（L1$_2$、B2、NaCl、NiAs、BiF$_3$
+tex_in_json	2	2	410 \\ プロトタイプタイプ & 5（L1$_2$、B2、NaCl、NiAs、BiF$_3$） \
+tex_in_json	2	2	\\ プロトタイプタイプ & 5（L1$_2$、B2、NaCl、NiAs、BiF$_3$） \\ 全公
+tex_in_json	3	3	L1$_2$、B2、NaCl、NiAs、BiF$_3$） \\ 全公開テーブルの総行数 & 21703
+tex_in_json	2.2	2.2	 \\ 全公開テーブルの総行数 & 21703（約2.2万行） \\ \bottomrule \end{t
+tex_in_json	100	100	ing   \caption{評価クエリ設計（合計100クエリ）。}   \label{tab:query
+tex_in_json	20	20	     \midrule     Easy & 20 & $< 8$ & 単一条件検索 \\     
+tex_in_json	8	8	drule     Easy & 20 & $< 8$ & 単一条件検索 \\     Medium 
+tex_in_json	30	30	& 単一条件検索 \\     Medium & 30 & $8$--$11$ & 構造+組成+安定性 
+tex_in_json	8	8	検索 \\     Medium & 30 & $8$--$11$ & 構造+組成+安定性 \\   
+tex_in_json	30	30	 構造+組成+安定性 \\     Hard & 30 & $12$--$16$ & 複合条件、集約 \
+tex_in_json	20	20	条件、集約 \\     Very Hard & 20 & $\geq 17$ & 材料設計クエリ \\
+tex_in_json	1	1	ze   \begin{algorithmic}[1]     \Require FK関係グラフ $G
+tex_in_json	2	2	ll{$(s, t) \in \binom{R}{2}$}       \If{$\text{Find
+tex_in_json	2	2	| = k$ に対して、アルゴリズムは $O(k^2)$ のBFSトラバーサルを実行する。36テーブル
+tex_in_json	36	36	$O(k^2)$ のBFSトラバーサルを実行する。36テーブル規模（$n = 36$, $k \leq 
+tex_in_json	36	36	ラバーサルを実行する。36テーブル規模（$n = 36$, $k \leq 6$）では、これがミリ秒単位
+tex_in_json	6	6	テーブル規模（$n = 36$, $k \leq 6$）では、これがミリ秒単位で完了する。  このヒュ
+tex_in_json	0	0	l'}は、どの行も両方の条件を満たさないため、常に0行を返す。スキーマグラフエンジンは、複数の要素が指
+tex_in_json	36	36	IN句に変換される。テーブルエイリアスは、すべての36テーブルに対して固定辞書から割り当てられる（\te
+tex_in_json	2	2	ユニークなエイリアスを生成する（\texttt{c2}, \texttt{c3}）。  \subsec
+tex_in_json	3	3	する（\texttt{c2}, \texttt{c3}）。  \subsection{条件抽出器}  
+tex_in_json	4	4	表現とデータベーススキーマを対応付ける。  辞書は4つのカテゴリをカバーしている： (1)~プロトタイ
+tex_in_json	1	1	る。  辞書は4つのカテゴリをカバーしている： (1)~プロトタイプエイリアス（例：\texttt{L
+tex_in_json	1	1	L12} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'
+tex_in_json	2	2	} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'$]）
+tex_in_json	3	3	rightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'$]）、 (2)~元素
+tex_in_json	2	2	Cu$_3$Au型, $\gamma'$]）、 (2)~元素マッピング（\texttt{Fe} $\l
+tex_in_json	3	3	$\leftrightarrow$ [鉄]）、 (3)~安定性用語（「安定」$\to$ \texttt
+tex_in_json	4	4	text{hull} \leq 0.05$）、 (4)~特性用語（「格子定数」$\to$ \textt
+tex_in_json	61	61	 \subsubsection{スキーマ写像辞書（61エントリ）} \label{sec:sup_sch
+tex_in_json	61	61	的な条件$\to$カラム対応表（スキーマ写像辞書、61エントリ；実装では\texttt{CONDITIO
+tex_in_json	61	61	ef{tab:schema_map_dict}に全61エントリの条件キーと参照テーブルを示す。  \be
+tex_in_json	61	61	ering \caption{スキーマ写像辞書の全61エントリ（条件キー$\to$参照テーブル；2列に分
+tex_in_json	2	2	の全61エントリ（条件キー$\to$参照テーブル；2列に分けて掲載）。} \label{tab:sch
+tex_in_json	3	3	e \setlength{\tabcolsep}{3pt} \resizebox{\textwidth
+tex_in_json	1.5	1.5	gin{tabular}{ll@{\hspace{1.5em}}ll}   \toprule   条件キー
+tex_in_json	5	5	ubsection{数値条件パーサ}  パーサは、5つのパターンを介して数値比較式を認識する（表~\r
+tex_in_json	0.03	0.03	ティ固有の許容範囲を呼び出す（格子定数：$\pm 0.03$~\AA{}{}; $E_\text{hull}
+tex_in_json	1.0	1.0	比較 & \texttt{band\_gap > 1.0} & \texttt{WHERE band\_g
+tex_in_json	1.0	1.0	texttt{WHERE band\_gap > 1.0} \\     日本語後置詞 & 形成エネルギー
+tex_in_json	0.5	0.5	 日本語後置詞 & 形成エネルギー $\geq$ 0.5 & \texttt{WHERE ... >= 0
+tex_in_json	0.5	0.5	5 & \texttt{WHERE ... >= 0.5} \\     日本語比較 & 格子定数 $>$
+tex_in_json	3.0	3.0	 \\     日本語比較 & 格子定数 $>$ 3.0 & \texttt{WHERE lattice\
+tex_in_json	3.0	3.0	exttt{WHERE lattice\_a > 3.0} \\     符号判定 & 負の形成エネルギー
+tex_in_json	0	0	ギー & \texttt{WHERE ... < 0} \\     範囲指定 & バンドギャップ 0
+tex_in_json	0.5	0.5	0} \\     範囲指定 & バンドギャップ 0.5--2.0 eV & \texttt{WHERE 
+tex_in_json	3	3	n{化学式パーサと曖昧さ処理}  化学式トークンは3つのタイプに分類される： (1)~exact\_f
+tex_in_json	1	1	  化学式トークンは3つのタイプに分類される： (1)~exact\_formula（\texttt{
+tex_in_json	3	3	exact\_formula（\texttt{Ni3Al} $\to$ \texttt{formula
+tex_in_json	3	3	to$ \texttt{formula = 'Ni3Al'}）、 (2)~formula\_or\_r
+tex_in_json	2	2	tt{formula = 'Ni3Al'}）、 (2)~formula\_or\_reduced\_f
+tex_in_json	2	2	_reduced\_formula（「NiAlのB2エントリ」$\to$ \texttt{reduce
+tex_in_json	3	3	ed\_formula = 'AlNi'}）、 (3)~contains\_elements（「Niと
+tex_in_json	1	1	クエリ内の意味トークンの割合を定量化し、$[0, 1]$の値を生成する。 このメトリックは、サイレント
+tex_in_json	0.8	0.8	ない語彙の静的廃棄）を防ぐ。 スコアが$\geq 0.8$の場合、ルールベースモードの実行がトリガーされる
+tex_in_json	0.5	0.5	ベースモードの実行がトリガーされる； $\geq 0.5$の場合はLLMモードにエスカレートする； $< 
+tex_in_json	0.5	0.5	$の場合はLLMモードにエスカレートする； $< 0.5$の場合はユーザーからの確認を要求する。  \su
+tex_in_json	5	5	の意図分類器はSQL生成の上流に配置され、クエリを5つのカテゴリに分類する。これは、20のVASP/D
+tex_in_json	20	20	置され、クエリを5つのカテゴリに分類する。これは、20のVASP/DFTワークフローパターンの正規表現マ
+tex_in_json	9	9	FTワークフローパターンの正規表現マッチカウントを9のDB特有パターンと比較し、範囲外の質問を事前にフ
+tex_in_json	492	492	ubsection{MeCab材料辞書}  また、492用語の語彙はMeCab形態素解析器~\cite{k
+tex_in_json	402	402	接照合による）。  カスタム辞書を使用することで、402の材料用語の単一トークン率は30.6%（デフォルト
+tex_in_json	30.6%	30.6	使用することで、402の材料用語の単一トークン率は30.6%（デフォルト）から100.0%に改善された（表~\
+tex_in_json	100.0%	100.0	用語の単一トークン率は30.6%（デフォルト）から100.0%に改善された（表~\ref{tab:mecab}）
+tex_in_json	1	1	ークン率」とは、MeCab 形態素解析器によって 1 つの見出し語に分割される材料用語の割合である。改
+tex_in_json	279	279	分割される材料用語の割合である。改善された用語数は279、劣化した用語数は0である。代表的な改善例には「生
+tex_in_json	0	0	である。改善された用語数は279、劣化した用語数は0である。代表的な改善例には「生成エンタルピー」（デ
+tex_in_json	2	2	代表的な改善例には「生成エンタルピー」（デフォルト2トークン $\to$ カスタム1トークン）や「ニッ
+tex_in_json	1	1	ピー」（デフォルト2トークン $\to$ カスタム1トークン）や「ニッケル系超合金」（7トークン $\
+tex_in_json	7	7	o$ カスタム1トークン）や「ニッケル系超合金」（7トークン $\to$ 1トークン）が含まれる。  
+tex_in_json	1	1	）や「ニッケル系超合金」（7トークン $\to$ 1トークン）が含まれる。  \begin{table
+tex_in_json	402	402	n{MeCab材料辞書がトークン化に与える影響。 402の材料用語に対する単一トークン率。} \label
+tex_in_json	30.6%	30.6	辞書 \\ \midrule 単一トークン率 & 30.6% (123/402) & 100.0% (402/
+tex_in_json	123	123	midrule 単一トークン率 & 30.6% (123/402) & 100.0% (402/402) 
+tex_in_json	402	402	ule 単一トークン率 & 30.6% (123/402) & 100.0% (402/402) \\ 改
+tex_in_json	100.0%	100.0	ークン率 & 30.6% (123/402) & 100.0% (402/402) \\ 改善された用語 & -
+tex_in_json	402	402	0.6% (123/402) & 100.0% (402/402) \\ 改善された用語 & --- & 
+tex_in_json	402	402	 (123/402) & 100.0% (402/402) \\ 改善された用語 & --- & 279 
+tex_in_json	279	279	/402) \\ 改善された用語 & --- & 279 \\ 劣化した用語 & --- & 0 \\ \
+tex_in_json	0	0	 & 279 \\ 劣化した用語 & --- & 0 \\ \bottomrule \end{tabu
+tex_in_json	402	402	nd{table}  MeCab カスタム辞書は 402 の材料用語を全て 1 トークンに揃える。これは形
+tex_in_json	1	1	Cab カスタム辞書は 402 の材料用語を全て 1 トークンに揃える。これは形態素解析を前提とする日
+tex_in_json	15	15	。   \subsection{SQLGuardの15チェック}  SQLGuardの静的検証は、以下の
+tex_in_json	15	15	チェック}  SQLGuardの静的検証は、以下の15のチェック関数から成る（実装と一対一対応）：  \
+tex_in_json	2	2	モデル（ms-marco-MiniLM-L-6-v2）と日本語モデル（hotchpotch/japan
+tex_in_json	1	1	er-cross-encoder-xsmall-v1）を20のVery Hardクエリで比較した。英語
+tex_in_json	20	20	cross-encoder-xsmall-v1）を20のVery Hardクエリで比較した。英語モデルは
+tex_in_json	88.4%	88.4	のVery Hardクエリで比較した。英語モデルは88.4%、日本語モデルは81.6%であった（日本語モデルが
+tex_in_json	81.6%	81.6	で比較した。英語モデルは88.4%、日本語モデルは81.6%であった（日本語モデルがms-marco比-6.8
+tex_in_json	-6.8	-6.8	1.6%であった（日本語モデルがms-marco比-6.8pp；レイテンシは32.8s対31.5s）。この比
+tex_in_json	32.8	32.8	デルがms-marco比-6.8pp；レイテンシは32.8s対31.5s）。この比較は単独測定であり、絶対値
+tex_in_json	31.5	31.5	marco比-6.8pp；レイテンシは32.8s対31.5s）。この比較は単独測定であり、絶対値は表~\re
+tex_in_json	5	5	表~\ref{tab:ablation}のVH層（5ラン平均87.5%）とは直接比較できない。少数ショ
+tex_in_json	87.5%	87.5	f{tab:ablation}のVH層（5ラン平均87.5%）とは直接比較できない。少数ショットの例にはSQL
+tex_in_json	2.2	2.2	edright\arraybackslash}p{2.2cm}>{\raggedright\arrayba
+tex_in_json	3.0	3.0	edright\arraybackslash}p{3.0cm}X>{\raggedright\arrayb
+tex_in_json	1	1	ティ & \path{oqmd_entries}（1行における式、プロトタイプ、格子、体積） & \p
+tex_in_json	1	1	in_boundary}など & 特性クラスごとに1つのテーブルが明確なカラム名と単位を提供する。 \
+tex_in_json	245	245	tering \caption{マルチ軸評価指標（245クエリ主評価）。「厳密な完全結果集合一致」はExa
+tex_in_json	39	39	t{semantic\_ordered}契約が真の39クエリについては行順序まで一致）であり、共通列射影
+tex_in_json	1	1	、共通列射影上でPrecision=Recall=1となる旧来の緩い完全一致（同一ランの採点監査\te
+tex_in_json	1	1	QL JOINテーブルの割合。 リコール、精度、F1は245クエリの平均；F1はクエリごとのF1スコア
+tex_in_json	245	245	 JOINテーブルの割合。 リコール、精度、F1は245クエリの平均；F1はクエリごとのF1スコアの平均で
+tex_in_json	1	1	合。 リコール、精度、F1は245クエリの平均；F1はクエリごとのF1スコアの平均であり、層ごとの精度
+tex_in_json	1	1	度、F1は245クエリの平均；F1はクエリごとのF1スコアの平均であり、層ごとの精度とリコールの平均の
+tex_in_json	245	245	の調和平均ではない。本表はfull条件の単一ラン（245クエリ多軸評価ラン）の記録値であり、100クエリサ
+tex_in_json	100	100	一ラン（245クエリ多軸評価ラン）の記録値であり、100クエリサブセットに対する表~\ref{tab:ab
+tex_in_json	5	5	に対する表~\ref{tab:ablation}の5ラン平均とは母集合が異なる。} \label{ta
+tex_in_json	43	43	{}} \toprule & Easy ($n$=43) & Medium ($n$=69) & Har
+tex_in_json	69	69	y ($n$=43) & Medium ($n$=69) & Hard ($n$=69) & VH ($
+tex_in_json	69	69	ium ($n$=69) & Hard ($n$=69) & VH ($n$=64) \\ \midru
+tex_in_json	64	64	 Hard ($n$=69) & VH ($n$=64) \\ \midrule リコール (EX)  
+tex_in_json	94.9	94.9	midrule リコール (EX)      & 94.9 & 93.9 & 81.0 & 77.2 \\ 
+tex_in_json	93.9	93.9	 リコール (EX)      & 94.9 & 93.9 & 81.0 & 77.2 \\ 精度     
+tex_in_json	81.0	81.0	EX)      & 94.9 & 93.9 & 81.0 & 77.2 \\ 精度        &  9
+tex_in_json	77.2	77.2	  & 94.9 & 93.9 & 81.0 & 77.2 \\ 精度        &  94.8 & 9
+tex_in_json	94.8	94.8	0 & 77.2 \\ 精度        &  94.8 & 94.3 & 80.8 & 79.5 \\ 
+tex_in_json	94.3	94.3	2 \\ 精度        &  94.8 & 94.3 & 80.8 & 79.5 \\ F1     
+tex_in_json	80.8	80.8	        &  94.8 & 94.3 & 80.8 & 79.5 \\ F1            
+tex_in_json	79.5	79.5	 &  94.8 & 94.3 & 80.8 & 79.5 \\ F1               &  9
+tex_in_json	1	1	& 94.3 & 80.8 & 79.5 \\ F1               &  94.8 & 
+tex_in_json	94.8	94.8	5 \\ F1               &  94.8 & 93.5 & 78.5 & 77.6 \\ 
+tex_in_json	93.5	93.5	               &  94.8 & 93.5 & 78.5 & 77.6 \\ 厳密な完全結果
+tex_in_json	78.5	78.5	        &  94.8 & 93.5 & 78.5 & 77.6 \\ 厳密な完全結果集合一致 & 
+tex_in_json	77.6	77.6	 &  94.8 & 93.5 & 78.5 & 77.6 \\ 厳密な完全結果集合一致 &  14.0 &
+tex_in_json	14.0	14.0	& 77.6 \\ 厳密な完全結果集合一致 &  14.0 & 14.5 & 13.0 &  1.6 \\ 
+tex_in_json	14.5	14.5	\\ 厳密な完全結果集合一致 &  14.0 & 14.5 & 13.0 &  1.6 \\ SELECT 
+tex_in_json	13.0	13.0	全結果集合一致 &  14.0 & 14.5 & 13.0 &  1.6 \\ SELECT col.\ 精
+tex_in_json	1.6	1.6	&  14.0 & 14.5 & 13.0 &  1.6 \\ SELECT col.\ 精度 &  71
+tex_in_json	71.0	71.0	.6 \\ SELECT col.\ 精度 &  71.0 & 71.2 & 61.0 & 46.0 \\ 
+tex_in_json	71.2	71.2	ELECT col.\ 精度 &  71.0 & 71.2 & 61.0 & 46.0 \\ JOINマッチ
+tex_in_json	61.0	61.0	ol.\ 精度 &  71.0 & 71.2 & 61.0 & 46.0 \\ JOINマッチ率  &  9
+tex_in_json	46.0	46.0	 &  71.0 & 71.2 & 61.0 & 46.0 \\ JOINマッチ率  &  96.5 & 9
+tex_in_json	96.5	96.5	0 & 46.0 \\ JOINマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\ 
+tex_in_json	93.1	93.1	0 \\ JOINマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\ 構文の有効性 
+tex_in_json	92.0	92.0	INマッチ率  &  96.5 & 93.1 & 92.0 & 77.3 \\ 構文の有効性  & 100.
+tex_in_json	77.3	77.3	 &  96.5 & 93.1 & 92.0 & 77.3 \\ 構文の有効性  & 100.0 & 100
+tex_in_json	100.0	100.0	92.0 & 77.3 \\ 構文の有効性  & 100.0 & 100.0 & 100.0 & 100.0 
+tex_in_json	100.0	100.0	7.3 \\ 構文の有効性  & 100.0 & 100.0 & 100.0 & 100.0 \\ 実行成功率
+tex_in_json	100.0	100.0	文の有効性  & 100.0 & 100.0 & 100.0 & 100.0 \\ 実行成功率 & 100.0
+tex_in_json	100.0	100.0	 100.0 & 100.0 & 100.0 & 100.0 \\ 実行成功率 & 100.0 & 100.0
+tex_in_json	100.0	100.0	100.0 & 100.0 \\ 実行成功率 & 100.0 & 100.0 & 100.0 & 100.0 
+tex_in_json	100.0	100.0	100.0 \\ 実行成功率 & 100.0 & 100.0 & 100.0 & 100.0 \\ \bott
+tex_in_json	100.0	100.0	 実行成功率 & 100.0 & 100.0 & 100.0 & 100.0 \\ \bottomrule \
+tex_in_json	100.0	100.0	 100.0 & 100.0 & 100.0 & 100.0 \\ \bottomrule \end{tabu
+tex_in_json	100	100	caption{アブレーション条件による誤差分析（100クエリ）。   テーブルの幻覚 = スキーマに解決
+tex_in_json	0	0	idrule     完全          & 0 & 0 & 0 & 5 \\     no\_f
+tex_in_json	0	0	le     完全          & 0 & 0 & 0 & 5 \\     no\_fewsh
+tex_in_json	0	0	   完全          & 0 & 0 & 0 & 5 \\     no\_fewshot  
+tex_in_json	5	5	全          & 0 & 0 & 0 & 5 \\     no\_fewshot   & 0
+tex_in_json	0	0	5 \\     no\_fewshot   & 0 & 0 & 0 & 2 \\     no\_d
+tex_in_json	0	0	     no\_fewshot   & 0 & 0 & 0 & 2 \\     no\_dict 
+tex_in_json	0	0	 no\_fewshot   & 0 & 0 & 0 & 2 \\     no\_dict     
+tex_in_json	2	2	_fewshot   & 0 & 0 & 0 & 2 \\     no\_dict      & 0
+tex_in_json	0	0	2 \\     no\_dict      & 0 & 0 & 0 & 4 \\     no\_r
+tex_in_json	0	0	     no\_dict      & 0 & 0 & 0 & 4 \\     no\_reran
+tex_in_json	0	0	 no\_dict      & 0 & 0 & 0 & 4 \\     no\_reranker 
+tex_in_json	4	4	_dict      & 0 & 0 & 0 & 4 \\     no\_reranker  & 0
+tex_in_json	0	0	4 \\     no\_reranker  & 0 & 0 & 0 & 0 \\     no\_g
+tex_in_json	0	0	     no\_reranker  & 0 & 0 & 0 & 0 \\     no\_guard
+tex_in_json	0	0	 no\_reranker  & 0 & 0 & 0 & 0 \\     no\_guard    
+tex_in_json	0	0	_reranker  & 0 & 0 & 0 & 0 \\     no\_guard     & 0
+tex_in_json	0	0	0 \\     no\_guard     & 0 & 0 & 0 & 3 \\     no\_n
+tex_in_json	0	0	     no\_guard     & 0 & 0 & 0 & 3 \\     no\_nbest
+tex_in_json	0	0	 no\_guard     & 0 & 0 & 0 & 3 \\     no\_nbest    
+tex_in_json	3	3	_guard     & 0 & 0 & 0 & 3 \\     no\_nbest     & 3
+tex_in_json	3	3	3 \\     no\_nbest     & 3 & 0 & 0 & 6 \\     no\_g
+tex_in_json	0	0	     no\_nbest     & 3 & 0 & 0 & 6 \\     no\_graph
+tex_in_json	0	0	 no\_nbest     & 3 & 0 & 0 & 6 \\     no\_graph    
+tex_in_json	6	6	_nbest     & 3 & 0 & 0 & 6 \\     no\_graph     & 0
+tex_in_json	0	0	6 \\     no\_graph     & 0 & 0 & 0 & 6 \\     \bott
+tex_in_json	0	0	     no\_graph     & 0 & 0 & 0 & 6 \\     \bottomru
+tex_in_json	0	0	 no\_graph     & 0 & 0 & 0 & 6 \\     \bottomrule  
+tex_in_json	6	6	_graph     & 0 & 0 & 0 & 6 \\     \bottomrule   \en
+tex_in_json	3	3	h} \centering \caption{上位3つのコンポーネントに対する難易度レベルの$\Del
+tex_in_json	20	20	桁が一致しない場合がある。層別値（特にVHは$n=20$）は探索的分析である。} \label{tab:
+tex_in_json	-2.8	-2.8	\midrule no\_fewshot   & -2.8  & -12.7 & -24.7 & -21.8
+tex_in_json	-12.7	-12.7	 no\_fewshot   & -2.8  & -12.7 & -24.7 & -21.8 \\ no\_d
+tex_in_json	-24.7	-24.7	shot   & -2.8  & -12.7 & -24.7 & -21.8 \\ no\_dict     
+tex_in_json	-21.8	-21.8	 -2.8  & -12.7 & -24.7 & -21.8 \\ no\_dict      & $+$0.
+tex_in_json	0.1	0.1	.8 \\ no\_dict      & $+$0.1  & -1.3  & -7.7  & -35.5
+tex_in_json	-1.3	-1.3	o\_dict      & $+$0.1  & -1.3  & -7.7  & -35.5 \\ no\_
+tex_in_json	-7.7	-7.7	     & $+$0.1  & -1.3  & -7.7  & -35.5 \\ no\_reranker
+tex_in_json	-35.5	-35.5	+$0.1  & -1.3  & -7.7  & -35.5 \\ no\_reranker  & $+$0.
+tex_in_json	0.2	0.2	.5 \\ no\_reranker  & $+$0.2  & -13.0 & -6.5  & -1.8 
+tex_in_json	-13.0	-13.0	o\_reranker  & $+$0.2  & -13.0 & -6.5  & -1.8  \\ \bott
+tex_in_json	-6.5	-6.5	ker  & $+$0.2  & -13.0 & -6.5  & -1.8  \\ \bottomrule 
+tex_in_json	-1.8	-1.8	+$0.2  & -13.0 & -6.5  & -1.8  \\ \bottomrule \end{tab
+tex_in_json	0.40	0.4	fill \begin{minipage}[t]{0.40\textwidth} \centering \c
+tex_in_json	5	5	ble~\ref{tab:ablation}と同じ5回の実験で測定。$n$-best = 1に設定する
+tex_in_json	1	1	n}と同じ5回の実験で測定。$n$-best = 1に設定すると、精度の明確な損失なしにレイテンシが約
+tex_in_json	30.9	30.9	シ (s) \\ \midrule full & 30.9 \\ no\_fewshot & 26.5 \\
+tex_in_json	26.5	26.5	 & 30.9 \\ no\_fewshot & 26.5 \\ no\_dict & 30.9 \\ no
+tex_in_json	30.9	30.9	hot & 26.5 \\ no\_dict & 30.9 \\ no\_reranker & 23.4 \
+tex_in_json	23.4	23.4	& 30.9 \\ no\_reranker & 23.4 \\ no\_guard & 25.7 \\ n
+tex_in_json	25.7	25.7	er & 23.4 \\ no\_guard & 25.7 \\ no\_nbest & 8.6 \\ no
+tex_in_json	8.6	8.6	rd & 25.7 \\ no\_nbest & 8.6 \\ no\_graph & 31.4 \\ \
+tex_in_json	31.4	31.4	est & 8.6 \\ no\_graph & 31.4 \\ \bottomrule \end{tabu
+tex_in_json	10	10	ction{$\gamma'$相候補ランキングの全10行} \label{sec:sup_gamma_p
+tex_in_json	10	10	}）による$\gamma'$相候補ランキングの上位10行を表~\ref{tab:gamma_prime_
+tex_in_json	10	10	\texttt{gamma\_prime\_top10}）に収録され、数値整合検証の対象である。  \b
+tex_in_json	10	10	 \centering   \caption{上位10の$\gamma'$-相候補（複合スコア$S$によ
+tex_in_json	5	5	ef{tab:gamma_prime}は本表の上位5行の抜粋）。化合物属性は合成検証データである。$\
+tex_in_json	3.572	3.572	ta a$は参照値$a_{\text{ref}}=3.572$~\AA{}{}（Ni$_3$Al行から動的取得
+tex_in_json	3	3	ref}}=3.572$~\AA{}{}（Ni$_3$Al行から動的取得）に対する差。同一組成に複数エ
+tex_in_json	3	3	のエントリを代表とする（決定的選択規則）。$a$は3桁丸めの表示値であり、$\Delta a$と$S$
+tex_in_json	1	1	 $S$ \\     \midrule     1 & Ni$_3$Al & \texttt{ent
+tex_in_json	3	3	    \midrule     1 & Ni$_3$Al & \texttt{entry\_0000
+tex_in_json	3.572	3.572	 \texttt{entry\_00001} & 3.572 & 0.000 & 180 & 0.000 & 
+tex_in_json	0.000	0.0	{entry\_00001} & 3.572 & 0.000 & 180 & 0.000 & 0.880 \\
+tex_in_json	180	180	00001} & 3.572 & 0.000 & 180 & 0.000 & 0.880 \\     2
+tex_in_json	0.000	0.0	 & 3.572 & 0.000 & 180 & 0.000 & 0.880 \\     2 & Co$_3
+tex_in_json	0.880	0.88	 & 0.000 & 180 & 0.000 & 0.880 \\     2 & Co$_3$Ti & \t
+tex_in_json	2	2	0 & 0.000 & 0.880 \\     2 & Co$_3$Ti & \texttt{ent
+tex_in_json	3	3	0 & 0.880 \\     2 & Co$_3$Ti & \texttt{entry\_0000
+tex_in_json	3.550	3.55	 \texttt{entry\_00004} & 3.550 & 0.000 & 190 & 0.022 & 
+tex_in_json	0.000	0.0	{entry\_00004} & 3.550 & 0.000 & 190 & 0.022 & 0.864 \\
+tex_in_json	190	190	00004} & 3.550 & 0.000 & 190 & 0.022 & 0.864 \\     3
+tex_in_json	0.022	0.022	 & 3.550 & 0.000 & 190 & 0.022 & 0.864 \\     3 & Cr$_3
+tex_in_json	0.864	0.864	 & 0.000 & 190 & 0.022 & 0.864 \\     3 & Cr$_3$In & \t
+tex_in_json	3	3	0 & 0.022 & 0.864 \\     3 & Cr$_3$In & \texttt{ent
+tex_in_json	3	3	2 & 0.864 \\     3 & Cr$_3$In & \texttt{entry\_0006
+tex_in_json	3.547	3.547	 \texttt{entry\_00068} & 3.547 & 0.012 & 249 & 0.025 & 
+tex_in_json	0.012	0.012	{entry\_00068} & 3.547 & 0.012 & 249 & 0.025 & 0.839 \\
+tex_in_json	249	249	00068} & 3.547 & 0.012 & 249 & 0.025 & 0.839 \\     4
+tex_in_json	0.025	0.025	 & 3.547 & 0.012 & 249 & 0.025 & 0.839 \\     4 & Hf$_3
+tex_in_json	0.839	0.839	 & 0.012 & 249 & 0.025 & 0.839 \\     4 & Hf$_3$V & \te
+tex_in_json	4	4	9 & 0.025 & 0.839 \\     4 & Hf$_3$V & \texttt{entr
+tex_in_json	3	3	5 & 0.839 \\     4 & Hf$_3$V & \texttt{entry\_00170
+tex_in_json	3.590	3.59	 \texttt{entry\_00170} & 3.590 & 0.006 & 196 & 0.018 & 
+tex_in_json	0.006	0.006	{entry\_00170} & 3.590 & 0.006 & 196 & 0.018 & 0.834 \\
+tex_in_json	196	196	00170} & 3.590 & 0.006 & 196 & 0.018 & 0.834 \\     5
+tex_in_json	0.018	0.018	 & 3.590 & 0.006 & 196 & 0.018 & 0.834 \\     5 & Pt$_3
+tex_in_json	0.834	0.834	 & 0.006 & 196 & 0.018 & 0.834 \\     5 & Pt$_3$Sc & \t
+tex_in_json	5	5	6 & 0.018 & 0.834 \\     5 & Pt$_3$Sc & \texttt{ent
+tex_in_json	3	3	8 & 0.834 \\     5 & Pt$_3$Sc & \texttt{entry\_0025
+tex_in_json	3.608	3.608	 \texttt{entry\_00251} & 3.608 & 0.003 & 194 & 0.035 & 
+tex_in_json	0.003	0.003	{entry\_00251} & 3.608 & 0.003 & 194 & 0.035 & 0.833 \\
+tex_in_json	194	194	00251} & 3.608 & 0.003 & 194 & 0.035 & 0.833 \\     6
+tex_in_json	0.035	0.035	 & 3.608 & 0.003 & 194 & 0.035 & 0.833 \\     6 & Cu$_3
+tex_in_json	0.833	0.833	 & 0.003 & 194 & 0.035 & 0.833 \\     6 & Cu$_3$Al & \t
+tex_in_json	6	6	4 & 0.035 & 0.833 \\     6 & Cu$_3$Al & \texttt{ent
+tex_in_json	3	3	5 & 0.833 \\     6 & Cu$_3$Al & \texttt{entry\_0021
+tex_in_json	3.537	3.537	 \texttt{entry\_00214} & 3.537 & 0.006 & 204 & 0.035 & 
+tex_in_json	0.006	0.006	{entry\_00214} & 3.537 & 0.006 & 204 & 0.035 & 0.825 \\
+tex_in_json	204	204	00214} & 3.537 & 0.006 & 204 & 0.035 & 0.825 \\     7
+tex_in_json	0.035	0.035	 & 3.537 & 0.006 & 204 & 0.035 & 0.825 \\     7 & Co$_3
+tex_in_json	0.825	0.825	 & 0.006 & 204 & 0.035 & 0.825 \\     7 & Co$_3$V & \te
+tex_in_json	7	7	4 & 0.035 & 0.825 \\     7 & Co$_3$V & \texttt{entr
+tex_in_json	3	3	5 & 0.825 \\     7 & Co$_3$V & \texttt{entry\_00197
+tex_in_json	3.611	3.611	 \texttt{entry\_00197} & 3.611 & 0.007 & 215 & 0.039 & 
+tex_in_json	0.007	0.007	{entry\_00197} & 3.611 & 0.007 & 215 & 0.039 & 0.822 \\
+tex_in_json	215	215	00197} & 3.611 & 0.007 & 215 & 0.039 & 0.822 \\     8
+tex_in_json	0.039	0.039	 & 3.611 & 0.007 & 215 & 0.039 & 0.822 \\     8 & Ag$_3
+tex_in_json	0.822	0.822	 & 0.007 & 215 & 0.039 & 0.822 \\     8 & Ag$_3$Ti & \t
+tex_in_json	8	8	5 & 0.039 & 0.822 \\     8 & Ag$_3$Ti & \texttt{ent
+tex_in_json	3	3	9 & 0.822 \\     8 & Ag$_3$Ti & \texttt{entry\_0032
+tex_in_json	3.575	3.575	 \texttt{entry\_00326} & 3.575 & 0.018 & 235 & 0.003 & 
+tex_in_json	0.018	0.018	{entry\_00326} & 3.575 & 0.018 & 235 & 0.003 & 0.808 \\
+tex_in_json	235	235	00326} & 3.575 & 0.018 & 235 & 0.003 & 0.808 \\     9
+tex_in_json	0.003	0.003	 & 3.575 & 0.018 & 235 & 0.003 & 0.808 \\     9 & V$_3$
+tex_in_json	0.808	0.808	 & 0.018 & 235 & 0.003 & 0.808 \\     9 & V$_3$Sn & \te
+tex_in_json	9	9	5 & 0.003 & 0.808 \\     9 & V$_3$Sn & \texttt{entr
+tex_in_json	3	3	03 & 0.808 \\     9 & V$_3$Sn & \texttt{entry\_0010
+tex_in_json	3.616	3.616	 \texttt{entry\_00100} & 3.616 & 0.007 & 197 & 0.043 & 
+tex_in_json	0.007	0.007	{entry\_00100} & 3.616 & 0.007 & 197 & 0.043 & 0.798 \\
+tex_in_json	197	197	00100} & 3.616 & 0.007 & 197 & 0.043 & 0.798 \\     1
+tex_in_json	0.043	0.043	 & 3.616 & 0.007 & 197 & 0.043 & 0.798 \\     10 & Pt$_
+tex_in_json	0.798	0.798	 & 0.007 & 197 & 0.043 & 0.798 \\     10 & Pt$_3$Ti & \
+tex_in_json	10	10	7 & 0.043 & 0.798 \\     10 & Pt$_3$Ti & \texttt{ent
+tex_in_json	3	3	 & 0.798 \\     10 & Pt$_3$Ti & \texttt{entry\_0011
+tex_in_json	3.506	3.506	 \texttt{entry\_00110} & 3.506 & 0.012 & 247 & 0.066 & 
+tex_in_json	0.012	0.012	{entry\_00110} & 3.506 & 0.012 & 247 & 0.066 & 0.785 \\
+tex_in_json	247	247	00110} & 3.506 & 0.012 & 247 & 0.066 & 0.785 \\     \
+tex_in_json	0.066	0.066	 & 3.506 & 0.012 & 247 & 0.066 & 0.785 \\     \bottomru
+tex_in_json	0.785	0.785	 & 0.012 & 247 & 0.066 & 0.785 \\     \bottomrule   \en
+tex_in_json	3	3	{table}  \subsection{Ni$_3$Al近傍の格子定数候補（全27エントリ）} \l
+tex_in_json	3	3	数候補抽出で$|a - a_{\text{Ni}_3\text{Al}}| \leq 0.03$~\A
+tex_in_json	0.03	0.03	xt{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を満たした26のユニーク組成（2
+tex_in_json	26	26	| \leq 0.03$~\AA{}{}を満たした26のユニーク組成（27エントリ）の全数を、表~\re
+tex_in_json	3	3	centering   \caption{Ni$_3$Al近傍の格子定数候補（$|a - a_{\te
+tex_in_json	0.03	0.03	a - a_{\text{ref}}| \leq 0.03$~\AA{}{}を満たす全27エントリ、$|\D
+tex_in_json	3	3	成に複数エントリが存在する場合がある（例：Zr$_3$Alは\texttt{entry\_00107}
+tex_in_json	3.583	3.583	\texttt{entry\_00107}（$a=3.583$）と\texttt{entry\_00238}（
+tex_in_json	3.544	3.544	\texttt{entry\_00238}（$a=3.544$）の両方が条件を満たす）。$a$は3桁丸めの表示
+tex_in_json	3	3	a=3.544$）の両方が条件を満たす）。$a$は3桁丸めの表示値であり、$|\Delta a|$は未
+tex_in_json	2	2	{tabular}{lcccc@{\hspace{2em}}lcccc}     \toprule  
+tex_in_json	3	3	 \\     \midrule     Ni$_3$Al & 3.572 & 0.000 & 0.0
+tex_in_json	3.572	3.572	 \midrule     Ni$_3$Al & 3.572 & 0.000 & 0.000 & $-0.42
+tex_in_json	0.000	0.0	e     Ni$_3$Al & 3.572 & 0.000 & 0.000 & $-0.420$ & Hf$
+tex_in_json	0.000	0.0	$_3$Al & 3.572 & 0.000 & 0.000 & $-0.420$ & Hf$_3$V & 3
+tex_in_json	-0.420	-0.42	3.572 & 0.000 & 0.000 & $-0.420$ & Hf$_3$V & 3.590 & 0.0
+tex_in_json	3	3	& 0.000 & $-0.420$ & Hf$_3$V & 3.590 & 0.018 & 0.00
+tex_in_json	3.590	3.59	0 & $-0.420$ & Hf$_3$V & 3.590 & 0.018 & 0.006 & $-0.29
+tex_in_json	0.018	0.018	420$ & Hf$_3$V & 3.590 & 0.018 & 0.006 & $-0.292$ \\   
+tex_in_json	0.006	0.006	f$_3$V & 3.590 & 0.018 & 0.006 & $-0.292$ \\     Ag$_3$
+tex_in_json	-0.292	-0.292	3.590 & 0.018 & 0.006 & $-0.292$ \\     Ag$_3$Ti & 3.575
+tex_in_json	3	3	06 & $-0.292$ \\     Ag$_3$Ti & 3.575 & 0.003 & 0.0
+tex_in_json	3.575	3.575	0.292$ \\     Ag$_3$Ti & 3.575 & 0.003 & 0.018 & $0.074
+tex_in_json	0.003	0.003	\     Ag$_3$Ti & 3.575 & 0.003 & 0.018 & $0.074$ & Hf$_
+tex_in_json	0.018	0.018	$_3$Ti & 3.575 & 0.003 & 0.018 & $0.074$ & Hf$_3$Si & 3
+tex_in_json	0.074	0.074	3.575 & 0.003 & 0.018 & $0.074$ & Hf$_3$Si & 3.553 & 0.
+tex_in_json	3	3	 & 0.018 & $0.074$ & Hf$_3$Si & 3.553 & 0.019 & 0.0
+tex_in_json	3.553	3.553	8 & $0.074$ & Hf$_3$Si & 3.553 & 0.019 & 0.027 & $-0.19
+tex_in_json	0.019	0.019	74$ & Hf$_3$Si & 3.553 & 0.019 & 0.027 & $-0.194$ \\   
+tex_in_json	0.027	0.027	$_3$Si & 3.553 & 0.019 & 0.027 & $-0.194$ \\     Cr$_3$
+tex_in_json	-0.194	-0.194	3.553 & 0.019 & 0.027 & $-0.194$ \\     Cr$_3$Sb & 3.575
+tex_in_json	3	3	27 & $-0.194$ \\     Cr$_3$Sb & 3.575 & 0.003 & 0.0
+tex_in_json	3.575	3.575	0.194$ \\     Cr$_3$Sb & 3.575 & 0.003 & 0.096 & $-0.06
+tex_in_json	0.003	0.003	\     Cr$_3$Sb & 3.575 & 0.003 & 0.096 & $-0.061$ & Mo$
+tex_in_json	0.096	0.096	$_3$Sb & 3.575 & 0.003 & 0.096 & $-0.061$ & Mo$_3$Sn & 
+tex_in_json	-0.061	-0.061	3.575 & 0.003 & 0.096 & $-0.061$ & Mo$_3$Sn & 3.552 & 0.
+tex_in_json	3	3	& 0.096 & $-0.061$ & Mo$_3$Sn & 3.552 & 0.020 & 0.0
+tex_in_json	3.552	3.552	 & $-0.061$ & Mo$_3$Sn & 3.552 & 0.020 & 0.095 & $-0.48
+tex_in_json	0.020	0.02	61$ & Mo$_3$Sn & 3.552 & 0.020 & 0.095 & $-0.489$ \\   
+tex_in_json	0.095	0.095	$_3$Sn & 3.552 & 0.020 & 0.095 & $-0.489$ \\     Au$_3$
+tex_in_json	-0.489	-0.489	3.552 & 0.020 & 0.095 & $-0.489$ \\     Au$_3$Sb & 3.576
+tex_in_json	3	3	95 & $-0.489$ \\     Au$_3$Sb & 3.576 & 0.004 & 0.0
+tex_in_json	3.576	3.576	0.489$ \\     Au$_3$Sb & 3.576 & 0.004 & 0.005 & $-0.47
+tex_in_json	0.004	0.004	\     Au$_3$Sb & 3.576 & 0.004 & 0.005 & $-0.471$ & Mo$
+tex_in_json	0.005	0.005	$_3$Sb & 3.576 & 0.004 & 0.005 & $-0.471$ & Mo$_3$Nb & 
+tex_in_json	-0.471	-0.471	3.576 & 0.004 & 0.005 & $-0.471$ & Mo$_3$Nb & 3.551 & 0.
+tex_in_json	3	3	& 0.005 & $-0.471$ & Mo$_3$Nb & 3.551 & 0.021 & 0.0
+tex_in_json	3.551	3.551	 & $-0.471$ & Mo$_3$Nb & 3.551 & 0.021 & 0.065 & $-0.49
+tex_in_json	0.021	0.021	71$ & Mo$_3$Nb & 3.551 & 0.021 & 0.065 & $-0.496$ \\   
+tex_in_json	0.065	0.065	$_3$Nb & 3.551 & 0.021 & 0.065 & $-0.496$ \\     Ni$_3$
+tex_in_json	-0.496	-0.496	3.551 & 0.021 & 0.065 & $-0.496$ \\     Ni$_3$Ti & 3.578
+tex_in_json	3	3	65 & $-0.496$ \\     Ni$_3$Ti & 3.578 & 0.006 & 0.0
+tex_in_json	3.578	3.578	0.496$ \\     Ni$_3$Ti & 3.578 & 0.006 & 0.068 & $0.000
+tex_in_json	0.006	0.006	\     Ni$_3$Ti & 3.578 & 0.006 & 0.068 & $0.000$ & Nb$_
+tex_in_json	0.068	0.068	$_3$Ti & 3.578 & 0.006 & 0.068 & $0.000$ & Nb$_3$Sn & 3
+tex_in_json	0.000	0.0	3.578 & 0.006 & 0.068 & $0.000$ & Nb$_3$Sn & 3.593 & 0.
+tex_in_json	3	3	 & 0.068 & $0.000$ & Nb$_3$Sn & 3.593 & 0.021 & 0.1
+tex_in_json	3.593	3.593	8 & $0.000$ & Nb$_3$Sn & 3.593 & 0.021 & 0.107 & $0.079
+tex_in_json	0.021	0.021	00$ & Nb$_3$Sn & 3.593 & 0.021 & 0.107 & $0.079$ \\    
+tex_in_json	0.107	0.107	$_3$Sn & 3.593 & 0.021 & 0.107 & $0.079$ \\     Fe$_3$S
+tex_in_json	0.079	0.079	3.593 & 0.021 & 0.107 & $0.079$ \\     Fe$_3$Sn & 3.580
+tex_in_json	3	3	107 & $0.079$ \\     Fe$_3$Sn & 3.580 & 0.008 & 0.0
+tex_in_json	3.580	3.58	0.079$ \\     Fe$_3$Sn & 3.580 & 0.008 & 0.053 & $-0.45
+tex_in_json	0.008	0.008	\     Fe$_3$Sn & 3.580 & 0.008 & 0.053 & $-0.456$ & Co$
+tex_in_json	0.053	0.053	$_3$Sn & 3.580 & 0.008 & 0.053 & $-0.456$ & Co$_3$Ti & 
+tex_in_json	-0.456	-0.456	3.580 & 0.008 & 0.053 & $-0.456$ & Co$_3$Ti & 3.550 & 0.
+tex_in_json	3	3	& 0.053 & $-0.456$ & Co$_3$Ti & 3.550 & 0.022 & 0.0
+tex_in_json	3.550	3.55	 & $-0.456$ & Co$_3$Ti & 3.550 & 0.022 & 0.000 & $-0.45
+tex_in_json	0.022	0.022	56$ & Co$_3$Ti & 3.550 & 0.022 & 0.000 & $-0.450$ \\   
+tex_in_json	0.000	0.0	$_3$Ti & 3.550 & 0.022 & 0.000 & $-0.450$ \\     Fe$_3$
+tex_in_json	-0.450	-0.45	3.550 & 0.022 & 0.000 & $-0.450$ \\     Fe$_3$Sb & 3.563
+tex_in_json	3	3	00 & $-0.450$ \\     Fe$_3$Sb & 3.563 & 0.009 & 0.0
+tex_in_json	3.563	3.563	0.450$ \\     Fe$_3$Sb & 3.563 & 0.009 & 0.031 & $0.078
+tex_in_json	0.009	0.009	\     Fe$_3$Sb & 3.563 & 0.009 & 0.031 & $0.078$ & Ru$_
+tex_in_json	0.031	0.031	$_3$Sb & 3.563 & 0.009 & 0.031 & $0.078$ & Ru$_3$Mn & 3
+tex_in_json	0.078	0.078	3.563 & 0.009 & 0.031 & $0.078$ & Ru$_3$Mn & 3.595 & 0.
+tex_in_json	3	3	 & 0.031 & $0.078$ & Ru$_3$Mn & 3.595 & 0.023 & 0.0
+tex_in_json	3.595	3.595	1 & $0.078$ & Ru$_3$Mn & 3.595 & 0.023 & 0.063 & $-0.27
+tex_in_json	0.023	0.023	78$ & Ru$_3$Mn & 3.595 & 0.023 & 0.063 & $-0.275$ \\   
+tex_in_json	0.063	0.063	$_3$Mn & 3.595 & 0.023 & 0.063 & $-0.275$ \\     Zr$_3$
+tex_in_json	-0.275	-0.275	3.595 & 0.023 & 0.063 & $-0.275$ \\     Zr$_3$Al & 3.583
+tex_in_json	3	3	63 & $-0.275$ \\     Zr$_3$Al & 3.583 & 0.011 & 0.0
+tex_in_json	3.583	3.583	0.275$ \\     Zr$_3$Al & 3.583 & 0.011 & 0.094 & $-0.09
+tex_in_json	0.011	0.011	\     Zr$_3$Al & 3.583 & 0.011 & 0.094 & $-0.091$ & Ag$
+tex_in_json	0.094	0.094	$_3$Al & 3.583 & 0.011 & 0.094 & $-0.091$ & Ag$_3$Ge & 
+tex_in_json	-0.091	-0.091	3.583 & 0.011 & 0.094 & $-0.091$ & Ag$_3$Ge & 3.548 & 0.
+tex_in_json	3	3	& 0.094 & $-0.091$ & Ag$_3$Ge & 3.548 & 0.024 & 0.0
+tex_in_json	3.548	3.548	 & $-0.091$ & Ag$_3$Ge & 3.548 & 0.024 & 0.009 & $0.000
+tex_in_json	0.024	0.024	91$ & Ag$_3$Ge & 3.548 & 0.024 & 0.009 & $0.000$ \\    
+tex_in_json	0.009	0.009	$_3$Ge & 3.548 & 0.024 & 0.009 & $0.000$ \\     Ag$_3$Y
+tex_in_json	0.000	0.0	3.548 & 0.024 & 0.009 & $0.000$ \\     Ag$_3$Y & 3.561 
+tex_in_json	3	3	009 & $0.000$ \\     Ag$_3$Y & 3.561 & 0.011 & 0.06
+tex_in_json	3.561	3.561	$0.000$ \\     Ag$_3$Y & 3.561 & 0.011 & 0.061 & $-0.48
+tex_in_json	0.011	0.011	\\     Ag$_3$Y & 3.561 & 0.011 & 0.061 & $-0.487$ & Cr$
+tex_in_json	0.061	0.061	g$_3$Y & 3.561 & 0.011 & 0.061 & $-0.487$ & Cr$_3$In & 
+tex_in_json	-0.487	-0.487	3.561 & 0.011 & 0.061 & $-0.487$ & Cr$_3$In & 3.547 & 0.
+tex_in_json	3	3	& 0.061 & $-0.487$ & Cr$_3$In & 3.547 & 0.025 & 0.0
+tex_in_json	3.547	3.547	 & $-0.487$ & Cr$_3$In & 3.547 & 0.025 & 0.012 & $0.023
+tex_in_json	0.025	0.025	87$ & Cr$_3$In & 3.547 & 0.025 & 0.012 & $0.023$ \\    
+tex_in_json	0.012	0.012	$_3$In & 3.547 & 0.025 & 0.012 & $0.023$ \\     Ta$_3$G
+tex_in_json	0.023	0.023	3.547 & 0.025 & 0.012 & $0.023$ \\     Ta$_3$Ga & 3.584
+tex_in_json	3	3	012 & $0.023$ \\     Ta$_3$Ga & 3.584 & 0.012 & 0.0
+tex_in_json	3.584	3.584	0.023$ \\     Ta$_3$Ga & 3.584 & 0.012 & 0.032 & $0.031
+tex_in_json	0.012	0.012	\     Ta$_3$Ga & 3.584 & 0.012 & 0.032 & $0.031$ & Ta$_
+tex_in_json	0.032	0.032	$_3$Ga & 3.584 & 0.012 & 0.032 & $0.031$ & Ta$_3$Sn & 3
+tex_in_json	0.031	0.031	3.584 & 0.012 & 0.032 & $0.031$ & Ta$_3$Sn & 3.547 & 0.
+tex_in_json	3	3	 & 0.032 & $0.031$ & Ta$_3$Sn & 3.547 & 0.025 & 0.0
+tex_in_json	3.547	3.547	2 & $0.031$ & Ta$_3$Sn & 3.547 & 0.025 & 0.093 & $-0.15
+tex_in_json	0.025	0.025	31$ & Ta$_3$Sn & 3.547 & 0.025 & 0.093 & $-0.159$ \\   
+tex_in_json	0.093	0.093	$_3$Sn & 3.547 & 0.025 & 0.093 & $-0.159$ \\     Fe$_3$
+tex_in_json	-0.159	-0.159	3.547 & 0.025 & 0.093 & $-0.159$ \\     Fe$_3$Mg & 3.586
+tex_in_json	3	3	93 & $-0.159$ \\     Fe$_3$Mg & 3.586 & 0.014 & 0.0
+tex_in_json	3.586	3.586	0.159$ \\     Fe$_3$Mg & 3.586 & 0.014 & 0.057 & $-0.08
+tex_in_json	0.014	0.014	\     Fe$_3$Mg & 3.586 & 0.014 & 0.057 & $-0.083$ & Cu$
+tex_in_json	0.057	0.057	$_3$Mg & 3.586 & 0.014 & 0.057 & $-0.083$ & Cu$_3$Ge & 
+tex_in_json	-0.083	-0.083	3.586 & 0.014 & 0.057 & $-0.083$ & Cu$_3$Ge & 3.544 & 0.
+tex_in_json	3	3	& 0.057 & $-0.083$ & Cu$_3$Ge & 3.544 & 0.028 & 0.0
+tex_in_json	3.544	3.544	 & $-0.083$ & Cu$_3$Ge & 3.544 & 0.028 & 0.089 & $-0.52
+tex_in_json	0.028	0.028	83$ & Cu$_3$Ge & 3.544 & 0.028 & 0.089 & $-0.524$ \\   
+tex_in_json	0.089	0.089	$_3$Ge & 3.544 & 0.028 & 0.089 & $-0.524$ \\     Co$_3$
+tex_in_json	-0.524	-0.524	3.544 & 0.028 & 0.089 & $-0.524$ \\     Co$_3$Ge & 3.554
+tex_in_json	3	3	89 & $-0.524$ \\     Co$_3$Ge & 3.554 & 0.018 & 0.0
+tex_in_json	3.554	3.554	0.524$ \\     Co$_3$Ge & 3.554 & 0.018 & 0.069 & $-0.06
+tex_in_json	0.018	0.018	\     Co$_3$Ge & 3.554 & 0.018 & 0.069 & $-0.067$ & Rh$
+tex_in_json	0.069	0.069	$_3$Ge & 3.554 & 0.018 & 0.069 & $-0.067$ & Rh$_3$Y & 3
+tex_in_json	-0.067	-0.067	3.554 & 0.018 & 0.069 & $-0.067$ & Rh$_3$Y & 3.601 & 0.0
+tex_in_json	3	3	& 0.069 & $-0.067$ & Rh$_3$Y & 3.601 & 0.028 & 0.02
+tex_in_json	3.601	3.601	9 & $-0.067$ & Rh$_3$Y & 3.601 & 0.028 & 0.024 & $-0.08
+tex_in_json	0.028	0.028	067$ & Rh$_3$Y & 3.601 & 0.028 & 0.024 & $-0.089$ \\   
+tex_in_json	0.024	0.024	h$_3$Y & 3.601 & 0.028 & 0.024 & $-0.089$ \\     Pd$_3$
+tex_in_json	-0.089	-0.089	3.601 & 0.028 & 0.024 & $-0.089$ \\     Pd$_3$Ga & 3.590
+tex_in_json	3	3	24 & $-0.089$ \\     Pd$_3$Ga & 3.590 & 0.018 & 0.0
+tex_in_json	3.590	3.59	0.089$ \\     Pd$_3$Ga & 3.590 & 0.018 & 0.054 & $-0.02
+tex_in_json	0.018	0.018	\     Pd$_3$Ga & 3.590 & 0.018 & 0.054 & $-0.027$ & Zr$
+tex_in_json	0.054	0.054	$_3$Ga & 3.590 & 0.018 & 0.054 & $-0.027$ & Zr$_3$Al & 
+tex_in_json	-0.027	-0.027	3.590 & 0.018 & 0.054 & $-0.027$ & Zr$_3$Al & 3.544 & 0.
+tex_in_json	3	3	& 0.054 & $-0.027$ & Zr$_3$Al & 3.544 & 0.028 & 0.0
+tex_in_json	3.544	3.544	 & $-0.027$ & Zr$_3$Al & 3.544 & 0.028 & 0.061 & $-0.43
+tex_in_json	0.028	0.028	27$ & Zr$_3$Al & 3.544 & 0.028 & 0.061 & $-0.436$ \\   
+tex_in_json	0.061	0.061	$_3$Al & 3.544 & 0.028 & 0.061 & $-0.436$ \\      &  & 
+tex_in_json	-0.436	-0.436	3.544 & 0.028 & 0.061 & $-0.436$ \\      &  &  &  &  & P
+tex_in_json	3	3	\      &  &  &  &  & Pt$_3$Ga & 3.602 & 0.030 & 0.0
+tex_in_json	3.602	3.602	&  &  &  &  & Pt$_3$Ga & 3.602 & 0.030 & 0.077 & $0.003
+tex_in_json	0.030	0.03	 &  & Pt$_3$Ga & 3.602 & 0.030 & 0.077 & $0.003$ \\    
+tex_in_json	0.077	0.077	$_3$Ga & 3.602 & 0.030 & 0.077 & $0.003$ \\     \bottom
+tex_in_json	0.003	0.003	3.602 & 0.030 & 0.077 & $0.003$ \\     \bottomrule   \e
+tex_in_json	15	15	c:fewshot}）を1, 3, 5, 10, 15に変化させた別の感度実行（単一ラン）の結果を表~\
+tex_in_json	3	3	。 精度とレイテンシのバランスに最適なのは $k=3$ である。 別の感度実行で測定したため、レイテン
+tex_in_json	5	5	f{tab:latency} の値と異なる（完全な5回のアブレーションで30.9s）。} \label
+tex_in_json	30.9	30.9	cy} の値と異なる（完全な5回のアブレーションで30.9s）。} \label{tab:fewshot_k
+tex_in_json	1	1	 & レイテンシ (s) \\ \midrule 1  & 90.7 & 100.0 & 96.7 &
+tex_in_json	90.7	90.7	テンシ (s) \\ \midrule 1  & 90.7 & 100.0 & 96.7 & 86.8 & 
+tex_in_json	100.0	100.0	 \\ \midrule 1  & 90.7 & 100.0 & 96.7 & 86.8 & 78.4 & 3
+tex_in_json	96.7	96.7	rule 1  & 90.7 & 100.0 & 96.7 & 86.8 & 78.4 & 31.6 \\ 
+tex_in_json	86.8	86.8	 & 90.7 & 100.0 & 96.7 & 86.8 & 78.4 & 31.6 \\ 3  & 92
+tex_in_json	78.4	78.4	 & 100.0 & 96.7 & 86.8 & 78.4 & 31.6 \\ 3  & 92.6 & 10
+tex_in_json	31.6	31.6	0 & 96.7 & 86.8 & 78.4 & 31.6 \\ 3  & 92.6 & 100.0 & 9
+tex_in_json	3	3	 & 86.8 & 78.4 & 31.6 \\ 3  & 92.6 & 100.0 & 96.7 &
+tex_in_json	92.6	92.6	.8 & 78.4 & 31.6 \\ 3  & 92.6 & 100.0 & 96.7 & 86.5 & 
+tex_in_json	100.0	100.0	.4 & 31.6 \\ 3  & 92.6 & 100.0 & 96.7 & 86.5 & 88.4 & 3
+tex_in_json	96.7	96.7	6 \\ 3  & 92.6 & 100.0 & 96.7 & 86.5 & 88.4 & 31.5 \\ 
+tex_in_json	86.5	86.5	 & 92.6 & 100.0 & 96.7 & 86.5 & 88.4 & 31.5 \\ 5  & 90
+tex_in_json	88.4	88.4	 & 100.0 & 96.7 & 86.5 & 88.4 & 31.5 \\ 5  & 90.7 & 10
+tex_in_json	31.5	31.5	0 & 96.7 & 86.5 & 88.4 & 31.5 \\ 5  & 90.7 & 100.0 & 9
+tex_in_json	5	5	 & 86.5 & 88.4 & 31.5 \\ 5  & 90.7 & 100.0 & 96.7 &
+tex_in_json	90.7	90.7	.5 & 88.4 & 31.5 \\ 5  & 90.7 & 100.0 & 96.7 & 86.5 & 
+tex_in_json	100.0	100.0	.4 & 31.5 \\ 5  & 90.7 & 100.0 & 96.7 & 86.5 & 78.9 & 2
+tex_in_json	96.7	96.7	5 \\ 5  & 90.7 & 100.0 & 96.7 & 86.5 & 78.9 & 23.6 \\ 
+tex_in_json	86.5	86.5	 & 90.7 & 100.0 & 96.7 & 86.5 & 78.9 & 23.6 \\ 10 & 91
+tex_in_json	78.9	78.9	 & 100.0 & 96.7 & 86.5 & 78.9 & 23.6 \\ 10 & 91.7 & 10
+tex_in_json	23.6	23.6	0 & 96.7 & 86.5 & 78.9 & 23.6 \\ 10 & 91.7 & 100.0 & 9
+tex_in_json	10	10	 & 86.5 & 78.9 & 23.6 \\ 10 & 91.7 & 100.0 & 96.7 & 
+tex_in_json	91.7	91.7	.5 & 78.9 & 23.6 \\ 10 & 91.7 & 100.0 & 96.7 & 86.5 & 
+tex_in_json	100.0	100.0	.9 & 23.6 \\ 10 & 91.7 & 100.0 & 96.7 & 86.5 & 83.9 & 2
+tex_in_json	96.7	96.7	6 \\ 10 & 91.7 & 100.0 & 96.7 & 86.5 & 83.9 & 29.5 \\ 
+tex_in_json	86.5	86.5	 & 91.7 & 100.0 & 96.7 & 86.5 & 83.9 & 29.5 \\ 15 & 92
+tex_in_json	83.9	83.9	 & 100.0 & 96.7 & 86.5 & 83.9 & 29.5 \\ 15 & 92.7 & 10
+tex_in_json	29.5	29.5	0 & 96.7 & 86.5 & 83.9 & 29.5 \\ 15 & 92.7 & 100.0 & 9
+tex_in_json	15	15	 & 86.5 & 83.9 & 29.5 \\ 15 & 92.7 & 100.0 & 96.7 & 
+tex_in_json	92.7	92.7	.5 & 83.9 & 29.5 \\ 15 & 92.7 & 100.0 & 96.7 & 86.8 & 
+tex_in_json	100.0	100.0	.9 & 29.5 \\ 15 & 92.7 & 100.0 & 96.7 & 86.8 & 88.4 & 2
+tex_in_json	96.7	96.7	5 \\ 15 & 92.7 & 100.0 & 96.7 & 86.8 & 88.4 & 28.0 \\ 
+tex_in_json	86.8	86.8	 & 92.7 & 100.0 & 96.7 & 86.8 & 88.4 & 28.0 \\ \bottom
+tex_in_json	88.4	88.4	 & 100.0 & 96.7 & 86.8 & 88.4 & 28.0 \\ \bottomrule \e
+tex_in_json	28.0	28.0	0 & 96.7 & 86.8 & 88.4 & 28.0 \\ \bottomrule \end{tabu
+tex_in_json	61	61	ensitivity}に示した。スキーマ写像辞書（61エントリ；表~\ref{tab:schema_ma
+tex_in_json	50%	50	ma_map_dict}）と用語辞書を同時にフル／50%（30）／25%（15）／10%（6）／0%（辞書
+tex_in_json	30	30	ap_dict}）と用語辞書を同時にフル／50%（30）／25%（15）／10%（6）／0%（辞書なし）
+tex_in_json	25%	25	ict}）と用語辞書を同時にフル／50%（30）／25%（15）／10%（6）／0%（辞書なし）の5水準に
+tex_in_json	15	15	）と用語辞書を同時にフル／50%（30）／25%（15）／10%（6）／0%（辞書なし）の5水準に削減し
+tex_in_json	10%	10	辞書を同時にフル／50%（30）／25%（15）／10%（6）／0%（辞書なし）の5水準に削減した単一ラン
+tex_in_json	6	6	時にフル／50%（30）／25%（15）／10%（6）／0%（辞書なし）の5水準に削減した単一ラン（本
+tex_in_json	0%	0	ル／50%（30）／25%（15）／10%（6）／0%（辞書なし）の5水準に削減した単一ラン（本アブレー
+tex_in_json	5	5	／25%（15）／10%（6）／0%（辞書なし）の5水準に削減した単一ラン（本アブレーションと同一プロ
+tex_in_json	61	61	tering \caption{スキーマ写像辞書（61エントリ）および用語辞書のサイズ感度（2辞書を同じ
+tex_in_json	2	2	像辞書（61エントリ）および用語辞書のサイズ感度（2辞書を同じ割合で同時削減；本アブレーションと同一プ
+tex_in_json	61	61	ョンと同一プロトコルの単一ラン）。観測される低下は61エントリ辞書単独の寄与ではない。全体値は未丸め値か
+tex_in_json	61	61	ard & VH \\ \midrule フル (61)  & 91.8 & 100.0 & 96.7 
+tex_in_json	91.8	91.8	H \\ \midrule フル (61)  & 91.8 & 100.0 & 96.7 & 86.8 & 
+tex_in_json	100.0	100.0	idrule フル (61)  & 91.8 & 100.0 & 96.7 & 86.8 & 83.9 \\ 
+tex_in_json	96.7	96.7	ル (61)  & 91.8 & 100.0 & 96.7 & 86.8 & 83.9 \\ 50% (30
+tex_in_json	86.8	86.8	 & 91.8 & 100.0 & 96.7 & 86.8 & 83.9 \\ 50% (30)  & 86
+tex_in_json	83.9	83.9	 & 100.0 & 96.7 & 86.8 & 83.9 \\ 50% (30)  & 86.0 & 10
+tex_in_json	50%	50	 & 96.7 & 86.8 & 83.9 \\ 50% (30)  & 86.0 & 100.0 & 9
+tex_in_json	30	30	.7 & 86.8 & 83.9 \\ 50% (30)  & 86.0 & 100.0 & 93.3 
+tex_in_json	86.0	86.0	.8 & 83.9 \\ 50% (30)  & 86.0 & 100.0 & 93.3 & 80.1 & 
+tex_in_json	100.0	100.0	.9 \\ 50% (30)  & 86.0 & 100.0 & 93.3 & 80.1 & 69.7 \\ 
+tex_in_json	93.3	93.3	% (30)  & 86.0 & 100.0 & 93.3 & 80.1 & 69.7 \\ 25% (15
+tex_in_json	80.1	80.1	 & 86.0 & 100.0 & 93.3 & 80.1 & 69.7 \\ 25% (15)  & 85
+tex_in_json	69.7	69.7	 & 100.0 & 93.3 & 80.1 & 69.7 \\ 25% (15)  & 85.0 & 10
+tex_in_json	25%	25	 & 93.3 & 80.1 & 69.7 \\ 25% (15)  & 85.0 & 100.0 & 9
+tex_in_json	15	15	.3 & 80.1 & 69.7 \\ 25% (15)  & 85.0 & 100.0 & 93.3 
+tex_in_json	85.0	85.0	.1 & 69.7 \\ 25% (15)  & 85.0 & 100.0 & 93.3 & 76.8 & 
+tex_in_json	100.0	100.0	.7 \\ 25% (15)  & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 
+tex_in_json	93.3	93.3	% (15)  & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 10% (6)
+tex_in_json	76.8	76.8	 & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 10% (6)   & 85
+tex_in_json	69.7	69.7	 & 100.0 & 93.3 & 76.8 & 69.7 \\ 10% (6)   & 85.0 & 10
+tex_in_json	10%	10	 & 93.3 & 76.8 & 69.7 \\ 10% (6)   & 85.0 & 100.0 & 9
+tex_in_json	6	6	.3 & 76.8 & 69.7 \\ 10% (6)   & 85.0 & 100.0 & 93.3
+tex_in_json	85.0	85.0	.8 & 69.7 \\ 10% (6)   & 85.0 & 100.0 & 93.3 & 76.8 & 
+tex_in_json	100.0	100.0	.7 \\ 10% (6)   & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 
+tex_in_json	93.3	93.3	% (6)   & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 0% (なし)
+tex_in_json	76.8	76.8	 & 85.0 & 100.0 & 93.3 & 76.8 & 69.7 \\ 0% (なし) & 82.9
+tex_in_json	69.7	69.7	 & 100.0 & 93.3 & 76.8 & 69.7 \\ 0% (なし) & 82.9 & 99.8
+tex_in_json	0%	0	 & 93.3 & 76.8 & 69.7 \\ 0% (なし) & 82.9 & 99.8 & 96.
+tex_in_json	82.9	82.9	76.8 & 69.7 \\ 0% (なし) & 82.9 & 99.8 & 96.7 & 79.0 & 5
+tex_in_json	99.8	99.8	69.7 \\ 0% (なし) & 82.9 & 99.8 & 96.7 & 79.0 & 51.0 \\ 
+tex_in_json	96.7	96.7	 0% (なし) & 82.9 & 99.8 & 96.7 & 79.0 & 51.0 \\ \bottom
+tex_in_json	79.0	79.0	) & 82.9 & 99.8 & 96.7 & 79.0 & 51.0 \\ \bottomrule \e
+tex_in_json	51.0	51.0	9 & 99.8 & 96.7 & 79.0 & 51.0 \\ \bottomrule \end{tabu
+tex_in_json	0.40	0.4	ring \begin{minipage}[t]{0.40\columnwidth} \centering 
+tex_in_json	3	3	層は $k$ によらず飽和し、 VH 層は $k=3$ と $k=15$ で最大（88.4%）となる。
+tex_in_json	15	15	よらず飽和し、 VH 層は $k=3$ と $k=15$ で最大（88.4%）となる。} \label{
+tex_in_json	88.4%	88.4	VH 層は $k=3$ と $k=15$ で最大（88.4%）となる。} \label{fig:fewshot
+tex_in_json	0.40	0.4	fill \begin{minipage}[t]{0.40\columnwidth} \centering 
+tex_in_json	5	5	ref{tab:ablation}のfull条件、5ラン平均）とGPT-4o（別の単一ラン）の比較であ
+tex_in_json	5	5	ref{tab:ablation}のfull条件（5ラン平均）、GPT-4o行は別の単一ランで測定した
+tex_in_json	5	5	幅に速く、全体・VHともGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラン比較のため統
+tex_in_json	92.5	92.5	s) \\ \midrule GPT-5.5 & 92.5 & 99.8 & 96.7 & 86.8 & 8
+tex_in_json	99.8	99.8	midrule GPT-5.5 & 92.5 & 99.8 & 96.7 & 86.8 & 87.5 & 3
+tex_in_json	96.7	96.7	 GPT-5.5 & 92.5 & 99.8 & 96.7 & 86.8 & 87.5 & 30.9 \\ 
+tex_in_json	86.8	86.8	5 & 92.5 & 99.8 & 96.7 & 86.8 & 87.5 & 30.9 \\ GPT-4o 
+tex_in_json	87.5	87.5	5 & 99.8 & 96.7 & 86.8 & 87.5 & 30.9 \\ GPT-4o  & 91.7
+tex_in_json	30.9	30.9	8 & 96.7 & 86.8 & 87.5 & 30.9 \\ GPT-4o  & 91.7 & 100.
+tex_in_json	91.7	91.7	87.5 & 30.9 \\ GPT-4o  & 91.7 & 100.0 & 93.3 & 91.8 & 
+tex_in_json	100.0	100.0	30.9 \\ GPT-4o  & 91.7 & 100.0 & 93.3 & 91.8 & 81.0 &  
+tex_in_json	93.3	93.3	GPT-4o  & 91.7 & 100.0 & 93.3 & 91.8 & 81.0 &  2.1 \\ 
+tex_in_json	91.8	91.8	 & 91.7 & 100.0 & 93.3 & 91.8 & 81.0 &  2.1 \\ \bottom
+tex_in_json	81.0	81.0	 & 100.0 & 93.3 & 91.8 & 81.0 &  2.1 \\ \bottomrule \e
+tex_in_json	2.1	2.1	 & 93.3 & 91.8 & 81.0 &  2.1 \\ \bottomrule \end{tabu
+tex_in_json	5	5	は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラン比較のため統
+tex_in_json	100%	100	ーダーチャート。 構文と実行の有効性はすべての層で100%である。 VH層は厳密な完全結果集合一致（Exac
+tex_in_json	1.6%	1.6	 VH層は厳密な完全結果集合一致（Exact軸）が1.6%と低いが、77.2%のリコールは多くの部分的に正し
+tex_in_json	77.2%	77.2	全結果集合一致（Exact軸）が1.6%と低いが、77.2%のリコールは多くの部分的に正しい結果を示している。
+tex_in_json	245	245	} \caption{保存されたfull条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だった39
+tex_in_json	0.8	0.8	ll条件ラン（245クエリ多軸評価ラン）でリコール0.8未満だった39件における誤差タイプの分布。1ケース
+tex_in_json	39	39	45クエリ多軸評価ラン）でリコール0.8未満だった39件における誤差タイプの分布。1ケースに複数の誤差タ
+tex_in_json	1	1	ル0.8未満だった39件における誤差タイプの分布。1ケースに複数の誤差タイプを付与し得るため、ラベルの
+tex_in_json	66	66	に複数の誤差タイプを付与し得るため、ラベルの合計（66）はケース数（39）を上回る。} \label{f
+tex_in_json	39	39	を付与し得るため、ラベルの合計（66）はケース数（39）を上回る。} \label{fig:error_
+tex_in_json	245	245	ror_dist}は、保存されたfull条件ラン（245クエリ多軸評価ラン）でリコールが0.8未満であった
+tex_in_json	0.8	0.8	l条件ラン（245クエリ多軸評価ラン）でリコールが0.8未満であった39クエリ（Very Hard 17・
+tex_in_json	39	39	クエリ多軸評価ラン）でリコールが0.8未満であった39クエリ（Very Hard 17・Hard 15・
+tex_in_json	15	15	た39クエリ（Very Hard 17・Hard 15・Medium 5・Easy 2；セクション~\r
+tex_in_json	5	5	y Hard 17・Hard 15・Medium 5・Easy 2；セクション~\ref{sec:er
+tex_in_json	2	2	17・Hard 15・Medium 5・Easy 2；セクション~\ref{sec:error_ana
+tex_in_json	24	24	）における誤差タイプの分布を示す（誤ったカラム選択24、JOIN不一致24、GROUP BY欠如14、値
+tex_in_json	24	24	の分布を示す（誤ったカラム選択24、JOIN不一致24、GROUP BY欠如14、値不一致4）。誤ったカ
+tex_in_json	14	14	選択24、JOIN不一致24、GROUP BY欠如14、値不一致4）。誤ったカラム選択とJOIN不一致が
+tex_in_json	4	4	IN不一致24、GROUP BY欠如14、値不一致4）。誤ったカラム選択とJOIN不一致が主要であり、
+tex_in_json	15	15	と安全性テストの入力別結果}  SQLGuardの15の検証項目（セクション~\ref{sec:sqlg
+tex_in_json	01	1	ション \\     \midrule     E01 & \texttt{DROP TABLE mat
+tex_in_json	02	2	 ブロック: DROPキーワード \\     E02 & \texttt{SELECT *; DELE
+tex_in_json	03	3	ステートメント + DELETE \\     E03 & L1$_2$化合物; \texttt{DRO
+tex_in_json	1	1	ト + DELETE \\     E03 & L1$_2$化合物; \texttt{DROP TAB
+tex_in_json	2	2	 DELETE \\     E03 & L1$_2$化合物; \texttt{DROP TABLE 
+tex_in_json	04	4	ルチステートメント + DROP \\     E04 & \texttt{SELECT * FROM 
+tex_in_json	05	5	 & ブロック: 不正なテーブル \\     E05 & \texttt{INSERT INTO ma
+tex_in_json	01	1	ロック: INSERTキーワード \\     F01 & \texttt{SELECT entry\_
+tex_in_json	02	2	MIT自動追加（サニタイズ済み） \\     F02 & \texttt{UPDATE materia
+tex_in_json	0	0	トコルの寛容性（共通列射影・列位置フォールバック・0行一致への満点付与・順序と多重度の無視）の影響を、
+tex_in_json	4	4	梱のper-queryスコアを完全再現できることを4データセットすべてで自己検査する（LLM・APIキ
+tex_in_json	0	0	フォールバック無効。drop empty＝ゴールド0行クエリを分母から除外。multiset＝行の重複
+tex_in_json	245	245	c\_ordered}契約が真のクエリ（主評価では245件中39件）に限り照合）。ordered＝exac
+tex_in_json	39	39	dered}契約が真のクエリ（主評価では245件中39件）に限り照合）。ordered＝exactとは母
+tex_in_json	234	234	{ORDER BY}付きゴールドクエリ（主評価では234件）に対する順序照合Recall；この列の定義は\
+tex_in_json	1	1	（共通列射影上でPrecision=Recall=1；78.0%）は本表の列には含めず、同梱の\tex
+tex_in_json	0	0	全ゴールド列必須・位置フォールバック無効・ゴールド0行除外・多重集合照合を同時に課す（順序照合のみ課さ
+tex_in_json	245	245	する。いずれも生成SQL付き保存ラン（main: 245クエリ、historical Recall 86.
+tex_in_json	86.1%	86.1	245クエリ、historical Recall 86.1%の単一ラン）に基づく。}   \label{tab
+tex_in_json	245	245	\\     \midrule     主評価 (245) & 86.1 & 26.3 & 82.8 & 
+tex_in_json	86.1	86.1	\midrule     主評価 (245) & 86.1 & 26.3 & 82.8 & 86.3 & 8
+tex_in_json	86.3	86.3	) & 86.1 & 26.3 & 82.8 & 86.3 & 83.9 & 10.6 & 54.3 \\ 
+tex_in_json	83.9	83.9	1 & 26.3 & 82.8 & 86.3 & 83.9 & 10.6 & 54.3 \\     独立設
+tex_in_json	10.6	10.6	3 & 82.8 & 86.3 & 83.9 & 10.6 & 54.3 \\     独立設計 (100)
+tex_in_json	100	100	10.6 & 54.3 \\     独立設計 (100) & 81.5 & 4.0 & 76.4 & 8
+tex_in_json	81.5	81.5	54.3 \\     独立設計 (100) & 81.5 & 4.0 & 76.4 & 81.9 & 80
+tex_in_json	4.0	4.0	     独立設計 (100) & 81.5 & 4.0 & 76.4 & 81.9 & 80.3 & 1
+tex_in_json	76.4	76.4	立設計 (100) & 81.5 & 4.0 & 76.4 & 81.9 & 80.3 & 1.0 & 50
+tex_in_json	81.9	81.9	0) & 81.5 & 4.0 & 76.4 & 81.9 & 80.3 & 1.0 & 50.4 \\  
+tex_in_json	1.0	1.0	0 & 76.4 & 81.9 & 80.3 & 1.0 & 50.4 \\     一般化B (20) 
+tex_in_json	20	20	 1.0 & 50.4 \\     一般化B (20) & 85.0 & 40.0 & 70.0 & 
+tex_in_json	85.0	85.0	 50.4 \\     一般化B (20) & 85.0 & 40.0 & 70.0 & 85.0 & 8
+tex_in_json	85.0	85.0	) & 85.0 & 40.0 & 70.0 & 85.0 & 85.0 & 15.0 & 66.5 \\ 
+tex_in_json	85.0	85.0	0 & 40.0 & 70.0 & 85.0 & 85.0 & 15.0 & 66.5 \\     一般化
+tex_in_json	15.0	15.0	0 & 70.0 & 85.0 & 85.0 & 15.0 & 66.5 \\     一般化C (20) 
+tex_in_json	20	20	15.0 & 66.5 \\     一般化C (20) & 80.0 & 30.0 & 60.0 & 
+tex_in_json	80.0	80.0	 66.5 \\     一般化C (20) & 80.0 & 30.0 & 60.0 & 80.0 & 7
+tex_in_json	30.0	30.0	\     一般化C (20) & 80.0 & 30.0 & 60.0 & 80.0 & 77.0 & 2
+tex_in_json	60.0	60.0	般化C (20) & 80.0 & 30.0 & 60.0 & 80.0 & 77.0 & 20.0 & 5
+tex_in_json	80.0	80.0	) & 80.0 & 30.0 & 60.0 & 80.0 & 77.0 & 20.0 & 57.4 \\ 
+tex_in_json	20.0	20.0	0 & 60.0 & 80.0 & 77.0 & 20.0 & 57.4 \\     \bottomrul
+tex_in_json	3	3	lar} \end{table}  解釈上の注意を3点述べる。第一に、「require all」の大幅
+tex_in_json	1.0	1.0	しては採用しない。実質的に効くのは「recall=1.0だがゴールド1列のみで比較された」クエリ（主評価3
+tex_in_json	1	1	実質的に効くのは「recall=1.0だがゴールド1列のみで比較された」クエリ（主評価33件・独立設計
+tex_in_json	18	18	列のみで比較された」クエリ（主評価33件・独立設計18件・一般化B 5件・C 4件）である。ゴールドSQ
+tex_in_json	5	5	」クエリ（主評価33件・独立設計18件・一般化B 5件・C 4件）である。ゴールドSQL修正前の保存ラ
+tex_in_json	4	4	主評価33件・独立設計18件・一般化B 5件・C 4件）である。ゴールドSQL修正前の保存ランに対する
+tex_in_json	4	4	に対する同種の目視監査で明確な過大評価と判定された4件（\texttt{q\_hard\_021}・\
+tex_in_json	009	9	\_021}・\texttt{q\_vhard\_009}・\texttt{q\_vhard\_018}・
+tex_in_json	018	18	\_009}・\texttt{q\_vhard\_018}・\texttt{q\_vhard\_020}、
+tex_in_json	020	20	\_018}・\texttt{q\_vhard\_020}、いずれも導出計算系）については、ゴールド修正後
+tex_in_json	5	5	を必須とする厳格採点を適用した監査（アブレーション5ラン$\times$7条件の35生成/クエリ）を実
+tex_in_json	7	7	適用した監査（アブレーション5ラン$\times$7条件の35生成/クエリ）を実施し、記録された寛容採
+tex_in_json	35	35	監査（アブレーション5ラン$\times$7条件の35生成/クエリ）を実施し、記録された寛容採点の平均リ
+tex_in_json	35	35	施し、記録された寛容採点の平均リコール（各クエリの35生成平均で0.686--1.00）に対し厳格採点で
+tex_in_json	4	4	成平均で0.686--1.00）に対し厳格採点では4件とも0.0であること、すなわち生成SQLが要求さ
+tex_in_json	0.0	0.0	0.686--1.00）に対し厳格採点では4件とも0.0であること、すなわち生成SQLが要求された導出計算
+tex_in_json	234	234	では\texttt{ORDER BY}付きゴールド234件に対する順序照合Recallが54.3%）。この
+tex_in_json	39	39	t{semantic\_ordered}契約付きの39件のみである（残る195件の\texttt{ORD
+tex_in_json	245	245	ンに対する採点方式の感度分析であり、本文の主要値（245クエリ多軸評価のRecall 86.1%等）の再測
+tex_in_json	86.1%	86.1	本文の主要値（245クエリ多軸評価のRecall 86.1%等）の再測定ではない。   \section{考察
+tex_in_json	5	5	ails}  \subsection{CTE評価の5カテゴリと条件別精度} \label{sec:ct
+tex_in_json	5	5	tion}  few-shot例でカバーされた既知5パターンは、シンプルCTE（導出量計算）・CTE＋
+tex_in_json	2	2	＋フィルター・CTE＋集約・マルチステージCTE（2段階以上）・CTE＋クロスカラム比較の5カテゴリを
+tex_in_json	5	5	ジCTE（2段階以上）・CTE＋クロスカラム比較の5カテゴリをカバーする。表~\ref{tab:cte
+tex_in_json	15	15	te_results}は、CTEマルチステップ計算15クエリ（既知5パターン＋新規10ゼロショットパター
+tex_in_json	5	5	ts}は、CTEマルチステップ計算15クエリ（既知5パターン＋新規10ゼロショットパターン；いずれも主
+tex_in_json	10	10	マルチステップ計算15クエリ（既知5パターン＋新規10ゼロショットパターン；いずれも主評価245クエリに
+tex_in_json	245	245	ーン＋新規10ゼロショットパターン；いずれも主評価245クエリに含まれ、既知5はアブレーション用100クエ
+tex_in_json	5	5	パターン；いずれも主評価245クエリに含まれ、既知5はアブレーション用100クエリサブセット内、新規1
+tex_in_json	100	100	評価245クエリに含まれ、既知5はアブレーション用100クエリサブセット内、新規10はサブセット外）の精度
+tex_in_json	10	10	5はアブレーション用100クエリサブセット内、新規10はサブセット外）の精度を示している。  \begi
+tex_in_json	15	15	ルチステップ計算クエリの精度。上段はfull条件の15クエリ（既知5＋新規10）、下段は既知5パターンに
+tex_in_json	5	5	クエリの精度。上段はfull条件の15クエリ（既知5＋新規10）、下段は既知5パターンに対するアブレー
+tex_in_json	10	10	精度。上段はfull条件の15クエリ（既知5＋新規10）、下段は既知5パターンに対するアブレーション条件
+tex_in_json	5	5	l条件の15クエリ（既知5＋新規10）、下段は既知5パターンに対するアブレーション条件別精度（5ラン平
+tex_in_json	5	5	は既知5パターンに対するアブレーション条件別精度（5ラン平均）である。few-shot例でカバーされた
+tex_in_json	5	5	平均）である。few-shot例でカバーされた既知5パターンは100%を維持する一方、例のない新規10
+tex_in_json	100%	100	。few-shot例でカバーされた既知5パターンは100%を維持する一方、例のない新規10パターンは59.0
+tex_in_json	10	10	知5パターンは100%を維持する一方、例のない新規10パターンは59.0%にとどまり、マルチステップ計算
+tex_in_json	59.0%	59.0	100%を維持する一方、例のない新規10パターンは59.0%にとどまり、マルチステップ計算サポートの範囲がfe
+tex_in_json	5	5	n$ & 実行再現率 \\ \midrule 既知5パターン（few-shot例あり） & 5 & 1
+tex_in_json	5	5	e 既知5パターン（few-shot例あり） & 5 & 100.0% \\ 新規10パターン（ゼロシ
+tex_in_json	100.0%	100.0	5パターン（few-shot例あり） & 5 & 100.0% \\ 新規10パターン（ゼロショット） & 10
+tex_in_json	10	10	ot例あり） & 5 & 100.0% \\ 新規10パターン（ゼロショット） & 10 & 59.0%
+tex_in_json	10	10	0% \\ 新規10パターン（ゼロショット） & 10 & 59.0% \\ \midrule 全体 &
+tex_in_json	59.0%	59.0	 新規10パターン（ゼロショット） & 10 & 59.0% \\ \midrule 全体 & 15 & 72
+tex_in_json	15	15	& 59.0% \\ \midrule 全体 & 15 & 72.7% \\ \bottomrule \
+tex_in_json	72.7%	72.7	0% \\ \midrule 全体 & 15 & 72.7% \\ \bottomrule \end{tabu
+tex_in_json	2	2	ule \end{tabular}\hspace{2em} \begin{tabular}[t]{@{
+tex_in_json	3	3	}} \toprule \multicolumn{3}{@{}l}{条件別精度（既知5パターン、5ラン
+tex_in_json	5	5	icolumn{3}{@{}l}{条件別精度（既知5パターン、5ラン平均）} \\ 条件 & $n$ 
+tex_in_json	5	5	n{3}{@{}l}{条件別精度（既知5パターン、5ラン平均）} \\ 条件 & $n$ & 実行再現
+tex_in_json	5	5	実行再現率 \\ \midrule full & 5 & 100.0% \\ no\_fewshot 
+tex_in_json	100.0%	100.0	率 \\ \midrule full & 5 & 100.0% \\ no\_fewshot & 5 & 60.
+tex_in_json	5	5	 100.0% \\ no\_fewshot & 5 & 60.0% \\ no\_dict & 5 
+tex_in_json	60.0%	60.0	.0% \\ no\_fewshot & 5 & 60.0% \\ no\_dict & 5 & 80.0% 
+tex_in_json	5	5	 5 & 60.0% \\ no\_dict & 5 & 80.0% \\ no\_reranker 
+tex_in_json	80.0%	80.0	 60.0% \\ no\_dict & 5 & 80.0% \\ no\_reranker & 5 & 10
+tex_in_json	5	5	 80.0% \\ no\_reranker & 5 & 100.0% \\ no\_guard & 
+tex_in_json	100.0%	100.0	0% \\ no\_reranker & 5 & 100.0% \\ no\_guard & 5 & 100.0
+tex_in_json	5	5	 & 100.0% \\ no\_guard & 5 & 100.0% \\ no\_nbest & 
+tex_in_json	100.0%	100.0	00.0% \\ no\_guard & 5 & 100.0% \\ no\_nbest & 5 & 96.0%
+tex_in_json	5	5	 & 100.0% \\ no\_nbest & 5 & 96.0% \\ no\_graph & 5
+tex_in_json	96.0%	96.0	00.0% \\ no\_nbest & 5 & 96.0% \\ no\_graph & 5 & 100.0
+tex_in_json	5	5	5 & 96.0% \\ no\_graph & 5 & 100.0% \\ \bottomrule 
+tex_in_json	100.0%	100.0	96.0% \\ no\_graph & 5 & 100.0% \\ \bottomrule \end{tabu
+tex_in_json	2	2	プロトタイプ横断クエリ。主評価と同一の検証DB（B2/NaCl/NiAs/BiF$_3$を含む）に対し
+tex_in_json	3	3	一の検証DB（B2/NaCl/NiAs/BiF$_3$を含む）に対し、非L1$_2$プロトタイプを対象
+tex_in_json	1	1	Cl/NiAs/BiF$_3$を含む）に対し、非L1$_2$プロトタイプを対象とするクエリを含む20の
+tex_in_json	2	2	NiAs/BiF$_3$を含む）に対し、非L1$_2$プロトタイプを対象とするクエリを含む20の評価ク
+tex_in_json	20	20	非L1$_2$プロトタイプを対象とするクエリを含む20の評価クエリ（\texttt{q\_proto\_
+tex_in_json	20	20	ttt{q\_proto\_*}）を実行した。この20クエリは主評価245クエリの部分集合であり（表~\
+tex_in_json	245	245	oto\_*}）を実行した。この20クエリは主評価245クエリの部分集合であり（表~\ref{tab:ma
+tex_in_json	100.0%	100.0	験のコーパスではない。結果は同一問題の別ランとして100.0%（全難易度で100%）であり、主評価の単一ラン内で
+tex_in_json	100%	100	果は同一問題の別ランとして100.0%（全難易度で100%）であり、主評価の単一ラン内では同20クエリは85
+tex_in_json	20	20	難易度で100%）であり、主評価の単一ラン内では同20クエリは85.0%であった（差はラン間変動を含む）
+tex_in_json	85.0%	85.0	0%）であり、主評価の単一ラン内では同20クエリは85.0%であった（差はラン間変動を含む）。  バリアントB
+tex_in_json	5	5	テーブルとカラム名が変更されたOQMD風のフラット5テーブルスキーマ（\texttt{oqmd\_en
+tex_in_json	85.0%	85.0	SQLパターンのみを再利用するよう指示した。結果は85.0%（Easy 100% / Medium 83.3%
+tex_in_json	100%	100	利用するよう指示した。結果は85.0%（Easy 100% / Medium 83.3% / Hard 80
+tex_in_json	83.3%	83.3	85.0%（Easy 100% / Medium 83.3% / Hard 80.0% / Very Hard
+tex_in_json	80.0%	80.0	0% / Medium 83.3% / Hard 80.0% / Very Hard 66.7%）であった。 
+tex_in_json	66.7%	66.7	/ Hard 80.0% / Very Hard 66.7%）であった。  バリアントC---識別子難読化。転
+tex_in_json	80.0%	80.0	したままランダムな英単語に置き換えた。実行再現率は80.0%（Easy 100% / Medium 83.3%
+tex_in_json	100%	100	語に置き換えた。実行再現率は80.0%（Easy 100% / Medium 83.3% / Hard 60
+tex_in_json	83.3%	83.3	80.0%（Easy 100% / Medium 83.3% / Hard 60.0% / Very Hard
+tex_in_json	60.0%	60.0	0% / Medium 83.3% / Hard 60.0% / Very Hard 66.7%；平均レイテン
+tex_in_json	66.7%	66.7	/ Hard 60.0% / Very Hard 66.7%；平均レイテンシ34.3s）であり、意味のある識別
+tex_in_json	34.3	34.3	/ Very Hard 66.7%；平均レイテンシ34.3s）であり、意味のある識別子名が失われても一定の性
+tex_in_json	3	3	データから27の二元系（299エントリ）を取得し、3テーブルPostgreSQLスキーマ（\textt
+tex_in_json	15	15	\_element\_ratios}）を構築した。15の日本語クエリに対し、MPスキーマ用の8件のfew
+tex_in_json	8	8	築した。15の日本語クエリに対し、MPスキーマ用の8件のfew-shot例とMP専用プロンプトを与えた
+tex_in_json	93.3%	93.3	イプラインコード自体は変更していない。実行再現率は93.3%（Easy/Medium/Hard 100%、Ve
+tex_in_json	100%	100	率は93.3%（Easy/Medium/Hard 100%、Very Hard 66.7%）であった。  \
+tex_in_json	66.7%	66.7	dium/Hard 100%、Very Hard 66.7%）であった。  \subsection{列間比較ク
+tex_in_json	3	3	った。  \subsection{列間比較クエリの3パターン} \label{sec:sup_colu
+tex_in_json	3	3	列間比較クエリについて、少数ショット例がカバーする3パターンとSQL断片を示す。 \begin{enu
+tex_in_json	2	2	m テーブル内比較：       同じテーブル内の2つの列の直接比較。       例：\texttt
+tex_in_json	2.0	2.0	ttt{bulk\_modulus\_vrh > 2.0 * shear\_modulus\_vrh}（\
+tex_in_json	0.5	0.5	MIN(electronegativity) > 0.5}。   \end{enumerate}  \su
+tex_in_json	1	1	のが挙げられる：(i)~「NiAl の組成比で L1$_2$ 構造のものを出してほしい」（NiAl は
+tex_in_json	2	2	げられる：(i)~「NiAl の組成比で L1$_2$ 構造のものを出してほしい」（NiAl は 1:
+tex_in_json	1	1	_2$ 構造のものを出してほしい」（NiAl は 1:1 組成の B2 型であり、1:3 組成の L1
+tex_in_json	1	1	$ 構造のものを出してほしい」（NiAl は 1:1 組成の B2 型であり、1:3 組成の L1$_
+tex_in_json	2	2	を出してほしい」（NiAl は 1:1 組成の B2 型であり、1:3 組成の L1$_2$ とは前提
+tex_in_json	1	1	」（NiAl は 1:1 組成の B2 型であり、1:3 組成の L1$_2$ とは前提が矛盾する）、
+tex_in_json	3	3	NiAl は 1:1 組成の B2 型であり、1:3 組成の L1$_2$ とは前提が矛盾する）、(i
+tex_in_json	1	1	1:1 組成の B2 型であり、1:3 組成の L1$_2$ とは前提が矛盾する）、(ii)~「安定な
+tex_in_json	2	2	 組成の B2 型であり、1:3 組成の L1$_2$ とは前提が矛盾する）、(ii)~「安定な化合物
+tex_in_json	0.5	0.5	固定している）、(iii)~「生成エンタルピーが 0.5eV より大きい安定化合物」（安定性は負の生成エン
+tex_in_json	1	1	する）、(iv)~「融点が 2000K 以上の L1$_2$ 化合物」（スキーマに存在しない属性への問
+tex_in_json	2	2	、(iv)~「融点が 2000K 以上の L1$_2$ 化合物」（スキーマに存在しない属性への問い）、
+tex_in_json	0	0	組成比ベースかの集計単位が不明）、(vii)~「D0$_{19}$ 構造の化合物」（検証データベースに
+tex_in_json	1	1	、データ準備・DB構築・評価データセット（ステップ1--3）、LLM評価実行（ステップ4）、統計解析・
+tex_in_json	4	4	ット（ステップ1--3）、LLM評価実行（ステップ4）、統計解析・集計・図表生成（ステップ5--6）、
+tex_in_json	5	5	（ステップ4）、統計解析・集計・図表生成（ステップ5--6）、数値整合検証と原稿コンパイル（ステップ7
+tex_in_json	7	7	5--6）、数値整合検証と原稿コンパイル（ステップ7）から成る。ステップ4のみがLLM APIキーを必
+tex_in_json	4	4	証と原稿コンパイル（ステップ7）から成る。ステップ4のみがLLM APIキーを必要とし非決定的であるた
+tex_in_json	6	6	を必要とし非決定的であるため、論文の全掲載数値と図6点はパッケージに保存された評価出力から決定的に再生
+tex_in_json	5	5	存された評価出力から決定的に再生成される：ステップ5では各クエリの5ラン平均（$n=100$）に対する
+tex_in_json	5	5	から決定的に再生成される：ステップ5では各クエリの5ラン平均（$n=100$）に対するWilcoxon
+tex_in_json	100	100	される：ステップ5では各クエリの5ラン平均（$n=100$）に対するWilcoxon符号順位統計量の両側全
+tex_in_json	95%	95	しない）・Holm補正・クエリ単位ブートストラップ95%CI（20000再標本）を算出し、ステップ6の結果
+tex_in_json	6	6	プ95%CI（20000再標本）を算出し、ステップ6の結果集約プログラムが単一情報源（SSOT）を生成
+tex_in_json	166	166	結果集約プログラムは冒頭でユニットテストスイート（166件）を実行して1件でも失敗すれば停止し（テストゲー
+tex_in_json	1	1	冒頭でユニットテストスイート（166件）を実行して1件でも失敗すれば停止し（テストゲート）、ステップ7
+tex_in_json	7	7	1件でも失敗すれば停止し（テストゲート）、ステップ7の数値整合検証プログラムはSSOTと原稿TeX中の
+tex_not_in_json	12.5	12.5	tfontsize\normalsize{10}{12.5}    \abovedisplayskip 13
+tex_not_in_json	16	16	} \setlength{\columnsep}{16pt}  \usepackage{graphicx
+tex_not_in_json	70	70	  stringstyle=\color{red!70!black},   numbers=left, 
+tex_not_in_json	0.001	0.001	     少数ショット例（-16.1pp, $p<0.001$）が最大の寄与を持ち、材料辞書（-9.8pp, 
+tex_not_in_json	-4	-4	（-9.8pp, $p=1.0\times10^{-4}$）もHolm補正後有意であることを示し（リラン
+tex_not_in_json	0.0195	0.0195	ことを示し（リランカーは-6.2ppで未補正$p=0.0195$だがHolm補正後は有意でない）、ドメイン特化型
+tex_not_in_json	3.4	3.4	はこれらのテーブルを対象とする。評価用SQLは平均3.4、最大6テーブルの結合と多段階CTEを要し、データ
+tex_not_in_json	17.6%	17.6	スを考慮して選定したものであり（主評価の構成比E 17.6%/M 28.2%/H 28.2%/VH 26.1%
+tex_not_in_json	28.2%	28.2	したものであり（主評価の構成比E 17.6%/M 28.2%/H 28.2%/VH 26.1%に対しサブセット
+tex_not_in_json	28.2%	28.2	主評価の構成比E 17.6%/M 28.2%/H 28.2%/VH 26.1%に対しサブセットはE 20%/M
+tex_not_in_json	26.1%	26.1	17.6%/M 28.2%/H 28.2%/VH 26.1%に対しサブセットはE 20%/M 30%/H 30
+tex_not_in_json	11	11	ア（Easy $<8$、Medium $8$--$11$、Hard $12$--$16$、VH $\ge
+tex_not_in_json	12	12	$、Medium $8$--$11$、Hard $12$--$16$、VH $\geq 17$。閾値 8
+tex_not_in_json	16	16	um $8$--$11$、Hard $12$--$16$、VH $\geq 17$。閾値 8/12/17
+tex_not_in_json	17	17	Hard $12$--$16$、VH $\geq 17$。閾値 8/12/17 は分布から機械的に導いた
+tex_not_in_json	12	12	--$16$、VH $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく、層の
+tex_not_in_json	17	17	16$、VH $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく、層の件数バ
+tex_not_in_json	144	144	はない：設計時に付与した主評価245問のラベルとは144/245で一致し、不一致101件のうち92件（91
+tex_not_in_json	101	101	245問のラベルとは144/245で一致し、不一致101件のうち92件（91.1%）は隣接層間のずれである
+tex_not_in_json	101	101	追加） & \texttt{q\_expert\_101}--\texttt{q\_expert\_115
+tex_not_in_json	0.001	0.001	「安定」は$E_\text{hull} \leq 0.001$~eV/atom（準安定：$0.001 < E_
+tex_not_in_json	0.001	0.001	\leq 0.001$~eV/atom（準安定：$0.001 < E_\text{hull} \leq 0.0
+tex_not_in_json	0.05	0.05	001 < E_\text{hull} \leq 0.05$、不安定：$E_\text{hull} > 0.
+tex_not_in_json	0.05	0.05	05$、不安定：$E_\text{hull} > 0.05$）と定義し、gold SQL・辞書・少数ショット
+tex_not_in_json	0.001	0.001	生ラベル（$E_\text{hull} \leq 0.001$と等価）であり、手動ラベルは含まない。曖昧表現の
+tex_not_in_json	-5.5	-5.5	テップ番号とは一部順序が異なる）。LLMにはGPT-5.5を使用する（GPT-5.5はOpenAI APIの
+tex_not_in_json	-5.5	-5.5	なる）。LLMにはGPT-5.5を使用する（GPT-5.5はOpenAI APIのモデル識別子\texttt
+tex_not_in_json	-5.5	-5.5	nAI APIのモデル識別子\texttt{gpt-5.5}で呼び出されるエイリアス名であり、日付付きスナッ
+tex_not_in_json	-5.5	-5.5	ステップ~1）で構造化条件に変換され、   GPT-5.5によるスキーマリンク（ステップ~2）がテーブルの優
+tex_not_in_json	-6	-6	ロスエンコーダ（ms-marco-MiniLM-L-6-v2；クエリと候補例のペアを入力して意味的類似度
+tex_not_in_json	-5.5	-5.5	「スキーマ写像辞書」と呼び、両者を区別する。GPT-5.5は入力クエリに関連するテーブルをスコアリングし、ソ
+tex_not_in_json	-5.5	-5.5	補} \label{sec:nbest}  GPT-5.5は1回の生成呼び出しで上位$n$個（デフォルト $
+tex_not_in_json	-5.5	-5.5	の妥当性からなるヒューリスティックスコアと、GPT-5.5による質問との意味的整合性スコアの重み付き和である
+tex_not_in_json	12	12	)~プロトタイプエイリアス（例：\texttt{L12} $\leftrightarrow$ [L1$_
+tex_not_in_json	0.001	0.001	ergy\_above\_hull} $\leq 0.001$~eV/atom）、(4)~特性用語の4カテゴリ
+tex_not_in_json	12	12	{structure.prototype = 'L12'}、および「体積弾性率」$\to$ \textt
+tex_not_in_json	-5.5	-5.5	anker}  SQL候補のリランキングにはGPT-5.5を使用する。少数ショットの例選択にはクロスエンコー
+tex_not_in_json	-5.5	-5.5	用し、SQL候補とスキーマのスコアリングにはGPT-5.5（API）を使用し、ハイブリッドアーキテクチャを形
+tex_not_in_json	0.0195	0.0195	tの2条件；no\_rerankerは未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意でな
+tex_not_in_json	0.0781	0.0781	未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意でない）。no\_guard（$n_\ma
+tex_not_in_json	3.5	3.5	e \setlength{\tabcolsep}{3.5pt} \begin{tabular}{@{}lr
+tex_not_in_json	0.001	0.001	 (6.0) & -16.1 & 55 & $<$0.001 & $<$0.001 & $[-21.1, -1
+tex_not_in_json	0.001	0.001	6.1 & 55 & $<$0.001 & $<$0.001 & $[-21.1, -11.2]$ \\ no
+tex_not_in_json	-11.2	-11.2	01 & $<$0.001 & $[-21.1, -11.2]$ \\ no\_dict      & 82.
+tex_not_in_json	0.0001	0.0001	2.0 (2.2) & -9.8  & 20 & 0.0001 & 0.0005 & $[-15.5, -4.7
+tex_not_in_json	0.0005	0.0005	 & -9.8  & 20 & 0.0001 & 0.0005 & $[-15.5, -4.7]$ \\ no\
+tex_not_in_json	-4.7	-4.7	0001 & 0.0005 & $[-15.5, -4.7]$ \\ no\_reranker  & 86.
+tex_not_in_json	0.0195	0.0195	85.7 (2.5) & -6.2  & 9 & 0.0195 & 0.0781 & $[-11.1, -1.9
+tex_not_in_json	0.0781	0.0781	) & -6.2  & 9 & 0.0195 & 0.0781 & $[-11.1, -1.9]$ \\ no\
+tex_not_in_json	-1.9	-1.9	0195 & 0.0781 & $[-11.1, -1.9]$ \\ no\_guard     & 92.
+tex_not_in_json	0.1484	0.1484	80.7 (4.2) & -1.4  & 8 & 0.1484 & 0.4453 & $[-3.4, -0.00
+tex_not_in_json	0.4453	0.4453	) & -1.4  & 8 & 0.1484 & 0.4453 & $[-3.4, -0.002]$ \\ \b
+tex_not_in_json	-0.002	-0.002	.1484 & 0.4453 & $[-3.4, -0.002]$ \\ \bottomrule \end{ta
+tex_not_in_json	0.001	0.001	度低下を示す条件を示す（$^{***}$: $p<0.001$）。星印の検定は表~\ref{tab:ablat
+tex_not_in_json	0.0781	0.0781	値に基づく（no\_rerankerは補正後$p=0.0781$相当で有意でないためn.s.）。†は$n_\ma
+tex_not_in_json	-5.5	-5.5	統制語彙・site\_label規約）のみをGPT-5.5に与え、単発でSQLを生成させる。少数ショット例・
+tex_not_in_json	-5.5	-5.5	aption{LLM-onlyベースライン（GPT-5.5、245クエリ、単一ラン）。再現率・適合率・F1は
+tex_not_in_json	7.8	7.8	ec:multiaxis}、再現率86.1%）より7.8pp低い。なお、この実行再現率は期待行の回収を測る
+tex_not_in_json	7.8	7.8	と比較すると、全コンポーネントの除去により再現率は7.8pp低下した。FK非整合JOIN率は0.9%から2
+tex_not_in_json	1.9	1.9	ot_k}）。$k$を1から3に増やすと全体$+$1.9pp（VH層$+$10.0pp）改善し、$k=3$
+tex_not_in_json	-32.9	-32.9	。影響はVH層で最も顕著で、フルから0%への低下は-32.9pp（全体-8.9pp）。Easy/Medium層
+tex_not_in_json	-8.9	-8.9	顕著で、フルから0%への低下は-32.9pp（全体-8.9pp）。Easy/Medium層は辞書の有無にかか
+tex_not_in_json	-5.5	-5.5	ec:model_comparison}  GPT-5.5とGPT-4oを比較した（表~\ref{tab:m
+tex_not_in_json	-4	-4	_comparison}  GPT-5.5とGPT-4oを比較した（表~\ref{tab:model_c
+tex_not_in_json	-4	-4	\ref{fig:model_comp}）。GPT-4oはレイテンシ2.1s（GPT-5.5の約1/15
+tex_not_in_json	-5.5	-5.5	mp}）。GPT-4oはレイテンシ2.1s（GPT-5.5の約1/15）と高速で、全体91.7%はGPT-5
+tex_not_in_json	-5.5	-5.5	.5の約1/15）と高速で、全体91.7%はGPT-5.5のfullと概ね同水準であり、層別ではMedium
+tex_not_in_json	-3.4	-3.4	fullと概ね同水準であり、層別ではMediumが-3.4pp、Hardが$+$5.0pp、VHが-6.5p
+tex_not_in_json	78.0%	78.0	全一致（lenient exact match）は78.0%（245クエリ、多軸評価と同一の単一ランに対する採
+tex_not_in_json	17	17	ラン）でリコール0.8未満だったのは39件（VH 17・Hard 15・Medium 5・Easy 2）
+tex_not_in_json	27	27	2$~\AA{}{}）を満たす26のユニーク組成（27エントリ）を抽出した（全27エントリは補足資料の表
+tex_not_in_json	27	27	す26のユニーク組成（27エントリ）を抽出した（全27エントリは補足資料の表~\ref{tab:latt
+tex_not_in_json	0.05	0.05	候補抽出：$E_\text{hull} \leq 0.05$~eV/atomの157件（安定7件（$E_\t
+tex_not_in_json	0.001	0.001	安定7件（$E_\text{hull} \leq 0.001$）、準安定150件）を抽出した。表~\ref{t
+tex_not_in_json	0.35	0.35	{equation} により行った（$w_1 = 0.35$、$w_2 = 0.35$、$w_3 = 0.3
+tex_not_in_json	0.35	0.35	り行った（$w_1 = 0.35$、$w_2 = 0.35$、$w_3 = 0.30$；$S_\text{s
+tex_not_in_json	0.30	0.3	.35$、$w_2 = 0.35$、$w_3 = 0.30$；$S_\text{stability} = 1
+tex_not_in_json	0.05	0.05	ity} = 1 - E_\text{hull}/0.05$、$S_\text{lattice} = 1 -
+tex_not_in_json	0.3	0.3	attice} = 1 - |\Delta a|/0.3$、$S_\text{bulk} = B/300$
+tex_not_in_json	300	300	/0.3$、$S_\text{bulk} = B/300$；同一組成の複数エントリは$S$最大のもので代表
+tex_not_in_json	-0.550	-0.55	の生成エネルギーはPt$_3$Al（$E_f = -0.550$~eV/atom）で、Al$_3$Sc（$-0.
+tex_not_in_json	-0.500	-0.5	550$~eV/atom）で、Al$_3$Sc（$-0.500$）、Co$_3$Ti（$-0.450$）、Cr$
+tex_not_in_json	-0.440	-0.44	3$Ti（$-0.450$）、Cr$_3$Fe（$-0.440$）、Ni$_3$Al（$-0.420$）が続く。
+tex_not_in_json	0.001	0.001	大の精度低下をもたらした（-16.1pp, $p<0.001$；Hard層-24.7pp、VH層-21.8pp
+tex_not_in_json	0.0001	0.0001	削除は全体で-9.8ppの低下をもたらした（$p=0.0001$、Holm補正後も有意）。効果は難易度層に依存し
+tex_not_in_json	12	12	{structure.prototype = 'L12'}）を同時に含み、辞書なしでは正しい条件を生成し
+tex_not_in_json	0.0195	0.0195	リランカーの削除は-6.2ppの低下（未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意では
+tex_not_in_json	0.0781	0.0781	未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意ではない）で、効果はMedium層（-13
+tex_not_in_json	0.1484	0.1484	]$pp）、貪欲最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.4, -0.002]$p
+tex_not_in_json	-0.002	-0.002	$p=0.1484$、95%CI $[-3.4, -0.002]$pp）はいずれも生の実行再現率では有意な効果を
+tex_not_in_json	4.6	4.6	に含まれるため、主評価全体（86.1%）との単純差4.6ppを「著者設計と独立設計の差」と解釈することはで
+tex_not_in_json	5.5	5.5	ると、独立設計83.9% 対 著者設計89.4%（5.5pp）と差はむしろ広がる（層別ではEasy 87.
+tex_not_in_json	11.5	11.5	ze \begin{tabular}{@{}lp{11.5em}cc@{}} \toprule バリアント 
+tex_not_in_json	0.67	0.67	リ（q\_hard\_014：$0.00 \to 0.67$、q\_vhard\_005：$1.00 \to
+tex_not_in_json	144	144	者が設計時に付与した主評価245問の既存ラベルとは144/245で一致、不一致101件のうち92件（91.
+tex_not_in_json	101	101	45問の既存ラベルとは144/245で一致、不一致101件のうち92件（91.1%）は隣接層間のずれである
+tex_not_in_json	0.0001	0.0001	ン辞書による用語翻訳（除去時-9.8pp, $p=0.0001$）を備える点、(2)~JOIN検索がエッジ重み最
+tex_not_in_json	0.05	0.05	ewcommand{\textfraction}{0.05} \renewcommand{\floatpag
+tex_not_in_json	0.85	0.85	mand{\floatpagefraction}{0.85} \setcounter{topnumber}{
+tex_not_in_json	0.3	0.3	^{1,*}$および末松 知恵$^{1}$}\\[0.3em]   {\small $^{1}$材料データ
+tex_not_in_json	305	305	Namiki, Tsukuba, Ibaraki 305-0044, Japan}\\[0.3em]   
+tex_not_in_json	0.3	0.3	araki 305-0044, Japan}\\[0.3em]   {\small $^{*}$対応著者：
+tex_not_in_json	-5.5	-5.5	 LLMモードはOpenAI APIを介してGPT-5.5を使用する。表~\ref{tab:sup_llm_
+tex_not_in_json	-5.5	-5.5	n{tabular}[t]{@{}l@{}}GPT-5.5 (OpenAI；エイリアス名で呼び出し、\\ 日
+tex_not_in_json	-6	-6	エンコーダ & ms-marco-MiniLM-L-6-v2 \\     修復ループ & 不使用（AP
+tex_not_in_json	8.1	8.1	esize \begin{tabular}{lp{8.1cm}ccl}   \toprule   ID &
+tex_not_in_json	24.1	24.1	構造を持つ化合物を一覧にして。 & 1.00 & 24.1 & $\checkmark$ \\     q\
+tex_not_in_json	29.8	29.8	の両方を含む化合物を抽出して。 & 1.00 & 29.8 & $\checkmark$ \\     \m
+tex_not_in_json	35.3	35.3	{2}}$型化合物を抽出して。 & 1.00 & 35.3 & $\checkmark$ \\     q\
+tex_not_in_json	012	12	kmark$ \\     q\_medium\_012 & energy above hullが0.01
+tex_not_in_json	0.01	0.01	_012 & energy above hullが0.01以下のL1$_{\mathrm{2}}$型化合物を
+tex_not_in_json	36.4	36.4	{2}}$型化合物を表示して。 & 1.00 & 36.4 & $\checkmark$ \\     q\
+tex_not_in_json	39.4	39.4	{2}}$型化合物を抽出して。 & 0.03 & 39.4 &  \\     q\_hard\_009 &
+tex_not_in_json	45.2	45.2	定数のものを安定性順に出して。 & 1.00 & 45.2 & $\checkmark$ \\     q\
+tex_not_in_json	0.05	0.05	(1 - E$_{\mathrm{hull}}$/0.05)$\times$0.4 + (1 - $|$a 
+tex_not_in_json	3.57	3.57	\times$0.4 + (1 - $|$a - 3.57$|$/0.3)$\times$0.3 + (B/
+tex_not_in_json	0.3	0.3	.4 + (1 - $|$a - 3.57$|$/0.3)$\times$0.3 + (B/300)$\t
+tex_not_in_json	0.3	0.3	$a - 3.57$|$/0.3)$\times$0.3 + (B/300)$\times$0.3（E$_
+tex_not_in_json	300	300	$|$/0.3)$\times$0.3 + (B/300)$\times$0.3（E$_{\mathrm{
+tex_not_in_json	0.3	0.3	mes$0.3 + (B/300)$\times$0.3（E$_{\mathrm{hull}}$ $\le
+tex_not_in_json	0.05	0.05	_{\mathrm{hull}}$ $\leq$ 0.05 eV/atomのL1$_{\mathrm{2}}
+tex_not_in_json	0.42	0.42	AA{}、B: 体積弾性率GPa）で出して。 & 0.42 & 40.0 &  \\     q\_vhar
+tex_not_in_json	40.0	40.0	 体積弾性率GPa）で出して。 & 0.42 & 40.0 &  \\     q\_vhard\_016 
+tex_not_in_json	016	16	40.0 &  \\     q\_vhard\_016 & 安定なL1$_{\mathrm{2}}$化合
+tex_not_in_json	30.8	30.8	のものを格子定数つきで出して。 & 1.00 & 30.8 & $\checkmark$ \\   \bot
+tex_not_in_json	021	21	ard\_002/003/006/008/010/021/028、q\_vhard\_001/002/00
+tex_not_in_json	019	19	ard\_001/002/006/007/018/019等）をゼロ化しており、純効果は明確に負である（表~
+tex_not_in_json	11	11	7.8 \\     Medium ($8$--$11$) & 34 & 90.5 \\     Har
+tex_not_in_json	12	12	 34 & 90.5 \\     Hard ($12$--$16$) & 34 & 70.2 \\  
+tex_not_in_json	16	16	90.5 \\     Hard ($12$--$16$) & 34 & 70.2 \\     Ver
+tex_not_in_json	17	17	 \\     Very Hard ($\geq 17$) & 14 & 78.7 \\     \mi
+tex_not_in_json	0.46	0.46	fill \begin{minipage}[t]{0.46\textwidth} \centering   
+tex_not_in_json	11	11	     Medium & 30 & $8$--$11$ & 構造+組成+安定性 \\     Hard
+tex_not_in_json	12	12	+安定性 \\     Hard & 30 & $12$--$16$ & 複合条件、集約 \\     
+tex_not_in_json	16	16	\     Hard & 30 & $12$--$16$ & 複合条件、集約 \\     Very H
+tex_not_in_json	17	17	  Very Hard & 20 & $\geq 17$ & 材料設計クエリ \\     \botto
+tex_not_in_json	12	12	)~プロトタイプエイリアス（例：\texttt{L12} $\leftrightarrow$ [L1$_
+tex_not_in_json	0.001	0.001	ergy\_above\_hull} $\leq 0.001$~eV/atom; 「準安定」$\to$ $0.
+tex_not_in_json	0.001	0.001	01$~eV/atom; 「準安定」$\to$ $0.001 < E_\text{hull} \leq 0.0
+tex_not_in_json	0.05	0.05	001 < E_\text{hull} \leq 0.05$）、 (4)~特性用語（「格子定数」$\to$ 
+tex_not_in_json	0.001	0.001	{}; $E_\text{hull}$：$\pm 0.001$~eV/atom）。  \begin{table
+tex_not_in_json	-6	-6	て、英語モデル（ms-marco-MiniLM-L-6-v2）と日本語モデル（hotchpotch/ja
+tex_not_in_json	78.0%	78.0	ttt{scoring\_audit.json}で78.0%）とは別指標である。 SELECT col.\ =
+tex_not_in_json	0.55	0.55	ring \begin{minipage}[t]{0.55\textwidth} \centering \c
+tex_not_in_json	70%	70	に設定すると、精度の明確な損失なしにレイテンシが約70%削減される。条件間の小差はLLM応答時間のラン間変
+tex_not_in_json	0.001	0.001	しているため、表示値からの再計算とは末桁が$\pm0.001$程度ずれ得る。}   \label{tab:ga
+tex_not_in_json	27	27	ction{Ni$_3$Al近傍の格子定数候補（全27エントリ）} \label{sec:sup_lat
+tex_not_in_json	27	27	3$~\AA{}{}を満たした26のユニーク組成（27エントリ）の全数を、表~\ref{tab:latt
+tex_not_in_json	27	27	| \leq 0.03$~\AA{}{}を満たす全27エントリ、$|\Delta a|$昇順・二段組）。
+tex_not_in_json	0.001	0.001	しているため、表示値からの再計算とは末桁が$\pm0.001$程度ずれ得る。}   \label{tab:la
+tex_not_in_json	-5.5	-5.5	~\ref{fig:model_comp}はGPT-5.5（表~\ref{tab:ablation}のful
+tex_not_in_json	-4	-4	lation}のfull条件、5ラン平均）とGPT-4o（別の単一ラン）の比較である。  \begin{
+tex_not_in_json	-5.5	-5.5	ng \caption{LLMモデルの比較。GPT-5.5行は表~\ref{tab:ablation}のfu
+tex_not_in_json	-4	-4	lation}のfull条件（5ラン平均）、GPT-4o行は別の単一ランで測定した。全体値は未丸め値から
+tex_not_in_json	-4	-4	の加重平均と末尾桁が一致しない場合がある。 GPT-4oは大幅に速く、全体・VHともGPT-5.5のfu
+tex_not_in_json	-5.5	-5.5	。 GPT-4oは大幅に速く、全体・VHともGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラ
+tex_not_in_json	-5.5	-5.5	レイテンシ (s) \\ \midrule GPT-5.5 & 92.5 & 99.8 & 96.7 & 8
+tex_not_in_json	-4	-4	86.8 & 87.5 & 30.9 \\ GPT-4o  & 91.7 & 100.0 & 93.3 
+tex_not_in_json	0.32	0.32	ring \begin{minipage}[t]{0.32\columnwidth} \centering 
+tex_not_in_json	-5.5	-5.5	.png} \caption{難易度層ごとのGPT-5.5とGPT-4oの精度比較。 全体・各層とも差は小さ
+tex_not_in_json	-4	-4	aption{難易度層ごとのGPT-5.5とGPT-4oの精度比較。 全体・各層とも差は小さく、GPT-
+tex_not_in_json	-4	-4	4oの精度比較。 全体・各層とも差は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と近い水
+tex_not_in_json	-5.5	-5.5	。 全体・各層とも差は小さく、GPT-4oはGPT-5.5のfull（5ラン平均）と近い水準を示した（単一ラ
+tex_not_in_json	0.32	0.32	fill \begin{minipage}[t]{0.32\columnwidth} \centering 
+tex_not_in_json	0.32	0.32	fill \begin{minipage}[t]{0.32\columnwidth} \centering 
+tex_not_in_json	17	17	0.8未満であった39クエリ（Very Hard 17・Hard 15・Medium 5・Easy 2；
+tex_not_in_json	78.0%	78.0	通列射影上でPrecision=Recall=1；78.0%）は本表の列には含めず、同梱の\texttt{sc
+tex_not_in_json	25.5%	25.5	す（順序照合のみ課さない）strict方針（主評価25.5%、$n=241$）も収録する。いずれも生成SQL付
+tex_not_in_json	241	241	さない）strict方針（主評価25.5%、$n=241$）も収録する。いずれも生成SQL付き保存ラン（m
+tex_not_in_json	26.3	26.3	e     主評価 (245) & 86.1 & 26.3 & 82.8 & 86.3 & 83.9 & 1
+tex_not_in_json	82.8	82.8	評価 (245) & 86.1 & 26.3 & 82.8 & 86.3 & 83.9 & 10.6 & 5
+tex_not_in_json	54.3	54.3	8 & 86.3 & 83.9 & 10.6 & 54.3 \\     独立設計 (100) & 81.5
+tex_not_in_json	80.3	80.3	.5 & 4.0 & 76.4 & 81.9 & 80.3 & 1.0 & 50.4 \\     一般化B
+tex_not_in_json	50.4	50.4	.4 & 81.9 & 80.3 & 1.0 & 50.4 \\     一般化B (20) & 85.0 
+tex_not_in_json	40.0	40.0	\     一般化B (20) & 85.0 & 40.0 & 70.0 & 85.0 & 85.0 & 1
+tex_not_in_json	70.0	70.0	般化B (20) & 85.0 & 40.0 & 70.0 & 85.0 & 85.0 & 15.0 & 6
+tex_not_in_json	66.5	66.5	0 & 85.0 & 85.0 & 15.0 & 66.5 \\     一般化C (20) & 80.0 
+tex_not_in_json	77.0	77.0	0 & 30.0 & 60.0 & 80.0 & 77.0 & 20.0 & 57.4 \\     \bo
+tex_not_in_json	57.4	57.4	0 & 80.0 & 77.0 & 20.0 & 57.4 \\     \bottomrule   \en
+tex_not_in_json	26.3%	26.3	に、「require all」の大幅な低下（主評価26.3%）は影響の上限であり、ゴールドSQLが補助列（\t
+tex_not_in_json	33	33	0だがゴールド1列のみで比較された」クエリ（主評価33件・独立設計18件・一般化B 5件・C 4件）であ
+tex_not_in_json	021	21	判定された4件（\texttt{q\_hard\_021}・\texttt{q\_vhard\_009}・
+tex_not_in_json	0.686	0.686	た寛容採点の平均リコール（各クエリの35生成平均で0.686--1.00）に対し厳格採点では4件とも0.0であ
+tex_not_in_json	54.3%	54.3	付きゴールド234件に対する順序照合Recallが54.3%）。この列はexact列とは別指標であり、exac
+tex_not_in_json	195	195	_ordered}契約付きの39件のみである（残る195件の\texttt{ORDER BY}は決定性確保
+tex_not_in_json	27	27	terials Project RESTデータから27の二元系（299エントリ）を取得し、3テーブルPo
+tex_not_in_json	299	299	 Project RESTデータから27の二元系（299エントリ）を取得し、3テーブルPostgreSQL
+tex_not_in_json	0.001	0.001	操作的定義$E_\text{hull} \leq 0.001$~eV/atomに固定している）、(iii)~「
+tex_not_in_json	19	19	ースかの集計単位が不明）、(vii)~「D0$_{19}$ 構造の化合物」（検証データベースに存在しない

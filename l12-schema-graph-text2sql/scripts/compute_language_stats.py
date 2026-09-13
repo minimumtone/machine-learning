@@ -17,51 +17,61 @@ from __future__ import annotations
 
 import json
 import statistics
-from itertools import product
+import sys
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import rankdata
 
 PROJECT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT))
+
+from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
+
 EVAL_DIR = PROJECT / "evaluation"
 SEED = 20260602
 N_BOOT = 100_000
+N_RUNS = 3
+N_QUERIES = 100
 
 
 def per_query_means(lang: str) -> tuple[dict[str, float], dict[str, str]]:
-    paths = sorted(EVAL_DIR.glob(f"language_paired_{lang}_run*.json"))
+    """Per-query mean recall over exactly N_RUNS saved runs.
+
+    Fails loudly when a run file is missing, a run has duplicate or
+    non-N_QUERIES ids, or any id does not have exactly N_RUNS observations,
+    so that an incomplete run set can never be summarised as 3-run/100-query
+    statistics.
+    """
+    paths = [EVAL_DIR / f"language_paired_{lang}_run{i}.json"
+             for i in range(1, N_RUNS + 1)]
+    missing = [p.name for p in paths if not p.is_file()]
+    if missing:
+        raise FileNotFoundError(f"{lang}: missing run files {missing}")
     acc: dict[str, list[float]] = {}
     diff_map: dict[str, str] = {}
     for p in paths:
         run = json.loads(p.read_text())
+        qids = [res["qid"] for res in run["results"]]
+        if len(qids) != N_QUERIES or len(set(qids)) != N_QUERIES:
+            raise ValueError(f"{p.name}: expected {N_QUERIES} unique qids, "
+                             f"got {len(qids)} ({len(set(qids))} unique)")
         for res in run["results"]:
             acc.setdefault(res["qid"], []).append(res["recall"])
             diff_map[res["qid"]] = res["difficulty"]
+    bad = {q: len(v) for q, v in acc.items() if len(v) != N_RUNS}
+    if bad:
+        raise ValueError(f"{lang}: qids without exactly {N_RUNS} observations: {bad}")
     return {q: statistics.mean(v) for q, v in acc.items()}, diff_map
-
-
-def sign_permutation_pvalue(nonzero: np.ndarray) -> float:
-    """Two-sided p-value of the Wilcoxon signed-rank statistic under the
-    exact sign-permutation null: enumerate all 2^k sign assignments of the
-    midranks of |diff| and count assignments whose positive-rank sum is at
-    least as extreme (min(W+, W-) <= observed min)."""
-    ranks = rankdata(np.abs(nonzero))
-    total = ranks.sum()
-    w_plus = ranks[nonzero > 0].sum()
-    observed = min(w_plus, total - w_plus)
-    n_extreme = 0
-    for signs in product((0.0, 1.0), repeat=len(ranks)):
-        w = float(np.dot(signs, ranks))
-        if min(w, total - w) <= observed + 1e-12:
-            n_extreme += 1
-    return n_extreme / 2 ** len(ranks)
 
 
 def main() -> None:
     ja, diff_map = per_query_means("ja")
     en, _ = per_query_means("en")
-    qids = sorted(set(ja) & set(en))
+    if set(ja) != set(en):
+        raise ValueError("ja/en qid sets differ: "
+                         f"ja-only={sorted(set(ja) - set(en))} "
+                         f"en-only={sorted(set(en) - set(ja))}")
+    qids = sorted(ja)
     diffs = np.array([en[q] - ja[q] for q in qids])
     nonzero = diffs[diffs != 0]
     p_value = sign_permutation_pvalue(nonzero) if len(nonzero) else 1.0

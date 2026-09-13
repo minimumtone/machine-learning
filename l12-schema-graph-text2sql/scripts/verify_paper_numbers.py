@@ -217,14 +217,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--tex",
         nargs="*",
-        default=["stam-m.tex", "stam-m_ja.tex"],
-        help="LaTeX files to audit (relative to --paper-dir).",
+        default=None,
+        help="LaTeX files to audit (relative to --paper-dir).  Default: every "
+             "*.tex directly under --paper-dir, sorted by name.  Explicitly "
+             "named files must exist.",
     )
     parser.add_argument(
         "--report",
         type=Path,
         default=None,
-        help="Optional TSV report path.  If omitted, only stdout summary is printed.",
+        help="Optional TSV report path listing every TeX numeric token "
+        "(tex_in_json / tex_not_in_json) and JSON values absent from TeX.  "
+        "If omitted, only stdout summary is printed.",
     )
     parser.add_argument(
         "--tex-only",
@@ -243,13 +247,20 @@ def main(argv: list[str] | None = None) -> int:
         paper_data = json.load(f)
     json_numbers = collect_numbers(paper_data)
 
+    if args.tex is None:
+        tex_names = sorted(p.name for p in paper_dir.glob("*.tex"))
+    else:
+        tex_names = list(args.tex)
+        missing = [name for name in tex_names if not (paper_dir / name).exists()]
+        if missing:
+            for name in missing:
+                print(f"ERROR: {paper_dir / name} not found", file=sys.stderr)
+            return 1
+
     combined_tex = ""
     file_map: list[tuple[str, int, str]] = []  # (filename, offset, text)
-    for tex_name in args.tex:
+    for tex_name in tex_names:
         tex_path = paper_dir / tex_name
-        if not tex_path.exists():
-            print(f"WARNING: {tex_path} not found, skipping", file=sys.stderr)
-            continue
         text = strip_non_prose(tex_path.read_text(encoding="utf-8"))
         file_map.append((tex_name, len(combined_tex), text))
         combined_tex += f"\n\n% FILE: {tex_name}\n\n" + text
@@ -289,13 +300,17 @@ def main(argv: list[str] | None = None) -> int:
     # 3. TeX -> JSON (informational)
     tex_numbers = extract_tex_numbers(combined_tex_clean)
     tex_not_in_json: list[tuple[str, float | int, str]] = []
+    tex_in_json: list[tuple[str, float | int, str]] = []
     for raw, val, start, end in tex_numbers:
+        ctx_start = max(0, start - 25)
+        ctx_end = min(len(combined_tex_clean), end + 25)
+        ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
         if val not in json_numbers:
-            ctx_start = max(0, start - 25)
-            ctx_end = min(len(combined_tex_clean), end + 25)
-            ctx = combined_tex_clean[ctx_start:ctx_end].replace("\n", " ")
             tex_not_in_json.append((raw, val, ctx))
+        else:
+            tex_in_json.append((raw, val, ctx))
 
+    print(f"TeX files audited: {len(file_map)} ({', '.join(name for name, _, _ in file_map)})")
     print(f"JSON numeric values: {len(json_numbers)}")
     print(f"TeX numeric tokens:  {len(tex_numbers)}")
     print(f"JSON numbers not found in TeX: {len(missing_in_tex)} (gating: {len(gating_missing)})")
@@ -321,6 +336,8 @@ def main(argv: list[str] | None = None) -> int:
         rows = []
         for n, paths in missing_in_tex:
             rows.append(("json_missing_in_tex", str(n), "", ";".join(paths[:5])))
+        for raw, val, ctx in tex_in_json:
+            rows.append(("tex_in_json", raw, str(val), ctx))
         for raw, val, ctx in tex_not_in_json:
             rows.append(("tex_not_in_json", raw, str(val), ctx))
         with open(args.report, "w", encoding="utf-8") as f:

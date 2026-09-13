@@ -82,7 +82,7 @@ POSTGRES_PASSWORD / POSTGRES_DB` を設定してください。
 ```bash
 # 1ラン（7条件×100件、約7時間、API約700回）
 python scripts/eval_ablation.py
-# 5ラン統計（約35時間、API約3,500回）— 論文のmean±SD+Wilcoxon再現
+# 5ラン統計（約35時間、API約3,500回）— 論文のmean±SD＋符号置換p値再現
 python scripts/eval_ablation_multirun.py --n-runs 5 --start-run 1
 ```
 出力: `evaluation/ablation_run_N.json`, `ablation_multirun_stats.json`

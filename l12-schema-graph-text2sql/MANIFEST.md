@@ -72,14 +72,18 @@
 
 | ファイル | 内容 | 使用箇所 |
 |---|---|---|
-| `ablation_multirun_stats.json` | 5ラン平均±SD | 表 tab:ablation |
-| `ablation_significance_v2.json` | Wilcoxon（SciPy method='exact'）＋Holm補正p値 | 表 tab:ablation |
-| `significance_recomputed.json` | 統計再計算のprovenance付き成果物 | 表 tab:ablation のp値検証 |
+| `ablation_multirun_stats.json` | 5ラン平均±SD＋`significance_tests`（Wilcoxon符号順位統計量の全符号置換p値・中央順位・Holm補正；`scripts/sign_permutation.py`、言語評価と同一検定） | 表 tab:ablation |
+| `significance_recomputed.json` | 上記p値のprovenance付き再計算（SciPy exact/approx値・ラン単位検定・ブートストラップCIを併記） | 表 tab:ablation のp値検証 |
+| `ablation_significance_v2.json` | 別手法統計（平均差のsign-flip検定・rank-biserial・クエリ単位ブートストラップ20,000再標本の95%CI） | 表 tab:ablation の95%CI列 |
 | `language_paired_stats.json` | 日英paired統計（符号置換p=0.193・bootstrap CI） | 表 tab:language_eval・§4.3.2 |
 | `language_eval_summary.json` | 言語評価の難易度別集計 | 表 tab:language_eval |
 | `scoring_audit.json` | 採点方式監査（historical/exact/lenient/ordered/strict） | 表 tab:scoring_audit（strict 25.5%・n=241 は本文言及） |
 | `error_analysis_counts.json` | 失敗カテゴリ計数 | 表 tab:error_analysis・図 error_distribution |
 | `failure_analysis.json` | 主評価の失敗39件の分析 | エラー分析節 |
+| `per_query_results.csv` | アブレーション100クエリのクエリ単位結果（`ablation_run_1.json` full条件第1ラン；質問文・難易度は `query_catalog.csv`）。列: qid, eval_set, difficulty, question, execution_recall, exact_match, latency_s, passed（実行再現率$\geq 0.8$） | 旧補足表S3（`tab:sup_query_detail`；100行表）の機械可読代替。補足資料には代表10行の抜粋のみ掲載 |
+| `per_query_by_condition.csv` | アブレーション7条件のクエリ単位実行再現率（第1ラン）。列: qid, difficulty, full, no_fewshot, no_dict, no_reranker, no_guard, no_nbest, no_graph | 旧補足表S4（`tab:sup_ablation_diff`；条件間差のある34行表）の機械可読代替（全100行を収録） |
+| `per_query_by_condition_mean5.csv` | 同上、5ラン平均 | 表 tab:ablation（5ラン平均）のクエリ単位内訳 |
+| `per_query_tables_provenance.json` | 上記3 CSVの入力SHA-256・行数・整合検査・出力SHA-256（`scripts/build_per_query_tables.py` が生成。決定的・LLM/DB不要） | — |
 | `distinct_audit.json` | DISTINCT使用監査（歴史的監査成果物） | 本文表・図では未使用（履歴） |
 | `gold_change_manifest_r22a.json` | R22A gold修正の変更manifest | 本文表・図では未使用（履歴） |
 
