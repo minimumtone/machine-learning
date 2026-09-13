@@ -1,0 +1,89 @@
+# v20 — EN25 provenance fix, verifier hardening, Table 3/4 SSOT, package hygiene
+Date: 2026-09-02 (UTC)
+
+## Changes
+
+1. [A/required] Independent untranslated-English 25-query runs: provenance bug fixed.
+   - `scripts/eval_independent_en.py` now passes
+     `gold_dir=EVAL_DIR / "gold_sql_independent_en"` and
+     `expected_dir=EVAL_DIR / "expected_results_independent_en"` to
+     `build_provenance()` (defaults previously recorded the main-evaluation
+     `gold_sql/` / `expected_results/` directories and hashes).
+   - `evaluation/independent_en_run1..3.json` provenance corrected in place
+     (gold_dir / expected_dir / hashes; a provenance-fix note added).
+     Results, model outputs, and all metrics are unchanged; no LLM re-run.
+   - `scripts/verify_all.py` now also cross-checks each provenance's
+     gold_dir / expected_dir against the parent directories of the dataset
+     rows' `gold_sql_path` / `expected_result_path` (this mismatch class
+     previously PASSed because only recorded-hash validity was checked).
+     Regression test added in `tests/test_evaluation_metrics.py`.
+
+2. [B] Stale workflow artifacts `paper/figures/workflow.{mmd,drawio,png}`
+   removed (not referenced by any TeX; contents described the old 100-query
+   main evaluation, 134 tests, and a deleted script).
+
+3. [B] Verification logs: v13–v16 log dates corrected to the actual
+   September 2026 verification period (bootstrap_seed=20260602 is a fixed
+   random seed and unchanged). Stale root `verify_all_dbfull.log` and the old
+   combined DB-full log moved to `verification_logs/history/` (labelled
+   historical). A fresh raw DB-full log captured from a clean extraction of
+   the final v20 ZIP contents replaces it as
+   `verification_logs/verify_all_dbfull.log`.
+
+4. [C] Remaining human-facing "unified complexity score" wording in
+   `paper_data.json` provenance notes and the EN25 run notes replaced with
+   post-hoc structural-complexity proxy wording. `compute_unified_difficulty.py`
+   filename unchanged.
+
+5. [C] Paper-only manuscript tools `repair_stam_ja.py` /
+   `translate_stam_ja_v2.py` removed from the SQL package and added to
+   `EXCLUDE_SCRIPTS` in `build_sql_package.py`.
+
+6. Table 3 / Table 4 row-level source data added to the SSOT:
+   `paper_scripts/compute_all_figures.py` now emits
+   `materials_evaluation.gamma_prime_top10` (10 rows) and
+   `materials_evaluation.lattice_match_entries` (27 rows) computed
+   deterministically from the database (a_ref = 3.572 Å; composite score
+   weights 0.35/0.35/0.30). Regeneration order: SSOT -> figures -> PDF.
+
+7. `evaluation/ablation_results.json`: `_note` added distinguishing this
+   single-run artefact (input to query-level CTE/error aggregation) from the
+   5-run Table 1 means in `ablation_multirun_stats.json`.
+
+8. `sql_package/MANIFEST.md` added: evaluation artefacts (datasets, saved
+   runs, derived statistics/audits) mapped to the manuscript tables/figures;
+   referenced from README_SQL.md and README_PACKAGE.md and shipped by
+   `build_sql_package.py`.
+
+9. Strict scoring policy (25.5%, n=241; all lenience removals combined
+   except ordering) now mentioned in the Table S20 caption
+   (`scoring_audit.json` already contained it).
+
+10. `FINAL_CHECKLIST.md`: stale `R:\l12_submission_full_r23` paths replaced
+    with a generic `<EXTRACT_DIR>` placeholder for the versioned final ZIP.
+
+## Verification (staging, 2026-09-02)
+
+- ruff check (sql_package + paper_scripts): clean
+- verify_all.py --warnings-as-errors (4 DSNs): PASS=18 WARN=0 FAIL=0 SKIP=0
+  (includes FULL_DB_TEST=1 pytest: 160 passed)
+- verify_ssot.py: 5/5 PASS
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+  (default bilingual run exits 1 as expected: English manuscript is
+  intentionally not yet synchronized)
+- stam-m_ja.pdf rebuilt (LuaLaTeX + BibTeX): 37 pages, no undefined
+  references/citations
+- Provenance directory cross-check over all 32 provenance blocks: the only
+  mismatches were the 6 EN25 entries (3 runs x gold/expected), now fixed.
+
+## Verification (fresh extraction of the final v20 ZIP)
+
+- verify_all.py --warnings-as-errors (4 DSNs): PASS=18 WARN=0 FAIL=0 SKIP=0
+  — raw output saved as verification_logs/verify_all_dbfull.log
+- Static checks, Japanese paper-number audit, SSOT check re-run from the
+  extraction (see below in this session's summary and the raw log).
+- File-set comparison staging <-> ZIP: identical apart from intentional
+  exclusions (caches, virtualenvs, LaTeX aux files).
+
+Model outputs, saved runs, and all SSOT metric values are unchanged in v20
+(no paid LLM re-evaluation).

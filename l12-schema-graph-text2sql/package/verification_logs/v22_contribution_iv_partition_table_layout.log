@@ -1,0 +1,30 @@
+# v22 — contribution (iv) subset wording + Table 1 (tab:main_partition) two-column layout
+Date: 2026-09-03 (UTC)
+
+## Changes (paper/stam-m_ja.tex only; no data, SSOT or script changes)
+
+1. Contribution list (iv): "A 同一スキーマ上の5プロトタイプ横断クエリ（100.0%）"
+   -> "A 同一スキーマ上の5プロトタイプ横断クエリ（主評価の部分集合の別ラン；100.0%）",
+   so that the only near-abstract occurrence of the 100.0% Variant A figure
+   also discloses that it is a separate run of a main-245 subset
+   (already disclosed in Sec. 4.3.4, Table 5 and S9.2 since v21).
+2. tab:main_partition switched from a single-column `table` float to a
+   two-column `table*` float: the tabular exceeded the column width and
+   overlapped the right column (equations/body text) on the v21 PDF p.4.
+   The float now renders full width at the top of p.5 with no overlap.
+
+## Verification (staging)
+
+- LuaLaTeX + BibTeX rebuild: 38 pages, 0 undefined references/citations
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+- verify_ssot.py: 5/5 PASS
+- paper_data.json, figures, evaluation artifacts: unchanged from v21
+
+## Verification (fresh extraction of the final v22 ZIP)
+
+- verify_all.py --warnings-as-errors (4 DSNs): PASS=18 WARN=0 FAIL=0 SKIP=0
+  (raw output saved as verification_logs/verify_all_dbfull.log)
+- verify_all.py --static-only 8/8, ruff clean, pytest 160 passed,
+  verify_ssot.py 5/5, verify_paper_numbers.py --tex stam-m_ja.tex exit 0
+- File-set comparison staging <-> ZIP: identical apart from intentional
+  exclusions (caches, virtualenvs, LaTeX aux files).

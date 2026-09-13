@@ -52,3 +52,7 @@ postgres_data/
 verification_package/
 GIT_COMMIT
 l12_sql_package_*.zip
+l12_text2sql_submission*.zip
+# Shipped verification logs (exempt from the *.log rule above)
+!package/verification_logs/*.log
+!package/verification_logs/history/*.log

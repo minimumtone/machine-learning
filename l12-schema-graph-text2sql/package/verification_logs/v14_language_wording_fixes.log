@@ -1,0 +1,48 @@
+=== v14 wording fixes after external re-review of the language evaluation (2026-09-01 UTC) ===
+
+Text-only changes (no data, gold SQL, expected results, or evaluation changes):
+1. Supplement S9.3 (8): replaced the stale "English queries not systematically
+   evaluated" limitation with the measured paired/non-translated English results
+   (90.0 +/- 2.0 % and 96.5 +/- 2.3 %), 2 languages only.
+2. Section 4.3 intro: added "(5) question-language dependence" to the list of
+   additional validations.
+3. Limitations (8): "concentrated in Very Hard" -> "relatively large in Medium
+   (-3.4 pp) and Very Hard (-4.1 pp); no difference in Hard".
+4. sec:language_eval: removed the claim that dictionary/few-shot are
+   language-independent; new wording states the bilingual-dictionary +
+   few-shot design also applies to English input, limited to ja/en; replaced
+   "-2.0 pp にとどまった" with "English was on average 2.0 pp lower"; added a
+   consistency note vs Table 1 full 92.5 +/- 0.4 % (separate 3-run vs 5-run).
+5. Methods p.4: pipeline accepts natural-language queries; Japanese for the
+   main evaluation, English also evaluated in the language-dependence study.
+6. "独立英語検証セット" renamed to "非翻訳英語検証セット" (newly authored in
+   English without reference to existing sets; gold SQL/expected results
+   created after authoring and DB-verified). SSOT _note updated accordingly.
+7. Data and Code Availability + Supplement S10 steps 3/4: added the English
+   paired 100-query set, the non-translated 25-query set, their gold/expected
+   artifacts, the 9 stored runs, and rerun step (g).
+8. Abstract: "除去する" -> "低減する"; added one sentence with the paired
+   ja/en (92.0/90.0 %) and non-translated English 25-query (96.5 %) results.
+9. FINAL_CHECKLIST.md: corrected PDF page count (now 36 pages after the added
+   sentence pushed the layout).
+
+Verification: compute_all_figures 5/5 SSOT checks; verify_ssot 5/5;
+verify_paper_numbers gating 0; LuaLaTeX+BibTeX rebuild 36 pages, no undefined
+references/citations (only font-shape info lines).
+
+Addendum (2026-09-01 UTC follow-up):
+- The earlier compute_all_figures.py run had silently failed (PostgreSQL
+  container was down; pipe masked the exit code), so paper/paper_data.json
+  still carried the old "independently authored" _note. After starting
+  l12_postgres, SSOT was regenerated (verify_ssot 5/5, verify_paper_numbers
+  gating 0); only _meta.generated_at and language_evaluation._note changed —
+  all numeric values identical. Grammar fix: "an non-translated" -> "a
+  non-translated" in compute_all_figures.py, SSOT regenerated again (5/5).
+- Fresh-extraction formal full verification (v14 ZIP, all four DSNs):
+  PASS=18 WARN=0 FAIL=0 SKIP=0 (gold_verification, expected_results_crosscheck,
+  order_totality, semantic_audit, vocabulary_audit, safety_cases,
+  scoring_selfcheck n_mismatch=0, pytest_full_db exit=0).
+- Independent EN gold re-verified from fresh extraction: all 25 ok;
+  language_eval_summary.json regenerated and byte-identical (sorted-JSON
+  comparison) to the packaged summary.
+- ZIP v14 rebuilt after the SSOT regeneration; fresh re-extraction re-verified.

@@ -45,6 +45,9 @@ EXCLUDE_SCRIPTS = {
     # repair_stam_ja.py would restore an obsolete manuscript revision.
     "repair_stam_ja.py",
     "translate_stam_ja_v2.py",
+    # Assembles the three-part submission ZIP from paper/ and package/
+    # (neither is shipped inside sql_package).
+    "build_submission_package.py",
 }
 
 EXCLUDE_DIR_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache"}

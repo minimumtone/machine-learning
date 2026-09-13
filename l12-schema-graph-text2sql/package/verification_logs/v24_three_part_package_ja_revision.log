@@ -1,0 +1,105 @@
+# v24 — Japanese manuscript revision, LLM4Mat-Bench citation, three-part submission package
+Date: 2026-06-02 (UTC)
+Branch: devin/1789279210-ja-abstract-prose-trim (base: main after PR #581 merge)
+Japanese freeze tag: ja-final -> 119230bb (moved from f80ac54c; two moves in this branch, 20c10308 then 119230bb)
+
+## Scope decisions (author)
+- Manuscript text only. Numbers, SSOT (paper/paper_data.json), saved model outputs, gold SQL, expected
+  results, evaluation code and the six figure PNGs are unchanged from v23e.
+- No English manuscript yet (procedure Phase 5+ not started). No paid LLM re-evaluation.
+
+## 1. Manuscript changes (paper/stam-m_ja.tex), 30 -> 29 pages
+- Abstract shortened to about half; the only quantitative value kept is the main execution recall (86.1%).
+  Values removed from the Abstract (generalization A–D, independent-design 81.5%, paired JA/EN 92.0/90.0%,
+  non-translated EN25 96.5%) remain in the main text and tables, so the number audit is unaffected.
+- Metaphors, filler modifiers and emphasis words removed throughout ("核心", "大幅に", "真に", "劇的",
+  "著しく", "顕著", "堅牢", "決定的に", "豊富な" etc.); redundant preambles compressed
+  (103,876 -> ~97,800 characters before the DFT/plain-language pass).
+- Abstract sentence 1 and the first paragraph of the Introduction now state that the target is a normalized RDB
+  holding DFT-derived inorganic-materials data (OQMD / Materials Project / AFLOW / NOMAD); AtomWork-Adv is
+  distinguished as a literature/experimental database. Abbreviations (RDB, DFT, FK, JOIN, few-shot, CTE,
+  ablation) are explained at first use; long sentences split. Tone: plain and descriptive.
+- Data-origin statement preserved: only the 89 pure-element reference energies are OQMD DFT values; compound and
+  verification records are programmatically generated synthetic data (Methods, Limitations, Acknowledgements,
+  supplementary tables).
+- Related work: Rubungo et al., LLM4Mat-Bench (Mach. Learn.: Sci. Technol. 6, 020501, 2025;
+  doi:10.1088/2632-2153/add3bb) added to references.bib (key rubungo2025llmmatbench) and cited in two places,
+  both deliberately limited in scope:
+  * Introduction: general-purpose LLMs applied to materials tasks by prompting alone show hallucinations /
+    invalid outputs and need task-specific knowledge — reported for property prediction as well.
+  * §LLM-only baseline: "the task differs, but the observation that materials-domain-specific errors remain in
+    general-purpose LLM output agrees with the property-prediction benchmark".
+  Not claimed: that prompt engineering is useless, or that LLM-only approaches fail (the LLM-only baseline here
+  reaches 78.3%). \cite count 45 -> 47; figure/table/label/includegraphics counts unchanged
+  (figure 5, table 26, includegraphics 6, label 96).
+- Cover letter (Japanese draft) added: paper/cover_letter_ja.md (placeholders in [ ] for the author).
+
+## 2. Freeze
+- ja-final -> 119230bb. paper/SHA256SUMS_ja.txt regenerated (13 files: stam-m_ja.tex, paper_data.json,
+  references.bib, interact.cls, tfnlm.bst, ja_numbers.tsv, glossary.tsv, figures/*.png x6); `sha256sum -c` 13/13 OK.
+- paper/ja_numbers.tsv regenerated. verify_paper_numbers.py --tex stam-m_ja.tex: exit 0, gating 0,
+  "JSON numbers not found in TeX: 46 (gating: 0)" — the same 46-token set as before the edit.
+- LuaLaTeX + BibTeX: 29 pages, undefined references/citations 0, multiply defined 0, overfull hbox 8
+  (all inside the shrunken TikZ ER figures, as before).
+
+## 3. Package restructuring (three reviewer-facing parts)
+- New scripts/build_submission_package.py assembles the ZIP mechanically:
+    README.md, FINAL_CHECKLIST.md, SHA256SUMS.txt
+    01_manuscript/       tex/bib/cls/bst, figures x6, stam-m_ja.pdf (29 p), stam-m_ja_main.pdf (p.1–15),
+                         cover_letter_ja.md, README.md
+    02_supplementary/    stam-m_ja_supplementary.pdf (p.16–29), tables/ (per_query_results.csv 100 rows,
+                         per_query_by_condition.csv, per_query_by_condition_mean5.csv, provenance json), README.md
+    03_mdr_scripts_data/ sql_package/ (same file set as build_sql_package.py + GIT_COMMIT), paper/ (frozen
+                         sources, SSOT, freeze files, figures), paper_scripts/, verification_logs/, README.md
+  Preconditions enforced by the script: PDF newer than TeX, SHA256SUMS_ja.txt matches the working tree,
+  verify_all.py --static-only PASS. PDF split uses pypdf (page objects are shared, embedded fonts kept once);
+  the supplement start page is detected as the first page whose first text line is "補足資料".
+- build_sql_package.py excludes build_submission_package.py (it is not part of sql_package).
+- Reviewer-facing READMEs: package/README.md (parts, correspondence table, verification levels 0–3, API-key
+  requirement only for level 3, DFT vs synthetic data notice, version history), README_01/02/03, FINAL_CHECKLIST.md
+  (English-translation gate: default verify_paper_numbers.py run must exit 0 AND print
+  "TeX files audited: 2 (stam-m.tex, stam-m_ja.tex)").
+
+## 4. Fresh-extraction verification of the v24 ZIP (extracted to a new directory, not the staging tree)
+- ZIP: 1,586 members (01: 14, 02: 6, 03: 1,563, root 3). SHA256SUMS.txt: 1,585/1,585 OK.
+- Hygiene: no .git/, .env, .pyc, __pycache__, .pytest_cache, stam-m.tex/.pdf, .DS_Store; no API-key patterns.
+- File-set diff sql_package vs `git ls-files`: source-only 30 (the known exclusions: paper/ x15 -> shipped under
+  03/paper, paper scripts x4 -> 03/paper_scripts, repair/translate/eval_jp_reranker scripts, api/, ui/,
+  pyproject.toml, README*.md, MODEL_SNAPSHOT.md, .gitignore); package-only: GIT_COMMIT.
+- Static file-reference scan over all packaged .py: 249 resolved; 15 unresolved are all outputs or tmp_path
+  test fixtures (schema_graph.png, main_eval_rerun_with_sql.json, q1.json/q1.sql, snap.json.gz, stam-m.tex in
+  test_verify_paper_numbers.py) — none is a shipped input.
+- PDFs: stam-m_ja.pdf 29 p; main 15 p; supplementary 14 p, page 1 starts with 補足資料; p.15 of main contains the
+  LLM4Mat-Bench reference; rasterization (pdftoppm) of split PDFs OK.
+- Level 0 (DB-free): verify_paper_numbers.py (default and --tex stam-m_ja.tex) exit 0 gating 0,
+  "TeX files audited: 1 (stam-m_ja.tex)"; verify_ssot.py 5/5; SHA256SUMS_ja 13/13.
+- Level 1: verify_all.py --static-only PASS=8 WARN=0 FAIL=0; pytest 166 passed (FULL_DB_TEST=1); ruff clean;
+  all 8 deterministic regeneration entry points exit 0 — only scoring_audit.json and
+  significance_recomputed.json changed, and only in provenance/generated_at and provenance/git_commit;
+  per_query_*.csv byte-identical to 02_supplementary/tables.
+- Level 2 (PostgreSQL 15): build_transfer_db.py / build_obfuscated_transfer_db.py / build_mp_transfer_db.py exit 0;
+  verify_all.py --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0; compute_all_figures.py regenerated
+  paper_data.json differing only in _meta.generated_at / _meta.git_commit; generate_figures.py -> six PNGs
+  byte-identical to the shipped ones; LuaLaTeX rebuild from the extracted sources: 29 pages, undefined 0,
+  multiply defined 0, overfull 8.
+- Level 3 (paid API) not re-run by decision; saved outputs are the source of the published numbers.
+
+## 9. Builder hardening after Devin Review on PR #586 (three findings, all accepted)
+
+1. `--output` pointing at a packaged input truncated that input (ZipFile "w" opens the target before reading)
+   and a previous ZIP inside a collected directory would be re-packaged into itself. Fix: after collecting the
+   entries and before opening the ZIP, refuse if the resolved output path equals any packaged source path.
+2. PDF freshness was checked against stam-m_ja.tex only; a newer references.bib / interact.cls / tfnlm.bst /
+   figure PNG did not block packaging. Fix: `check_pdf_fresh()` compares the PDF mtime against all
+   MANUSCRIPT_SOURCES and FIGURES.
+3. GIT_COMMIT recorded HEAD while the files were collected from the working tree, so modified or untracked
+   packaged files would have been shipped as if they came from that commit. Fix: `dirty_packaged_files()`
+   intersects `git status --porcelain -z --untracked-files=all` with the packaged source paths (GIT_COMMIT
+   itself is generated and ignored) and refuses to package unless `--allow-dirty`, which also ships the list as
+   WORKTREE_DIRTY.txt at the ZIP root.
+
+Probe results (working tree at the package commit): untracked evaluation/__zz_dirty_probe.csv -> refused, and with
+--allow-dirty -> WARNING + WORKTREE_DIRTY.txt listing 03_mdr_scripts_data/sql_package/evaluation/__zz_dirty_probe.csv;
+`--output paper/cover_letter_ja.md` -> refused, file untouched; `touch paper/references.bib` -> refused
+("older than .../references.bib"). The final v24 ZIP was rebuilt from the clean commit, so it contains no
+WORKTREE_DIRTY.txt; the file set equals the previous build except GIT_COMMIT, README.md, this log and SHA256SUMS.txt.

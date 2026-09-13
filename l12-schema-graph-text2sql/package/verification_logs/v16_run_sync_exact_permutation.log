@@ -1,0 +1,70 @@
+# v16 verification log (2026-09-02)
+
+External review follow-ups applied on top of v15:
+
+1. Saved independent English runs synchronized to unified difficulty labels
+   - `scripts/compute_unified_difficulty.py --apply` now also rewrites
+     `evaluation/independent_en_run{1,2,3}.json`:
+     * `results[].difficulty` updated from `independent_en_dataset.jsonl`
+       (Easy 13 / Medium 8 / Hard 4 / Very Hard 0)
+     * top-level `by_difficulty` recomputed from the updated labels and the
+       unchanged per-query recalls
+     * provenance note added: difficulty labels updated post hoc from the
+       unified structural-complexity score; model outputs unchanged
+   - Immutability check: for each run, every per-query field except
+     `difficulty` is byte-identical to the v15 values (SQL, recall,
+     latency, etc. unchanged). Only `results[].difficulty`,
+     `by_difficulty`, and `provenance` changed.
+
+2. Paired language test replaced by an exhaustive sign-permutation test
+   - `scripts/compute_language_stats.py` now enumerates all 2^13 = 8192
+     sign assignments of the midranks of |diff| (ties handled by midranks)
+     and reports the two-sided p-value of the Wilcoxon signed-rank
+     statistic under this exact permutation null:
+       p = 1580/8192 = 0.193 (13 non-zero pairs)
+   - This is SciPy-version independent (no reliance on method="auto").
+   - Bootstrap 95% CI unchanged: [-5.8, +1.6] pp (seed 20260602,
+     100,000 resamples). Mean diff unchanged: -2.0 pp.
+
+3. Other Wilcoxon calls pinned to method="exact"
+   - `scripts/eval_ablation_multirun.py`, `scripts/recompute_significance.py`
+     now pass method="exact" explicitly (SciPy "auto" can select different
+     methods across versions). Recomputed exact p-values match the stored
+     paper values: no_fewshot 4.513e-12, no_dict 1.049e-04,
+     no_reranker 1.953e-02, no_graph 1.484e-01, no_nbest 8.125e-01,
+     no_guard 1.000.
+
+4. Manuscript (stam-m_ja.tex)
+   - p=0.216 -> exhaustive sign-permutation p=0.193 (both occurrences).
+   - Footnote: stratified difference now attributed "mainly" to
+     q_hard_014 / q_vhard_005.
+   - Stratified EN-JA differences stated to be based on unrounded
+     per-query three-run means; note on <=0.1 pp discrepancy vs. Table
+     values due to rounding/aggregation order.
+   - Sec. 2.1.2 and the independent-EN paragraph now state that
+     compute_unified_difficulty.py is a post hoc reimplementation of the
+     design-time score: 144/245 agreement with the main-evaluation labels,
+     mismatches mostly between adjacent tiers; only the 25 untranslated
+     English queries were machine-labeled with it.
+
+5. SSOT provenance
+   - paper_data.json `_meta.source_files` now lists
+     evaluation/language_eval_summary.json,
+     evaluation/language_paired_stats.json,
+     evaluation/evaluation_dataset_en.jsonl,
+     evaluation/independent_en_dataset.jsonl.
+   - Regenerated via compute_all_figures.py; verify_ssot.py 5/5 PASS.
+
+6. Verification
+   - verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+     (default no-argument run still exits 1 as expected while the English
+     manuscript is intentionally unsynchronized).
+   - Japanese PDF rebuilt with LuaLaTeX+BibTeX: 37 pages, 0 undefined
+     references/citations.
+   - No paid LLM evaluations were rerun; all model outputs are the saved
+     v13 runs.
+
+Historical note: verification_logs/v15_language_stats_difficulty.log
+records the v15-era value p=0.216 (SciPy exact method with ties). It is
+kept as a historical log; the current statistic is the exhaustive
+sign-permutation p=0.193 described above.
