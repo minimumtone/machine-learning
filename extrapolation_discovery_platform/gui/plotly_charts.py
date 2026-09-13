@@ -941,18 +941,25 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
 
     Includes Bootstrap 95% CI for RMSE (#9) and leak suspect count (#7).
     """
+    def _score(value: Any) -> Any:
+        try:
+            return "N/A" if value is None or not np.isfinite(float(value)) else round(float(value), 4)
+        except (TypeError, ValueError):
+            return "N/A"
+
     records = []
     for i, s in enumerate(scores):
         rec: Dict[str, Any] = {
             "Rank": i + 1,
             "Feature Set": s.feature_set,
-            "Effect Size": round(s.effect_size, 4),
-            "Stability": round(s.stability, 4),
-            "Generalisation": round(s.generalisation, 4),
-            "Leak Penalty": round(s.leak_penalty, 4),
-            "Extrap. Safety": round(s.extrapolation_safety, 4),
-            "MC Penalty": round(s.multicollinearity_penalty, 4),
-            "Total": round(s.total, 4),
+            "Effect Size": _score(s.effect_size),
+            "Stability": _score(s.stability),
+            "Generalisation": _score(s.generalisation),
+            "Leak Penalty": _score(s.leak_penalty),
+            "Extrap. Safety": _score(s.extrapolation_safety),
+            "MC Penalty": _score(s.multicollinearity_penalty),
+            "Coverage": _score(s.coverage),
+            "Total": _score(s.total),
         }
         # Bootstrap CI (#9)
         rmse_mean = getattr(s, "rmse_mean", 0.0)

@@ -61,6 +61,7 @@ from extrapolation_discovery_platform.model_selection import (
     run_model_selection,
 )
 from extrapolation_discovery_platform._compat import as_serializable
+from extrapolation_discovery_platform.pipeline import stage1_preprocess
 
 if TYPE_CHECKING:
     from extrapolation_discovery_platform.ood import OODResult
@@ -463,8 +464,6 @@ class ExperimentRunner:
             #   4. 特徴量選択（訓練データのみ・リーク防止）
             # を同じ順序で実行する。individual_runner も同じ関数を使うため
             # 同一条件なら同一結果が保証される。
-            from extrapolation_discovery_platform.pipeline import stage1_preprocess
-
             _fs_names = [fs.value for fs in feature_sets]
             _generic = getattr(self, "_generic_csv_mode", False)
             prep = stage1_preprocess(
@@ -480,6 +479,7 @@ class ExperimentRunner:
                 generic_csv_mode=_generic,
                 n_folds=self._n_folds,
                 test_size=self._test_size,
+                exclusion_elements=self._exclude_elements,
             )
             if not prep.success:
                 raise RuntimeError(f"Stage1 前処理失敗:\n{prep.error_message}")
