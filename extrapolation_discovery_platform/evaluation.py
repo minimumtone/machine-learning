@@ -49,7 +49,7 @@ class ValidityScore:
 
     feature_set: str
     effect_size: float = float("nan")
-    stability: float = 0.0
+    stability: float = float("nan")
     generalisation: float = float("nan")
     leak_penalty: float = 0.0
     extrapolation_safety: float = float("nan")
@@ -67,6 +67,25 @@ class ValidityScore:
 
     # Leak suspects from Phase 1 (#7)
     leak_suspects: Dict[str, float] = field(default_factory=dict)
+
+    @property
+    def coverage(self) -> float:
+        """Fraction of positive-axis weight backed by finite scores."""
+        positive = {
+            "effect_size": self.effect_size,
+            "stability": self.stability,
+            "generalisation": self.generalisation,
+            "extrapolation_safety": self.extrapolation_safety,
+        }
+        denominator = sum(self._weights.get(name, 0.0) for name in positive)
+        if denominator == 0:
+            return 0.0
+        numerator = sum(
+            self._weights.get(name, 0.0)
+            for name, value in positive.items()
+            if math.isfinite(value)
+        )
+        return numerator / denominator
 
     @property
     def total(self) -> float:
@@ -127,6 +146,7 @@ class ValidityScore:
             "leak_penalty": _json_score(self.leak_penalty),
             "extrapolation_safety": _json_score(self.extrapolation_safety),
             "multicollinearity_penalty": _json_score(self.multicollinearity_penalty),
+            "coverage": _json_score(self.coverage),
             "total": _json_score(self.total),
             "rmse_mean": _json_score(self.rmse_mean),
             "rmse_ci_lower": _json_score(self.rmse_ci_lower),
@@ -237,7 +257,7 @@ class FeatureValidityEvaluator:
                 cv = _std / _mean if _mean > 0 else 1.0
                 vs.stability = max(0.0, 1.0 - cv)
             else:
-                vs.stability = 0.5  # neutral
+                vs.stability = float("nan")
 
             # 3. Generalisation (Random vs Block sign consistency)
             # Use exact policy names to avoid accidentally matching

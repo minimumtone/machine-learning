@@ -398,6 +398,34 @@ class TestT4_RunnerDelegation:
         assert "FS_ALL" in runner._effective_cols
         assert len(runner._effective_cols["FS_ALL"]) > 0
 
+    def test_runner_passes_exclusion_elements_to_stage1(
+        self, sample_data, monkeypatch,
+    ):
+        from extrapolation_discovery_platform.pipeline import PreprocessResult
+        from extrapolation_discovery_platform.runner import ExperimentRunner
+
+        X, y, comp = sample_data
+        captured = {}
+
+        def _stage1_stub(**kwargs):
+            captured.update(kwargs)
+            return PreprocessResult(success=False, error_message="stub")
+
+        monkeypatch.setattr(
+            "extrapolation_discovery_platform.runner.stage1_preprocess",
+            _stage1_stub,
+        )
+        runner = ExperimentRunner(
+            seeds=[42], quick=True, exclude_elements=["Ti"],
+        )
+        with pytest.raises(RuntimeError):
+            runner.run(
+                comp, X, y,
+                selected_workflows=["WF-LIN"],
+                selected_feature_sets=["FS_BASE"],
+                selected_split_policies=["ElementExclusion"],
+            )
+        assert captured["exclusion_elements"] == ["Ti"]
 
 class TestT5_IndividualDelegation:
     """T5: individual_runner.py が pipeline.py に委譲している。"""
@@ -690,6 +718,56 @@ class TestEvaluationHierarchy:
         assert math.isnan(score.generalisation)
         assert math.isfinite(score.total)
         assert score.to_dict()["effect_size"] is None
+
+    def test_validity_coverage_excludes_missing_ood_axis(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        runs = [
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="RandomCV", seed=42, fold=0,
+                rmse_test=100.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="RandomCV", seed=42, fold=1,
+                rmse_test=110.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=0,
+                rmse_test=120.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=1,
+                rmse_test=130.0,
+            ),
+        ]
+        score = FeatureValidityEvaluator().evaluate(runs)[0]
+        assert score.coverage == pytest.approx(0.8)
+        assert score.to_dict()["coverage"] == 0.8
+
+    def test_single_block_run_has_nan_stability_and_total(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        score = FeatureValidityEvaluator().evaluate([
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=0,
+                rmse_test=100.0,
+            ),
+        ])[0]
+        assert math.isnan(score.stability)
+        assert score.coverage == 0.0
+        assert math.isnan(score.total)
+        assert score.to_dict()["total"] is None
 
     def test_randomcv_scores_remain_finite(self):
         from extrapolation_discovery_platform.evaluation import (
