@@ -486,7 +486,7 @@ class FeatureValidityEvaluator:
         is_ood = np.ascontiguousarray(np.asarray(ood_data.get("is_ood", []), dtype=bool))
 
         if len(errors) == 0 or is_ood.sum() == 0 or (~is_ood).sum() == 0:
-            return 0.5
+            return float("nan")
 
         ood_err = np.abs(errors[is_ood])
         id_err = np.abs(errors[~is_ood])

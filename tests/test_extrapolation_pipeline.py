@@ -751,6 +751,15 @@ class TestEvaluationHierarchy:
         assert score.coverage == pytest.approx(0.8)
         assert score.to_dict()["coverage"] == 0.8
 
+        ood_errors = {"FS_BASE": {
+            "errors": np.array([1.0, 2.0]),
+            "uncertainties": np.array([0.1, 0.1]),
+            "is_ood": np.array([False, False]),
+        }}
+        score = FeatureValidityEvaluator().evaluate(runs, ood_errors)[0]
+        assert math.isnan(score.extrapolation_safety)
+        assert score.coverage == pytest.approx(0.8)
+
     def test_single_block_run_has_nan_stability_and_total(self):
         from extrapolation_discovery_platform.evaluation import (
             FeatureValidityEvaluator,
