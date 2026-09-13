@@ -524,9 +524,16 @@ def check_provenance() -> tuple[str, list[str]]:
             continue
         n_blocks += 1
 
+        # build_provenance() always records the dataset and its hash; a block
+        # without them identifies no input, and the dataset-derived
+        # gold/expected directory checks below could not run at all.
         dataset_file = prov.get("dataset_file")
         dataset_rows: list[dict] = []
-        if isinstance(dataset_file, str):
+        if not isinstance(dataset_file, str):
+            errors.append(f"{p.name}: provenance dataset_file is missing")
+        elif not isinstance(prov.get("dataset_sha256"), str):
+            errors.append(f"{p.name}: provenance dataset_sha256 is missing for '{dataset_file}'")
+        else:
             dataset = EVAL / dataset_file
             if not dataset.is_file():
                 errors.append(f"{p.name}: provenance dataset missing: {dataset_file}")

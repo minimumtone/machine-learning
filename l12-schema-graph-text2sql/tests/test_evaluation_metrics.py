@@ -313,8 +313,9 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
                        match="spans multiple dirs"):
         va.check_provenance()
 
-    # a provenance block that omits the directory or hash key for a
-    # directory the dataset points at must not pass by skipping the check
+    # a provenance block that omits the dataset identity, or the directory
+    # or hash key for a directory the dataset points at, must not pass by
+    # skipping the check
     dataset.write_text(
         '{"id": "q1", "question": "x",'
         ' "gold_sql_path": "gold_sql/q1.sql",'
@@ -322,7 +323,10 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
     prov4 = build_provenance(dataset, gold_dir=gold, prompt_path=prompt,
                              expected_dir=expected)
     prov4["git_commit"] = "deadbeef"
-    for missing, match in (("gold_dir", "provenance gold_dir is missing"),
+    for missing, match in (("dataset_file", "provenance dataset_file is missing"),
+                           ("dataset_sha256",
+                            "provenance dataset_sha256 is missing"),
+                           ("gold_dir", "provenance gold_dir is missing"),
                            ("gold_sha256", "provenance gold_sha256 is missing"),
                            ("expected_dir", "provenance expected_dir is missing"),
                            ("expected_sha256",
@@ -334,6 +338,13 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
         }))
         with pytest.raises(va.VerifyError, match=match):
             va.check_provenance()
+    # a block carrying nothing but git_commit identifies no input at all
+    result.write_text(json.dumps({
+        "model": "m", "provenance": {"git_commit": "deadbeef"},
+        "results": [{"qid": "q1", "sql": "SELECT 1;"}],
+    }))
+    with pytest.raises(va.VerifyError, match="dataset_file is missing"):
+        va.check_provenance()
     result.write_text(json.dumps({
         "model": "m", "provenance": prov4,
         "results": [{"qid": "q1", "sql": "SELECT 1;"}],
