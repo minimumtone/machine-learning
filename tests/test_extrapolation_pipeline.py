@@ -571,6 +571,181 @@ class TestT9_JobFactory:
         assert "_BUILTIN_FACTORIES" not in src, "旧 _BUILTIN_FACTORIES が残存"
 
 
+class TestEvaluationHierarchy:
+    def test_element_exclusion_thresholds_and_labels(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({
+            "A": [1.0, 0.5, 1e-5, 0.0, 0.0, 0.0],
+            "B": [0.0, 0.5, 0.99999, 1.0, 1.0, 1.0],
+            "C": [0.0] * 6,
+        })
+        X = pd.DataFrame({"x": np.arange(len(comp))})
+        y = pd.Series(np.arange(len(comp), dtype=float))
+        splitter = ElementExclusionSplitter(
+            target_elements=["A", "B", "C"],
+            min_test_size=1,
+            min_train_size=2,
+            max_test_fraction=0.8,
+        )
+        folds = list(splitter.split(X, y, compositions=comp))
+        assert splitter.fold_labels == ["A"]
+        assert len(folds) == 1
+        assert 2 not in folds[0][1]
+
+    def test_element_exclusion_skips_small_train(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({"A": [1.0] * 5 + [0.0] * 2})
+        splitter = ElementExclusionSplitter(
+            target_elements=["A"], min_test_size=1,
+            min_train_size=3, max_test_fraction=1.0,
+        )
+        assert list(splitter.split(comp, compositions=comp)) == []
+        assert splitter.fold_labels == []
+
+    def test_element_exclusion_skips_large_test_fraction(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({"A": [1.0] * 8 + [0.0] * 2})
+        splitter = ElementExclusionSplitter(
+            target_elements=["A"], min_test_size=1,
+            min_train_size=1, max_test_fraction=0.4,
+        )
+        assert list(splitter.split(comp, compositions=comp)) == []
+        assert splitter.fold_labels == []
+
+    def test_composition_group_cv_keeps_groups_together(self):
+        from extrapolation_discovery_platform.splitters import (
+            CompositionGroupCVSplitter,
+        )
+
+        comp = pd.DataFrame({
+            "A": [0.1, 0.1, 0.2, 0.2, 0.3, 0.4],
+            "B": [0.9, 0.9, 0.8, 0.8, 0.7, 0.6],
+        })
+        X = pd.DataFrame({"x": np.arange(len(comp))})
+        folds = list(CompositionGroupCVSplitter(3, 42).split(X, compositions=comp))
+        seen = []
+        for train, test in folds:
+            assert set(train).isdisjoint(set(test))
+            train_keys = {tuple(comp.iloc[i].round(4)) for i in train}
+            test_keys = {tuple(comp.iloc[i].round(4)) for i in test}
+            assert train_keys.isdisjoint(test_keys)
+            seen.extend(test.tolist())
+        assert sorted(seen) == list(range(len(comp)))
+
+    def test_stage2_propagates_element_labels(self, sample_data):
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess, stage2_train,
+        )
+        from extrapolation_discovery_platform.features import FeatureSetName
+
+        X, y, comp = sample_data
+        comp = pd.DataFrame({
+            "Co": np.r_[np.full(10, 0.5), np.zeros(70)],
+            "Ni": np.r_[np.zeros(10), np.full(10, 0.5), np.zeros(60)],
+            "Fe": np.r_[np.full(10, 0.5), np.zeros(10), np.full(60, 0.5)],
+        })
+        prep = stage1_preprocess(
+            X, y, comp, [FeatureSetName.FS_BASE.value], ["WF-LIN"],
+            seeds=[42], active_policies=["ElementExclusion"],
+            exclusion_elements=["Co", "Ni"], n_folds=3,
+        )
+        assert prep.success, prep.error_message
+        train = stage2_train(
+            prep, X, y, "WF-LIN", "ElementExclusion", "FS_BASE",
+            quick=True, seed=42,
+        )
+        assert train.success, train.error_message
+        expected = set(prep.fold_labels["ElementExclusion"])
+        assert expected
+        assert {r.split_group for r in train.runs} <= expected
+
+    def test_missing_randomcv_scores_are_nan_but_total_is_finite(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, rmse):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, seed=42, fold=0,
+                rmse_test=rmse, rmse_train=rmse,
+            )
+
+        scores = FeatureValidityEvaluator().evaluate([
+            run("CompositionBlock", 100.0),
+            run("ElementExclusion", 200.0),
+        ])
+        score = scores[0]
+        assert math.isnan(score.effect_size)
+        assert math.isnan(score.generalisation)
+        assert math.isfinite(score.total)
+        assert score.to_dict()["effect_size"] is None
+
+    def test_randomcv_scores_remain_finite(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, rmse):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, seed=42, fold=0,
+                rmse_test=rmse, rmse_train=rmse,
+            )
+
+        score = FeatureValidityEvaluator().evaluate([
+            run("RandomCV", 100.0),
+            run("CompositionBlock", 120.0),
+        ])[0]
+        assert math.isfinite(score.effect_size)
+        assert math.isfinite(score.generalisation)
+        assert math.isfinite(score.total)
+
+    def test_parity_grid_separates_element_groups(self):
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(group):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="ElementExclusion", split_group=group,
+                seed=42, fold=0,
+                y_test_true=np.array([1.0, 2.0]),
+                y_test_pred=np.array([1.1, 1.9]),
+                test_indices=np.array([0, 1]),
+            )
+
+        fig = plotly_combo_parity_grid([run("Ti"), run("Nb")])
+        scatters = [t for t in fig.data if t.mode == "markers"]
+        assert sum(len(t.x) for t in scatters) == 4
+        texts = " ".join(str(a.text) for a in fig.layout.annotations)
+        assert "R²=" not in texts or "EE-" in texts
+
+    def test_derive_microstructure_preserves_missingness(self):
+        from extrapolation_discovery_platform.data.build_highconf_v2 import (
+            derive_microstructure,
+        )
+
+        out = derive_microstructure(pd.Series(["FCC", "FCC+B2", None, "Unknown"]))
+        assert out["micro_n_phases"].iloc[:2].tolist() == [1.0, 2.0]
+        assert out["micro_n_phases"].iloc[2:].isna().all()
+        assert out["micro_missing"].tolist() == [0.0, 0.0, 1.0, 1.0]
+        assert out.filter(like="micro_").iloc[2:, 1:].isna().all().all()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import sys
