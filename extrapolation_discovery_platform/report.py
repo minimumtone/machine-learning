@@ -1,9 +1,9 @@
 """
-Report Generator for Extrapolation Discovery Platform
+Report Generator for the Feature Design Framework
 レポート生成モジュール
 
 Generates a comprehensive Markdown report with embedded figures:
-  - Feature validity ranking table
+  - Feature-set evaluation table
   - Split-wise performance comparison
   - OOD distribution figure
   - OOD candidate compositions list
@@ -106,7 +106,7 @@ class ReportGenerator:
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
         # ---- Header ----
-        lines.append("# Extrapolation Discovery Platform - Experiment Report")
+        lines.append("# Feature Design Framework - Evaluation Report")
         lines.append("")
         lines.append(f"Generated: {now}")
         lines.append("")
@@ -128,10 +128,10 @@ class ReportGenerator:
         lines.append(f"- **Total elapsed time**: {total_time:.1f} sec")
         lines.append("")
 
-        # ---- 2. Feature Validity Ranking ----
-        lines.append("## 2. Feature Set Validity Ranking")
+        # ---- 2. Feature-Set Evaluation ----
+        lines.append("## 2. Feature-Set Evaluation")
         lines.append("")
-        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | MC Penalty | Coverage | RMSE (95% CI) | **Total** |")
+        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Gen. Robustness | MC Penalty | Coverage | RMSE (95% CI) | **Total** |")
         lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|------------|----------|---------------|-----------|")
         for i, s in enumerate(validity_scores):
             # Format Bootstrap CI if available (#9)
@@ -209,7 +209,7 @@ class ReportGenerator:
         lines.append("")
         if ood_result is not None:
             lines.append(f"- **Total query samples**: {ood_result.n_total}")
-            lines.append(f"- **OOD samples**: {ood_result.n_ood}")
+            lines.append(f"- **Distance-based OOD candidates**: {ood_result.n_ood}")
             lines.append(f"- **OOD ratio**: {ood_result.ood_ratio:.2%}")
             lines.append(f"- **OOD threshold**: {ood_result.ood_threshold:.4f}")
             lines.append("")
@@ -218,7 +218,7 @@ class ReportGenerator:
             lines.append("")
 
         # ---- 5. OOD Candidate Compositions ----
-        lines.append("## 5. OOD Region Candidate Compositions")
+        lines.append("## 5. High-Distance Candidate Compositions")
         lines.append("")
         if ood_result is not None and compositions_df is not None:
             ood_mask = ood_result.is_ood
@@ -251,7 +251,7 @@ class ReportGenerator:
                     lines.append(top_ood_display.round(3).to_string())
                 lines.append("")
             else:
-                lines.append("No OOD samples detected.")
+                lines.append("No distance-based OOD candidates detected.")
                 lines.append("")
         else:
             lines.append("Not available (OOD analysis or compositions not provided).")

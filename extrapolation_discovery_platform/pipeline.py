@@ -1,5 +1,5 @@
 """
-EDP 3-Stage パイプライン（共通処理）
+3-Stage 評価パイプライン（共通処理）
 ======================================
 
 「データ選択 → 一括計算(runner.py) → 可視化」と
@@ -130,7 +130,7 @@ class TrainResult:
     r2_test_mean:    float = float("nan")
     r2_test_std:     float = float("nan")
     mae_test_mean:   float = float("nan")
-    # 全 fold の予測をプールした大域指標（外挿 fold での fold 内 R² の
+    # 全 fold の予測をプールした大域指標（分布シフト fold での fold 内 R² の
     # 不安定さを避け、定数予測器との比較を直読できるようにする）
     rmse_global:  float = float("nan")   # プール RMSE
     nrmse_global: float = float("nan")   # プール RMSE / 全データの y 標準偏差
@@ -151,7 +151,7 @@ class OODStageResult:
     ood_result : OODResult
         全 fold アンサンブル後の OOD 検出結果（primary fold 基準）。
     primary_train_idx / primary_test_idx : np.ndarray
-        GUI の OOD Map 可視化に使う primary fold のインデックス。
+        GUI の Feature-Space Coverage 可視化に使う primary fold のインデックス。
     ensemble_scores : np.ndarray
         全サンプルの全 fold 累積スコア（デバッグ・詳細分析用）。
     """
@@ -490,7 +490,7 @@ def apply_extrapolation_guard(
     """予測値を訓練ターゲット範囲 ± margin×レンジにクリップする。
 
     線形系 WF は強い共変量シフト下で訓練範囲を数倍超える予測を出しうる。
-    物理的にあり得ない外挿を防ぎつつ、穏健な外挿（範囲外 margin 以内）は
+    物理的にあり得ない予測を防ぎつつ、穏健な分布シフト下の予測（範囲外 margin 以内）は
     許容する。クリップ後にテストメトリクスを再計算し、クリップ件数を
     artifacts["n_pred_clipped"] に記録する。
     """
@@ -520,7 +520,7 @@ def apply_extrapolation_guard(
     run.artifacts["n_pred_clipped"] = n_clipped
     run.artifacts["pred_clip_bounds"] = (lo_b, hi_b)
     logger.warning(
-        "外挿ガード: %d 件の予測を [%.4g, %.4g] にクリップ (WF=%s fold=%d)",
+        "予測ガード: %d 件の予測を [%.4g, %.4g] にクリップ (WF=%s fold=%d)",
         n_clipped, lo_b, hi_b, run.workflow, run.fold,
     )
     return run
@@ -743,7 +743,7 @@ def stage3_detect_ood(
         - 全 fold スコアをアンサンブル（平均）して代表値を決定
         - primary fold（CompositionBlock、次に CompositionGroupCV の先頭 fold）
           の結果を GUI に使用
-        - GUI の OOD Map タブ・OOD サマリーのみがこの出力を参照する
+        - GUI の Feature-Space Coverage タブ・OOD サマリーのみがこの出力を参照する
 
     Parameters
     ----------

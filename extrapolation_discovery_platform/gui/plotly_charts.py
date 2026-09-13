@@ -1,10 +1,10 @@
 """
-Plotly Interactive Charts for Extrapolation Discovery Platform
+Plotly Interactive Charts for the Feature Design Framework
 Plotlyインタラクティブチャートモジュール
 
 Provides interactive equivalents of the matplotlib-based visualization module:
-  - plotly_ood_map        : OOD cluster map with hover + lasso select
-  - plotly_validity_ranking : Feature validity stacked bar chart
+  - plotly_ood_map        : Feature-space coverage map with hover + lasso select
+  - plotly_validity_ranking : Feature-set evaluation stacked bar chart
   - plotly_heatmap        : Performance heatmap (feature_set × split_policy)
   - plotly_parity         : Parity plot (y_true vs y_pred)
   - plotly_uncertainty_ood : Uncertainty vs OOD score scatter
@@ -96,6 +96,16 @@ def split_series_abbreviation(split_policy: str, split_group: str = "") -> str:
     }.get(split_policy, split_policy)
 
 
+def split_policy_display_name(split_policy: str, split_group: str = "") -> str:
+    if split_policy == "ElementExclusion" and split_group:
+        return f"Leave-one-element-out ({split_group})"
+    return {
+        "RandomCV": "Random CV (in-distribution reference)",
+        "CompositionGroupCV": "Composition-group-disjoint CV",
+        "CompositionBlock": "Composition-space block holdout",
+    }.get(split_policy, split_policy)
+
+
 # ---------------------------------------------------------------------------
 # 1. OOD Cluster Map (PCA)
 # ---------------------------------------------------------------------------
@@ -105,7 +115,7 @@ def plotly_ood_map(
     X_query: pd.DataFrame,
     composite_scores: np.ndarray,
     is_ood: np.ndarray,
-    title: str = "OOD Map (PCA)",
+    title: str = "Feature-Space Coverage (PCA)",
 ) -> go.Figure:
     """Interactive 2-D PCA projection coloured by OOD score.
 
@@ -208,7 +218,7 @@ def plotly_ood_map(
 
 
 # ---------------------------------------------------------------------------
-# 2. Feature Validity Ranking (Stacked Bar)
+# 2. Feature-Set Evaluation (Stacked Bar)
 # ---------------------------------------------------------------------------
 
 def plotly_validity_ranking(
@@ -230,7 +240,7 @@ def plotly_validity_ranking(
         ("effect_size", "Effect Size", "#4C72B0"),
         ("stability", "Stability", "#55A868"),
         ("generalisation", "Generalisation", "#C44E52"),
-        ("extrapolation_safety", "Extrap. Safety", "#CCB974"),
+        ("extrapolation_safety", "Gen. Robustness", "#CCB974"),
     ]
 
     fig = go.Figure()
@@ -270,7 +280,7 @@ def plotly_validity_ranking(
 
     fig.update_layout(
         barmode="relative",
-        title="Feature Set Validity Ranking — 特徴量セット妥当性ランキング",
+        title="Feature-Set Evaluation — 特徴量セット評価",
         xaxis_title="妥当性スコア (Score) — 高いほど良い",
         yaxis_title="特徴量セット (Feature Set)",
         height=max(400, len(fs_names) * 80),
@@ -956,7 +966,7 @@ def validity_scores_to_dataframe(scores: List[Any]) -> pd.DataFrame:
             "Stability": _score(s.stability),
             "Generalisation": _score(s.generalisation),
             "Leak Penalty": _score(s.leak_penalty),
-            "Extrap. Safety": _score(s.extrapolation_safety),
+            "Gen. Robustness": _score(s.extrapolation_safety),
             "MC Penalty": _score(s.multicollinearity_penalty),
             "Coverage": _score(s.coverage),
             "Total": _score(s.total),
@@ -1545,7 +1555,7 @@ def plotly_fs_radar(
         ("effect_size", "Effect Size\n(効果量)"),
         ("stability", "Stability\n(安定性)"),
         ("generalisation", "Generalisation\n(汎化性)"),
-        ("extrapolation_safety", "Extrap. Safety\n(外挿安全性)"),
+        ("extrapolation_safety", "Gen. Robustness\n(汎化頑健性)"),
     ]
     dim_keys = [d[0] for d in dims]
     dim_labels = [d[1] for d in dims]
@@ -1826,7 +1836,7 @@ def build_fs_comparison_summary_md(
             f"- 効果量 (Effect Size): {best.effect_size:.4f}\n"
             f"- 安定性 (Stability): {best.stability:.4f}\n"
             f"- 汎化性 (Generalisation): {best.generalisation:.4f}\n"
-            f"- 外挿安全性 (Extrap. Safety): {best.extrapolation_safety:.4f}\n"
+            f"- 汎化頑健性 (Gen. Robustness): {best.extrapolation_safety:.4f}\n"
             f"- リークペナルティ: {best.leak_penalty:.4f}"
         )
         lines.append("")
@@ -1836,7 +1846,7 @@ def build_fs_comparison_summary_md(
         if best.total >= 0.6:
             lines.append(
                 "- Total Score ≥ 0.6: **良好**。この特徴量セットは安定した予測性能を持ち、"
-                "外挿にも比較的安全です。"
+                "分布シフト下でも比較的頑健です。"
             )
         elif best.total >= 0.4:
             lines.append(
@@ -2874,10 +2884,7 @@ def plotly_combo_parity_grid(
             if series not in sp_dict or not sp_dict[series]["true"]:
                 continue
             sp, group = series
-            display_name = (
-                f"ElementExclusion ({group})"
-                if sp == "ElementExclusion" and group else sp
-            )
+            display_name = split_policy_display_name(sp, group)
             sty = sp_style(sp, group)
             show_legend = display_name not in shown_sp
             shown_sp.add(display_name)

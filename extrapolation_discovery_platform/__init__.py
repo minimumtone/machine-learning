@@ -1,10 +1,10 @@
 """
-Extrapolation Discovery Platform
-外挿発見基盤
+Feature Design Framework for Materials Machine Learning
+材料機械学習のための特徴量設計フレームワーク
 
 A systematic framework for evaluating feature sets in materials science,
-including OOD detection, feature validity assessment, and candidate
-composition proposal for extrapolation regions.
+including OOD detection, feature-set evaluation, and candidate
+composition proposal for high-distance regions.
 
 NOTE: HEA (High Entropy Alloys) is used as a concrete example domain;
 the platform is designed to be domain-agnostic.
@@ -16,8 +16,8 @@ dataset        Synthetic dataset generation with property proxy
 splitters      Data splitting strategies (RandomCV / CompositionBlock / ElementExclusion)
 workflows      ML workflows (WF-LIN / WF-XGB / WF-ENS)
 ood            Out-of-Distribution detection (Mahalanobis / kNN)
-evaluation     Feature validity scoring engine
-visualization  OOD maps, ranking charts, comparison tables
+evaluation     Feature-set evaluation engine
+visualization  Feature-space coverage maps, ranking charts, comparison tables
 report         Markdown report generator with literature evidence integration
 runner         Experiment orchestrator with MLflow-style tracking
 

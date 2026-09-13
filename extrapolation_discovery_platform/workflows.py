@@ -1,4 +1,4 @@
-"""ML Workflow Module for Extrapolation Discovery Platform.
+"""ML Workflow Module for the Feature Design Framework.
 
 Workflow templates:
   WF-LIN   - Linear regression (Ridge, coefficient analysis)
@@ -286,7 +286,7 @@ class WorkflowLIN(BaseWorkflow):
     """Linear regression workflow (Ridge).
 
     ``alpha=None``（既定）の場合は RidgeCV で正則化強度をデータから選択する。
-    固定 alpha=1.0 は外挿条件では正則化が弱すぎ、予測が訓練範囲を大きく
+    固定 alpha=1.0 は分布シフト条件では正則化が弱すぎ、予測が訓練範囲を大きく
     超える原因になるため。
     """
 

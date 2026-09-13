@@ -1,5 +1,5 @@
-# Extrapolation Discovery Platform - Dependencies
-# 外挿発見基盤 依存パッケージ
+# Feature Design Framework - Dependencies
+# 材料機械学習のための特徴量設計フレームワーク 依存パッケージ
 #
 # Install core only:  pip install -r requirements.txt
 # Install everything: pip install -r requirements.txt  (uncomment optional lines)
