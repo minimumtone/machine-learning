@@ -2753,9 +2753,11 @@ def plotly_combo_parity_grid(
         {"color": "#D84315", "symbol": "square"},
     ]
 
+    ee_groups = sorted({g for sp, g in sp_order if sp == "ElementExclusion" and g})
+
     def sp_style(sp, group=""):
         if sp == "ElementExclusion" and group:
-            return ee_styles[sum(ord(c) for c in group) % len(ee_styles)]
+            return ee_styles[ee_groups.index(group) % len(ee_styles)]
         return SP_STYLES.get(sp, {"color": "#888888", "symbol": "circle"})
 
     # 全 (FS, WF) の組み合わせを順番に並べる

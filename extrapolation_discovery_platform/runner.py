@@ -731,6 +731,8 @@ class ExperimentRunner:
                 )
 
                 for sp_name, folds in splitter_folds.items():
+                    _label_key = rc_key if sp_name == "RandomCV" else sp_name
+                    sp_labels = (fold_labels or {}).get(_label_key, [])
                     for fold_idx, (train_idx, test_idx) in enumerate(folds):
                         for wf_name in wf_names:
                             if wf_name not in allowed_wf:
@@ -748,9 +750,8 @@ class ExperimentRunner:
                                 dim_reduction=self._dim_reduction,
                                 force_pca=force_pca,
                                 split_group=(
-                                    (fold_labels or {}).get(sp_name, [""] * len(folds))[fold_idx]
-                                    if fold_idx < len((fold_labels or {}).get(sp_name, []))
-                                    else ""
+                                    sp_labels[fold_idx]
+                                    if fold_idx < len(sp_labels) else ""
                                 ),
                             ))
         if blocked_count > 0:
