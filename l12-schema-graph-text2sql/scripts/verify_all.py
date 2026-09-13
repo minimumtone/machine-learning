@@ -544,9 +544,12 @@ def check_provenance() -> tuple[str, list[str]]:
         # checks out (guards against build_provenance() being called with
         # default directories for a non-default dataset).  A dataset whose
         # rows span several directories cannot be covered by one recorded
-        # hash and is rejected outright.
-        for path_key, dir_key in (("gold_sql_path", "gold_dir"),
-                                  ("expected_result_path", "expected_dir")):
+        # hash and is rejected outright.  When the dataset does point at a
+        # directory, the provenance must record both the directory and its
+        # hash: a missing key would otherwise skip the hash checks below.
+        for path_key, dir_key, hash_key in (
+                ("gold_sql_path", "gold_dir", "gold_sha256"),
+                ("expected_result_path", "expected_dir", "expected_sha256")):
             dirs = {Path(row[path_key]).parent.as_posix()
                     for row in dataset_rows if isinstance(row.get(path_key), str)}
             recorded = prov.get(dir_key)
@@ -554,10 +557,17 @@ def check_provenance() -> tuple[str, list[str]]:
                 errors.append(
                     f"{p.name}: dataset {path_key} spans multiple dirs "
                     f"{sorted(dirs)}; a single provenance {dir_key} cannot cover them")
-            elif dirs and isinstance(recorded, str) and dirs != {recorded}:
+            elif dirs and not isinstance(recorded, str):
+                errors.append(
+                    f"{p.name}: dataset {path_key} points at {sorted(dirs)} "
+                    f"but provenance {dir_key} is missing")
+            elif dirs and dirs != {recorded}:
                 errors.append(
                     f"{p.name}: provenance {dir_key} '{recorded}' does not match "
                     f"dataset {path_key} parent dir {sorted(dirs)}")
+            elif dirs and not isinstance(prov.get(hash_key), str):
+                errors.append(
+                    f"{p.name}: provenance {hash_key} is missing for {dir_key} '{recorded}'")
 
         gold_dir_name = prov.get("gold_dir")
         if isinstance(gold_dir_name, str):
