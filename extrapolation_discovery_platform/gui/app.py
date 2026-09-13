@@ -72,6 +72,7 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
     plotly_parity_grid_by_algorithm,
     plotly_parity_per_algorithm,
     plotly_parity_train_test,
+    split_series_abbreviation,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -88,6 +89,97 @@ def _fmt_score(x: Any) -> str:
         return "N/A" if x is None or not np.isfinite(float(x)) else f"{float(x):.4f}"
     except (TypeError, ValueError):
         return "N/A"
+
+
+def _cell_metrics(run_list: List[Any], sp_f: str = "All") -> Tuple:
+    """Calculate heatmap metrics independently for each split series."""
+    from collections import defaultdict
+    import math
+    from sklearn.metrics import mean_squared_error, r2_score
+
+    filtered = [
+        r for r in run_list
+        if sp_f == "All" or r.split_policy == sp_f
+    ]
+    wfs = sorted({r.workflow for r in filtered})
+    fss = sorted({r.feature_set for r in filtered})
+    cell = defaultdict(lambda: {"true": [], "pred": []})
+    seen = set()
+    for r in filtered:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        series = (r.split_policy, getattr(r, "split_group", ""))
+        ti = getattr(r, "test_indices", None)
+        for i in range(len(r.y_test_true)):
+            test_key = (
+                int(ti[i]) if ti is not None else float(r.y_test_true[i])
+            )
+            key = (r.workflow, r.feature_set, series, test_key)
+            if key in seen:
+                continue
+            seen.add(key)
+            cell[(r.workflow, r.feature_set, series)]["true"].append(
+                float(r.y_test_true[i])
+            )
+            cell[(r.workflow, r.feature_set, series)]["pred"].append(
+                float(r.y_test_pred[i])
+            )
+
+    def series_sort_key(series):
+        policy, group = series
+        rank = {
+            "RandomCV": 0,
+            "CompositionGroupCV": 1,
+            "CompositionBlock": 2,
+            "ElementExclusion": 3,
+            "Holdout": 4,
+        }.get(policy, 99)
+        return rank, group
+
+    rows = []
+    for fs in fss:
+        series_for_fs = {
+            (r.split_policy, getattr(r, "split_group", ""))
+            for r in filtered if r.feature_set == fs
+        }
+        rows.extend((fs, series) for series in sorted(
+            series_for_fs, key=series_sort_key,
+        ))
+
+    r2_z, rmse_z, txt_r2, txt_rmse, row_labels = [], [], [], [], []
+    for fs, series in rows:
+        row_r2, row_rmse, row_txt_r2, row_txt_rmse = [], [], [], []
+        label = f"{fs.replace('FS_', '')} · {split_series_abbreviation(*series)}"
+        row_labels.append(label)
+        for wf in wfs:
+            d = cell[(wf, fs, series)]
+            if len(d["true"]) < 2:
+                row_r2.append(None)
+                row_rmse.append(None)
+                row_txt_r2.append("N/A")
+                row_txt_rmse.append("N/A")
+                continue
+            try:
+                r2_val = float(r2_score(d["true"], d["pred"]))
+                rmse_val = float(math.sqrt(mean_squared_error(
+                    d["true"], d["pred"],
+                )))
+            except Exception:
+                r2_val = rmse_val = None
+            row_r2.append(r2_val)
+            row_rmse.append(rmse_val)
+            warn = "⚠" if r2_val is not None and r2_val < 0 else ""
+            row_txt_r2.append(
+                f"{r2_val:.3f}{warn}" if r2_val is not None else "N/A"
+            )
+            row_txt_rmse.append(
+                f"{rmse_val:.3f}" if rmse_val is not None else "N/A"
+            )
+        r2_z.append(row_r2)
+        rmse_z.append(row_rmse)
+        txt_r2.append(row_txt_r2)
+        txt_rmse.append(row_txt_rmse)
+    return wfs, row_labels, r2_z, rmse_z, txt_r2, txt_rmse
 
 
 # ---------------------------------------------------------------------------
@@ -664,10 +756,7 @@ def _refresh_results_data(
             plotly_combo_parity_grid,
         )
         from plotly.subplots import make_subplots as _msub
-        from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
-        from collections import defaultdict
         import plotly.graph_objects as _go
-        import math
 
         runs   = session.get("runs", [])
         scores = session.get("validity_scores", [])
@@ -700,62 +789,23 @@ def _refresh_results_data(
         )
 
         # ── メイン2: WF × FS ヒートマップ (R² | RMSE 並列) ───────────────
-        def _cell_metrics(run_list, sp_f="All"):
-            fl = [r for r in run_list if sp_f == "All" or r.split_policy == sp_f]
-            wfs = sorted({r.workflow    for r in fl})
-            fss = sorted({r.feature_set for r in fl})
-            cell = defaultdict(lambda: {"true": [], "pred": []})
-            seen = set()
-            for r in fl:
-                if r.y_test_true is None or r.y_test_pred is None:
-                    continue
-                ti = getattr(r, "test_indices", None)
-                for i in range(len(r.y_test_true)):
-                    key = (r.workflow, r.feature_set,
-                           int(ti[i]) if ti is not None else float(r.y_test_true[i]))
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    cell[(r.workflow, r.feature_set)]["true"].append(float(r.y_test_true[i]))
-                    cell[(r.workflow, r.feature_set)]["pred"].append(float(r.y_test_pred[i]))
-            r2_z, rmse_z, txt_r2, txt_rmse = [], [], [], []
-            for fs in fss:
-                rr, rm, tr, tm = [], [], [], []
-                for wf in wfs:
-                    d = cell[(wf, fs)]
-                    if len(d["true"]) < 2:
-                        rr.append(None); rm.append(None)
-                        tr.append("N/A"); tm.append("N/A")
-                        continue
-                    try:
-                        r2_v   = float(_r2(d["true"], d["pred"]))
-                        rmse_v = float(math.sqrt(_mse(d["true"], d["pred"])))
-                    except Exception:
-                        r2_v = rmse_v = None
-                    rr.append(r2_v); rm.append(rmse_v)
-                    warn = "⚠" if r2_v is not None and r2_v < 0 else ""
-                    tr.append(f"{r2_v:.3f}{warn}" if r2_v is not None else "N/A")
-                    tm.append(f"{rmse_v:.3f}"      if rmse_v is not None else "N/A")
-                r2_z.append(rr); rmse_z.append(rm)
-                txt_r2.append(tr); txt_rmse.append(tm)
-            return wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse
+        wfs, row_labels, r2_z, rmse_z, txt_r2, txt_rmse = _cell_metrics(
+            runs, parity_sp_val,
+        )
 
-        wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse = _cell_metrics(runs, parity_sp_val)
-        fs_labels = [f.replace("FS_", "") for f in fss]
-
-        if wfs and fss:
+        if wfs and row_labels:
             heat_fig = _msub(rows=1, cols=2,
                              subplot_titles=["R² (高いほど良)", "RMSE (低いほど良)"],
                              horizontal_spacing=0.14)
             heat_fig.add_trace(_go.Heatmap(
-                z=r2_z, x=wfs, y=fs_labels,
+                z=r2_z, x=wfs, y=row_labels,
                 text=txt_r2, texttemplate="%{text}", textfont=dict(size=9),
                 colorscale="RdYlGn", zmin=-1, zmax=1,
                 colorbar=dict(title="R²", thickness=10, len=0.7, x=0.44),
                 hovertemplate="WF:%{x} FS:%{y}<br>R²=%{text}<extra></extra>",
             ), row=1, col=1)
             heat_fig.add_trace(_go.Heatmap(
-                z=rmse_z, x=wfs, y=fs_labels,
+                z=rmse_z, x=wfs, y=row_labels,
                 text=txt_rmse, texttemplate="%{text}", textfont=dict(size=9),
                 colorscale="RdYlGn_r",
                 colorbar=dict(title="RMSE", thickness=10, len=0.7, x=1.0),
@@ -766,10 +816,11 @@ def _refresh_results_data(
                     text=("WF × FS メトリクスヒートマップ "
                           f"(Split={parity_sp_val})<br>"
                           "<span style='font-size:10px;color:#666;'>"
-                          "全fold集積データから直接計算 / ⚠ は R²<0</span>"),
+                          "split-seriesごとに計算（異なる分割方式は混合しない）"
+                          " / ⚠ は R²<0</span>"),
                     font=dict(size=12),
                 ),
-                height=max(280, len(fss)*50 + 120),
+                height=max(280, len(row_labels)*50 + 120),
                 margin=dict(t=80, b=60, l=80, r=20),
             )
             heat_fig.update_xaxes(tickangle=-35, tickfont=dict(size=9))

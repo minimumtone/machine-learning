@@ -387,18 +387,14 @@ def stage1_preprocess(
             except Exception:
                 logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
 
-        # 全ポリシーで fold が空の場合のフォールバック
+        # Requested policies must produce folds; never substitute RandomCV.
         if not fold_plan:
-            logger.warning(
-                "Stage1: 全分割ポリシーで fold 0。"
-                "RandomCV seed=%d でフォールバック", _seed0
+            raise ValueError(
+                f"Stage1: 要求された分割ポリシー {active_policies} はいずれも "
+                "fold を生成できませんでした（ElementExclusion は "
+                "train≥50 / test≤40% の元素が必要）。RandomCV を明示的に "
+                "選択してください。"
             )
-            rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
-            folds = list(rc_fb.split(features_df, target, compositions=split_comps))
-            if folds:
-                key = f"RandomCV_seed{_seed0}"
-                fold_plan[key] = folds
-                fold_labels[key] = list(rc_fb.fold_labels)
 
         result.fold_plan = fold_plan
         result.fold_labels = fold_labels

@@ -76,6 +76,18 @@ def _records_to_df(records: List[Dict[str, Any]]) -> pd.DataFrame:
 logger = logging.getLogger(__name__)
 
 
+def split_series_abbreviation(split_policy: str, split_group: str = "") -> str:
+    """Return the compact label used for split-policy series."""
+    if split_policy == "ElementExclusion" and split_group:
+        return f"EE-{split_group}"
+    return {
+        "CompositionBlock": "CB",
+        "CompositionGroupCV": "CGCV",
+        "RandomCV": "RCV",
+        "Holdout": "HO",
+    }.get(split_policy, split_policy)
+
+
 # ---------------------------------------------------------------------------
 # 1. OOD Cluster Map (PCA)
 # ---------------------------------------------------------------------------
@@ -2906,13 +2918,7 @@ def plotly_combo_parity_grid(
                 rmse_val = float(math.sqrt(_mse(data["true"], data["pred"])))
             except Exception:
                 continue
-            display_name = (
-                f"EE-{group}" if sp == "ElementExclusion" and group
-                else sp.replace("CompositionBlock", "CB")
-                    .replace("CompositionGroupCV", "CGCV")
-                    .replace("RandomCV", "RCV")
-                    .replace("Holdout", "HO")
-            )
+            display_name = split_series_abbreviation(sp, group)
             lines.append(f"{display_name} R²={r2_val:.3f} RMSE={rmse_val:.3f}")
         if ci < len(annots):
             existing = annots[ci].text or ""
