@@ -1,5 +1,5 @@
 """
-Feature Validity Evaluation Engine
+Feature-Set Evaluation Engine
 特徴量妥当性評価エンジン
 
 Scores each feature set along six axes:
@@ -7,7 +7,7 @@ Scores each feature set along six axes:
   2. Stability     - variance across seeds / folds
   3. Generalisation - sign consistency between RandomCV and Block splits
   4. Leak suspicion - Random-only improvement with Block degradation
-  5. Extrapolation safety - uncertainty behaviour on OOD points
+  5. Generalization robustness - uncertainty behaviour on OOD points
   6. Multicollinearity penalty - VIF-based collinearity penalty (Phase 1)
 """
 
@@ -196,7 +196,7 @@ class FeatureValidityEvaluator:
             All experiment run results.
         ood_errors : dict, optional
             {feature_set: {"errors": ..., "uncertainties": ..., "is_ood": ...}}
-            Per-sample data for extrapolation safety assessment.
+            Per-sample data for generalization robustness assessment.
         mc_reports : dict, optional
             {feature_set: MulticollinearityReport} from Phase 1.
             Used to compute multicollinearity_penalty.
@@ -277,7 +277,7 @@ class FeatureValidityEvaluator:
                 vs.leak_suspects = mc_reports[fs_name].leak_suspects
             vs.leak_penalty = min(1.0, max(behavioural_penalty, corr_penalty))
 
-            # 5. Extrapolation safety
+            # 5. Generalization robustness
             if ood_errors and fs_name in ood_errors:
                 vs.extrapolation_safety = self._extrapolation_safety(
                     ood_errors[fs_name]

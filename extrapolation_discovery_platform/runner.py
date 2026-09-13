@@ -371,10 +371,10 @@ class ExperimentRunner:
                computes a "generalisation" score by comparing RandomCV vs
                CompositionBlock performance.  If RandomCV is always included,
                this score reflects random-split variance rather than true
-               compositional extrapolation ability.
+               generalization under distribution shift.
             3. **Redundancy**: CompositionBlock already provides rigorous
                k-fold cross-validation; adding RandomCV doubles run count
-               without adding information about extrapolation safety.
+               without adding information about generalization robustness.
 
             Set ``selected_split_policies=["CompositionBlock",
             "ElementExclusion", "RandomCV"]`` to include RandomCV when

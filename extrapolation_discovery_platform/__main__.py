@@ -1,5 +1,5 @@
 """
-CLI Entry Point for Extrapolation Discovery Platform
+CLI Entry Point for the Feature Design Framework
 CLIエントリポイント
 
 Usage::
@@ -386,7 +386,7 @@ def cmd_gui(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="extrapolation_discovery_platform",
-        description="Extrapolation Discovery Platform — CLI",
+        description="Feature Design Framework for Materials Machine Learning — CLI",
     )
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Enable debug logging")

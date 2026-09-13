@@ -1,4 +1,4 @@
 """
-Gradio GUI for Extrapolation Discovery Platform
+Gradio GUI for the Feature Design Framework
 GUIモジュール
 """

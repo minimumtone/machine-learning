@@ -1,6 +1,6 @@
 """
 Out-of-Distribution (OOD) Detection Module
-外挿（OOD）検知モジュール
+分布シフト（OOD）検知モジュール
 
 Detects samples that lie outside the training distribution using:
   - Mahalanobis distance
@@ -36,7 +36,7 @@ class OODResult:
     ood_threshold: float
 
     # Summary statistics
-    ood_ratio: float  # fraction of OOD samples
+    ood_ratio: float  # fraction of distance-based candidates
     n_total: int
     n_ood: int
 

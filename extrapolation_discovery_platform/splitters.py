@@ -1,5 +1,5 @@
 """
-Data Splitting Strategies for HEA Extrapolation Platform
+Data Splitting Strategies for the HEA Feature Design Framework
 データ分割戦略モジュール
 
 Three splitting policies:

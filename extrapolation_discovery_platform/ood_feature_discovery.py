@@ -1,9 +1,9 @@
 """
-OOD-Aware Feature Discovery
+OOD-Aware Candidate-Feature Evaluation
 =============================
 
 OOD 検出後に「OOD に近い内挿サンプル」を特定し、
-追加特徴量を組み込んで再学習することで外挿性能の向上を探索する。
+追加特徴量を組み込んで再学習することで分布シフト下の汎化性能向上を探索する。
 
 フロー:
   1. identify_boundary_samples()

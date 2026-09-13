@@ -1,5 +1,5 @@
 """
-Shared utility functions for the HEA Extrapolation Platform.
+Shared utility functions for the HEA Feature Design Framework.
 共通ユーティリティ関数
 
 This module consolidates helper functions that were previously duplicated

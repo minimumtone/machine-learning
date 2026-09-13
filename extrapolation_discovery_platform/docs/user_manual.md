@@ -1,4 +1,4 @@
-# Extrapolation Discovery Platform 取扱説明書
+# Feature Design Framework for Materials Machine Learning 取扱説明書
 
 **バージョン**: 3.0  
 **最終更新**: 2026-02-25  
@@ -28,7 +28,7 @@
    - [5.2 Data Summary（データ要約）](#52-data-summaryデータ要約)
    - [5.3 Config & Run（設定・実行）](#53-config--run設定実行)
    - [5.4 Results（実験結果）](#54-results実験結果)
-   - [5.5 OOD Map（外挿マップ）](#55-ood-map外挿マップ)
+   - [5.5 Feature-Space Coverage（特徴空間カバレッジ）](#55-feature-space-coverage特徴空間カバレッジ)
    - [5.6 Literature Search（文献検索）](#56-literature-search文献検索)
    - [5.7 Report（レポート）](#57-reportレポート)
 6. [CLI操作ガイド](#6-cli操作ガイド)
@@ -43,7 +43,7 @@
    - [7.3 分割方式（Split Policies）](#73-分割方式split-policies)
 8. [結果の読み方・解釈ガイド](#8-結果の読み方解釈ガイド)
    - [8.1 妥当性スコア（Validity Score）の6要素](#81-妥当性スコアvalidity-scoreの6要素)
-   - [8.2 OOD（外挿領域）の判定基準](#82-ood外挿領域の判定基準)
+   - [8.2 OOD（分布シフト領域）の判定基準](#82-ood分布シフト領域の判定基準)
    - [8.3 R$^2$・RMSEの読み方](#83-r2rmseの読み方)
    - [8.4 訓練スコアとテストスコアの差（過学習の兆候）](#84-訓練スコアとテストスコアの差過学習の兆候)
 9. [システム統合（自動動作）](#9-システム統合自動動作)
@@ -67,7 +67,7 @@
 
 ### 1.1 このプラットフォームについて
 
-**Extrapolation Discovery Platform** は、材料科学における機械学習モデルの**特徴量妥当性**を定量的に評価し、**外挿（OOD: Out-of-Distribution）領域**を可視化するツールです。
+**Feature Design Framework for Materials Machine Learning** は、材料科学における機械学習モデルの**特徴量セット評価**を定量的に行い、**分布シフト（OOD: Out-of-Distribution）領域**を可視化するツールです。
 
 > **目的**: 最も精度の高いモデルを選ぶことではなく、**未知領域に対して壊れない設計**を作ることです。
 
@@ -96,10 +96,10 @@ HEA（高エントロピー合金）を例題として、以下の処理を**ボ
 | **Feature Set（特徴量セット）** | モデルに入力する変数の組み合わせ | FS_BASE = VEC, dH_mix, dS_mix, delta_r 等、FS_MAGPIE = 132元素特徴量 |
 | **Workflow（ワークフロー）** | 機械学習モデルの種類 | WF-LIN（線形）、WF-XGB（XGBoost）、WF-ENS（アンサンブル） |
 | **Split Policy（分割方式）** | データの訓練/テスト分割方法 | RandomCV、CompositionBlock、ElementExclusion |
-| **OOD（Out-of-Distribution）** | 訓練データの分布から外れたサンプル（外挿領域） | kNN距離が閾値を超えるデータ点 |
+| **OOD（Out-of-Distribution）** | 訓練データの分布から外れたサンプル（高距離領域） | kNN距離が閾値を超えるデータ点 |
 | **Validity Score（妥当性スコア）** | 特徴量セットの総合品質スコア（0〜1） | 6要素の加重平均 |
 | **Parity Plot** | 予測値 vs 実測値の散布図 | 対角線に近いほど精度が高い |
-| **KPI（Key Performance Indicator）** | 性能の主要指標 | Total Runs, Best Score, OOD Samples |
+| **KPI（Key Performance Indicator）** | 性能の主要指標 | Total Runs, Best Score, Distance-based OOD candidates |
 | **Seed（乱数シード）** | 再現性を確保するための初期値 | 42, 123, 456 |
 
 ### 1.3 v2.0 での主な変更点
@@ -262,7 +262,7 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 | **Data Summary** | データセットの要約統計量・可視化 | 特徴量の分布・相関を確認するとき |
 | **Config & Run** | 実験パラメータ設定と実行 | 実験を開始するとき |
 | **Results** | 詳細な結果テーブルとグラフ | 個別のランを詳しく調べるとき |
-| **OOD Map** | 外挿領域の可視化 | OODサンプルの分布を確認するとき |
+| **Feature-Space Coverage** | 高距離領域の可視化 | OODサンプルの分布を確認するとき |
 | **Literature Search** | 文献データベース検索 | 類似研究を調べるとき |
 | **Report** | レポートのプレビューとダウンロード | 結果を保存・共有するとき |
 
@@ -286,9 +286,9 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 | **Total Runs** | 左上KPI | 実行されたランの総数 |
 | **Best Feature Set** | 中央上KPI | 最も良い特徴量セット名 |
 | **Best Total Score** | 中央右KPI | 最高の妥当性スコア |
-| **OOD Samples** | 右上KPI | OODと判定されたサンプル数 |
+| **Distance-based OOD candidates** | 右上KPI | OODと判定されたサンプル数 |
 | **System Details** | KPIの下（折りたたみ） | MLflow/Feast/MIntの動作状態 |
-| **Feature Validity Ranking** | 中段グラフ | 特徴量セットごとの妥当性スコア横棒グラフ |
+| **Feature-Set Evaluation** | 中段グラフ | 特徴量セットごとの評価スコア横棒グラフ |
 | **Performance Heatmap** | 下段グラフ | 特徴量セット×分割方式の性能ヒートマップ |
 | **Heatmap Metric** | 最下部ドロップダウン | ヒートマップのメトリクス切替 |
 
@@ -303,9 +303,9 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 - **Total Runs = 1404**: 3シード x 6特徴量セット x 3分割方式 x 6ワークフロー x (複数fold) の組み合わせ
 - **Best Feature Set = FS_ELECTRON**: 電子構造特徴量セットが最も良い総合スコア
 - **Best Total Score = 0.5238**: 妥当性スコア（0〜1の範囲、高いほど良い）
-- **OOD Samples = 21**: OODと判定されたサンプル数（各特徴量セットでのOOD検出結果の合計）
+- **Distance-based OOD candidates = 21**: OODと判定されたサンプル数（各特徴量セットでのOOD検出結果の合計）
 
-> **ポイント**: Feature Validity RankingグラフにはFS_MAGPIEが表示され、他の特徴量セットとの比較が可能です。
+> **ポイント**: Feature-Set EvaluationグラフにはFS_MAGPIEが表示され、他の特徴量セットとの比較が可能です。
 
 #### Performance Heatmap（性能ヒートマップ）
 
@@ -444,7 +444,7 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 #### フィルタとテーブル（実験実行後）
 
 ![Results タブ](screenshots_v4/21_results_magpie_ranking.png)
-*図5.4.1: Results画面 — Feature Validity RankingにFS_MAGPIEが6位として表示（Total=0.3404）*
+*図5.4.1: Results画面 — Feature-Set EvaluationにFS_MAGPIEが6位として表示（Total=0.3404）*
 
 **画面上部のフィルタ**:
 - **Workflow Filter**: ワークフロー（WF-LIN, WF-XGB, WF-ENS, MInt-LIN, MInt-XGB, MInt-ENS）で絞り込み
@@ -453,7 +453,7 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 
 > **ヒント**: 「All」を選択すると全データが表示されます。複数のフィルタを組み合わせて、特定の条件の結果だけを素早く確認できます。
 
-#### Feature Validity Ranking テーブル
+#### Feature-Set Evaluation テーブル
 
 特徴量セットごとの**妥当性スコア**をランキング形式で表示します。
 
@@ -465,7 +465,7 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 | **Stability** | シード間の安定性 | 高いほど良い（1.0 = 完全安定） |
 | **Generalisation** | 汎化性能（Train vs Test差） | 高いほど良い |
 | **Leak Penalty** | OODリーク減点 | 0が理想（低いほど良い） |
-| **Extrap. Safety** | 外挿安全性スコア | 高いほど良い |
+| **Gen. Robustness** | 汎化頑健性スコア | 高いほど良い |
 | **Total** | 総合スコア（上記の加重平均） | 高いほど良い |
 
 > **実験例での結果**: FS_ELECTRON（Total=0.5238）が1位、FS_MAGPIE（Total=0.3404）が6位。MAGPIEは132特徴量と多いため、次元の呪いの影響でランキングが下がる場合があります。特徴量選択との併用が推奨されます。
@@ -497,30 +497,30 @@ GUIは **7つのタブ** で構成されています。以下、各タブの操�
 - **破線（y = x）**: 完全一致線。この線上にデータ点が乗っていれば、予測と実測が完全に一致
 - **点の散らばり**: 対角線から離れるほど、予測の誤差が大きい
 
-> **解釈のコツ**: 低温側（600〜700付近）で対角線に近く、高温側（900〜1000付近）で散らばりが大きい場合は、高温領域のデータが不足している可能性があります。これはまさに「外挿（OOD）」の問題です。
+> **解釈のコツ**: 低温側（600〜700付近）で対角線に近く、高温側（900〜1000付近）で散らばりが大きい場合は、高温領域のデータが不足している可能性があります。これはまさに「分布シフト（OOD）」の問題です。
 
 ---
 
-### 5.5 OOD Map（外挿マップ）
+### 5.5 Feature-Space Coverage（特徴空間カバレッジ）
 
 OOD（Out-of-Distribution）サンプルの分布をPCA 2次元マップで可視化する画面です。
 
 #### 初期状態（実験実行前）
 
-![OOD Map 初期状態](screenshots_v4/03_ood_map_initial.png)
-*図5.5.0: OOD Map初期状態 — 実験実行前はマップが空*
+![Feature-Space Coverage 初期状態](screenshots_v4/03_ood_map_initial.png)
+*図5.5.0: Feature-Space Coverage初期状態 — 実験実行前はマップが空*
 
 #### データ表示状態（実験実行後）
 
-![OOD Map ドロップダウン](screenshots_v4/22_ood_map_magpie_dropdown.png)
-*図5.5.1: OOD Map — Feature SetドロップダウンにFS_MAGPIEが追加されている*
+![Feature-Space Coverage ドロップダウン](screenshots_v4/22_ood_map_magpie_dropdown.png)
+*図5.5.1: Feature-Space Coverage — Feature SetドロップダウンにFS_MAGPIEが追加されている*
 
 **画面構成**:
 
 | 要素 | 説明 |
 |------|------|
-| **Feature Set for OOD Map** | 表示する特徴量セットの選択ドロップダウン（FS_MAGPIE含む6選択肢） |
-| **OOD Map (PCA)** | PCA 2次元散布図。軸はPC1, PC2（各軸の寄与率%つき） |
+| **Feature Set for Feature-Space Coverage** | 表示する特徴量セットの選択ドロップダウン（FS_MAGPIE含む6選択肢） |
+| **Feature-Space Coverage (PCA)** | PCA 2次元散布図。軸はPC1, PC2（各軸の寄与率%つき） |
 | **色スケール** | OODスコア。0（緑、In-Distribution）〜 0.6+（赤、OOD） |
 | **大きい丸** | 訓練データ |
 | **小さい丸** | テスト（クエリ）データ |
@@ -611,17 +611,17 @@ Unregistered features: vec, ds_mix, tm_avg, cold_work_pct, ...
 #### レポートプレビュー（上部）
 
 ![Report 上部](screenshots_v4/15_report_with_data.png)
-*図5.7.1: Report画面上部 — 実験サマリーとFeature Set Validity Ranking（FS_MAGPIE含む6セット）*
+*図5.7.1: Report画面上部 — 実験サマリーとFeature-Set Evaluation（FS_MAGPIE含む6セット）*
 
 **レポートの内容構成**:
 
 | セクション | 内容 |
 |-----------|------|
 | **1. Experiment Summary** | 総ラン数（1404）、特徴量セット一覧（6種類）、ワークフロー一覧、分割方式、所要時間 |
-| **2. Feature Set Validity Ranking** | 6要素スコアの表（FS_MAGPIE含む） |
+| **2. Feature-Set Evaluation** | 6要素スコアの表（FS_MAGPIE含む） |
 | **3. Split-wise Performance Comparison** | 分割方式別のRMSE, R$^2$の比較表 |
 | **4. OOD Analysis** | OODサンプル数、閾値、判定結果（各セットのOOD率） |
-| **5. OOD Region Candidate Compositions** | OODとして検出された合金組成の候補リスト |
+| **5. High-Distance Candidate Compositions** | OODとして検出された合金組成の候補リスト |
 | **6. Figures** | 生成されたプロット画像 |
 | **7. Literature Near-Neighbour WF Evidence** | 文献検索の類似ワークフロー |
 
@@ -807,11 +807,11 @@ MagpieData {statistic} {property}
 
 | 分割方式 | 説明 | 何を検証できるか |
 |---------|------|----------------|
-| **RandomCV** | ランダムに5分割交差検証 | 標準的な予測精度 |
-| **CompositionBlock** | 類似組成をブロックにまとめて分割 | 組成空間での汎化性能 |
-| **ElementExclusion** | 指定元素を含むデータをテストに分離 | 未知元素への外挿能力 |
+| **Random CV (in-distribution reference)** (`RandomCV`) | ランダムに5分割交差検証 | 標準的な予測精度 |
+| **Composition-space block holdout** (`CompositionBlock`) | 類似組成をブロックにまとめて分割 | 組成空間での汎化性能 |
+| **Leave-one-element-out** (`ElementExclusion`) | 指定元素を含むデータをテストに分離 | 未知元素での分布シフト下の汎化 |
 
-> **重要**: ElementExclusionは最も厳しいテストです。ここで性能が大きく下がる特徴量セットは、新しい元素系への外挿に弱いことを示しています。
+> **重要**: ElementExclusionは最も厳しいテストです。ここで性能が大きく下がる特徴量セットは、新しい元素系での分布シフト下の汎化に弱いことを示しています。
 
 ---
 
@@ -827,33 +827,33 @@ MagpieData {statistic} {property}
 | **Stability** | +0.20 | シード間のスコア標準偏差の逆数 | 大きい = シードを変えても結果が安定 |
 | **Generalisation** | +0.30 | 1 - (test_RMSE - train_RMSE)/train_RMSE | 大きい = 過学習していない |
 | **Leak Penalty** | −0.15 | OODリーク率の減点 | 0 = リークなし（理想） |
-| **Extrap. Safety** | +0.20 | ElementExclusion分割での性能維持率 | 大きい = 外挿に強い |
+| **Gen. Robustness** | +0.20 | ElementExclusion分割での性能維持率 | 大きい = 分布シフト下で頑健 |
 | **Multicollinearity Penalty** | −0.10 | VIF > 10 の特徴量比率 | 0 = 多重共線性なし（理想） |
 
 **計算式**:
 ```
 Total = 0.30 x Effect Size + 0.20 x Stability + 0.30 x Generalisation
-      - 0.15 x Leak Penalty + 0.20 x Extrap. Safety
+      - 0.15 x Leak Penalty + 0.20 x Gen. Robustness
       - 0.10 x Multicollinearity Penalty
 ```
 
 > **実験例での解釈**: FS_ALL (Total=0.3428) vs FS_SIZE (Total=0.2849)。FS_ALLはStabilityが0.764と高く（FS_SIZEは0.753）、Generalisationが0.3（FS_SIZEは0.1）と大きく優れています。
 
-### 8.2 OOD（外挿領域）の判定基準
+### 8.2 OOD（分布シフト領域）の判定基準
 
 OOD検出はkNN（k近傍法）距離ベースで行われます：
 
 1. 訓練データ間のkNN距離分布を計算
 2. 距離分布の95パーセンタイルを閾値として設定
 3. テストデータの各サンプルについてkNN距離を計算
-4. 閾値を超えたサンプルをOOD（外挿）と判定
+4. 閾値を超えたサンプルをOOD（高距離）と判定
 
 > **注意**: 現在のOOD検出は交差検証の **fold-0のみ** を使用しています。これは計算コストと速度のトレードオフによる設計判断です。fold-0の分割がデータの偏りを含む場合、OOD率が実際と異なる可能性があります。将来のバージョンで全fold平均への拡張を予定しています。
 
 **OOD率の解釈**:
-- **0%**: テストデータは訓練データの分布内（外挿なし）
-- **1〜10%**: 少数のサンプルが分布端にある（軽度の外挿）
-- **10%以上**: 有意な外挿領域がある（追加データ取得を検討）
+- **0%**: テストデータは訓練データの分布内（分布シフトなし）
+- **1〜10%**: 少数のサンプルが分布端にある（軽度の分布シフト）
+- **10%以上**: 有意な分布シフト領域がある（追加データ取得を検討）
 
 ### 8.3 R$^2$・RMSEの読み方
 

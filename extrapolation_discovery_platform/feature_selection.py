@@ -1,5 +1,5 @@
 """
-Feature Selection Module for Extrapolation Discovery Platform
+Feature Selection Module for the Feature Design Framework
 特徴量選択モジュール
 
 Implements four model selection / feature selection algorithms:

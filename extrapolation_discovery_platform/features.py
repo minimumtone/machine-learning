@@ -1,5 +1,5 @@
 """
-Feature Engineering Module for HEA Extrapolation Platform
+Feature Engineering Module for the HEA Feature Design Framework
 HEA特徴量エンジニアリングモジュール
 
 Provides systematic feature set construction from alloy compositions:

@@ -1,5 +1,5 @@
 """
-Gradio Dashboard for Extrapolation Discovery Platform
+Gradio Dashboard for the Feature Design Framework
 Gradio dashboard
 
 Launch::
@@ -13,7 +13,7 @@ Tab-based layout (3-phase workflow):
   2. 解析 (Analysis)
      - Dashboard     - KPI cards + validity ranking + performance heatmap
      - Results       - Run results table + filters + parity plot
-     - OOD Map       - Interactive PCA scatter + OOD candidates table
+     - Feature-Space Coverage - Interactive PCA scatter + OOD candidates table
      - FS Comparison - Feature selection + physical origins
   3. 後処理 (Post-processing)
      - Literature    - Query UI + filters + feature frequency
@@ -22,7 +22,7 @@ Tab-based layout (3-phase workflow):
 Design decisions (GUI review fixes):
   - gr.State replaces module-global _SESSION for multi-user isolation (#1)
   - Slider value cast to int to avoid TypeError (#2)
-  - OOD Map uses actual split indices from runner (#3)
+  - Feature-Space Coverage uses actual split indices from runner (#3)
   - InputScope filter choices match schema enum values (#4)
   - theme= passed to gr.Blocks(), not launch() (#5)
   - app.queue() enables async execution (#6)
@@ -455,7 +455,7 @@ def _build_physical_interpretation_md(
             f"- 効果量: {_fmt_score(best.effect_size)} / "
             f"安定性: {_fmt_score(best.stability)} / "
             f"汎化性: {_fmt_score(best.generalisation)}\n"
-            f"- 外挿安全性: {_fmt_score(best.extrapolation_safety)} / "
+            f"- 汎化頑健性: {_fmt_score(best.extrapolation_safety)} / "
             f"リークペナルティ: {_fmt_score(best.leak_penalty)}\n"
             f"- 多重共線性ペナルティ: {_fmt_score(best.multicollinearity_penalty)}"
         )
@@ -555,7 +555,7 @@ def _build_physical_interpretation_md(
         if avg_ratio > 0.2:
             lines.append(
                 "**注意**: OOD比率が20%超です。データの分布がトレーニング領域から"
-                "大きく外れている可能性があり、外挿予測の信頼性に注意が必要です。"
+                "大きく外れている可能性があり、分布シフト下の予測の信頼性に注意が必要です。"
             )
         elif avg_ratio > 0.1:
             lines.append(
@@ -579,7 +579,7 @@ def _build_physical_interpretation_md(
         "0.30 \\times \\text{Effect Size} "
         "+ 0.20 \\times \\text{Stability} "
         "+ 0.30 \\times \\text{Generalisation} "
-        "+ 0.20 \\times \\text{Extrap. Safety} "
+        "+ 0.20 \\times \\text{Generalization Robustness} "
         "- 0.15 \\times \\text{Leak Penalty} "
         "- 0.10 \\times \\text{MC Penalty}$$\n"
     )
@@ -661,13 +661,13 @@ def _build_physical_interpretation_md(
         "Total スコアから **減算** されます。\n"
     )
 
-    # 5. Extrapolation Safety
-    lines.append("#### 5. Extrapolation Safety（外挿安全性）— 重み 0.20\n")
+    # 5. Generalization Robustness
+    lines.append("#### 5. Generalization Robustness（汎化頑健性）— 重み 0.20\n")
     lines.append(
         "OOD サンプルに対する **誤差スコア** と **不確実性スコア** の加重平均です。\n"
     )
     lines.append(
-        "$$\\text{Extrap. Safety} = 0.6 \\times \\text{err\\_score} "
+        "$$\\text{Generalization Robustness} = 0.6 \\times \\text{err\\_score} "
         "+ 0.4 \\times \\text{unc\\_score}$$\n"
     )
     lines.append(
@@ -733,7 +733,7 @@ def _build_physical_interpretation_md(
         "| Effect Size | 特徴量セットの違いによる性能差が大きい | 差が小さい |\n"
         "| Stability | シード間での結果が安定 | 結果のばらつきが大きい |\n"
         "| Generalisation | 分割方法に依らず汎化 | 特定分割でのみ好成績 |\n"
-        "| Extrap. Safety | OOD領域でも精度を維持 | 外挿で精度低下 |\n"
+        "| Gen. Robustness | 高距離サンプルでも精度を維持 | 分布シフトで精度低下 |\n"
         "| Leak Penalty | データリークの疑い（要注意） | リーク無し |\n"
         "| MC Penalty | 多重共線性が高い（線形モデル不安定） | 共線性なし |"
     )
@@ -864,14 +864,14 @@ def _refresh_ood_data(
         ood_split_indices = session.get("ood_split_indices", {})
 
         if not ood_results or features_df is None:
-            return None, "No OOD results. Run experiment first.", pd.DataFrame()
+            return None, "No OOD results. Run an experiment first.", pd.DataFrame()
 
         ood_res = ood_results.get(fs_key)
         if ood_res is None:
             available = list(ood_results.keys())
             return (
                 None,
-                f"No OOD for {fs_key}. Available: {available}",
+                f"No distance-based OOD candidates for {fs_key}. Available: {available}",
                 pd.DataFrame(),
             )
 
@@ -905,7 +905,7 @@ def _refresh_ood_data(
             X_train = pd.DataFrame(X_fs_arr[train_idx], columns=available_cols)
             X_query = pd.DataFrame(X_fs_arr[test_idx], columns=available_cols)
         else:
-            logger.warning("No OOD split indices for %s, using heuristic", fs_key)
+            logger.warning("No OOD split indices for %s; using heuristic", fs_key)
             n_ood = len(ood_res.composite_scores)
             X_train = pd.DataFrame(
                 X_fs_arr[:len(X_fs_arr) - n_ood], columns=available_cols,
@@ -918,7 +918,7 @@ def _refresh_ood_data(
             X_train, X_query,
             composite_scores=ood_res.composite_scores,
             is_ood=ood_res.is_ood,
-            title=f"OOD Map (PCA) -- {fs_key}",
+            title=f"Feature-Space Coverage (PCA) -- {fs_key}",
         )
 
         summary = (
@@ -1032,7 +1032,7 @@ def _export_ood_csv(
             )
         else:
             export_df = pd.DataFrame()
-        # Sort: OOD samples first, then by score descending
+        # Sort: distance-based OOD candidates first, then by score descending
         export_df = export_df.sort_values(
             ["is_OOD", "OOD_Score"], ascending=[False, False],
         ).reset_index(drop=True)
@@ -2315,12 +2315,12 @@ def create_app() -> gr.Blocks:
 
     # Gradio 6.0: theme moved from Blocks() to launch().
     with gr.Blocks(
-        title=f"Extrapolation Discovery Platform ({_GUI_VERSION_TAG})",
+        title=f"Feature Design Framework for Materials Machine Learning ({_GUI_VERSION_TAG})",
     ) as app:
         gr.Markdown(
-            f"# Extrapolation Discovery Platform &ensp;"
+            f"# Feature Design Framework for Materials Machine Learning &ensp;"
             f"<small style='color:#888;'>({_GUI_VERSION_TAG})</small>\n"
-            "Feature Validity Evaluation & OOD Detection Dashboard\n\n"
+            "Feature-Set Evaluation & Generalization Diagnostics Dashboard\n\n"
             "**使い方**: 上のタブから操作を選択してください。"
             "まず **Config & Run** でデータをロード＆解析実行し、"
             "結果を **Results** / **Dashboard** / **OOD & Individual** 等のタブで確認します。"
@@ -2337,7 +2337,7 @@ def create_app() -> gr.Blocks:
                     "このプラットフォームは、複数のMLワークフロー×特徴量セット×"
                     "分割ポリシーの組み合わせを網羅的に実行し、"
                     "特徴量の妥当性を評価します。\n"
-                    "OOD検出で外挿危険領域を特定し、文献検索で最適記述子を探索します。"
+                    "OOD検出で高距離領域を特定し、文献検索で候補記述子を評価します。"
                 )
 
                 gr.Markdown(
@@ -2975,39 +2975,39 @@ def create_app() -> gr.Blocks:
                         "### 分割ポリシー\n\n"
                         "**CompositionBlock**（推奨）: 組成空間でkMeansクラスタリングを行い、"
                         "類似組成がtrain/testに混入しないように分割する。"
-                        "真の外挿性能を評価できる。\n\n"
+                        "分布シフト下の汎化性能を評価できる。\n\n"
                         "**CompositionGroupCV**: 完全一致組成を同一グループとして"
                         "train/testから分離する。\n\n"
                         "**ElementExclusion**: 特定元素を含むサンプルをテストセットに割り当てる。"
-                        "特定元素系への外挿能力を評価する。\n\n"
+                        "特定元素系での汎化を評価する。\n\n"
                         "**RandomCV** ⚠️ デフォルト無効: ランダムk-fold交差検証。"
                         "以下の理由により通常は使用しない:\n"
                         "1. **データリーク**: 組成が類似した合金がtrain/testに混在し、"
                         "テスト性能が過大評価される\n"
                         "2. **評価スコアの歪み**: 汎化スコアはRandomCV vs CompositionBlockの"
-                        "比較で算出されるが、RandomCVを含めると真の外挿能力でなく"
+                        "比較で算出されるが、RandomCVを含めると分布シフト下の汎化でなく"
                         "ランダム分割の分散を反映してしまう\n"
                         "3. **冗長性**: CompositionBlockが既に厳密なk-fold CVを提供している\n\n"
                         "ベースライン比較や診断目的のみ使用してください。"
                     )
                     with gr.Row():
                         sp_cb_check = gr.Checkbox(
-                            label="✅ CompositionBlock（推奨）",
+                            label="✅ Composition-space block holdout（推奨）",
                             value=True,
                             info="組成空間kMeansクラスタによる厳密分割",
                         )
                         sp_ee_check = gr.Checkbox(
-                            label="✅ ElementExclusion",
+                            label="✅ Leave-one-element-out",
                             value=True,
-                            info="特定元素を含む試料を全て除外する zero-shot 元素外挿テスト（train≥50・test≤40% を満たす元素のみ）",
+                            info="特定元素を含む試料を全て除外する zero-shot 元素汎化テスト（train≥50・test≤40% を満たす元素のみ）",
                         )
                         sp_cg_check = gr.Checkbox(
-                            label="CompositionGroupCV（同一組成を train/test で完全分離）",
+                            label="Composition-group-disjoint CV（同一組成を train/test で完全分離）",
                             value=True,
                             info="組成が完全一致する試料をグループ化し、未知組成への汎化を測る（RandomCV と CompositionBlock の中間の難易度）",
                         )
                         sp_rc_check = gr.Checkbox(
-                            label="⚠️ RandomCV（リーク懸念あり・デフォルト無効）",
+                            label="⚠️ Random CV (in-distribution reference；リーク懸念あり・デフォルト無効)",
                             value=False,
                             info="ランダムCV — ベースライン/診断用途のみ",
                         )
@@ -3174,7 +3174,7 @@ def create_app() -> gr.Blocks:
                     "### ⑤ 特徴量セット妥当性ランキング\n"
                     "総合スコア（効果量・安定性・汎化性・リーク懸念）で降順ソート。"
                 )
-                validity_table = gr.Dataframe(label="Feature Validity Ranking")
+                validity_table = gr.Dataframe(label="Feature-Set Evaluation")
 
                 # ── ④ 全Runテーブル ──────────────────────────────────────────
                 with gr.Accordion("全Runテーブル (All Runs)", open=False):
@@ -3297,7 +3297,7 @@ def create_app() -> gr.Blocks:
                         )
 
             with gr.Tab("Dashboard"):
-                gr.Markdown("## Dashboard -- KPIs & Feature Validity")
+                gr.Markdown("## Dashboard -- KPIs & Feature-Set Evaluation")
                 gr.Markdown(
                     "**Config & Run** タブで解析を実行すると、"
                     "このページに結果が表示されます。"
@@ -3314,7 +3314,7 @@ def create_app() -> gr.Blocks:
                         label="Best Total Score", value="--", interactive=False,
                     )
                     kpi_ood_count = gr.Textbox(
-                        label="OOD Samples", value="--", interactive=False,
+                        label="Distance-based OOD candidates", value="--", interactive=False,
                     )
 
                 with gr.Accordion(
@@ -3325,7 +3325,7 @@ def create_app() -> gr.Blocks:
                         _build_integration_status_md(None),
                     )
 
-                validity_plot = gr.Plot(label="Feature Validity Ranking")
+                validity_plot = gr.Plot(label="Feature-Set Evaluation")
                 heatmap_plot = gr.Plot(label="Performance Heatmap (RMSE Test)")
                 with gr.Row():
                     heatmap_metric = gr.Dropdown(
@@ -3370,9 +3370,9 @@ def create_app() -> gr.Blocks:
 
             with gr.Tab("OOD & Individual"):
                 with gr.Tabs():
-                    with gr.Tab("OOD Map"):
+                    with gr.Tab("Feature-Space Coverage"):
                         gr.Markdown(
-                            "## OOD (Out-of-Distribution) Map & Candidates",
+                            "## Feature-Space Coverage (PCA) & Candidates",
                         )
 
                         fs_selector = gr.Dropdown(
@@ -3381,9 +3381,9 @@ def create_app() -> gr.Blocks:
                                 "FS_ELECTRON", "FS_ALL", "FS_MAGPIE",
                             ],
                             value="FS_ALL",
-                            label="Feature Set for OOD Map",
+                            label="Feature Set for Feature-Space Coverage",
                         )
-                        ood_plot = gr.Plot(label="OOD Map (PCA)")
+                        ood_plot = gr.Plot(label="Feature-Space Coverage (PCA)")
                         with gr.Row():
                             ood_summary = gr.Textbox(
                                 label="OOD Summary", interactive=False,
@@ -3392,7 +3392,7 @@ def create_app() -> gr.Blocks:
 
                         with gr.Row():
                             ood_refresh_btn = gr.Button(
-                                "Refresh OOD Map", variant="primary",
+                                "Refresh Feature-Space Coverage", variant="primary",
                             )
                             ood_csv_btn = gr.Button(
                                 "\u2b07 Download OOD Candidates CSV",
@@ -3506,7 +3506,7 @@ def create_app() -> gr.Blocks:
                         ind_parity_plot = gr.Plot(label="Parity Plot (Test Set)")
 
                         gr.Markdown("#### 🗺️ OOD マップ")
-                        ind_ood_plot = gr.Plot(label="OOD Map (PCA)")
+                        ind_ood_plot = gr.Plot(label="Feature-Space Coverage (PCA)")
                         ind_ood_summary = gr.Textbox(
                             label="OOD サマリー", interactive=False,
                         )
@@ -3702,7 +3702,7 @@ def create_app() -> gr.Blocks:
                                         X_tr_ood, X_te_ood,
                                         composite_scores=ood.composite_scores,
                                         is_ood=ood.is_ood,
-                                        title=f"OOD Map — {wf_name} / {fs_name}",
+                                        title=f"Feature-Space Coverage — {wf_name} / {fs_name}",
                                     )
                                     ood_summary_text = (
                                         f"Total: {ood.n_total} | "
@@ -3853,7 +3853,7 @@ def create_app() -> gr.Blocks:
                             ],
                         )
 
-                with gr.Tab("🔭 OOD Feature Discovery"):
+                with gr.Tab("🔭 Candidate-Feature Evaluation (OOD)"):
                     gr.Markdown(
                         "## OOD 特徴量探索\n\n"
                         "OOD 検出後に境界付近のサンプルを訓練データに追加し、"
