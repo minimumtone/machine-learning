@@ -1,0 +1,47 @@
+v15 verification log (2026-09-02, language statistics + independent-EN difficulty relabel)
+================================================================================
+
+Scope of v15 (vs v14):
+- Non-translated English 25-query set: difficulty labels recomputed from gold SQL
+  with the unified complexity score (scripts/compute_unified_difficulty.py):
+  Easy 13 / Medium 8 / Hard 4 / Very Hard 0 (was 6/7/7/5). Questions, gold SQL,
+  expected results and the three saved runs are unchanged; overall stays
+  96.5 +/- 2.3% (95.2 / 95.2 / 99.2). Run provenance dataset_sha256 was re-pinned
+  (dataset_relabel_note added); per-query outputs byte-identical to v14.
+- Paired ja/en statistics added (scripts/compute_language_stats.py, deterministic,
+  seed 20260602, 100000 bootstrap resamples): mean diff (EN-JA) -2.0 pp,
+  exact Wilcoxon signed-rank p = 0.216 (13 non-zero pairs),
+  bootstrap 95% CI [-5.8, +1.6] pp (contains 0). Per-difficulty (exploratory):
+  Easy -1.3 pp (nnz 2), Medium -3.3 pp (nnz 2), Hard +0.2 pp (nnz 6),
+  Very Hard -4.1 pp (nnz 3). Integrated into SSOT as
+  language_evaluation.paired_stats via compute_all_figures.py.
+- Japanese manuscript stam-m_ja.tex updated accordingly (statistics, CI-contains-0
+  interpretation, non-comparability of the 25-query set, structural-complexity
+  discussion in 4.3.1, footnote for Table 1 vs paired-JA subgroup differences,
+  Japanese few-shot pool kept fixed, Table S3 header, contributions/section title,
+  limitations item (8) softened). English stam-m.tex intentionally NOT synchronized
+  in v15 (full SSOT-based resync planned before submission; not submission-ready).
+
+Verification results (fresh extraction of the v15 ZIP, /home/ubuntu/v15_fresh2):
+- static verify_all.py --static-only: PASS=8 WARN=0 FAIL=0 SKIP=0
+- FULL_DB_TEST=1 verify_all.py --warnings-as-errors (4 DSNs: main / transfer /
+  obfuscated transfer / MP): PASS=18 WARN=0 FAIL=0 SKIP=0 (incl. pytest_full_db exit 0)
+- gen_independent_en_expected.py: all 25 independent EN gold queries verified OK
+- compute_unified_difficulty.py: match 25/25
+- summarize_language_eval.py / compute_language_stats.py rerun from fresh
+  extraction reproduce byte/value-identical outputs (deterministic)
+- paper_scripts/verify_ssot.py: 5/5 checks passed
+- paper_scripts/verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+- default verify_paper_numbers.py (both languages): exit 1 -- EXPECTED, because
+  the English manuscript is intentionally stale in v15. "gating 0" applies to the
+  Japanese manuscript only and does not mean both languages are synchronized.
+- ruff check on changed scripts: pass
+- Japanese PDF rebuild (LuaLaTeX + BibTeX): exit 0, 37 pages,
+  0 undefined references / citations
+- ZIP file-set diff vs staging tree (find | sort | comm): identical after
+  intentional exclusions (.venv, __pycache__, caches, LaTeX aux); v15 adds only
+  scripts/compute_unified_difficulty.py, scripts/compute_language_stats.py,
+  evaluation/language_paired_stats.json relative to v14 (no deletions).
+- Saved run immutability: independent_en_run{1,2,3}.json results identical to
+  v14 except the provenance dataset_sha256 re-pin described above; all paired
+  ja/en run files byte-identical to v14.

@@ -1,0 +1,87 @@
+v17 verification log — subset relation, post-hoc proxy, ablation stats sync
+Date: 2026-09-02 (UTC)
+
+Scope: external-review fixes on top of v16. No paid LLM evaluations were
+rerun; all model outputs are the saved runs.
+
+1. Main-evaluation / independent-100 subset relation (manuscript)
+   - Verified from packaged data: the 100 independently designed queries
+     (q_expert_001..q_expert_100 in evaluation/expert_evaluation_dataset.jsonl)
+     are a complete subset of the 245-query main corpus
+     (evaluation/main_evaluation_dataset.jsonl): 100/100 IDs contained,
+     gold SQL identical 100/100. Unique question count is 245, not 345.
+   - stam-m_ja.tex rewritten accordingly:
+     * Sec. on query design: the main evaluation uses an integrated
+       245-query corpus; 145 queries were designed by the authors and 100
+       by a co-author not involved in the pipeline implementation.
+     * Independent-evaluation section: the 100 independent queries are a
+       subset of the main 245 (explicitly "not an additional 100"); the
+       81.5% result is a separate rerun of that same subset.
+     * The 4.6 pp gap (86.1% vs 81.5%) is no longer interpreted as a
+       quantified self-reference bias: within the single main run the
+       independent subset scores 83.4% and the author-designed remainder
+       87.9% (4.5 pp), and run-to-run variation of the same 100 queries
+       (83.4% vs 81.5%) is mixed into any comparison against the overall
+       86.1%. The within-run comparison is reported as an exploratory
+       observation only.
+   - SSOT: compute_all_figures.py now derives the within-run breakdown
+     from evaluation/main_eval_with_sql.json
+     (independent_evaluation.main_run_subsets: expert_subset_pct=83.4,
+     n=100; author_designed_pct=87.9, n=145) and lists
+     evaluation/main_eval_with_sql.json and
+     evaluation/independent_eval_results.json in _meta.source_files.
+
+2. Unified complexity score demoted to a post-hoc proxy (manuscript)
+   - Sec. 2.1.2: difficulty tiers were assigned at design time based on
+     the structural complexity of the gold SQL; the additive score
+     (tables x3 + WHERE/HAVING x1 + GROUP BY x2 + EXISTS x3 + derived x3;
+     thresholds 8/12/17) was the guideline used then.
+     compute_unified_difficulty.py is described as a post-hoc,
+     reproducible approximation of that structural-complexity criterion,
+     NOT the deterministic generator of the historical labels: it agrees
+     with the design-time main-evaluation labels 144/245, mismatches are
+     almost all between adjacent tiers (counting-rule interpretation
+     differences). Only the 25 untranslated English queries were
+     machine-labeled with the script (match 25/25 by construction).
+
+3. Ablation statistics sync
+   - evaluation/ablation_multirun_stats.json regenerated via
+     scripts/eval_ablation_multirun.py --n-runs 5 (saved runs only):
+     significance_tests.no_fewshot.p_value is now the exact value
+     4.513278639706186e-12 (previously the stale auto/asymptotic
+     1.4269e-09); all other conditions unchanged
+     (no_dict 1.049041748046875e-04, no_reranker 1.953125e-02,
+     no_graph 1.484375e-01, no_nbest 8.125e-01, no_guard 1.0).
+     Holm-adjusted no_fewshot: 2.7079671838237118e-11.
+   - evaluation/significance_recomputed.json regenerated; _meta.test now
+     reads "Wilcoxon signed-rank on per-query mean accuracy, exact
+     distribution (SciPy method='exact')" (was "...method='auto'").
+   - Statistical-method note: the paired language test uses an exhaustive
+     tie-aware sign permutation (2^13 enumerations); the ablation tests
+     use the exact signed-rank distribution (SciPy method="exact").
+     For ties these definitions can differ (e.g. no_nbest: exact 0.8125
+     vs full sign permutation 0.625) but all significance conclusions are
+     identical under either definition.
+   - Determinism check: rerunning eval_ablation_multirun.py,
+     recompute_significance.py, compute_language_stats.py and
+     summarize_language_eval.py reproduces the packaged JSONs exactly
+     except for the generated_at timestamp.
+
+4. SSOT / audits
+   - paper/paper_data.json regenerated via paper_scripts/compute_all_figures.py.
+   - verify_ssot.py: 5/5 checks passed.
+   - verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+     (default no-argument run still exits 1 as expected while the English
+     manuscript is intentionally unsynchronized).
+   - ruff: clean. pytest (FULL_DB): 160 passed.
+   - verify_all.py --warnings-as-errors (4 DSNs: main, transfer,
+     obfuscated transfer, MP): PASS=18 WARN=0 FAIL=0.
+   - Independent EN gold: gen_independent_en_expected.py — all 25
+     verified OK; compute_unified_difficulty.py — match 25/25.
+   - Japanese PDF rebuilt with LuaLaTeX+BibTeX: 37 pages, 0 undefined
+     references/citations.
+
+5. Notes
+   - English manuscript paper/stam-m.tex remains intentionally
+     unsynchronized (to be fully resynced from the SSOT after the
+     Japanese manuscript is finalized); it is not submission-ready.

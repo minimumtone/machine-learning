@@ -1,0 +1,101 @@
+# v18 verification log — annotation-scope fix, difficulty_cte_folded rename, standardized subset comparison
+# Date: 2026-09-02 (UTC)
+
+## Changes in v18 (relative to v17, external review follow-up)
+
+Mandatory wording corrections:
+1. Author contributions: the co-author's 100 independently designed queries are
+   now described as "主評価245クエリに含まれる100クエリの独立設計" (a subset of
+   the 245-query main evaluation), not an additional validation set.
+2. Data availability and S10 step 3: both 100-query sets are explicitly
+   labelled "（主評価245クエリの部分集合）".
+3. §2.1.2: the manuscript no longer claims that all 245 main queries carry
+   explicit required-table / JOIN-path annotations. It now states that every
+   query has a gold SQL and expected result (JSON); required tables and JOIN
+   structure are derived from the gold SQL for the multi-axis comparison
+   (sec:multiaxis); explicit required-table/JOIN-path annotations are kept
+   separately only for the 100-query ablation subset. Verified against the
+   package: main_evaluation_dataset.jsonl 245 rows have no
+   expected_tables/required_tables/required_join_path/expected_columns fields;
+   evaluation_dataset.jsonl (ablation 100) has expected_tables 100/100 and
+   required_join_path 100/100.
+
+Catalog rename:
+4. build_query_catalog.py: column `difficulty_unified` renamed to
+   `difficulty_cte_folded` (design-time label with CTE queries folded to
+   very_hard). This is unrelated to the post-hoc structural-complexity proxy of
+   compute_unified_difficulty.py (144/245 agreement with historical labels);
+   the rename removes that ambiguity. query_catalog.csv / query_catalog.json
+   regenerated (300 rows; regeneration is byte-identical / deterministic).
+   `grep -rn difficulty_unified` over the staging tree (excluding
+   verification_logs/, whose logs mention the old name when describing this
+   rename): 0 hits.
+
+Supplement wording:
+5. 「統一複雑さスコア」→「設計時難易度層のpost-hoc複雑さ指標」 in the
+   supplement; §2.1.2 and the untranslated-EN-25 paragraph use the same
+   framing.
+6. significance_recomputed.json `_meta.test`: "exact distribution" →
+   "SciPy method='exact' distribution" (regenerated; content identical except
+   generated_at, timestamp restored).
+
+Exploratory standardized comparison (recomputed from existing saved outputs
+only; no paid LLM calls):
+7. compute_all_figures.py now derives, from the single saved main run
+   (main_eval_with_sql.json), per-difficulty recall for the independent-design
+   subset (100) and the author-designed complement (145), and a direct
+   standardization of both to the main-corpus difficulty mix (E43/M69/H69/VH64)
+   using unrounded stratum means:
+     independent standardized  83.9 %
+     author-designed           89.4 %   (difference 5.5 pp; VH stratum is the
+                                         only reversal: 85.7 vs 74.8)
+   Stored in paper_data.json under
+   independent_evaluation.main_run_subsets.{by_difficulty,
+   standardized_to_main_distribution}; manuscript §4.3.1 reports it as an
+   exploratory observation (not a causal self-reference-bias estimate).
+
+README notes:
+8. README_SQL.md documents that q_expert_101–115 keep historical ID naming but
+   are NOT part of the independent 100 (author-designed), and that
+   semantic_contract exists only on q_expert_014 / q_expert_038 (metadata
+   granularity, not a separate dataset).
+
+PDF:
+9. \usepackage[hidelinks]{hyperref}: link boxes removed from the Japanese PDF.
+
+## Verification results (staging, 2026-09-02)
+
+- ruff check sql_package + paper_scripts: All checks passed.
+- verify_all.py --warnings-as-errors (4 DSNs, FULL_DB_TEST=1):
+  PASS=18 WARN=0 FAIL=0 SKIP=0 — VERIFICATION PASSED
+  (includes gold-SQL/expected verification for all suites incl. independent
+  EN 25/25 and pytest_full_db).
+- pytest -q: 160 passed.
+- Deterministic regeneration: query_catalog.csv/json, language_paired_stats,
+  language_eval_summary byte-identical; significance_recomputed.json identical
+  except generated_at (restored).
+- verify_ssot.py: 5/5 checks passed.
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0.
+- verify_paper_numbers.py (default bilingual): exit 1 — expected; the English
+  manuscript (paper/stam-m.tex) is intentionally stale / not submission-ready.
+- LuaLaTeX + BibTeX rebuild: 37 pages, no undefined references/citations
+  (only JY3 italic font-shape info lines).
+- Source/package file-set comparison: staging vs ZIP differs only by
+  intentional exclusions (.ruff_cache, .pytest_cache, .venv, __pycache__,
+  LaTeX aux files).
+
+## Fresh-extraction results (from the rebuilt v18 ZIP, /home/ubuntu/v18_fresh)
+
+- verify_ssot.py: 5/5 checks passed.
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0.
+- verify_all.py --warnings-as-errors (4 DSNs, FULL_DB_TEST=1):
+  PASS=18 WARN=0 FAIL=0 SKIP=0 — VERIFICATION PASSED.
+- pytest -q: 160 passed.
+- ruff check: All checks passed.
+- compute_all_figures.py rerun from the extraction: paper_data.json identical
+  to the staging SSOT except generated_at/git_commit metadata.
+- build_query_catalog.py rerun from the extraction: query_catalog.csv
+  byte-identical.
+
+The final ZIP is rebuilt once after appending these results to this log; the
+only file changed by that rebuild is this log itself.

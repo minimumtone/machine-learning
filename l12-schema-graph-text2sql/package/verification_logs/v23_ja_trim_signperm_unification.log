@@ -1,0 +1,302 @@
+# v23 — Japanese manuscript trimming (Phase 0–4 of the agreed procedure), ablation p-value unification, verifier hardening
+Date: 2026-09-12 (UTC); §9 appended 2026-09-13
+Branch: devin/1789219794-ja-trim-phase0-4 (base: main after PR #563 merge = tag baseline-v22, e4993909)
+Japanese freeze tag: ja-final -> f80ac54c (moved from ab25c94d after the float-tie correction, §8)
+
+## Scope decisions (author, 2026-09)
+- Trimming only; English translation (procedure Phase 5+) NOT started. paper/stam-m.tex is intentionally
+  left unsynchronised (still carries the pre-v23 p-values); the default bilingual
+  `verify_paper_numbers.py` run therefore exits 1 by design — the valid check is `--tex stam-m_ja.tex`.
+  [Superseded in §11: the old stam-m.tex / stam-m.pdf were deleted; the default run now audits stam-m_ja.tex only
+  and exits 0.]
+- Submission / MDR / DICE / ORCID registrations are done by the author, not in this package.
+- No paid LLM re-evaluation. Saved model outputs, recall values, exact metrics and CIs are unchanged.
+  The only numeric change is the ablation p-value method (below), approved before the ja-final freeze.
+
+## 1. Manuscript trimming (paper/stam-m_ja.tex), 38 -> 30 pages
+Every deletion has a machine-readable replacement shipped in the package (INV-2):
+- Phase 1: new scripts/build_per_query_tables.py -> evaluation/per_query_results.csv (100 rows = the 100 ablation
+  queries, replacement for old Table S3; an earlier revision of this log wrongly said 245 rows, corrected in §10) and
+  evaluation/per_query_by_condition.csv (100 x 7 conditions, mean of 5 runs) with provenance; MANIFEST.md rows added.
+- Phase 2: Table S3 (100-row per-query detail) -> 10-row balanced excerpt; Table S4 (34-row ablation diff) removed;
+  S2 generated-SQL examples 3 -> 1 complete example (all generated SQL is in evaluation/generated_sql/);
+  S10 reproduction workflow compressed to one paragraph (step->script mapping kept in MANIFEST.md / README_SQL.md);
+  S8.1–S8.3 prose duplicating main-text sensitivity analysis removed (tables/figures kept);
+  S9.3 limitation details folded into main-text §4.7 (all 10 items retained).
+- Phase 3: 27-entry Ni3Al lattice-match table (Table 4) -> supplement, §3.7 compressed; §4.3.3 column-comparison
+  patterns -> supplement; §4.4 -> one paragraph; §2.1.1 compressed; safety/limitation notices pointer-ised;
+  Table 3 full 10 rows -> supplement with a 5-row excerpt in the main text (all SSOT values remain in TeX);
+  S1 unit-test table -> category paragraph; S9.2 shortened; S8.5 duplicate prose removed; Figs 1/2 -> 0.9\textwidth.
+- Kept by author decision: Algorithm S1 pseudocode; S9.4 synthetic ambiguous/contradictory examples
+  (they are not evaluation queries, so no CSV replacement exists).
+- Layout: two-column dictionary table (S7), side-by-side S5/S6 and S13/S14, CTE table split, Figs S3–S5 in one row,
+  footnotesize references; three overfull tables (tab:llm_only, tab:language_eval, tab:schema_map_dict) fitted with
+  \resizebox; tab:main_partition is a two-column table*.
+- G3 recorded as: all technical gates PASS, 30 pages vs the procedure's 26–28 estimate (+2). The estimate was an
+  effort target derived from character/table counts that assumed a 16-page main text (v22 measured 18) and did not
+  include 15–20% float whitespace per supplement page; STAM has no page limit.
+
+## 2. Ablation p-values unified with the language comparison (approved)
+- New shared helper scripts/sign_permutation.py: two-sided exact sign-permutation test of the Wilcoxon signed-rank
+  statistic over all 2^n_nz sign assignments, ties in |diff| handled by midranks (doubled ranks keep the DP integral),
+  SciPy-version independent. Used by recompute_significance.py, eval_ablation_multirun.py and compute_language_stats.py.
+- Why: SciPy `wilcoxon(method="exact")` uses the untied signed-rank table and is not exact when |diff| values tie
+  (they do: per-query 5-run means take values in {0, 0.2, ..., 1}).
+- Changes (only where ties exist):  no_fewshot 4.513e-12 -> 1.330e-12,  no_dict 1.049e-4 -> 9.918e-5,
+  no_nbest 0.8125 -> 0.625 (0.75 in the first v23 package; see §8).  no_reranker 0.0195 / no_guard 1.000 / no_graph 0.1484 unchanged.
+  Holm decisions unchanged (significant: no_fewshot, no_dict; no_reranker Holm p = 0.0781 unchanged).
+- Independently re-derived by the author (midrank DP) — identical values.
+- Canonical files: evaluation/ablation_multirun_stats.json (per-condition `significance_tests.<cond>.test =
+  sign-permutation-exact-midranks`; the file-level `_meta` block was added only in §10 — an earlier revision of this
+  log wrongly claimed it existed here), evaluation/significance_recomputed.json (`_meta.test_label`; primary p_value = sign-permutation; `p_value_scipy_exact_untied` and
+  `p_value_approx_legacy` are recomputed audit values; `p_value_stored_before_run` = value found in
+  ablation_multirun_stats.json when the script ran — this key was named `legacy_p_value` until the fresh-extraction
+  check below showed that a re-run silently overwrote it with the already-unified value; renamed so the audit
+  meaning is unambiguous and `--apply` is idempotent, commit 5305d7db).
+  Regenerated SSOT -> Table 1 / Fig. 3 caption / §2.5 / §4.7 / S10 text.
+- Language comparison (p = 0.193, bootstrap CI) byte-identical; all six PNG figures byte-identical to baseline-v22.
+
+## 3. verify_paper_numbers.py hardening (agreed)
+- `--tex` default None -> sorted glob of paper/*.tex; explicitly named missing TeX -> exit 1; zero TeX files -> exit 1;
+  audited files are printed. `--report` now lists every TeX numeric token (tex_in_json / tex_not_in_json /
+  json_missing_in_tex) so JA/EN token sets can be compared file-by-file.
+- Tests: +2 (tests/test_verify_paper_numbers.py) and +3 (tests/test_sign_permutation.py: brute-force enumeration,
+  untied SciPy exact agreement, hand-checkable values). Suite 160 -> 165 (-> 166 with the §8 regression test). The 166 figure appears in S1, Data
+  availability, S10 and SSOT `testing.n_unit_tests` (verified consistent; gating 0).
+
+## 4. Phase 4 freeze artifacts (paper/)
+- SHA256SUMS_ja.txt: 13 files (stam-m_ja.tex, paper_data.json, references.bib, interact.cls, tfnlm.bst,
+  6 PNG figures, ja_numbers.tsv, glossary.tsv); `sha256sum -c` 13/13 OK at ja-final.
+- ja_numbers.tsv: every numeric token of stam-m_ja.tex classified against paper_data.json (1,988 tokens;
+  47 JSON-only values; 0 p-value gating failures).
+- glossary.tsv: JA->EN term table (52 terms) for the deferred translation phase.
+
+## 5. Other changes
+- Devin Review on PR #563 (hardening, results unchanged): compute_language_stats validates 3 runs x 100 unique qids
+  per language; verify_all rejects provenance whose gold_dir/expected_dir disagree with the dataset paths.
+- scripts/provenance.py: git_commit falls back to the packaged GIT_COMMIT file when no .git is present, so artifacts
+  regenerated from an extracted package carry the package revision instead of 'unknown'.
+- S10 step 5 wording corrected at final review (still described SciPy method="exact"; now the unified test).
+- Package docs: README_PACKAGE.md / FINAL_CHECKLIST.md / MANIFEST.md / README_SQL.md updated (166 tests, 30 pages,
+  freeze artifacts, unified test, per-query CSVs). Residual 8 "Overfull \hbox" warnings are all node boxes inside the
+  0.9\textwidth-scaled TikZ ER figure (no visible overflow); earlier logs reported 0 because of a mis-escaped grep.
+
+## 6. Verification (staging, commit ab25c94d)
+- LuaLaTeX + BibTeX: exit 0, 30 pages, undefined refs/cites 0, multiply defined 0, overfull 8 (TikZ only)
+- verify_paper_numbers.py --tex stam-m_ja.tex: exit 0, gating 0 ; verify_ssot.py: 5/5
+- ruff: All checks passed ; FULL_DB_TEST=1 pytest: 165 passed
+- Source <-> sql_package file-set (git ls-files vs ZIP, comm): 1557 vs 1527 files. Only in source, all intentional:
+  paper/* (shipped in the outer paper/ directory), the 4 paper scripts + requirements-paper.txt (shipped as
+  paper_scripts/), repair_stam_ja.py / translate_stam_ja_v2.py / eval_jp_reranker_vh.py (EXCLUDE_SCRIPTS),
+  api/ and ui/ (FastAPI / Streamlit demo layers, not referenced by the reproduction code), pyproject.toml,
+  README.md / README_VERIFICATION.md / MODEL_SNAPSHOT.md / .gitignore. Only in package: GIT_COMMIT (generated).
+- Static reference scan of packaged *.py (110 literal file references): every referenced template / config / data
+  file exists in the package; the unresolved literals are output paths, pytest tmp-dir fixtures, or the
+  intentionally excluded paper scripts named in build_sql_package.py.
+
+## 7. Verification from a fresh extraction of the v23 ZIP (package commit 5305d7db)
+Extraction directory contents: FINAL_CHECKLIST.md, README_PACKAGE.md, paper/, paper_scripts/, sql_package/, verification_logs/
+(1573 files; sql_package/ = 1527 files, no __pycache__ / .pytest_cache / .pyc).
+
+sql_package/ (all 4 DSNs set, FULL_DB_TEST=1):
+- scripts/verify_all.py --static-only ................ PASS=8  WARN=0 FAIL=0
+- scripts/verify_all.py --warnings-as-errors ......... PASS=18 WARN=0 FAIL=0 SKIP=0  (raw output: verify_all_dbfull.log;
+  includes run_gold_verification / check_expected_results / audit_order_totality / audit_semantics / audit_vocabulary /
+  safety cases / scoring self-check (4 datasets, n_mismatch=0) / pytest -q -ra)
+- python -m pytest -q .................................. 165 passed
+- ruff check . ......................................... All checks passed
+- Deterministic regeneration entry points, each exit 0: build_per_query_tables.py, recompute_significance.py --apply,
+  compute_language_stats.py, summarize_language_eval.py, derive_main_artifacts.py, audit_scoring.py,
+  build_query_catalog.py, compute_unified_difficulty.py.  SHA-256 of all 1527 files before/after: only
+  evaluation/scoring_audit.json and evaluation/significance_recomputed.json change, and only in
+  provenance.generated_at / provenance.git_commit (the latter now stamps the packaged GIT_COMMIT instead of 'unknown').
+  ablation_multirun_stats.json, language stats, per-query CSVs, main artifacts, catalog and difficulty files are byte-identical.
+- DB builders (db/, docker/, build_transfer_db.py, build_obfuscated_transfer_db.py, build_mp_transfer_db.py, ingestion/)
+  are byte-identical to baseline-v22 (git diff empty); their fresh-extraction runs are recorded in the v20–v22 logs and
+  the resulting databases are the ones verified above.
+- Paid path (author instruction: no full re-evaluation): one-query smoke of the full pipeline (few-shot + dictionary +
+  n-best + reranker + SQLGuard + graph) from the extracted package with the available API key —
+  ja q_easy_001 recall 1.000, en q_easy_001 recall 1.000. Full reruns of eval_* / eval_independent_en / eval_ablation_multirun
+  are NOT re-executed in this version (stored outputs are the canonical results).
+
+paper/ + paper_scripts/:
+- sha256sum -c SHA256SUMS_ja.txt ....................... 13/13 OK (ja-final freeze set)
+- verify_ssot.py ....................................... 5/5
+- verify_paper_numbers.py --tex stam-m_ja.tex .......... exit 0, gating 0
+- verify_paper_numbers.py (default = both TeX) ......... exit 1 (expected: stam-m.tex intentionally unsynchronised)
+- compute_all_figures.py -> generate_figures.py ........ exit 0; paper_data.json identical to the shipped SSOT except
+  _meta.generated_at / _meta.git_commit (45fb4eea -> 5305d7db; shipped SSOT was generated at the p-value unification
+  commit and no data changed afterwards); all 6 PNG figures byte-identical (SHA256SUMS_ja 12/13 OK, the one FAILED
+  line is paper_data.json's _meta block).
+- lualatex x3 + bibtex: exit 0, 30 pages, undefined refs/cites 0, multiply defined 0, overfull \hbox 8 (all TikZ ER node boxes)
+
+File-set comparison (git ls-files @5305d7db vs sql_package/): 1557 vs 1527. Only-in-source = paper/* (16, shipped under
+paper/), the 5 paper scripts (shipped under paper_scripts/), 3 EXCLUDE_SCRIPTS (eval_jp_reranker_vh.py, repair_stam_ja.py,
+translate_stam_ja_v2.py — historical/editorial), api/* (2) and ui/* (1) demo layers, pyproject.toml, README.md,
+README_VERIFICATION.md, MODEL_SNAPSHOT.md, .gitignore. Only-in-package = GIT_COMMIT (generated); paper_scripts/requirements-paper.txt
+is a package-only file.  Static literal-reference scan of packaged *.py: 110 literals, 18 unresolved = 7 EXCLUDE_SCRIPTS names
+inside build_sql_package.py, 10 pytest tmp-dir fixture names, 1 output path (capture_main_eval_sql.py) — no missing input file.
+
+## 8. Post-review correction: float-representation ties in sign_permutation (commits 37d45a95, f80ac54c)
+- Finding (Devin Review on PR #578): `rankdata([abs(d) ...])` ranked mathematically equal differences separately when
+  their binary representations differ. Per-query 5-run means produce e.g. 0.2 and 1.0-0.8 = 0.19999999999999996; in the
+  stored no_nbest data the five non-zero differences are [-0.0383, 0.2, 0.1820, -0.2, 0.19999999999999996], so the three
+  |diff| = 0.2 received midranks 3.5 / 5 / 3.5 instead of a shared 4, giving p = 0.75 instead of 0.625.
+- Fix: `scripts/sign_permutation.py` rounds |diff| to TIE_DECIMALS = 9 before midranking. Regression test
+  `test_float_representations_of_equal_diffs_share_a_midrank` (both representations -> 0.625). Suite 165 -> 166.
+- Effect: only no_nbest changes (0.75 -> 0.625; Holm 1.000, n.s. — no decision changes). no_fewshot / no_dict /
+  no_reranker / no_guard / no_graph byte-identical. `p_value_scipy_exact_untied` (0.8125) kept as audit value.
+- Regenerated: evaluation/ablation_multirun_stats.json, evaluation/significance_recomputed.json, paper/paper_data.json
+  (n_unit_tests 165 -> 166), stam-m_ja.tex (Table 1 row 0.7500 -> 0.6250, §4.1 p = 0.625, S1 / Data availability / S10
+  test count 166, S1 sign-permutation category 3 -> 4 tests), README_SQL.md, freeze artifacts (SHA256SUMS_ja.txt,
+  ja_numbers.tsv 2,035 lines), tag ja-final moved ab25c94d -> f80ac54c. PDF rebuilt: 30 pages, undefined 0, overfull 8 (TikZ).
+- Package rebuilt from f80ac54c (build_sql_package.py, GIT_COMMIT = f80ac54c; 1527 files) and re-verified from a fresh
+  extraction of the rebuilt ZIP (1573 files):
+  - verify_all --static-only PASS=8 ; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0
+  - pytest 166 passed ; ruff clean ; verify_ssot 5/5 ; verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0 ;
+    default (both TeX) exit 1 as expected ; SHA256SUMS_ja 13/13 OK
+  - compute_all_figures -> generate_figures: paper_data.json differs from the shipped SSOT only in _meta.generated_at /
+    _meta.git_commit (5305d7db -> f80ac54c; the shipped SSOT was generated before the freeze commit existed and no data
+    changed afterwards); all 6 PNG figures byte-identical; lualatex 30 pages / undefined 0 / overfull 8.
+  - 8 deterministic entry points exit 0; SHA-256 before/after over 1527 files: only scoring_audit.json and
+    significance_recomputed.json change — provenance.generated_at / git_commit, and significance_recomputed.json's
+    `p_value_stored_before_run` for no_nbest (0.75 -> 0.625: the shipped file records the value it replaced; a re-run
+    from the package finds 0.625 already applied). All measured values identical.
+
+## 9. Post-merge correction: verify_all provenance keys may not be omitted (PR #579, commits e9c34c1e, 120adf18)
+- Finding (Devin Review on PR #578, scripts/verify_all.py check_provenance): the dataset<->provenance directory
+  comparison and the downstream gold_sha256 / expected_sha256 checks were all gated on
+  isinstance(prov[dir_key], str). A provenance block that omitted gold_dir(+gold_sha256) or
+  expected_dir(+expected_sha256) therefore passed with those inputs unverified although the dataset rows point
+  at a concrete directory. A second Devin Review pass on PR #579 noted the same bypass one level up: with
+  dataset_file itself omitted, dataset_rows stayed empty and none of the directory checks ran.
+- Fix: every provenance block must carry a string dataset_file and dataset_sha256 (build_provenance() always emits
+  both; all 32 shipped blocks have them). When the dataset rows resolve to a directory, a missing dir key is an error ("provenance gold_dir is
+  missing"), and a present dir with a missing hash key is an error ("provenance gold_sha256 is missing ...").
+  Datasets without gold_sql_path / expected_result_path rows (pre-R22 provenance) are unaffected.
+- Regression assertions (dataset_file / dataset_sha256 / gold_dir / gold_sha256 / expected_dir / expected_sha256 stripped
+  in turn -> VerifyError; a git_commit-only block -> VerifyError; full block -> PASS) were appended to
+  tests/test_evaluation_metrics.py::test_verify_all_provenance_new_keys_tamper_detection, so the suite stays at
+  166 and the frozen manuscript / SSOT test count (ja-final = f80ac54c) is untouched.
+- Effect on shipped data: none. All 32 provenance blocks already carry all six keys; no evaluation artifact, SSOT,
+  figure, TeX or freeze file changes. Only sql_package/scripts/verify_all.py, sql_package/tests/
+  test_evaluation_metrics.py and GIT_COMMIT (f80ac54c -> 120adf18) differ from the v23 package.
+- Package rebuilt from 120adf18 (build_sql_package.py, 1527 files) and re-verified from a fresh extraction of
+  the rebuilt ZIP (results appended below by the gate run).
+  - verify_all --static-only PASS=8 ; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0 (raw output ->
+    verification_logs/verify_all_dbfull.log, replaced)
+  - pytest 166 passed ; ruff clean ; verify_ssot 5/5 ; verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0 ;
+    default (both TeX) exit 1 as expected ; SHA256SUMS_ja 13/13 OK
+  - compute_all_figures -> generate_figures: paper_data.json differs from the shipped SSOT only in _meta.generated_at /
+    _meta.git_commit ; all 6 PNG figures byte-identical ; lualatex 30 pages / undefined 0 / overfull 8 (TikZ).
+  - 8 deterministic entry points exit 0 ; SHA-256 before/after over 1527 files: only scoring_audit.json and
+    significance_recomputed.json change (provenance generated_at / git_commit, and p_value_stored_before_run for
+    no_nbest 0.75 -> 0.625, as in §8). All measured values identical.
+  - Manuscript, SSOT, figures, freeze files (SHA256SUMS_ja.txt, ja_numbers.tsv) are byte-identical to v23.
+
+## 10. Log corrections + `_meta.test_label` in ablation_multirun_stats.json (PR #579, commit 61d6b004)
+- Two record errors reported by the author against v23/v23b (no manuscript or data impact):
+  (a) §1 said per_query_results.csv has 245 rows; it has 100 rows (the 100 ablation queries, replacement for old
+      Table S3; MANIFEST.md was already correct). Fixed in §1.
+  (b) §2 said ablation_multirun_stats.json carried `_meta.test = sign-permutation-exact-midranks`; the file had no
+      `_meta` at all (only the per-condition `significance_tests.<cond>.test` label; the file-level `_meta.test_label`
+      lived in significance_recomputed.json). Fixed in §2.
+- Practical fix for (b): the SSOT (compute_all_figures.py) reads the ablation p-values from ablation_multirun_stats.json,
+  so that file now names the test itself. scripts/sign_permutation.py owns TEST_LABEL / TEST_DESCRIPTION /
+  stats_meta(n_runs); eval_ablation_multirun.py writes `_meta` as the first key of ablation_multirun_stats.json and
+  recompute_significance.py --apply writes the same block (idempotent). `_meta` =
+  {n_runs 5, test "exact sign-permutation test ... |diff| rounded to 9 decimals before ranking ...",
+   test_label "sign-permutation-exact-midranks", tie_decimals 9, correction "Holm-Bonferroni ..."}.
+- Regenerated from the stored ablation_run_1..5.json (no LLM calls): eval_ablation_multirun.py main() with all 5 run
+  files present re-aggregates only. Key-by-key diff of ablation_multirun_stats.json before/after: only `_meta` added and
+  provenance.generated_at / git_commit (unknown -> 120adf18). All p-values (no_fewshot 1.330e-12, no_dict 9.918e-5,
+  no_nbest 0.625, no_reranker 0.0195, no_guard 1.000, no_graph 0.1484), Holm values, means/SDs, deltas, per-query means
+  unchanged. significance_recomputed.json: `_meta.test` wording + `_meta.tie_decimals` added, p_value_stored_before_run
+  for no_nbest now 0.625 (the value found in the shipped file; was 0.75 = pre-§8 value), provenance stamps.
+- SSOT: compute_all_figures.py -> paper_data.json differs only in _meta.generated_at / _meta.git_commit and the embedded
+  figure_source_data.ablation_multirun_stats._meta / provenance; generate_figures.py -> all 6 PNGs byte-identical
+  (git shows no figure change). verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0; verify_ssot 5/5.
+- Freeze: stam-m_ja.tex, ja_numbers.tsv, glossary.tsv, references.bib, interact.cls, tfnlm.bst and the 6 figures are
+  byte-identical to ja-final (f80ac54c); ja-final is NOT moved. SHA256SUMS_ja.txt: only the paper_data.json line was
+  updated (its _meta/provenance metadata changed; no SSOT value changed). sha256sum -c -> 13/13 OK.
+- Repo gates at 61d6b004: verify_all --static PASS=8; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0;
+  pytest 166 passed (FULL_DB_TEST=1); ruff clean.
+- Package rebuilt from 61d6b004 and re-verified from a fresh extraction of the rebuilt ZIP (results appended below).
+  - verify_all --static-only PASS=8 ; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0 (raw output ->
+    verification_logs/verify_all_dbfull.log, replaced)
+  - pytest 166 passed ; ruff clean ; verify_ssot 5/5 ; verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0 ;
+    default (both TeX) exit 1 as expected ; SHA256SUMS_ja 13/13 OK
+  - compute_all_figures -> generate_figures: paper_data.json differs from the shipped SSOT only in _meta.generated_at /
+    _meta.git_commit (120adf18 -> 61d6b004; the shipped SSOT was generated before the commit existed, no data changed);
+    all 6 PNG figures byte-identical ; lualatex 30 pages / undefined 0 / overfull 8 (TikZ).
+  - 8 deterministic entry points exit 0 ; SHA-256 before/after over 1527 files: only scoring_audit.json and
+    significance_recomputed.json change, and now only in provenance generated_at / git_commit (p_value_stored_before_run
+    is stable at 0.625 because the shipped file already carries it). ablation_multirun_stats.json is byte-identical after
+    `recompute_significance.py --apply` (the _meta block it writes equals the shipped one).
+  - per_query_results.csv: 100 data rows ; ablation_multirun_stats.json `_meta.test_label` = sign-permutation-exact-midranks.
+  - file-set diff sql_package vs `git ls-files` (find|sort|comm): 31 source-only paths, all intentional (paper/* ship under
+    paper/, 4 paper scripts under paper_scripts/, eval_jp_reranker_vh.py / repair_stam_ja.py / translate_stam_ja_v2.py,
+    api/, ui/, README*.md, MODEL_SNAPSHOT.md, pyproject.toml, .gitignore); package-only: GIT_COMMIT. No __pycache__ /
+    .pyc / .pytest_cache / .env / credentials inside the ZIP.
+
+## 11. Removal of the stale English manuscript (PR #579, commit 1dc3ea18)
+- Author request: delete the old paper/stam-m.tex — it was still shipped with pre-v23 statistics (e.g. no_fewshot
+  p=0.001, no_dict p=0.029, no_reranker p=0.016, no_nbest p=0.217 and a "sign-flip with mean-difference statistic"
+  description that no longer matches scripts/sign_permutation.py). Confirmed by grep before deletion.
+- Deleted from the repository (`git rm paper/stam-m.tex`) and from the package (paper/stam-m.tex, paper/stam-m.pdf and
+  the local LaTeX by-products). Per the procedure, the English version is NOT to be patched incrementally: it will be
+  produced by copying the frozen stam-m_ja.tex (ja-final = f80ac54c) and translating section by section (not started).
+- No data, script, SSOT or frozen file changed: stam-m_ja.tex and the other 12 SHA256SUMS_ja.txt entries are
+  byte-identical to v23c; ja-final not moved. Only documentation was updated (README_VERIFICATION.md in the repo;
+  README_PACKAGE.md / FINAL_CHECKLIST.md / this log in the package).
+- Consequence for the verifier: `verify_paper_numbers.py` with no arguments (default = sorted paper/*.tex glob) now finds
+  only stam-m_ja.tex -> "TeX files audited: 1 (stam-m_ja.tex)", gating 0, exit 0. The earlier "default exits 1 by
+  design" statements in this log (Scope decisions, §7) are superseded. Once an English TeX is placed in paper/ it is
+  picked up automatically and bilingual exit 0 becomes the synchronisation gate.
+- Repo gates at 1dc3ea18: ruff clean; tests/test_verify_paper_numbers.py 2 passed (fixtures are tmp_path-based, so the
+  deletion does not affect them); verify_all --static-only PASS=8; verify_ssot 5/5; verify_paper_numbers (default and
+  --tex stam-m_ja.tex) exit 0 gating 0.
+- Package rebuilt from 1dc3ea18 (GIT_COMMIT updated) and re-verified from a fresh extraction (appended below).
+- Fresh extraction of the rebuilt v23d ZIP (1604 entries = v23c 1606 - stam-m.tex - stam-m.pdf):
+  - verify_all --static-only PASS=8 ; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0
+  - pytest 166 passed ; ruff clean ; verify_ssot 5/5 ; verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0 ;
+    verify_paper_numbers (default) -> "TeX files audited: 1 (stam-m_ja.tex)" exit 0 ; SHA256SUMS_ja 13/13 OK
+  - compute_all_figures -> generate_figures: paper_data.json differs from the shipped SSOT only in _meta.generated_at /
+    _meta.git_commit (61d6b004 -> 1dc3ea18); all 6 PNG figures byte-identical ; lualatex 30 pages / undefined 0 /
+    overfull 8 (TikZ ER figure only).
+  - 8 deterministic entry points exit 0 ; SHA-256 before/after over 1527 sql_package files: only scoring_audit.json and
+    significance_recomputed.json change, and only in provenance generated_at / git_commit.
+  - file-set diff sql_package vs `git ls-files` (find|sort|comm): 30 source-only paths (the v23c list minus
+    paper/stam-m.tex), all intentional; package-only: GIT_COMMIT. No stam-m.tex / stam-m.pdf / __pycache__ / .pyc /
+    .pytest_cache / .env / credentials inside the ZIP.
+
+## 12. verify_all provenance: gold/expected dir+hash keys required unconditionally (PR #581, commit 41e86c06)
+- Devin Review on the merged PR #579 (comment 3998661582): check_provenance() derived the set of parent directories
+  `dirs` from the dataset rows' gold_sql_path / expected_result_path and only demanded gold_dir / gold_sha256 /
+  expected_dir / expected_sha256 when `dirs` was non-empty. For a dataset whose rows carry no paths
+  (e.g. {"id":"q1","question":"x"}) every branch was skipped and the later hash checks are isinstance(str)-gated, so a
+  block missing all four keys still passed. build_provenance() always emits the four keys, so their absence is never
+  legitimate. Reproduced with the new test assertions against the pre-fix code (DID NOT RAISE VerifyError).
+- Fix (scripts/verify_all.py): the four keys are required as strings on every block, independent of the dataset rows;
+  the parent-directory consistency check (single dir, equal to the recorded one) still runs additionally when rows
+  carry paths. Regression assertions appended inside test_verify_all_provenance_new_keys_tamper_detection (path-less
+  dataset, each key stripped in turn -> VerifyError; full block -> PASS), so the suite stays at 166 (the count frozen
+  in stam-m_ja.tex / paper_data.json.testing).
+- No data, SSOT, figure, manuscript or frozen file changed; ja-final (f80ac54c) not moved; SHA256SUMS_ja.txt unchanged.
+  All 32 shipped provenance blocks already carry the four keys, so verify_all results are unchanged.
+- Repo gates at 41e86c06: ruff clean; FULL_DB_TEST=1 pytest 166 passed; verify_all --static-only PASS=8.
+- Package: scripts/verify_all.py and tests/test_evaluation_metrics.py replaced, GIT_COMMIT -> 41e86c06 (PR #581 branch
+  head; the PR was open at packaging time). Every other tracked file in sql_package is byte-identical to the repo at
+  that commit (cmp over `git ls-files`); file-set diff unchanged from v23d (30 source-only paths, package-only GIT_COMMIT).
+- Fresh extraction of the rebuilt v23e ZIP: see the appended block below.
+- Fresh extraction of the rebuilt v23e ZIP (1604 entries, same set as v23d; two files replaced + GIT_COMMIT):
+  - verify_all --static-only PASS=8 ; verify_all --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0 (raw output ->
+    verification_logs/verify_all_dbfull.log, replaced)
+  - pytest 166 passed ; ruff clean ; verify_ssot 5/5 ; verify_paper_numbers --tex stam-m_ja.tex exit 0 gating 0 ;
+    verify_paper_numbers (default) -> "TeX files audited: 1 (stam-m_ja.tex)" exit 0 ; SHA256SUMS_ja 13/13 OK
+  - compute_all_figures -> generate_figures: paper_data.json differs from the shipped SSOT only in _meta.generated_at /
+    _meta.git_commit (-> 41e86c06); all 6 PNG figures byte-identical ; lualatex 30 pages / undefined 0 / overfull 8
+    (TikZ ER figure only).
+  - 8 deterministic entry points exit 0 ; SHA-256 before/after over 1527 sql_package files: only scoring_audit.json and
+    significance_recomputed.json change, and only in provenance generated_at / git_commit.
+  - No stam-m.tex / stam-m.pdf / __pycache__ / .pyc / .pytest_cache / .env / credentials inside the ZIP.

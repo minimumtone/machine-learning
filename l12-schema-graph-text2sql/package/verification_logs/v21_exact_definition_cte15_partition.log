@@ -1,0 +1,104 @@
+# v21 — exact-metric ordering contract, CTE-15 ⊂ main 245, Variant A ⊂ main 245, main-245 partition
+Date: 2026-09-03 (UTC)
+
+## Data checks performed first (fresh, from packaged evaluation/ files)
+
+- expected_results/*.json with semantic_ordered=true: 39 / 245 main queries
+- gold_sql/ with ORDER BY (main 245): 234 / 245
+- cte15_dataset.jsonl: 15 ids, all in main 245
+  (q_vhard_009/016/018/019/020 in the ablation 100-subset;
+   q_cte_006–q_cte_015 in main 245, outside the ablation subset)
+- prototype_evaluation_dataset.jsonl (Variant A, q_proto_*): 20 ids, all in main 245
+- transfer_evaluation_dataset.jsonl (Variant B): 20 ids, none in main 245
+- Disjoint partition of main 245 confirmed:
+  ablation 100 + independent design q_expert_001–100 (100)
+  + Variant A q_proto_* (20) + zero-shot CTE q_cte_* (10) + q_expert_101–115 (15)
+  (author-designed 145 = 100 + 20 + 10 + 15)
+- Within the single canonical main run (main_eval_with_sql.json):
+  q_proto_* 20 = 85.0%, q_cte_* 10 = 59.0%, 5 ablation CTE = 100.0%,
+  CTE15 = 72.7%, independent design 100 = 83.4%.
+
+## Changes
+
+1. Exact-metric definition corrected (definition error, not wording):
+   exact = exact gold column list + row multiset + row order ONLY where the
+   expected result's `semantic_ordered` contract is true (39/245 main
+   queries). Gold-SQL ORDER BY is not the exact metric's ordering contract.
+   - paper/stam-m_ja.tex: metric definition (Sec. 3.4), main result (10.6%),
+     Table S19 multiaxis caption, Table S20 caption, S8.6 text
+   - evaluation/metrics.py docstring; scripts/audit_scoring.py,
+     scripts/eval_multiaxis_metrics.py, scripts/derive_main_artifacts.py
+     metadata strings; `n_semantic_ordered` added to scoring_audit.json;
+     `exact_metric` note re-normalized in multiaxis_results.json /
+     main_eval_with_sql.json (deterministic derivation; scores unchanged)
+   - The separate `ordered` column in Table S20 is UNCHANGED: it is a
+     different metric whose population is gold SQL with ORDER BY (234 main
+     queries), value 54.3%. Table S20 caption now states this explicitly.
+   - MANIFEST.md: new "ordering contracts" section (39 vs 234).
+
+2. CTE evaluation = 15 queries, all inside main 245:
+   - SSOT `dataset.n_cte_queries` 5 -> 15; new keys
+     `n_cte_in_ablation_subset` = 5, `n_cte_zero_shot` = 10
+   - Sec. 2.1.2 principle (4), Sec. 4.3.2, S8 CTE section, S10 step 3 and
+     MANIFEST.md reworded: 5 known/few-shot-covered patterns are in the
+     ablation subset; 10 zero-shot patterns are in main 245 but outside the
+     ablation subset; the 10 were NOT added from outside the main corpus.
+   - Table S21 lower block (ablation conditions) intentionally stays at the
+     5 patterns that are in the ablation subset.
+
+3. Variant A (q_proto_*, 20) disclosed as a subset of main 245:
+   MANIFEST.md, Sec. 4.3.4 / Table 5 caption, S9.2 — the 100.0% is a
+   separate run of the same questions (85.0% within the single main run);
+   Variants B/C/D and the untranslated EN-25 are distinct corpora.
+
+4. Main-245 partition table added (Sec. 2.1.2, `tab:main_partition`) and in
+   MANIFEST.md; SSOT `dataset.main_partition` (counts, id ranges,
+   within-main-run recall of each re-reported subset) and
+   `dataset.ordering_contracts` added by paper_scripts/compute_all_figures.py
+   with set-relation assertions (ablation/independent/CTE15/proto ⊂ main;
+   CTE15 = ablation-CTE ∪ zero-shot-CTE; transfer ∩ main = ∅).
+
+5. Sec. 4.3 opening: one-sentence disclosure that the independent design 100,
+   Variant A 20 and CTE 15 (135 main queries) are re-reported as separate
+   runs of main-245 subsets, while B/C/D and EN-25 are distinct corpora.
+
+## Verification (staging, 2026-09-03)
+
+- ruff check (sql_package + paper_scripts): clean
+- pytest: 160 passed
+- verify_all.py --warnings-as-errors (4 DSNs): PASS=18 WARN=0 FAIL=0 SKIP=0
+- verify_ssot.py: 5/5 PASS
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0
+  (default bilingual run exits 1 as expected: English manuscript is
+  intentionally not yet synchronized)
+- Regeneration order SSOT -> figures -> PDF; stam-m_ja.pdf rebuilt
+  (LuaLaTeX + BibTeX): 38 pages, no undefined references/citations
+- grep "when the gold query is ordered" over the whole tree
+  (excluding verification_logs/): 0 hits
+
+## Verification (fresh extraction of the final v21 ZIP)
+
+- verify_all.py --warnings-as-errors (4 DSNs): PASS=18 WARN=0 FAIL=0 SKIP=0
+  — raw output saved as verification_logs/verify_all_dbfull.log
+- verify_ssot.py 5/5, verify_paper_numbers.py --tex stam-m_ja.tex exit 0,
+  ruff clean, pytest 160 passed, re-run from the extraction.
+- verify_all.py --static-only: 8/8 PASS.
+- Figures regenerated from the extracted paper_data.json: all 6 PNGs
+  byte-identical; the 6 PDFs differ only in the embedded /CreationDate.
+- compute_all_figures.py re-run from the extraction: paper_data.json
+  identical apart from _meta.generated_at.
+- File-set comparison staging <-> ZIP: identical apart from intentional
+  exclusions (caches, virtualenvs, LaTeX aux files).
+- Static scan of relative path literals in packaged .py/.md: all referenced
+  files exist (the only non-existent path is scripts/eval_jp_reranker_vh.py,
+  which README_SQL.md names precisely as an intentionally excluded script).
+- No __pycache__/.pyc/.venv/.pytest_cache/LaTeX aux files, no real API keys
+  or private keys in the ZIP (.env.example placeholders only).
+- audit_scoring.py and derive_main_artifacts.py re-run from the extraction:
+  scoring_audit.json / main_eval_with_sql.json identical apart from
+  provenance.generated_at (audit_scoring.py is run after
+  derive_main_artifacts.py so that sources.main.source_result_sha256 matches
+  the packaged main_eval_with_sql.json).
+
+Model outputs, saved runs, generated SQL, latencies, per-query recall and
+all SSOT metric values are unchanged in v21 (no paid LLM re-evaluation).

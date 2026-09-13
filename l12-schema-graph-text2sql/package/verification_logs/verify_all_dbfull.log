@@ -1,0 +1,26 @@
+L12 SQL PACKAGE VERIFICATION
+project=/home/ubuntu/ja_trim_logs/v23e_x/sql_package
+mode=formal-full
+
+[PASS] package_structure                 0.00s  required package structure present
+[PASS] python_syntax                     0.10s  100 Python files compile
+[PASS] canonical_catalog                 0.01s  300 unique canonical queries; catalog/gold/expected paths agree
+[PASS] expected_json_schema              0.03s  300 expected-result JSON files have a valid structural contract
+[PASS] question_gold_contract            0.05s  300 canonical question/gold pairs passed hidden-constraint lint
+[PASS] generated_sql_consistency         0.03s  8 generated-SQL suites agree with manifests/source results
+[PASS] provenance                        0.41s  32 evaluation provenance blocks match current input hashes
+[PASS] main_run_single_source            0.00s  duplicate main artifacts agree on 245 query outputs
+[PASS] dependencies                      0.00s  verification dependencies importable
+[PASS] db_environment                    0.00s  all DB-suite DSNs set
+[PASS] gold_verification                 1.71s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/run_gold_verification.py
+[PASS] expected_results_crosscheck       1.62s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/check_expected_results.py
+[PASS] order_totality                    0.94s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/audit_order_totality.py
+[PASS] semantic_audit                    0.21s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/audit_semantics.py
+[PASS] vocabulary_audit                  0.79s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/audit_vocabulary.py
+[PASS] safety_cases                      0.49s  exit=0: /usr/bin/python /home/ubuntu/ja_trim_logs/v23e_x/sql_package/scripts/verify_safety_cases.py
+[PASS] scoring_selfcheck                 3.13s  4 scoring datasets reproduced with selfcheck n_mismatch=0
+[PASS] pytest_full_db                   13.72s  exit=0: /usr/bin/python -m pytest -q -ra
+
+==============================================================================
+PASS=18 WARN=0 FAIL=0 SKIP=0
+VERIFICATION PASSED

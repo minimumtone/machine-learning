@@ -1,0 +1,77 @@
+# v19 verification log — mismatch breakdown, standardization-claim scoping, terminology sync, log-date fix
+# Date: 2026-09-02 (UTC)
+
+## Changes in v19 (relative to v18, external review follow-up)
+
+1. Mismatch breakdown made explicit. Independently recomputed with the
+   packaged compute_unified_difficulty.py against the design-time labels of
+   main_evaluation_dataset.jsonl (245 rows):
+     match 144, mismatch 101, of which 92 (91.1%) adjacent-stratum,
+     9 non-adjacent.
+   §2.1.2 and the untranslated-EN-25 paragraph now state
+   「不一致101件のうち92件（91.1%）は隣接層間のずれ」 (with the 9 non-adjacent
+   cases noted in §2.1.2) instead of 「不一致はほぼ隣接層間のずれ」.
+
+2. Standardization claim scoped. §4.3.1 now reads: the 5.5 pp standardized
+   difference means the gap is not explained *by the 4-stratum difficulty
+   composition alone*; within-stratum structural complexity (SQL length,
+   table count, subquery count) and few-shot coverage remain uncontrolled,
+   and the standardized comparison stays an exploratory observation.
+
+3. Terminology sync in the reproduction package. README_PACKAGE.md no longer
+   says 「統一複雑さスコア」: it now calls compute_unified_difficulty.py a
+   post-hoc proxy approximating the design-time structural-complexity
+   criterion (not the deterministic generator of the historical labels), with
+   the same 144/245 + 92/101 (91.1%) breakdown. The script's docstring header
+   was changed from "Unified complexity score" to "Post-hoc
+   structural-complexity proxy" with the same caveat. The file name is kept.
+
+4. v18 log date fix: the v18 verification log header/section erroneously said
+   2026-06-02 (template/seed carry-over); corrected to 2026-09-02, matching
+   paper_data.json generated_at and the compiled PDF. The v18 log's
+   `grep -rn difficulty_unified: 0 hits` claim is now scoped as "excluding
+   verification_logs/" since the logs themselves mention the old name when
+   describing the rename.
+
+No model outputs, saved runs, statistics, or SSOT numeric values changed in
+v19; the edits are wording/documentation plus the recomputed (deterministic)
+mismatch breakdown.
+
+## Verification results (staging, 2026-09-02)
+
+- Mismatch breakdown recomputation (compute_unified_difficulty.py vs
+  main_evaluation_dataset.jsonl): match 144 / adjacent 92 / non-adjacent 9
+  (adjacent = 91.1% of the 101 mismatches). Matches the manuscript.
+- ruff check sql_package + paper_scripts: All checks passed.
+- pytest -q (sql_package): 160 passed.
+- verify_ssot.py: 5/5 checks passed.
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0.
+- verify_paper_numbers.py (default bilingual): exit 1 (expected; the English
+  manuscript stam-m.tex is intentionally stale and not submission-ready).
+- verify_all.py --warnings-as-errors (4 DSNs, FULL_DB_TEST=1):
+  PASS=18 WARN=0 FAIL=0 SKIP=0.
+- Japanese PDF rebuilt (lualatex x3 + bibtex): 37 pages, 0 undefined
+  references/citations.
+
+## Verification results (fresh extraction of the final v19 ZIP)
+
+Extracted /home/ubuntu/l12_submission_full_r23_final_v19.zip to a clean
+directory and re-ran, from the extraction only:
+
+- verify_ssot.py: 5/5 checks passed.
+- verify_paper_numbers.py --tex stam-m_ja.tex: gating 0, exit 0.
+- verify_paper_numbers.py (default bilingual): exit 1 (expected, English
+  manuscript intentionally stale).
+- ruff check (sql_package): All checks passed.
+- pytest -q: 160 passed.
+- verify_all.py --warnings-as-errors (4 DSNs, FULL_DB_TEST=1):
+  PASS=18 WARN=0 FAIL=0 SKIP=0.
+- Mismatch breakdown recomputation from packaged files: 144 / 92 / 9.
+- grep -rn difficulty_unified excluding verification_logs/: 0 hits.
+- grep -rn 統一複雑さスコア README_PACKAGE.md: 0 hits.
+- Package file set vs staging tree (find | sort + comm, excluding caches,
+  virtualenvs, bytecode and LaTeX aux files): 0 differences (1592 files).
+
+This section documents the fresh-extraction run of the same ZIP in which this
+log is packaged; the log entry in the ZIP was updated in place after these
+checks completed, without changing any other packaged file.

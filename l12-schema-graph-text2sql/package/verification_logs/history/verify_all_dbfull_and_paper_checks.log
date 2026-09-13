@@ -1,0 +1,496 @@
+# NOTE (2026-09-02): datestamps reading "2026-06-02" in the addenda below
+# were written while the build machine's clock was mis-set; the work was
+# actually performed 2026-08-30 .. 2026-09-01 (see file mtimes / git log).
+# Kept verbatim as a historical record.
+
+=== DB-full verify_all (staged package, r23_check) ===
+L12 SQL PACKAGE VERIFICATION
+project=/home/ubuntu/r23_check/sql_package
+mode=formal-full
+
+[PASS] package_structure                 0.00s  required package structure present
+[PASS] python_syntax                     2.34s  2057 Python files compile
+[PASS] canonical_catalog                 0.01s  300 unique canonical queries; catalog/gold/expected paths agree
+[PASS] expected_json_schema              0.03s  300 expected-result JSON files have a valid structural contract
+[PASS] question_gold_contract            0.05s  300 canonical question/gold pairs passed hidden-constraint lint
+[PASS] generated_sql_consistency         0.03s  8 generated-SQL suites agree with manifests/source results
+[PASS] provenance                        0.28s  23 evaluation provenance blocks match current input hashes
+[PASS] main_run_single_source            0.00s  duplicate main artifacts agree on 245 query outputs
+[PASS] dependencies                      0.00s  verification dependencies importable
+[PASS] db_environment                    0.00s  all DB-suite DSNs set
+[PASS] gold_verification                 1.69s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/run_gold_verification.py
+[PASS] expected_results_crosscheck       1.63s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/check_expected_results.py
+[PASS] order_totality                    0.95s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/audit_order_totality.py
+[PASS] semantic_audit                    0.22s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/audit_semantics.py
+[PASS] vocabulary_audit                  0.79s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/audit_vocabulary.py
+[PASS] safety_cases                      0.49s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python /home/ubuntu/r23_check/sql_package/scripts/verify_safety_cases.py
+[PASS] scoring_selfcheck                 3.08s  4 scoring datasets reproduced with selfcheck n_mismatch=0
+[PASS] pytest_full_db                    1.57s  exit=0: /home/ubuntu/r23_check/sql_package/.venv/bin/python -m pytest -q -ra
+
+==============================================================================
+PASS=18 WARN=0 FAIL=0 SKIP=0
+VERIFICATION PASSED
+
+=== Clean-extraction verify_all (from final ZIP, fresh venv) ===
+L12 SQL PACKAGE VERIFICATION
+project=/home/ubuntu/r23_final_extract/sql_package
+mode=formal-full
+
+[PASS] package_structure                 0.00s  required package structure present
+[PASS] python_syntax                     2.33s  2057 Python files compile
+[PASS] canonical_catalog                 0.01s  300 unique canonical queries; catalog/gold/expected paths agree
+[PASS] expected_json_schema              0.03s  300 expected-result JSON files have a valid structural contract
+[PASS] question_gold_contract            0.05s  300 canonical question/gold pairs passed hidden-constraint lint
+[PASS] generated_sql_consistency         0.03s  8 generated-SQL suites agree with manifests/source results
+[PASS] provenance                        0.27s  23 evaluation provenance blocks match current input hashes
+[PASS] main_run_single_source            0.00s  duplicate main artifacts agree on 245 query outputs
+[PASS] dependencies                      0.00s  verification dependencies importable
+[PASS] db_environment                    0.00s  all DB-suite DSNs set
+[PASS] gold_verification                 1.69s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/run_gold_verification.py
+[PASS] expected_results_crosscheck       1.63s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/check_expected_results.py
+[PASS] order_totality                    0.95s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/audit_order_totality.py
+[PASS] semantic_audit                    0.21s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/audit_semantics.py
+[PASS] vocabulary_audit                  0.79s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/audit_vocabulary.py
+[PASS] safety_cases                      0.50s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python /home/ubuntu/r23_final_extract/sql_package/scripts/verify_safety_cases.py
+[PASS] scoring_selfcheck                 3.13s  4 scoring datasets reproduced with selfcheck n_mismatch=0
+[PASS] pytest_full_db                    1.58s  exit=0: /home/ubuntu/r23_final_extract/sql_package/.venv/bin/python -m pytest -q -ra
+
+==============================================================================
+PASS=18 WARN=0 FAIL=0 SKIP=0
+VERIFICATION PASSED
+
+=== verify_paper_numbers (stam-m_ja.tex) ===
+JSON numeric values: 254
+TeX numeric tokens:  2703
+JSON numbers not found in TeX: 45 (gating: 0)
+TeX p-values not backed by JSON: 0 (gating)
+TeX numbers not found in JSON: 530 (informational only)
+  NOTE: most of these are table rule widths, years, citation numbers and layout constants — they are not audited data values.
+
+--- JSON numbers missing from TeX (review) ---
+      20260602  paths=ablation.table.no_fewshot.stats_v2.seed, ablation.table.no_dict.stats_v2.seed, ablation.table.no_reranker.stats_v2.seed
+           724  paths=database.n_unique_formulas
+          54.1  paths=cte_evaluation_15.avg_latency_s
+  21.101587301587298  paths=ablation.table.no_fewshot.stats_v2.bootstrap_ci95_pp[1]
+  16.122196620583715  paths=ablation.table.no_fewshot.stats_v2.delta_pp
+  15.513659522121502  paths=ablation.table.no_dict.stats_v2.bootstrap_ci95_pp[1]
+  11.205259941969619  paths=ablation.table.no_fewshot.stats_v2.bootstrap_ci95_pp[0]
+  11.141368291902687  paths=ablation.table.no_reranker.stats_v2.bootstrap_ci95_pp[1]
+  9.782284997814951  paths=ablation.table.no_dict.stats_v2.delta_pp
+  6.191358133141957  paths=ablation.table.no_reranker.stats_v2.delta_pp
+  4.710736211688976  paths=ablation.table.no_dict.stats_v2.bootstrap_ci95_pp[0]
+           3.8  paths=ablation.table.no_fewshot.hard_std
+  3.3877120211883978  paths=ablation.table.no_graph.stats_v2.bootstrap_ci95_pp[1]
+  1.9486842105263156  paths=ablation.table.no_reranker.stats_v2.bootstrap_ci95_pp[0]
+  1.4241353960939211  paths=ablation.table.no_graph.stats_v2.delta_pp
+  1.1437310121181086  paths=ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[1]
+  0.9253246753246753  paths=ablation.table.no_fewshot.stats_v2.rank_biserial
+  0.8952380952380953  paths=ablation.table.no_dict.stats_v2.rank_biserial
+  0.8666666666666667  paths=ablation.table.no_reranker.stats_v2.rank_biserial
+         0.625  paths=ablation.table.no_nbest.stats_v2.p_exact_sign_flip
+  0.6111111111111112  paths=ablation.table.no_graph.stats_v2.rank_biserial
+  0.5999999999999999  paths=ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[1]
+     0.4453125  paths=ablation.table.no_graph.p_value_holm
+  0.3437310121181088  paths=ablation.table.no_nbest.stats_v2.delta_pp
+  0.3333333333333333  paths=ablation.table.no_guard.stats_v2.rank_biserial
+  0.1617204301075268  paths=ablation.table.no_guard.stats_v2.delta_pp
+     0.1484375  paths=ablation.table.no_graph.p_value
+     0.1015625  paths=ablation.table.no_graph.stats_v2.p_exact_sign_flip
+      0.078125  paths=ablation.table.no_reranker.p_value_holm
+        0.0625  paths=ablation.table.no_nbest.stats_v2.min_attainable_p
+    0.01953125  paths=ablation.table.no_reranker.p_value
+      0.015625  paths=ablation.table.no_reranker.stats_v2.p_exact_sign_flip
+     0.0078125  paths=ablation.table.no_graph.stats_v2.min_attainable_p
+    0.00390625  paths=ablation.table.no_reranker.stats_v2.min_attainable_p
+  0.0020416118060121225  paths=ablation.table.no_graph.stats_v2.bootstrap_ci95_pp[0]
+  0.0005245208740234375  paths=ablation.table.no_dict.p_value_holm
+  0.0001201629638671875  paths=ablation.table.no_dict.stats_v2.p_exact_sign_flip
+  0.0001049041748046875  paths=ablation.table.no_dict.p_value
+  4.9999750001249995e-06  paths=ablation.table.no_fewshot.stats_v2.p_exact_sign_flip
+  1.9073486328125e-06  paths=ablation.table.no_dict.stats_v2.min_attainable_p
+  8.561406327608118e-09  paths=ablation.table.no_fewshot.p_value_holm
+  1.426901054601353e-09  paths=ablation.table.no_fewshot.p_value
+  5.551115123125783e-17  paths=ablation.table.no_fewshot.stats_v2.min_attainable_p
+  -0.11483870967741948  paths=ablation.table.no_guard.stats_v2.bootstrap_ci95_pp[0]
+  -0.4179894179894179  paths=ablation.table.no_nbest.stats_v2.bootstrap_ci95_pp[0]
+
+--- TeX numbers not in JSON (manual values / constants) ---
+          12.5 ->         12.5  ...tfontsize\normalsize{10}{12.5}    \abovedisplayskip 13...
+            16 ->           16  ...} \setlength{\columnsep}{16pt}  \usepackage{graphicx...
+            70 ->           70  ...  stringstyle=\color{red!70!black},   numbers=left, ...
+         0.001 ->        0.001  ...除去による低下が最大であり（-16.1pp、$p<0.001$、Holm補正後も有意）、材料辞書の除去（-9....
+           95% ->           95  ...ション（クエリ単位の符号反転検定とブートストラップ95%信頼区間）、少数ショットの$k$感度、辞書サイズ感...
+         0.001 ->        0.001  ...     少数ショット例（-16.1pp, $p<0.001$）が最大の寄与を持ち、材料辞書（-9.8pp, ...
+            -4 ->           -4  ...（-9.8pp, $p=1.0\times10^{-4}$）もHolm補正後有意であることを示し（リラン...
+        0.0195 ->       0.0195  ...ことを示し（リランカーは-6.2ppで未補正$p=0.0195$だがHolm補正後は有意でない）、ドメイン特化型...
+          -5.5 ->         -5.5  ...ステップ~1）で構造化条件に変換され、   GPT-5.5によるスキーマリンク（ステップ~2）がテーブルの優...
+            -6 ->           -6  ...ロスエンコーダ（ms-marco-MiniLM-L-6-v2；クエリと候補例のペアを入力して意味的類似度...
+          -5.5 ->         -5.5  ...「スキーマ写像辞書」と呼び、両者を区別する。GPT-5.5は入力クエリに関連するテーブルをスコアリングし、ソ...
+          -5.5 ->         -5.5  ...補} \label{sec:nbest}  GPT-5.5は1回の生成呼び出しで上位$n$個（デフォルト $...
+            12 ->           12  ...)~プロトタイプエイリアス（例：\texttt{L12} $\leftrightarrow$ [L1$_...
+         0.001 ->        0.001  ...ergy\_above\_hull} $\leq 0.001$~eV/atom）、(4)~特性用語の4カテゴリ...
+            12 ->           12  ...{structure.prototype = 'L12'}、および「体積弾性率」$\to$ \textt...
+          -5.5 ->         -5.5  ...リランカー}  SQL候補のリランキングにはGPT-5.5を使用する。少数ショットの例選択にはクロスエンコー...
+          -5.5 ->         -5.5  ...用し、SQL候補とスキーマのスコアリングにはGPT-5.5（API）を使用し、ハイブリッドアーキテクチャを形...
+          -9.9 ->         -9.9  ...20 VHクエリで日本語モデルがms-marco比-9.9pp；差は未丸め値から算出）は補足資料~\ref{...
+          -5.5 ->         -5.5  ...が検出された場合にエラーメッセージをLLM（GPT-5.5）にフィードバックして最大3回の修復試行を行う修復...
+           3.4 ->          3.4  ...はこれらのテーブルを対象とする。評価用SQLは平均3.4、最大で6テーブルの結合と多段階CTEを要する構成...
+            11 ->           11  ...$；Easy $<8$、Medium $8$--$11$、Hard $12$--$16$、Very Ha...
+            12 ->           12  ...$、Medium $8$--$11$、Hard $12$--$16$、Very Hard（以下 VH と...
+            16 ->           16  ...um $8$--$11$、Hard $12$--$16$、Very Hard（以下 VH と略記） $\...
+            17 ->           17  ...ry Hard（以下 VH と略記） $\geq 17$。閾値 8/12/17 は分布から機械的に導いた...
+            12 ->           12  ...下 VH と略記） $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく、層の...
+            17 ->           17  ...H と略記） $\geq 17$。閾値 8/12/17 は分布から機械的に導いたものではなく、層の件数バ...
+         0.001 ->        0.001  ...作的定義を$E_\text{hull} \leq 0.001$~eV/atom（準安定：$0.001 < E_...
+         0.001 ->        0.001  ...\leq 0.001$~eV/atom（準安定：$0.001 < E_\text{hull} \leq 0.0...
+          0.05 ->         0.05  ...001 < E_\text{hull} \leq 0.05$、不安定：$E_\text{hull} > 0....
+          0.05 ->         0.05  ...05$、不安定：$E_\text{hull} > 0.05$）と定め、gold SQL・辞書・少数ショット例...
+         0.001 ->        0.001  ...生ラベル（$E_\text{hull} \leq 0.001$と等価）であり、手動ラベルは含まない。曖昧表現に...
+           95% ->           95  ...ペア数を$n_\mathrm{nz}$として示す。95%CIはクエリ単位ブートストラップ（$n=100$、...
+        0.0195 ->       0.0195  ...tの2条件；no\_rerankerは未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意でな...
+        0.0781 ->       0.0781  ...未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意でない）。no\_guard（$n_\ma...
+           3.5 ->          3.5  ...e \setlength{\tabcolsep}{3.5pt} \begin{tabular}{@{}lr...
+           95% ->           95  ...p$ & $p_\mathrm{Holm}$ & 95%CI (pp) \\ \midrule full ...
+         0.001 ->        0.001  ... (6.0) & -16.1 & 55 & $<$0.001 & $<$0.001 & $[-21.1, -1...
+         0.001 ->        0.001  ...6.1 & 55 & $<$0.001 & $<$0.001 & $[-21.1, -11.2]$ \\ no...
+         -11.2 ->        -11.2  ...01 & $<$0.001 & $[-21.1, -11.2]$ \\ no\_dict      & 82....
+        0.0001 ->       0.0001  ...2.0 (2.2) & -9.8  & 20 & 0.0001 & 0.0005 & $[-15.5, -4.7...
+        0.0005 ->       0.0005  ... & -9.8  & 20 & 0.0001 & 0.0005 & $[-15.5, -4.7]$ \\ no\...
+          -4.7 ->         -4.7  ...0001 & 0.0005 & $[-15.5, -4.7]$ \\ no\_reranker  & 86....
+        0.0195 ->       0.0195  ...85.7 (2.5) & -6.2  & 9 & 0.0195 & 0.0781 & $[-11.1, -1.9...
+        0.0781 ->       0.0781  ...) & -6.2  & 9 & 0.0195 & 0.0781 & $[-11.1, -1.9]$ \\ no\...
+          -1.9 ->         -1.9  ...0195 & 0.0781 & $[-11.1, -1.9]$ \\ no\_guard     & 92....
+        0.1484 ->       0.1484  ...80.7 (4.2) & -1.4  & 8 & 0.1484 & 0.4453 & $[-3.4, -0.0]...
+        0.4453 ->       0.4453  ...) & -1.4  & 8 & 0.1484 & 0.4453 & $[-3.4, -0.0]$ \\ \bot...
+         0.001 ->        0.001  ...度低下を示す条件を示す（$^{***}$: $p<0.001$）。星印の検定は表~\ref{tab:ablat...
+          -5.5 ->         -5.5  ...統制語彙・site\_label規約）のみをGPT-5.5に与え、単発でSQLを生成させる。少数ショット例・...
+          -5.5 ->         -5.5  ...aption{LLM-onlyベースライン（GPT-5.5、245クエリ、単一ラン）。再現率・適合率・F1は...
+           7.8 ->          7.8  ...ec:multiaxis}、再現率86.1%）より7.8pp低い。構文妥当性は100%、実行成功率は99....
+           7.8 ->          7.8  ...価と比較すると、全コンポーネント除去により再現率は7.8pp低下し、JOIN幻覚率は0.9%から23.0%...
+           1.9 ->          1.9  ...ails}）。$k$を1から3に増やすと全体$+$1.9pp（VHティア$+$10.0pp）改善し、$k=...
+         -32.9 ->        -32.9  ...響はVHティアで最も顕著で、フルから0%への低下は-32.9pp（全体-8.9pp）。Easy/Mediumテ...
+          -8.9 ->         -8.9  ...顕著で、フルから0%への低下は-32.9pp（全体-8.9pp）。Easy/Mediumティアは辞書の有無に...
+          -5.5 ->         -5.5  ...rison}  同じ100クエリサブセットをGPT-5.5とGPT-4oで評価した（表~\ref{tab:m...
+            -4 ->           -4  ...同じ100クエリサブセットをGPT-5.5とGPT-4oで評価した（表~\ref{tab:model_c...
+            -4 ->           -4  ...sup_results_details}）。GPT-4oはレイテンシ2.1s（GPT-5.5の約1/15...
+          -5.5 ->         -5.5  ...ls}）。GPT-4oはレイテンシ2.1s（GPT-5.5の約1/15）と高速で、全体91.7%はGPT-5...
+          -5.5 ->         -5.5  ....5の約1/15）と高速で、全体91.7%はGPT-5.5のfull（92.5$\pm$0.4%）と同等であ...
+          -3.4 ->         -3.4  ...）と同等である（単一ラン）。層別ではMediumが-3.4pp、Hardが$+$5.0pp、VHが-6.5p...
+         78.0% ->         78.0  ...ion=Recall=1となる旧来の緩い完全一致は78.0%（245クエリ、多軸評価と同一の単一ランの採点監査...
+            40 ->           40  ...クエリ多軸評価ラン）でリコール0.8未満だったのは40件（VH 18・Hard 15・Medium 5・...
+          0.03 ->         0.03  ...xt{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}の26候補）、(c)~$E_\t...
+          0.05 ->         0.05  ...、(c)~$E_\text{hull} \leq 0.05$~eV/atomの安定/準安定候補抽出（157件...
+         0.001 ->        0.001  ...大の精度低下をもたらした（-16.1pp, $p<0.001$；Hard層-24.7pp、VH層-21.8pp...
+        0.0001 ->       0.0001  ...削除は全体で-9.8ppの低下をもたらした（$p=0.0001$、Holm補正後も有意）。効果は難易度層に依存し...
+            12 ->           12  ...{structure.prototype = 'L12'}）を同時に含み、辞書なしでは正しい条件を生成し...
+        0.0195 ->       0.0195  ...リランカーの削除は-6.2ppの低下（未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意では...
+        0.0781 ->       0.0781  ...未補正$p=0.0195$だがHolm補正後$p=0.0781$で有意ではない）で、効果はMedium層（-13...
+           95% ->           95  ...欲最短経路連結} SQLGuard（-0.2pp、95%CI $[-0.6, +0.1]$pp）、$n$-...
+           95% ->           95  ...$-best（-0.3pp、$p=0.8125$、95%CI $[-1.1, +0.4]$pp）、貪欲最短...
+        0.1484 ->       0.1484  ...]$pp）、貪欲最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.4, -0.0]$pp）...
+           95% ->           95  ...最短経路連結（-1.4pp、$p=0.1484$、95%CI $[-3.4, -0.0]$pp）はいずれも...
+        0.0001 ->       0.0001  ...ン辞書による用語翻訳（除去時-9.8pp, $p=0.0001$）を備える点、(2)~JOIN検索がエッジ重み最...
+           4.6 ->          4.6  ...、著者設計の245クエリ主評価（86.1%）よりも4.6pp低い。このギャップは主に、(1)~独立クエリが...
+         81.9% ->         81.9  ...。ゴールドが0行のクエリを分母から除外した感度値は81.9%（$n=97$）である（補足資料~\ref{sec...
+          11.5 ->         11.5  ...ze \begin{tabular}{@{}lp{11.5em}cc@{}} \toprule バリアント ...
+            11 ->           11  ...ion{制限事項と今後の研究}  主な制限は以下の11点である（各項目の詳細は補足資料~\ref{sec...
+           95% ->           95  ...体の$\Delta$にはクエリ単位ブートストラップ95%CIを付与したが（表~\ref{tab:ablat...
+         0.001 ->        0.001  ...価）から、少数ショット例（-16.1pp, $p<0.001$）が最大の精度低下要因であり、材料ドメイン辞書（...
+        0.0001 ->       0.0001  ...因であり、材料ドメイン辞書（-9.8pp, $p=0.0001$）も有意な寄与を持つことが示された（2条件ともH...
+           95% ->           95  ...スキーマでは有意な差を示さなかった（-1.4pp、95%CI $[-3.4, -0.0]$pp、Holm補...
+         0.445 ->        0.445  ...-3.4, -0.0]$pp、Holm補正後$p=0.445$）。JOIN パスの誤りは少なく、残る主要な失敗...
+          -7.8 ->         -7.8  ...ン（245クエリ）は実行再現率78.3%（主評価比-7.8pp）で、FK関係に基づかないJOINが115件、...
+           0.3 ->          0.3  ...^{1,*}$および末松 知恵$^{1}$}\\[0.3em]   {\small $^{1}$材料データ...
+           305 ->          305  ...Namiki, Tsukuba, Ibaraki 305-0044, Japan}\\[0.3em]   ...
+           0.3 ->          0.3  ...araki 305-0044, Japan}\\[0.3em]   {\small $^{*}$対応著者：...
+            39 ->           39  ...テゴリとその検証の焦点を示す。セクションS2では、39の回帰テストケースをリストする。セクションS3では...
+          -5.5 ->         -5.5  ...提供する。セクションS7では、LLMモード（GPT-5.5）の構成パラメータとプロンプト構造を説明する。セク...
+            39 ->           39  ...tab:sup_all_tests}には、すべての39の回帰テストケース（通常、一致なし、曖昧、矛盾、S...
+            39 ->           39  ...ng \caption{回帰テストケース（すべての39テスト、すべて合格）。クエリは元の日本語で示されて...
+            11 ->           11  ...合物の全データを出して & PASS \\   A11 & 通常 & Tiを含むL1$_2$化合物を格子...
+            12 ->           12  ...定数順（降順）に出して & PASS \\   A12 & 通常 & 安定なL1$_2$で格子定数3.5...
+           3.5 ->          3.5  ...A12 & 通常 & 安定なL1$_2$で格子定数3.5\AA{}{} 以上のものを出して & PASS ...
+            12 ->           12  ... & PASS \\   C02 & 曖昧 & L12 & PASS \\   C03 & 曖昧 & 安...
+            12 ->           12  ...SS \\   C09 & 曖昧 & NiAl L12 & PASS \\   C10 & 曖昧 & N...
+            12 ->           12  ...PASS \\   C10 & 曖昧 & NiのL12 & PASS \\   \midrule   D...
+          0.03 ->         0.03  ...xt{Ni}_3\text{Al}}| \leq 0.03$~\AA{}{}を厳密に満たす候補を示す（$a_...
+            27 ->           27  ...$~\AA{}{}; 該当する26のユニーク組成（27エントリ）の中から$|\Delta a|$の小さい...
+
+=== verify_ssot ===
+[PASS] figure provenance goes through the SSOT
+       generate_figures.py reads paper_data.json only.
+[PASS] paper_data.json contains no hand-written numbers
+       No hard-coded numeric literals reach paper_data.json.
+[PASS] SQLGuard check count is consistent
+       paper_data.json safety.n_sqlguard_checks = 15
+       check_* functions invoked by validate_sql() = 15
+       paper/stam-m_ja.tex: states 15, enumerates 15 items
+[PASS] derivable invariants agree
+       All derivable invariants agree with the packaged artefacts.
+[PASS] provenance fields are reproducible
+       _meta.git_commit = '48a6cb01d7a5d86d523bb1587c92c828db60865f'; .git present: False
+
+5/5 checks passed
+
+=== 2026-06-02 post-audit addendum ===
+Numeric audit (detect numbers in stam-m_ja.tex -> trace provenance): 5 stale cells found
+in tab:ablation-detail (per-difficulty deltas) and fixed to match
+paper_data.json ablation.top3_per_difficulty_deltas / ablation_multirun_stats.json:
+  no_fewshot Medium -15.9 -> -12.7
+  no_dict Medium -1.4 -> -1.3 ; Hard -7.8 -> -7.7
+  no_reranker Medium -13.1 -> -13.0 ; Hard -6.6 -> -6.5
+PDF recompiled (LuaLaTeX+BibTeX, 40 pages, 0 undefined citations/references).
+verify_paper_numbers --tex stam-m_ja.tex: gating 0 (exit 0)
+verify_ssot: 5/5 checks passed
+All other unmatched TeX numbers verified as: fixed thresholds/model names/citation years,
+question-text constants, per-query supplementary tables (ablation run artefacts),
+materials table values (DB-derived), scoring_audit.json values (all cross-checked), CI bounds
+(ablation_significance_v2 / paper_data stats_v2, all matched after rounding).
+
+=== 2026-06-02 rendering-fix addendum ===
+Fixed 85 malformed subscript tokens in stam-m_ja.tex supplement per-query tables:
+"$$_{\mathrm{X}}$$" (display math, caused mid-cell line breaks) -> "$_{\mathrm{X}}$" (inline).
+Algorithm 1 font reduced to \footnotesize per author request.
+PDF recompiled (LuaLaTeX+BibTeX): 37 pages, 0 undefined citations/references.
+verify_paper_numbers --tex stam-m_ja.tex: gating 0 (exit 0); verify_ssot: 5/5 checks passed.
+No numeric content changed.
+
+=== 2026-06-02 S4 lattice-match table expansion (Co3Ti visibility) ===
+Change: paper/stam-m_ja.tex tab:sup_lattice_match reformatted to a two-column
+layout listing ALL 27 entries (26 unique compositions) satisfying
+|a - a_ref| <= 0.03 A (a_ref = 3.572 A), instead of the previous top-14
+truncation. Co3Ti (delta_a = 0.022 A, E_hull = 0.0) is now shown in the table.
+Row data re-derived from DB-full (formation_enthalpy view, L12 prototype
+filter): 27 entries confirmed, matching the manuscript count.
+Cross-references updated (supplementary intro S4 description; main-text
+pointer now says "all 27 entries in Supplement S4").
+Re-verification after change:
+  lualatex+bibtex rebuild: 37 pages, undefined citations/references = 0,
+    no new overfull hbox from the S4 table (visual check of pp.14/17/30 OK)
+  verify_paper_numbers.py --tex stam-m_ja.tex: gating 0 (exit 0)
+  verify_ssot.py: 5/5 checks passed
+No numeric SSOT values changed (n_ni3al_lattice_match = 26 unchanged).
+
+=== 2026-06-02 S7 temperature wording revision ===
+Change: paper/stam-m_ja.tex S7 — replaced "GPT-5シリーズAPIは温度パラメータを
+サポートしておらず、本実装でも送信していない" with "本実装では温度パラメータを
+採用せずに統計的処理をおこなう" (user-requested wording; API-support claim
+removed). Table S4 temperature row updated to
+"指定なし（温度パラメータは採用していない）".
+Re-verification: lualatex+bibtex rebuild 37 pages, undefined refs/citations 0;
+verify_paper_numbers.py gating 0 (exit 0); verify_ssot.py 5/5 PASS.
+
+=== 2026-06-02 Independent-query designer anonymization ===
+Change: paper/stam-m_ja.tex — removed the personal name from the independent
+100-query design description (sec:independent_eval) and from the data
+availability cross-check sentence; both now read "パイプラインの実装に関与して
+いない共同著者". Author list / contribution statement unchanged (author
+metadata). English stam-m.tex/pdf unchanged (held until ja review done).
+Re-verification: lualatex+bibtex rebuild 37 pages, undefined refs/citations 0;
+verify_paper_numbers.py gating 0 (exit 0); verify_ssot.py 5/5 PASS.
+
+=== 2026-06-02 Manuscript revision batch (abstract + Fig + 8 review items) ===
+Changes to paper/stam-m_ja.tex only (English version unchanged):
+1. Abstract rewritten: mechanism-design focus with DB perspective (safety,
+   maintainability/portability, result reliability) and materials-engineering
+   perspective (cross-table search, multi-step derivations without SQL);
+   ablation detail enumeration (-16.1pp etc.) removed from abstract.
+2. Pipeline figure: two-row left-to-right layout with wrap arrow from step 3
+   to step 4, plus explicit output box (実行結果: read-only実行→結果テーブル);
+   caption updated. Note: subsection reorder makes ER diagram Figure 1 and the
+   pipeline overview Figure 2.
+3. Removed sentence 「この課題への対処が本研究の出発点である。」 (intro).
+4. Contributions: first mention of the 36-table RDB now reads 「検証RDB
+   （設計はセクション~\ref{sec:evaluation}で説明）」.
+5. GPT-5.5 naming clarified at first prose mention: OpenAI API model
+   identifier \texttt{gpt-5.5} (alias name, not a dated snapshot ID), with
+   pointer to Table \ref{tab:sup_llm_params}.
+6. Sec. few-shot retrieval: k defined (number of few-shot examples included
+   in the prompt; default k=3, so TF-IDF recall stage keeps up to 2k=6),
+   pointer to sensitivity analysis section.
+7. Schema-linking section: added concrete example (bulk-modulus query ->
+   composition/phase_stability/elastic_tensor/material_entry ranked top).
+8. n-best section: reranker selection criteria spelled out (heuristic score:
+   SQLGuard pass, execution success, non-empty result, condition coverage,
+   row-count plausibility; weighted with GPT-5.5 semantic score), with label
+   sec:reranker added to the hybrid reranker subsection.
+9. Subsection order: 「データベースと評価設計」(formerly 2.11) moved before
+   「パイプラインの概要」; it is now Section 2.1.
+Re-verification: lualatex+bibtex rebuild 37 pages, undefined refs/citations 0;
+verify_paper_numbers.py --tex stam-m_ja.tex gating 0 (exit 0);
+verify_ssot.py 5/5 PASS. No numeric SSOT values changed.
+
+================================================================
+2026-06-02 Discussion/Conclusion revision (Japanese manuscript only)
+================================================================
+Changes to paper/stam-m_ja.tex:
+1. Sec 4.1: 「再確認」->「重要である」.
+2. Sec 4.2: defined 条件 vs コンポーネント terminology; added discussion of
+   few-shot removal impact on Hard/VH tiers (limits of LLM alone) and of the
+   dictionary as a lexical resource preserving expression diversity,
+   complementary to few-shot SQL patterns.
+3. Sec 4.3 (new): 追加検証：独立設計クエリ・多段計算・一般化 groups the
+   independent 100-query evaluation, CTE/multistep, column comparison and
+   generalization subsections; boundaries with the main (author-designed)
+   evaluation made explicit. 関連システムとの比較 moved to its own
+   subsection before Limitations; 寄与の相互作用 kept as paragraph in 4.2.
+4. Sec 4.3.1: self-reference bias explained; the 「なお、このセットでは
+   ゴールドSQLが0行…」sentence removed from main text AND the corresponding
+   81.9% (n=97) sensitivity sentence removed from the supplement
+   (scoring-audit table itself retained).
+5. Sec 4.3.2 (CTE): introductory sentences added before the 代表例.
+6. Sec 4.3.3: clarified column-comparison queries belong to the
+   author-designed main evaluation.
+7. Sec 4.3.4: MP transfer claim positioned as lightweight schema adaptation.
+8. Limitations: item 「ゴールドSQLの検証…」 removed from the main-text list
+   (now 10 items) and from the supplementary limitations list (expert
+   verification of gold SQL has been completed).
+9. Conclusion rewritten: purpose -> design/what was done -> findings ->
+   implications; long numeric enumerations and CALPHAD/future-work sentences
+   removed (future work remains only in 今後の展望).
+10. Sec 3.x: 「実行フィードバックと修復ループ」simplified to
+    「実行フィードバックによる候補排除」 (repair loop, unused in all reported
+    evaluations, no longer described in methods; parameter table row kept).
+11. Supplement: 「Very HardクエリをEasyに近づける」rephrased.
+Re-verification: lualatex+bibtex rebuild 36 pages, undefined refs/citations 0;
+verify_paper_numbers.py --tex stam-m_ja.tex gating 0 (exit 0);
+verify_ssot.py 5/5 PASS. No numeric SSOT values changed. English manuscript
+unchanged.
+
+=== 2026-06-02 Supplement restructuring (S4/S5 merge, numbering, shortening) ===
+1. Former S4 (lattice-constant candidates) and S5 (formation-energy ranking
+   of stable L12 candidates) merged into a single section
+   「材料工学的探索の抽出結果：格子定数候補と安定候補ランキング」 (now S3).
+   Full 27-entry two-column table and Co3Ti sentence retained; the 157-candidate
+   / 7 stable / 150 metastable ranking paragraph retained. Both labels
+   (sec:sup_lattice_match, sec:sup_stable_l12) kept for reference integrity.
+2. Numbering fixes: all appendix \paragraph -> \paragraph* (removes spurious
+   S15.0.0.x numbers in the reproduction-workflow section and in the SQL
+   examples); duplicated inner subsubsection headings under the sensitivity
+   subsections (few-shot k / dictionary size / LLM model) removed;
+   materials-evaluation subsubsections promoted to subsections
+   (fixes S13.0.0.x-style numbering); Japanese cross-encoder comparison
+   promoted to its own subsection (was misnested under SQLGuard).
+3. Shortening: former S2 (39-row regression-test-case table) removed —
+   category counts remain in the unit-test-category table and the individual
+   query strings are contained in the packaged test code (noted in S1);
+   former S6 (SQL-injection details section, unreferenced) removed and its
+   informative sentence folded into the results subsection
+   「SQLインジェクションと安全性テストの入力別結果」; supplement roadmap
+   paragraph rewritten with dynamic \ref{}s (no hardcoded S-numbers).
+Supplement sections now S1–S12 (was S1–S15). PDF 35 pages (was 36).
+Re-verification: lualatex+bibtex rebuild, undefined refs/citations 0;
+verify_paper_numbers.py --tex stam-m_ja.tex gating 0 (exit 0);
+verify_ssot.py 5/5 PASS. No numeric SSOT values changed. English manuscript
+unchanged.
+
+[2026-06-02] Supplement restructure (user-requested):
+- Moved to main text: lattice-match table (all 27 entries, two-column), gamma'-ranking table (top-10),
+  related-system comparison table, cross-column comparison details, schema-design/T2SQL-cost discussion,
+  materials-engineering evaluation details (S13.0.1-2 equivalents).
+- Shortened supplement: discussion supplement (old S14) and reproduction workflow (old S15) compressed;
+  supplement now S1-S10 + workflow. Wide main-text tables set as full-width (table*) to avoid column overflow.
+- Rebuild: lualatex+bibtex+lualatex x2, 34 pages, undefined refs/citations: 0.
+- verify_paper_numbers --tex stam-m_ja.tex: gating 0 (JSON-missing 45 non-gating).
+- verify_ssot.py: 5/5 checks passed.
+- English manuscript unchanged (SHA-256 e07a9c05...92d34).
+
+=== 2026-06-02 指摘13件対応（v7） ===
+修正（stam-m_ja.tex のみ、英語版不変 SHA-256 e07a9c05...）:
+ 1. 表S6 テーブル 32 -> 36（DB実測: base tables 36 / views 1）
+ 2. 表S1 をテストモジュール別内訳（合計160、pytest --collect-only 実測と一致）に更新
+ 3. 図S5 本文/キャプション/図を 24/24/14/4・39ケース・多重ラベル合計66 に統一（SSOT failure_analysis から再生成）
+ 4. 図S4 キャプション VH exact 3.1->1.6% / recall 75.6->77.2%（表S12/SSOTと一致）
+ 5. 2.10 日本語リランカー差 -9.9pp -> -6.8pp（88.4-81.6）
+ 6. 純元素: 89=OQMD基底状態エントリ（material_entryへ加算）/ 178=pure_element_reference 行数（2参照セット×89元素）と書き分け
+ 7. S10ステップ3・制限事項(4)・データ利用可能性の「100クエリ」を主評価245に統一（100はサブセット/独立評価として明示）
+ 8. 検定名: 本文掲載値は Wilcoxon 符号順位検定（SSOT significance: test=wilcoxon-exact）に統一。
+    符号反転検定・rank-biserial は補助統計としてSSOT収録である旨をS10に明記。n_eff表記をn_nzに統一。
+ 9. 2.2 節参照を sec:fewshot〜sec:repair に修正、図の処理順との順序差を明記
+10. 「層化抽出」->「難易度層のバランスを考慮して選定」（構成比 17.6/28.2/28.2/26.1% vs 20/30/30/20% を明記）
+11. 「安定」: ユーザー視点の曖昧さと本評価の操作的固定（E_hull<=0.001）を S9.4(ii)・制限事項(7)で書き分け
+12. SQLGuard: 危険関数禁止（ブロックリスト、pg_sleep等）と関数allowlist照合の役割分担、
+    LIMIT自動追加が正規化（書き換え）である旨を2.9に注記。check_*関数は実装で15件を確認。
+13. DB実測（l12_materials, PostgreSQL 15）:
+    SELECT count(*) FILTER (WHERE is_stable <> (energy_above_hull <= 0.001)) FROM phase_stability; -> mismatch 0（total 1559, stable 77）
+    L12候補（E_hull<=0.05, formula単位最小E_hull）: stable 7 / metastable 150 / 計157、unique組成255 — 本文3.7と一致
+検証: lualatex+bibtex 再ビルド34ページ・undefined references/citations 0、
+      verify_paper_numbers gating 0、verify_ssot 5/5 PASS。
+
+=== 2026-06-02 第2次PDF監査10件対応（v8） ===
+ 1. 完全一致指標の呼称統一: 2.1.3の定義を (1)厳密な完全結果集合一致（Exact Result-Set Match; gold列リスト・行多重集合・順序）
+    = 表S12「正確な一致」= 図S4 Exact軸、(2)緩い完全一致（lenient exact match; 共通列射影Precision=Recall=1、
+    scoring_audit.json の common_column_exact_overlap_pct=78.0% としてのみ報告）に再定義。
+    貢献(ii)・S10(b)・表S1のEM表記も置換。図S4レーダー軸ラベル EM→Exact（generator修正・再生成）。
+ 2. S8.4: 40クエリ/VH18 → 39クエリ/VH17（SSOT failure_analysis 実測: 39件 = VH17/H15/M5/E2）
+ 3. S8.6: 「注意を4点」→「3点」（本文は第一〜第三のみ）
+ 4. S8.1: §2.2 → \ref{sec:fewshot}（2.3）参照に修正
+ 5. 2.9: 「テーブル・カラム存在確認」を「テーブル存在確認、カラム存在確認」に分割（列挙15項目=15チェック）
+ 6. 表S21に条件別精度（既知5パターン×7条件、5ラン平均: full 100.0 / no_fewshot 60.0 / no_dict 80.0 /
+    no_reranker 100.0 / no_guard 100.0 / no_nbest 96.0 / no_graph 100.0、SSOT ablation.cte_query_results）を追加
+ 7. 緩い完全一致78.0%の出典（scoring_audit.json / common_column_exact_overlap_pct）を3.4・表S12/S20キャプションに明示
+ 8. S10評価方針の n_eff → n_nz に統一
+ 9. 表3・表4キャプションに「a は3桁丸め表示、Δa・S は未丸め値から算出（末桁±0.001ずれ得る）」を追記
+10. 3.7(2): 「26候補」→「26のユニーク組成（27エントリ）」
+持ち越し: is_stable ≡ (energy_above_hull <= 0.001) をDB再実測 —
+    SELECT count(*) FILTER (WHERE is_stable <> (energy_above_hull <= 0.001)), count(*) FILTER (WHERE is_stable), count(*)
+    FROM phase_stability; -> mismatch 0 / stable 77 / total 1559（2.1.2・S2.1・3.7の主張と整合）
+検証: lualatex+bibtex 34ページ・undefined references/citations 0、verify_paper_numbers gating 0、verify_ssot 5/5 PASS。
+英語版 stam-m.tex は不変。
+
+=== 2026-06-02 STAM Methods向け改稿（v9） ===
+1. タイトル: 「精度・保守性・安全性を担保する」→「正確・保守可能・安全なデータ検索のための」Text-to-SQL基盤
+2. Abstract: 冒頭を材料データアクセス障壁→除去基盤のフレーミングに変更、86.1%を「245の自然言語クエリに対し
+   行レベルの実行再現率86.1%（期待行の検索を評価、完全一致SQL出力の割合ではない）」に厳密化、
+   末尾に「軽量なスキーマ固有設定で他の正規化材料RDBへ適応できる」を追加
+3. 序論「目的と貢献」冒頭に主眼（性能競争ではなく材料データ基盤アクセシビリティ問題の解決）を追加
+4. 結果（LLM-only節の主評価参照直後）に行レベル指標と厳密完全結果集合一致10.6%の区別を明示
+5. 安全性・一般化表現の弱め: 「実行前の安全性を保証する層」→「安全性検査を担う層」、
+   「差し替えのみで適用できる」→「軽量なスキーマ固有設定で適応できる」（結論・考察）
+6. 結論冒頭を「Text-to-SQLを中核とする材料データアクセス基盤を設計」に同期。3.7の材料デモは現状維持。
+検証: lualatex+bibtex 35ページ・undefined references/citations 0、verify_paper_numbers gating 0、verify_ssot 5/5。
+英語版 stam-m.tex 不変（SHA-256 e07a9c05...一致）。
+
+=== 2026-06-02 第3次PDF監査対応（v10） ===
+冒頭3点: (A1) Abstract「移行できる保守性・可搬性」→「適応しやすい保守性・可搬性」
+(A2) 4.1: 100%実行成功・89.3%JOIN一致は正確性・実行健全性の証拠と位置付け直し
+(A3) 4.2: 「JOINパスの健全性の保証」→「FKに整合したJOIN構成を促す」
+12件: (1) 幻覚率=SQLテキスト静的照合の診断値である旨を表2キャプション・3.2・3.4に明記
+(2) 表S20 ordered=ORDER BY付きゴールド234件基準と明記（scoring_audit.json n_gold_with_order_by=234）
+(3) 総行数を「約2.2万行」に統一（表S6・4.7(1)）
+(4) 表S14キャプションの未丸め注記は既存（確認）
+(5) no_graph CI表示を[-3.4, -0.002]に（SSOT bootstrap_ci95_pp=[0.00204,3.3877]）＋表1キャプションにCI（ブートストラップ）とp値（Wilcoxon）の統計量相違を注記
+(6) 3.3.2/3.3.3「整合」「同等」→「単一ランのため直接比較はできないが概ね同水準」
+(7) 3.1「ほぼVH層に集中」→「主にVH層（一部Medium・Easy層にも小差）」
+(8) 3.7: 表3・表4は検証済み（gold相当）決定的SQLのDB実行結果であり生成SQL出力ではない旨を明記
+(9) 表2キャプションからテーブル幻覚の定義を削除（SSOTに層別値なし・本文10件のみ）
+(10) 用語統一: 実行精度→実行再現率、表S12行見出し「正確な一致」→「厳密な完全結果集合一致」
+(11) 4.7(10)・S9.3(10)の参照をセクション2.1.3（sec:metrics新設ラベル）へ
+(12) 数値条件パーサ列挙に日本語比較を追加し5パターン整合／図3キャプション「**: p<0.01」削除／制限事項(5)にLLM-onlyでも VH 74.6 > Hard 68.6 の同傾向を追記
+検証: LuaLaTeX 35ページ・未定義参照/引用0、verify_paper_numbers gating 0、verify_ssot 5/5、英語版SHA-256不変
+
+=== 2026-06-02 第4次PDF監査対応（v11） ===
+(1) 「カラム幻覚」を「静的スキーマ未解決参照」に改名（表2見出し・キャプション・3.2本文・3.4・S8.5表キャプション）。有効なCTE・派生テーブル由来参照も計上し得る「真の幻覚件数の上限的診断値」と位置付け、「存在しないカラム参照87件」表現を全廃
+(2) GPT-4o「同等」全廃: 3.3.3末尾・表S18キャプション・図S3キャプション・S8.3を「近い水準（単一ラン比較のため統計的同等性は評価していない）」に統一
+(3) S8.6冒頭・S10のExact参照を sec:metrics（2.1.3）へ修正
+(4) 3.2の前方参照文を削除し、件数提示直後に自己完結の静的照合説明を配置
+(5) 3.7の相互参照を補足資料S4（表S3, tab:sup_query_detail）へ修正
+(6) 表S3列見出し「精度」→「再現率」、合否基準「精度が≥0.8」→「実行再現率が≥0.8」
+(7) 図3・図S1・図S2・図S3のy軸ラベルAccuracy→Execution recall差し替えの英語版向けメモをLaTeXコメントで残置
+(8) 表S20 ordered定義を「各データセットのORDER BY付きゴールドに対するRecall（主評価では234件）」に一般化／表1キャプションにno_graphのみ小数第3位表示の理由を追記／表2キャプション後半を「未解決参照の計上は…診断」に文体統一
+検証: LuaLaTeX 35ページ・未定義参照/引用0、verify_paper_numbers gating 0、verify_ssot 5/5、英語版SHA-256不変
+
+=== 2026-06-02 第5次PDF監査対応（v12） ===
+(1) generate_figures.py の y軸ラベル「Accuracy (%)」4箇所を「Execution recall (%)」へ変更し図3・図S1・図S2・図S3を再生成（英語版向けLaTeXコメント4件は不要となり削除）
+(2) Abstract「実在しないカラムやFK関係に基づかないJOINの抑制による検索結果の信頼性が確保される」→「誤ったスキーマ参照やFK非整合JOINの抑制による検索結果の信頼性向上が図られる」
+(3) 結論「効果的に解消できる」→「効果的に緩和できる」、障壁主張に「少なくとも本評価では」を付加し「正規化スキーマ構造・結合経路・条件対応の理解」に精緻化
+(4) Methods「データの信頼性を担保するため…OQMDを用い」→「生成エンタルピー計算の参照状態に現実的な値を用いるため…OQMD由来値を用いた。一方、その他の特性はプログラム生成した合成検証データである」
+(5) Abstract「SQLやスキーマ構造を意識せずに実行できる」→「直接記述することなく自然言語から実行できる枠組みを提供する」
+(6) Abstract 一般化試験の数値に「行レベル実行再現率は」を明記
+(7) Methods「小さな精度低下で処理できる」→「異なる適応条件下でも一定の実行再現率を維持することを示す」
+(8) 結論「データ変換や移行なしに…付加する研究インフラ」→「既存RDBを維持したまま自然言語インターフェースを付加する方向性を示す研究インフラ」
+(9) paper_data.json safety キー all_blocked→all_handled（compute_all_figures.py も同期。F01はblockではなくLIMIT付加のsanitizedケースのため）
+(10) S8.6 寛容採点の平均リコール範囲を実測に合わせ「（各クエリの35生成平均で0.686--1.00）」に修正
+    （ablation_run_1..5 実測: q_hard_021=0.971, q_vhard_009=1.000, q_vhard_018=0.686, q_vhard_020=0.943）
+(11) 2.1.1 と表S6キャプションに 36テーブルのうち1つがスキーマ初期化状態管理表（schema_initialization_status）である旨を明記（材料概念テーブルは35）
+検証: LuaLaTeX 35ページ・未定義参照/引用0、verify_paper_numbers gating 0、verify_ssot 5/5、英語版SHA-256不変

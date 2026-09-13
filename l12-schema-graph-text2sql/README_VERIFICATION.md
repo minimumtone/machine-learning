@@ -1,5 +1,10 @@
 # 隔離環境検証パッケージ — L1$_2$ Schema-Graph Text-to-SQL
 
+> **注記（v24）**: 配布ZIP（原稿本文 / Supplementary / MDR登録用スクリプト・データの3区分）は
+> `scripts/build_submission_package.py` で組み立て、その内容と検証手順は `package/README.md`・`package/FINAL_CHECKLIST.md`
+> に記載している。本ファイルの §4–5 に残る評価値・テスト件数は初期版（スキーマ再設計前）の実行時のものであり、
+> 現行の掲載値は `paper/paper_data.json`（SSOT）と `MANIFEST.md` を正とする。
+
 本パッケージは、論文の全評価（ablation・独立評価・転用試験・CTE評価）を
 隔離環境で再現するための資材・スクリプト・手順一式です。
 
@@ -147,7 +152,12 @@ L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... python scripts/audit_vocabular
 python scripts/compute_all_figures.py   # paper/paper_data.json 再生成（SSoT）
 python scripts/generate_figures.py      # paper/figures/ の図再生成
 cd paper && lualatex stam-m_ja.tex && bibtex stam-m_ja && lualatex stam-m_ja.tex && lualatex stam-m_ja.tex  # 日本語版
+python scripts/verify_paper_numbers.py   # 原稿の数値がSSOT由来かを監査（既定: paper/*.tex）
 ```
+
+英語版（`paper/stam-m.tex`）を訳出した後の合格条件は、`verify_paper_numbers.py` の既定実行が exit 0 であることに加え、
+出力に `TeX files audited: 2 (stam-m.tex, stam-m_ja.tex)` が含まれること（英語版が無くても
+`TeX files audited: 1 (stam-m_ja.tex)` で exit 0 になるため、exit 0 だけでは不十分）。
 
 ## 5. 判定基準（期待値）
 
