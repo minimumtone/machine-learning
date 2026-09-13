@@ -352,6 +352,32 @@ def test_verify_all_provenance_new_keys_tamper_detection(tmp_path, monkeypatch):
     summary, _ = va.check_provenance()
     assert "1 evaluation provenance blocks" in summary
 
+    # the gold/expected directory and hash keys are required even when the
+    # dataset rows carry no per-query paths (build_provenance() always
+    # records them), so an empty path set must not skip the requirement
+    dataset.write_text('{"id": "q1", "question": "x"}\n')
+    prov5 = build_provenance(dataset, gold_dir=gold, prompt_path=prompt,
+                             expected_dir=expected)
+    prov5["git_commit"] = "deadbeef"
+    for missing, match in (("gold_dir", "provenance gold_dir is missing"),
+                           ("gold_sha256", "provenance gold_sha256 is missing"),
+                           ("expected_dir", "provenance expected_dir is missing"),
+                           ("expected_sha256",
+                            "provenance expected_sha256 is missing")):
+        stripped = {k: v for k, v in prov5.items() if k != missing}
+        result.write_text(json.dumps({
+            "model": "m", "provenance": stripped,
+            "results": [{"qid": "q1", "sql": "SELECT 1;"}],
+        }))
+        with pytest.raises(va.VerifyError, match=match):
+            va.check_provenance()
+    result.write_text(json.dumps({
+        "model": "m", "provenance": prov5,
+        "results": [{"qid": "q1", "sql": "SELECT 1;"}],
+    }))
+    summary, _ = va.check_provenance()
+    assert "1 evaluation provenance blocks" in summary
+
 
 def test_model_comparison_config_hash_staleness():
     import pytest
