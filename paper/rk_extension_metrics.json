@@ -1,0 +1,178 @@
+{
+  "BCC_sqs_dft_raw_endpoints": {
+    "n_train": 29,
+    "n_test": 17,
+    "n_test_non_equiatomic": 2,
+    "n_test_equiatomic": 15,
+    "n_train_non_equiatomic": 18,
+    "omega1_pairs_available": 350,
+    "coverage_train": {
+      "n_alloys": 29,
+      "n_pairs": 247,
+      "n_pairs_covered": 180,
+      "pair_coverage_frac": 0.728744939271255,
+      "n_alloys_fully_covered": 2
+    },
+    "coverage_test": {
+      "n_alloys": 17,
+      "n_pairs": 144,
+      "n_pairs_covered": 117,
+      "pair_coverage_frac": 0.8125,
+      "n_alloys_fully_covered": 3
+    },
+    "q_baseline_opt": 1.1096076965332031,
+    "rmse_train_baseline_qopt": 0.0278144222609024,
+    "rmse_test_baseline_qopt": 0.01176028034285854,
+    "rmse_train_baseline_q1": 0.02785548737196799,
+    "rmse_test_baseline_q1": 0.012424144821201613,
+    "q_joint": 1.1154017190243593,
+    "q1_joint": 21.232841099259197,
+    "rmse_train_joint": 0.026379766180395288,
+    "rmse_test_joint": 0.011362388747057571,
+    "q1_with_q_fixed_1": 21.21773730468752,
+    "rmse_train_q1fixed": 0.02642781498000362,
+    "rmse_test_q1fixed": 0.012048186701447288,
+    "asym_term_shift_test_q1_unity": {
+      "median_A": 0.0,
+      "p90_A": 0.00012506275161232604,
+      "max_A": 0.0005522268612825343,
+      "n": 17
+    },
+    "rmse_test_nonequi_baseline": 0.009109278196096554,
+    "rmse_test_nonequi_joint": 0.003237116399400967,
+    "rmse_test_equi_baseline": 0.012069834009123363,
+    "rmse_test_equi_joint": 0.012038294678513476
+  },
+  "FCC_sqs_dft_raw_endpoints": {
+    "n_train": 35,
+    "n_test": 14,
+    "n_test_non_equiatomic": 3,
+    "n_test_equiatomic": 11,
+    "n_train_non_equiatomic": 27,
+    "omega1_pairs_available": 70,
+    "coverage_train": {
+      "n_alloys": 35,
+      "n_pairs": 287,
+      "n_pairs_covered": 16,
+      "pair_coverage_frac": 0.05574912891986063,
+      "n_alloys_fully_covered": 0
+    },
+    "coverage_test": {
+      "n_alloys": 14,
+      "n_pairs": 112,
+      "n_pairs_covered": 10,
+      "pair_coverage_frac": 0.08928571428571429,
+      "n_alloys_fully_covered": 0
+    },
+    "q_baseline_opt": 3.5767066955566458,
+    "rmse_train_baseline_qopt": 0.009529211678881771,
+    "rmse_test_baseline_qopt": 0.012724643088380932,
+    "rmse_train_baseline_q1": 0.009970239339485576,
+    "rmse_test_baseline_q1": 0.013602231538658645,
+    "q_joint": 4.141867245374731,
+    "q1_joint": 159.94252191109183,
+    "rmse_train_joint": 0.009480933197494129,
+    "rmse_test_joint": 0.01423727276077112,
+    "q1_with_q_fixed_1": -115.66456640625017,
+    "rmse_train_q1fixed": 0.009935124711879217,
+    "rmse_test_q1fixed": 0.013602231538658645,
+    "asym_term_shift_test_q1_unity": {
+      "median_A": 0.0,
+      "p90_A": 0.0,
+      "max_A": 0.0,
+      "n": 14
+    },
+    "rmse_test_nonequi_baseline": 0.016459234495929103,
+    "rmse_test_nonequi_joint": 0.015239594915341631,
+    "rmse_test_equi_baseline": 0.011497479500851799,
+    "rmse_test_equi_joint": 0.013951420063769381
+  },
+  "BCC_sqs_dft_curated_endpoints": {
+    "n_train": 29,
+    "n_test": 17,
+    "n_test_non_equiatomic": 2,
+    "n_test_equiatomic": 15,
+    "n_train_non_equiatomic": 18,
+    "omega1_pairs_available": 427,
+    "coverage_train": {
+      "n_alloys": 29,
+      "n_pairs": 247,
+      "n_pairs_covered": 193,
+      "pair_coverage_frac": 0.7813765182186235,
+      "n_alloys_fully_covered": 2
+    },
+    "coverage_test": {
+      "n_alloys": 17,
+      "n_pairs": 144,
+      "n_pairs_covered": 117,
+      "pair_coverage_frac": 0.8125,
+      "n_alloys_fully_covered": 3
+    },
+    "q_baseline_opt": 1.1096076965332031,
+    "rmse_train_baseline_qopt": 0.0278144222609024,
+    "rmse_test_baseline_qopt": 0.01176028034285854,
+    "rmse_train_baseline_q1": 0.02785548737196799,
+    "rmse_test_baseline_q1": 0.012424144821201613,
+    "q_joint": 0.9481378819806745,
+    "q1_joint": 20.833158367699994,
+    "rmse_train_joint": 0.026415377293520677,
+    "rmse_test_joint": 0.012410203461584708,
+    "q1_with_q_fixed_1": 20.407583984375023,
+    "rmse_train_q1fixed": 0.02642449431294364,
+    "rmse_test_q1fixed": 0.0120464104928879,
+    "asym_term_shift_test_q1_unity": {
+      "median_A": 0.0,
+      "p90_A": 0.00012506276966810513,
+      "max_A": 0.0005522268078852477,
+      "n": 17
+    },
+    "rmse_test_nonequi_baseline": 0.009109278196096554,
+    "rmse_test_nonequi_joint": 0.003781596879938717,
+    "rmse_test_equi_baseline": 0.012069834009123363,
+    "rmse_test_equi_joint": 0.013139311497335188
+  },
+  "FCC_sqs_dft_curated_endpoints": {
+    "n_train": 35,
+    "n_test": 14,
+    "n_test_non_equiatomic": 3,
+    "n_test_equiatomic": 11,
+    "n_train_non_equiatomic": 27,
+    "omega1_pairs_available": 73,
+    "coverage_train": {
+      "n_alloys": 35,
+      "n_pairs": 287,
+      "n_pairs_covered": 16,
+      "pair_coverage_frac": 0.05574912891986063,
+      "n_alloys_fully_covered": 0
+    },
+    "coverage_test": {
+      "n_alloys": 14,
+      "n_pairs": 112,
+      "n_pairs_covered": 10,
+      "pair_coverage_frac": 0.08928571428571429,
+      "n_alloys_fully_covered": 0
+    },
+    "q_baseline_opt": 3.5767066955566458,
+    "rmse_train_baseline_qopt": 0.009529211678881771,
+    "rmse_test_baseline_qopt": 0.012724643088380932,
+    "rmse_train_baseline_q1": 0.009970239339485576,
+    "rmse_test_baseline_q1": 0.013602231538658645,
+    "q_joint": 4.940741928160385,
+    "q1_joint": 239.37568616901493,
+    "rmse_train_joint": 0.009398196215119862,
+    "rmse_test_joint": 0.01697428454891896,
+    "q1_with_q_fixed_1": -100.73500000000013,
+    "rmse_train_q1fixed": 0.009926565463108975,
+    "rmse_test_q1fixed": 0.013602231538658645,
+    "asym_term_shift_test_q1_unity": {
+      "median_A": 0.0,
+      "p90_A": 0.0,
+      "max_A": 0.0,
+      "n": 14
+    },
+    "rmse_test_nonequi_baseline": 0.016459234495929103,
+    "rmse_test_nonequi_joint": 0.013599918512615,
+    "rmse_test_equi_baseline": 0.011497479500851799,
+    "rmse_test_equi_joint": 0.017783790762218536
+  }
+}
