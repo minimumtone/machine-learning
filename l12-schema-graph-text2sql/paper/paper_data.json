@@ -2,8 +2,8 @@
   "_meta": {
     "description": "Single source of truth for paper numerical values",
     "generated_by": "paper_scripts/compute_all_figures.py",
-    "generated_at": "2026-09-12 15:53:43 UTC",
-    "git_commit": "5305d7db386de323c9312adefbe6507c56cf8daa",
+    "generated_at": "2026-09-13 01:40:22 UTC",
+    "git_commit": "120adf188a0a10db187ee7ea41f7e2aa282ec4b9",
     "source_files": [
       "evaluation/ablation_multirun_stats.json",
       "evaluation/ablation_run_1.json",
@@ -1393,6 +1393,13 @@
   "figure_source_data": {
     "_note": "Verbatim evaluation JSON payloads consumed by generate_figures.py (paper_scripts/ in the package)",
     "ablation_multirun_stats": {
+      "_meta": {
+        "n_runs": 5,
+        "test": "exact sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|, |diff| rounded to 9 decimals before ranking) on per-query mean accuracy, full - condition (scripts/sign_permutation.py)",
+        "test_label": "sign-permutation-exact-midranks",
+        "tie_decimals": 9,
+        "correction": "Holm-Bonferroni across the ablated conditions"
+      },
       "n_runs": 5,
       "provenance": {
         "dataset_file": "evaluation_dataset.jsonl",
@@ -1404,8 +1411,8 @@
         "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
         "expected_dir": "expected_results",
         "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-        "git_commit": "unknown",
-        "generated_at": "2026-09-02T09:59:42+00:00",
+        "git_commit": "120adf188a0a10db187ee7ea41f7e2aa282ec4b9",
+        "generated_at": "2026-09-13T01:39:50+00:00",
         "rescore_note": "aggregated deterministically from stored ablation_run_*.json; the per-run provenance in those files identifies the inference revision"
       },
       "conditions": {

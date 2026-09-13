@@ -2,8 +2,9 @@
   "_meta": {
     "generated_by": "scripts/recompute_significance.py",
     "n_runs": 5,
-    "test": "exact sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|) on per-query mean accuracy, full - condition (scripts/sign_permutation.py)",
+    "test": "exact sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|, |diff| rounded to 9 decimals before ranking) on per-query mean accuracy, full - condition (scripts/sign_permutation.py)",
     "test_label": "sign-permutation-exact-midranks",
+    "tie_decimals": 9,
     "correction": "Holm-Bonferroni across the ablated conditions",
     "bootstrap": {
       "n_resamples": 10000,
@@ -21,8 +22,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "5305d7db386de323c9312adefbe6507c56cf8daa",
-    "generated_at": "2026-09-12T15:53:08+00:00",
+    "git_commit": "120adf188a0a10db187ee7ea41f7e2aa282ec4b9",
+    "generated_at": "2026-09-13T01:38:07+00:00",
     "rescore_note": "statistics recomputed deterministically from stored ablation_run_*.json by scripts/recompute_significance.py; no LLM call is involved"
   },
   "conditions": {
@@ -87,7 +88,7 @@
         -0.4000000000000001,
         1.1460317460317457
       ],
-      "p_value_stored_before_run": 0.75,
+      "p_value_stored_before_run": 0.625,
       "p_value_holm": 1.0,
       "significant_holm": false,
       "stars_holm": "n.s."

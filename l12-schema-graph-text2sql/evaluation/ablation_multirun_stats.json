@@ -1,4 +1,11 @@
 {
+  "_meta": {
+    "n_runs": 5,
+    "test": "exact sign-permutation test of the Wilcoxon signed-rank statistic (midranks for tied |diff|, |diff| rounded to 9 decimals before ranking) on per-query mean accuracy, full - condition (scripts/sign_permutation.py)",
+    "test_label": "sign-permutation-exact-midranks",
+    "tie_decimals": 9,
+    "correction": "Holm-Bonferroni across the ablated conditions"
+  },
   "n_runs": 5,
   "provenance": {
     "dataset_file": "evaluation_dataset.jsonl",
@@ -10,8 +17,8 @@
     "prompt_template_note": "SHA-256 of the static prompt template only; the prompt actually sent per query additionally contains dynamically injected few-shot examples, schema/JOIN listings and column hints, so it is not covered by this hash",
     "expected_dir": "expected_results",
     "expected_sha256": "e2365f2250787a7109f4ebe733a6426ffdaf31b613891436e6e667a562fcc11b",
-    "git_commit": "unknown",
-    "generated_at": "2026-09-02T09:59:42+00:00",
+    "git_commit": "120adf188a0a10db187ee7ea41f7e2aa282ec4b9",
+    "generated_at": "2026-09-13T01:39:50+00:00",
     "rescore_note": "aggregated deterministically from stored ablation_run_*.json; the per-run provenance in those files identifies the inference revision"
   },
   "conditions": {
