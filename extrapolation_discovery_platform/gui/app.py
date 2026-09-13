@@ -40,11 +40,13 @@ import datetime
 import faulthandler
 import html as html_mod
 import logging
+import math
 import queue
 import threading
 import time
 import traceback
 import warnings
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
@@ -54,6 +56,7 @@ faulthandler.enable()
 import gradio as gr
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error, r2_score
 
 from extrapolation_discovery_platform.gui.plotly_charts import (
     build_summary_stats_md,
@@ -93,10 +96,6 @@ def _fmt_score(x: Any) -> str:
 
 def _cell_metrics(run_list: List[Any], sp_f: str = "All") -> Tuple:
     """Calculate heatmap metrics independently for each split series."""
-    from collections import defaultdict
-    import math
-    from sklearn.metrics import mean_squared_error, r2_score
-
     filtered = [
         r for r in run_list
         if sp_f == "All" or r.split_policy == sp_f

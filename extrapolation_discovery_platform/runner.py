@@ -711,10 +711,7 @@ class ExperimentRunner:
             if "ElementExclusion" in fold_plan:
                 splitter_folds["ElementExclusion"] = fold_plan["ElementExclusion"]
             rc_key = f"RandomCV_seed{seed}"
-            policies = selected_policies
-            if policies is None:
-                policies = getattr(self, "_selected_split_policies", [])
-            if "RandomCV" in policies and rc_key in fold_plan:
+            if "RandomCV" in (selected_policies or []) and rc_key in fold_plan:
                 splitter_folds["RandomCV"] = fold_plan[rc_key]
             for fs_name in feature_sets:
                 fs_key = fs_name.value
