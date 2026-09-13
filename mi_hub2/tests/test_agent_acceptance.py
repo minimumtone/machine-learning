@@ -231,7 +231,7 @@ class TestHumanInTheLoop:
         assert exec_task.status == TaskState.AWAITING_APPROVAL
 
     def test_approval_then_execution(self, manager, session):
-        result = manager.run_auto(session)
+        manager.run_auto(session)
         approval = next(a for a in session.approvals if a.status == "pending")
         manager.resolve_approval(session, approval.approval_id, True)
         manager.run_auto(session)
@@ -425,6 +425,22 @@ def test_classify_intent_fallback():
     assert classify_intent("HEAの安定性について教えて", False)["intent"] == "question"
 
 
+def test_fallback_proposal_summary():
+    """LLM 不可時のスクリプト提案要約に、導入・成果物・承認前提が含まれる。"""
+    from mi_hub.agent.llm import _fallback_proposal_summary
+    script = (
+        "pip install -q icet\n"
+        "python3 - <<'PY'\n"
+        "import matplotlib.pyplot as plt\n"
+        "plt.savefig(\"result.png\")\n"
+        "PY\n"
+    )
+    summary = _fallback_proposal_summary(script)
+    assert "icet" in summary
+    assert "result.png" in summary
+    assert "承認するまで実行されません" in summary
+
+
 def test_knowledge_provider_registration(manager, session):
     """登録したナレッジプロバイダ（MCP/GraphRAG差込口）が文献検索に併用される。"""
     from mi_hub.agent.tools import KnowledgeProvider
@@ -452,3 +468,101 @@ def test_memory_context_short_and_long_term(manager, session):
     assert mem["short_term_memory"]["recent_tasks"]
     assert mem["long_term_memory"]["evaluation_history"]
     assert mem["long_term_memory"]["evidence"]
+
+
+class TestLLMProviders:
+    """複数LLMプロバイダの解決（実LLMは呼ばない）。"""
+
+    def test_no_keys_no_provider(self):
+        from mi_hub.agent import llm
+
+        assert llm.available_providers() == []
+        assert llm.current_provider() is None
+        assert not llm.llm_available()
+
+    def test_provider_resolution(self, monkeypatch):
+        from mi_hub.agent import llm
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        monkeypatch.setenv("GEMINI_API_KEY", "y")
+        assert llm.available_providers() == ["anthropic", "gemini"]
+        assert llm.current_provider() == "anthropic"
+        monkeypatch.setenv("MI_HUB_LLM_PROVIDER", "gemini")
+        assert llm.current_provider() == "gemini"
+        # キーの無いプロバイダ指定はキーのあるものへフォールバック
+        monkeypatch.setenv("MI_HUB_LLM_PROVIDER", "openai")
+        assert llm.current_provider() == "anthropic"
+
+    def test_local_provider(self, monkeypatch):
+        from mi_hub.agent import llm
+
+        monkeypatch.setenv("MI_HUB_LLM_BASE_URL", "http://localhost:11434/v1")
+        assert "local" in llm.available_providers()
+        assert llm.current_provider() == "local"
+        assert llm.llm_available()
+
+    def test_parse_json_text_code_fence(self):
+        from mi_hub.agent.llm import _parse_json_text
+
+        assert _parse_json_text('```json\n{"a": 1}\n```') == {"a": 1}
+        assert _parse_json_text('{"a": 1}') == {"a": 1}
+        assert _parse_json_text("not json") is None
+
+
+class TestBugRegressions:
+    """バグ検証で見つかった問題の回帰試験。"""
+
+    def test_resolve_approval_rejects_double_resolution(self, manager, session):
+        from mi_hub.agent.models import ApprovalRequest
+
+        req = ApprovalRequest(kind="script_execution", description="test",
+                              payload={"script": "echo ok"})
+        session.approvals.append(req)
+        manager.resolve_approval(session, req.approval_id, True)
+        with pytest.raises(ValueError):
+            manager.resolve_approval(session, req.approval_id, False)
+        assert req.status == "approved"
+
+    def test_search_literature_returns_copies(self, manager):
+        gw = manager.gateway
+        docs = gw.search_literature("NiAl antisite")
+        assert docs
+        docs[0]["claim"] = "改変"
+        docs[0]["conditions"]["injected"] = True
+        again = gw.search_literature("NiAl antisite")
+        assert again[0]["claim"] != "改変"
+        assert "injected" not in again[0]["conditions"]
+
+    def test_search_knowledge_does_not_pollute_registry(self, manager):
+        gw = manager.gateway
+        gw.search_knowledge("NiAl antisite")
+        assert all("provider" not in d for d in gw.literature)
+
+    def test_run_script_timeout_reports_generated_files(self, manager, tmp_path):
+        wd = str(tmp_path / "ws-timeout")
+        res = manager.gateway.run_script(
+            "echo x > out.txt\nsleep 5", timeout_s=1, workdir=wd,
+        )
+        assert res["exit_code"] == -1
+        assert "out.txt" in res["generated_files"]
+
+    def test_update_from_logs_skips_corrupt_lines(self, tmp_path):
+        from mi_hub.agent.graphrag import build_default_provider
+
+        provider = build_default_provider(str(tmp_path / "graphrag"))
+        with open(provider.log_path, "a", encoding="utf-8") as f:
+            f.write("{broken json\n\n")
+        provider.search("ナノ結晶粒微細化 の文献")
+        provider.search("ナノ結晶粒微細化 を調べたい")
+        added = provider.update_from_logs(min_count=2)
+        assert isinstance(added, list)
+
+    def test_update_from_logs_adds_compound_terms(self, tmp_path):
+        from mi_hub.agent.graphrag import build_default_provider
+
+        provider = build_default_provider(str(tmp_path / "graphrag"))
+        provider.search("積層欠陥エネルギー と 相安定性 の関係")
+        provider.search("積層欠陥エネルギー の文献を調べたい")
+        added = provider.update_from_logs(min_count=2)
+        assert "積層欠陥エネルギー" in added
+        assert provider.tokenizer.tokenize("積層欠陥エネルギーの評価")[0] == "積層欠陥エネルギー"

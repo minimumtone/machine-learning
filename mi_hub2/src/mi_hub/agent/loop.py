@@ -11,10 +11,16 @@ import os
 import platform
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
-from . import llm
+from pydantic import ValidationError
+
+from . import codes, llm, scriptgen
+from .graphrag import GraphRAGProvider
 from .models import (
+    ApprovalRequest,
+    Evidence,
+    JobRecord,
     Observation,
     Plan,
     PlanChange,
@@ -31,6 +37,11 @@ from .roles import (
     ModelSelectionAgent,
     SafetyApprovalAgent,
     VerificationPlanningAgent,
+)
+from .scheduler import (
+    SchedulerError,
+    SchedulerGateway,
+    resolve_scheduler_from_env,
 )
 from .states import AgentState, HypothesisState, TaskState
 from .tools import ToolGateway
@@ -77,9 +88,11 @@ class ResearchManager:
     """研究セッション全体を統括する（§5.1）。"""
 
     def __init__(self, gateway: ToolGateway | None = None,
-                 store: SessionStore | None = None):
+                 store: SessionStore | None = None,
+                 scheduler: SchedulerGateway | None = None):
         self.gateway = gateway or ToolGateway()
         self.store = store or SessionStore()
+        self.scheduler = scheduler or resolve_scheduler_from_env()
         self.safety = SafetyApprovalAgent()
         self._roles = {
             "EvidenceAgent": EvidenceAgent(),
@@ -100,6 +113,12 @@ class ResearchManager:
             if structured.get(k) is not None
         })
         state = SessionState(goal=goal, agent_state=AgentState.IDLE)
+        # 会話は研究者の疑問・依頼（研究目標）から始める
+        state.chat_history.append({"role": "user", "content": goal_statement})
+        state.chat_history.append({
+            "role": "assistant",
+            "content": "研究目標を受け付けました。計画を生成し、承認をいただきながら検証を進めます。",
+        })
         state.audit("ResearchManager", "session_created", goal_id=goal.goal_id)
         self.store.save(state)
         return state
@@ -272,6 +291,8 @@ class ResearchManager:
             state.audit(task.agent, "task_executed", task_id=task.task_id,
                         status=task.status.value)
             status = "completed" if task.status != TaskState.FAILED else "failed"
+            if task.status != TaskState.FAILED:
+                self._add_science_comment(state, task)
         except Exception as exc:  # ツール層以外の予期しない失敗
             from .errors import record_error
 
@@ -285,6 +306,29 @@ class ResearchManager:
         self.store.save(state)
         return {"status": status, "task_id": task.task_id,
                 "result": task.result, "error": task.error}
+
+    _COMMENT_TARGETS: ClassVar[dict[str, str]] = {
+        "HypothesisAgent": "仮説",
+        "EvaluationAgent": "評価結果",
+        "ExecutionAgent": "計算結果",
+    }
+
+    def _add_science_comment(self, state: SessionState, task: Task) -> None:
+        """仮説・計算結果への専門的コメントを研究者へ提示する（LLM 不可時は何もしない）。"""
+        kind = self._COMMENT_TARGETS.get(task.agent)
+        if not kind or not task.result:
+            return
+        goal = state.goal.statement if state.goal else ""
+        payload = {"task": task.description, "result": task.result,
+                   "hypotheses": [h.statement for h in state.hypotheses]}
+        comment = llm.science_comment(goal, kind, payload)
+        if comment:
+            state.chat_history.append({
+                "role": "assistant",
+                "content": f"【エージェント所見（{kind}）】\n{comment}",
+            })
+            state.audit("ResearchManager", "science_comment",
+                        task_id=task.task_id, kind=kind)
 
     def _wire_inputs(self, state: SessionState, task: Task) -> None:
         plan = state.plan
@@ -339,6 +383,292 @@ class ResearchManager:
         d = self.store.base_dir / "workspaces" / state.session_id
         d.mkdir(parents=True, exist_ok=True)
         return str(d)
+
+    # ---------- 外部ジョブ（Slurm等、承認必須） ----------
+    def propose_job(self, state: SessionState, name: str, script: str,
+                    kind: str = "dft", description: str = "",
+                    estimated_node_hours: float = 1.0) -> JobRecord:
+        """外部ジョブを提案し、承認要求を登録する（投入は承認後のみ）。"""
+        job = JobRecord(
+            scheduler=self.scheduler.name, name=name, kind=kind, script=script,
+            workdir=os.path.join(self.session_workspace(state), "jobs", name),
+            estimated_node_hours=estimated_node_hours,
+        )
+        req = ApprovalRequest(
+            kind="job_submission",
+            description=description or f"外部ジョブ投入: {name}（{kind}、"
+                        f"推定 {estimated_node_hours:.1f} ノード時間）",
+            payload={"job_id": job.job_id, "script": script,
+                     "estimated_node_hours": estimated_node_hours},
+        )
+        job.approval_id = req.approval_id
+        state.jobs.append(job)
+        state.approvals.append(req)
+        state.audit("ResearchManager", "job_proposed", job_id=job.job_id,
+                    approval_id=req.approval_id, name=name, kind=kind)
+        state.chat_history.append({
+            "role": "assistant",
+            "content": f"「{req.description}」という提案がありますが、実行しますか？"
+                       "（承認するまで投入されません。実行する場合は「承認」、"
+                       "しない場合は「却下」と入力してください。承認タブからも操作可）",
+        })
+        self.store.save(state)
+        return job
+
+    # ---------- 計算コード選択（仮説 → コード推薦 → 入力生成 → 承認付き提案） ----------
+    def plan_calculation(self, state: SessionState,
+                         hypothesis_id: str | None = None,
+                         hypothesis_text: str | None = None) -> dict[str, Any]:
+        """検証したい仮説に最適な計算コードを推薦する。
+
+        LLM で仮説から計算要件を構造化し、codes.CODE_CATALOG の決定論的
+        ルールで順位付けする。推薦と根拠はチャットへ提示される（実行はしない）。
+        """
+        text = hypothesis_text
+        if text is None and hypothesis_id:
+            h = state.hypothesis(hypothesis_id)
+            if h is None:
+                raise ValueError(f"仮説が存在しません: {hypothesis_id}")
+            text = h.statement
+        if not text:
+            raise ValueError("仮説（hypothesis_id または hypothesis_text）が必要です")
+        goal = state.goal.statement if state.goal else ""
+        raw = llm.structure_calc_requirements(text, goal, codes.catalog_summary())
+        try:
+            req = codes.CalcRequirements.model_validate(raw)
+        except ValidationError:
+            req = codes.CalcRequirements()
+        recs = codes.recommend_codes(req)
+        message = codes.format_recommendation(req, recs)
+        if recs:
+            message += (
+                f"\n\n第1候補（{recs[0].code}）の入力スクリプトを生成して"
+                "承認付きジョブとして提案できます。実行しますか？（承認/却下）"
+            )
+        state.chat_history.append({"role": "assistant", "content": message})
+        state.audit("ResearchManager", "calculation_planned",
+                    hypothesis=text[:200],
+                    requirements=req.model_dump(),
+                    recommended=[r.code for r in recs])
+        self.store.save(state)
+        return {"requirements": req.model_dump(),
+                "recommendations": [r.model_dump() for r in recs]}
+
+    def propose_calculation_job(self, state: SessionState, code: str,
+                                elements: list[str],
+                                params: dict[str, Any] | None = None,
+                                description: str = "",
+                                estimated_node_hours: float = 1.0) -> JobRecord:
+        """選択したコードの入力一式を生成し、承認付き外部ジョブとして提案する。"""
+        p = dict(params or {})
+        name = p.get("job_name", f"{code}_{'-'.join(elements).lower()}")
+        workdir = os.path.join(self.session_workspace(state), "jobs", name)
+        gen = scriptgen.generate_inputs(code, workdir, elements=elements, params=p)
+        job = self.propose_job(
+            state, name=name, script=gen["sbatch"], kind=code,
+            description=description
+            or f"{code} 計算ジョブ投入: {name}（入力: {', '.join(gen['files'])}、"
+               f"推定 {estimated_node_hours:.1f} ノード時間）",
+            estimated_node_hours=estimated_node_hours,
+        )
+        job.detail["generated_files"] = gen["files"]
+        job.detail["command"] = gen["command"]
+        self.store.save(state)
+        return job
+
+    # ---------- 解析パイプライン（生成 → 承認 → 実行 → エラー自動修正 → 結果返却） ----------
+    def propose_analysis(self, state: SessionState, purpose: str,
+                         script: str | None = None,
+                         job_id: str | None = None) -> ApprovalRequest:
+        """計算データの解析スクリプトを提案し、承認要求を登録する。
+
+        script 未指定なら LLM が生成する（対象データはジョブ作業ディレクトリの
+        ファイル一覧）。実行は承認後 run_approved_analysis() で行う。
+        """
+        data_dir = self.session_workspace(state)
+        if job_id:
+            job = state.job(job_id)
+            if job is None:
+                raise ValueError(f"ジョブが存在しません: {job_id}")
+            data_dir = job.workdir
+        data_files = sorted(os.listdir(data_dir)) if os.path.isdir(data_dir) else []
+        if script is None:
+            script = llm.generate_analysis_script(
+                purpose, data_files,
+                context=state.goal.statement if state.goal else "")
+        if not script:
+            raise ValueError(
+                "解析スクリプトを生成できません（LLM 未設定時は script を指定してください）")
+        req = ApprovalRequest(
+            kind="analysis_execution",
+            description=f"解析スクリプト実行: {purpose}",
+            payload={"script": script, "purpose": purpose,
+                     "workdir": data_dir, "data_files": data_files},
+        )
+        state.approvals.append(req)
+        state.audit("ResearchManager", "analysis_proposed",
+                    approval_id=req.approval_id, purpose=purpose)
+        state.chat_history.append({
+            "role": "assistant",
+            "content": f"「解析スクリプト実行: {purpose}」という提案がありますが、"
+                       "実行しますか？（承認するまで実行されません。実行する場合は"
+                       "「承認」、しない場合は「却下」と入力してください）\n\n"
+                       f"```bash\n{script[:2000]}\n```",
+        })
+        self.store.save(state)
+        return req
+
+    def run_approved_analysis(self, state: SessionState, approval_id: str,
+                              max_fix_attempts: int = 2) -> dict[str, Any]:
+        """承認済み解析を実行する。失敗時は LLM でスクリプトを自動修正して再試行し、
+        結果（出力・生成ファイル・要約）をチャットと証拠に返却する。"""
+        req = state.approval(approval_id)
+        if req is None:
+            raise ValueError(f"承認要求が存在しません: {approval_id}")
+        if req.kind != "analysis_execution":
+            raise ValueError(f"解析の承認要求ではありません: {approval_id}（{req.kind}）")
+        if req.status != "approved":
+            raise ValueError(f"未承認の解析は実行できません: {approval_id}")
+        purpose = str(req.payload.get("purpose", ""))
+        script = str(req.payload.get("script", ""))
+        workdir = str(req.payload.get("workdir") or self.session_workspace(state))
+        attempts: list[dict[str, Any]] = []
+        result: dict[str, Any] = {}
+        for attempt in range(1 + max_fix_attempts):
+            result = self.gateway.run_script(script, workdir=workdir)
+            attempts.append({"attempt": attempt + 1,
+                             "exit_code": result["exit_code"],
+                             "stderr_tail": result["stderr"][-500:]})
+            if result["exit_code"] == 0:
+                break
+            state.audit("ResearchManager", "analysis_failed",
+                        approval_id=approval_id, attempt=attempt + 1,
+                        exit_code=result["exit_code"])
+            if attempt >= max_fix_attempts:
+                break
+            fixed = llm.fix_analysis_script(script, result["stdout"],
+                                            result["stderr"])
+            if not fixed or fixed == script:
+                break
+            script = fixed
+            state.audit("ResearchManager", "analysis_script_fixed",
+                        approval_id=approval_id, attempt=attempt + 1)
+        ok = result.get("exit_code") == 0
+        generated = result.get("generated_files") or []
+        state.evidence.append(Evidence(
+            source_type="analysis",
+            claim=f"解析「{purpose}」が{'成功' if ok else '失敗'}"
+                  f"（{len(attempts)} 回試行）",
+            conditions={"approval_id": approval_id, "workdir": workdir,
+                        "stdout": result.get("stdout", ""),
+                        "stderr": result.get("stderr", ""),
+                        "generated_files": generated,
+                        "attempts": attempts, "final_script": script},
+            evidence_type="computation",
+            limitations=["解析結果の科学的解釈は研究者の確認が必要"],
+        ))
+        summary = None
+        if ok:
+            summary = llm.summarize_analysis_result(
+                purpose, result.get("stdout", ""), generated)
+        lines = [(f"【解析結果】{purpose}（{'成功' if ok else '失敗'}、"
+                  f"{len(attempts)} 回試行）")]
+        if summary:
+            lines.append(summary)
+        stdout_tail = (result.get("stdout") or "").strip()[-1500:]
+        if stdout_tail:
+            lines += ["```", stdout_tail, "```"]
+        if generated:
+            lines.append("生成ファイル: " + ", ".join(generated)
+                         + f"（{workdir}）")
+        if not ok:
+            lines.append("エラー: " + (result.get("stderr") or "")[-800:])
+            lines.append("自動修正でも解決できませんでした。データや前提の確認をお願いします。")
+        state.chat_history.append({"role": "assistant",
+                                   "content": "\n".join(lines)})
+        state.audit("ResearchManager", "analysis_finished",
+                    approval_id=approval_id, ok=ok,
+                    attempts=len(attempts), generated_files=generated)
+        self.store.save(state)
+        return {"ok": ok, "attempts": attempts, "result": result,
+                "summary": summary, "final_script": script}
+
+    def submit_approved_job(self, state: SessionState, job_id: str) -> JobRecord:
+        """承認済みジョブをスケジューラへ投入する。"""
+        import time as _time
+
+        job = state.job(job_id)
+        if job is None:
+            raise ValueError(f"ジョブが存在しません: {job_id}")
+        if job.state != "proposed":
+            raise ValueError(f"ジョブは投入済みです: {job_id}（{job.state}）")
+        approval = state.approval(job.approval_id) if job.approval_id else None
+        if approval is None or approval.status != "approved":
+            raise ValueError(f"未承認のジョブは投入できません: {job_id}")
+        remaining = state.budget.max_node_hours - state.budget.used_node_hours
+        if job.estimated_node_hours > remaining:
+            raise ValueError(
+                f"ノード時間予算不足: 残 {remaining:.1f}h < 推定 {job.estimated_node_hours:.1f}h"
+            )
+        job.scheduler_job_id = self.scheduler.submit(job.script, job.workdir, job.name)
+        # 投入直後にまず永続化する（直後の状態確認が失敗しても二重投入を防ぐ）
+        job.state = "pending"
+        job.submitted_at = _time.time()
+        state.budget.used_node_hours += job.estimated_node_hours
+        state.audit("ResearchManager", "job_submitted", job_id=job.job_id,
+                    scheduler_job_id=job.scheduler_job_id, state=job.state)
+        self.store.save(state)
+        try:
+            job.state = self.scheduler.status(job.scheduler_job_id)
+        except SchedulerError as exc:
+            state.audit("ResearchManager", "job_poll_failed",
+                        job_id=job.job_id, error=str(exc))
+            self.store.save(state)
+            return job
+        if job.state in ("completed", "failed", "cancelled"):
+            self._finalize_job(state, job)
+        self.store.save(state)
+        return job
+
+    def poll_jobs(self, state: SessionState) -> list[JobRecord]:
+        """未完了ジョブの状態をポーリングし、完了したものを証拠化する。"""
+        updated = []
+        for job in state.jobs:
+            if job.state not in ("pending", "running") or not job.scheduler_job_id:
+                continue
+            try:
+                new_state = self.scheduler.status(job.scheduler_job_id)
+            except SchedulerError as exc:
+                state.audit("ResearchManager", "job_poll_failed",
+                            job_id=job.job_id, error=str(exc))
+                continue
+            if new_state != job.state:
+                job.state = new_state
+                if new_state in ("completed", "failed", "cancelled"):
+                    self._finalize_job(state, job)
+                updated.append(job)
+        if updated:
+            self.store.save(state)
+        return updated
+
+    def _finalize_job(self, state: SessionState, job: JobRecord) -> None:
+        import time as _time
+
+        job.finished_at = _time.time()
+        generated = sorted(os.listdir(job.workdir)) if os.path.isdir(job.workdir) else []
+        state.evidence.append(Evidence(
+            source_type="external_job",
+            claim=f"外部ジョブ {job.name}（{job.kind}）が {job.state} で終了",
+            conditions={"job_id": job.job_id,
+                        "scheduler": job.scheduler,
+                        "scheduler_job_id": job.scheduler_job_id,
+                        "workdir": job.workdir,
+                        "generated_files": generated},
+            evidence_type="computation",
+            limitations=["外部計算の終了状態。科学的妥当性は出力の検証が必要"],
+        ))
+        state.audit("ResearchManager", "job_finished", job_id=job.job_id,
+                    state=job.state)
 
     # ---------- Case report (事例の蓄積) ----------
     def export_case_report(self, state: SessionState) -> str:
@@ -403,9 +733,19 @@ class ResearchManager:
                 for e in state.errors
             ] + [""]
         path = os.path.join(self.session_workspace(state), "case_report.md")
+        report_text = "\n".join(lines)
         with open(path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
+            f.write(report_text)
         state.audit("ResearchManager", "case_report_exported", path=path)
+        # 事例ナレッジの自動還元: GraphRAG が登録済みなら事例として取り込む
+        for provider in self.gateway.knowledge_providers:
+            if isinstance(provider, GraphRAGProvider):
+                provider.ingest_case_report(
+                    state.session_id,
+                    state.goal.statement if state.goal else state.session_id,
+                    report_text)
+                state.audit("ResearchManager", "case_knowledge_ingested",
+                            provider=provider.name)
         self.store.save(state)
         return path
 
@@ -455,6 +795,10 @@ class ResearchManager:
         req = state.approval(approval_id)
         if req is None:
             raise ValueError(f"承認要求が存在しません: {approval_id}")
+        if req.status != "pending":
+            raise ValueError(
+                f"承認要求は既に解決済みです: {approval_id}（{req.status}）"
+            )
         req.status = "approved" if approve else "rejected"
         req.resolved_at = _time.time()
         req.resolved_by = by
