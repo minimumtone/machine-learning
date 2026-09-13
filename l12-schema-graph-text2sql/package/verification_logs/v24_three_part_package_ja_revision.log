@@ -83,3 +83,23 @@ Japanese freeze tag: ja-final -> 119230bb (moved from f80ac54c; two moves in thi
   byte-identical to the shipped ones; LuaLaTeX rebuild from the extracted sources: 29 pages, undefined 0,
   multiply defined 0, overfull 8.
 - Level 3 (paid API) not re-run by decision; saved outputs are the source of the published numbers.
+
+## 9. Builder hardening after Devin Review on PR #586 (three findings, all accepted)
+
+1. `--output` pointing at a packaged input truncated that input (ZipFile "w" opens the target before reading)
+   and a previous ZIP inside a collected directory would be re-packaged into itself. Fix: after collecting the
+   entries and before opening the ZIP, refuse if the resolved output path equals any packaged source path.
+2. PDF freshness was checked against stam-m_ja.tex only; a newer references.bib / interact.cls / tfnlm.bst /
+   figure PNG did not block packaging. Fix: `check_pdf_fresh()` compares the PDF mtime against all
+   MANUSCRIPT_SOURCES and FIGURES.
+3. GIT_COMMIT recorded HEAD while the files were collected from the working tree, so modified or untracked
+   packaged files would have been shipped as if they came from that commit. Fix: `dirty_packaged_files()`
+   intersects `git status --porcelain -z --untracked-files=all` with the packaged source paths (GIT_COMMIT
+   itself is generated and ignored) and refuses to package unless `--allow-dirty`, which also ships the list as
+   WORKTREE_DIRTY.txt at the ZIP root.
+
+Probe results (working tree at the package commit): untracked evaluation/__zz_dirty_probe.csv -> refused, and with
+--allow-dirty -> WARNING + WORKTREE_DIRTY.txt listing 03_mdr_scripts_data/sql_package/evaluation/__zz_dirty_probe.csv;
+`--output paper/cover_letter_ja.md` -> refused, file untouched; `touch paper/references.bib` -> refused
+("older than .../references.bib"). The final v24 ZIP was rebuilt from the clean commit, so it contains no
+WORKTREE_DIRTY.txt; the file set equals the previous build except GIT_COMMIT, README.md, this log and SHA256SUMS.txt.

@@ -13,14 +13,19 @@ Layout of the ZIP (see package/README.md for the reviewer-facing description):
         verification_logs/
 
 Preconditions (the script refuses to package otherwise):
-  * paper/stam-m_ja.pdf exists (build it with LuaLaTeX + BibTeX first);
+  * paper/stam-m_ja.pdf exists and is newer than every manuscript input
+    (TeX, bib, cls, bst, figure PNGs);
   * paper/SHA256SUMS_ja.txt matches the working tree (the ja-final freeze set);
+  * no packaged file is modified or untracked relative to HEAD, so that the
+    recorded GIT_COMMIT reproduces the package (unless --allow-dirty, which
+    additionally ships the list of such files as WORKTREE_DIRTY.txt);
+  * the output ZIP path is not itself a packaged input;
   * scripts/verify_all.py --static-only passes (unless --skip-verify);
   * the ``pypdf`` package is importable (used to split the PDF into main-text
     and supplement parts without duplicating embedded fonts).
 
 Usage:
-    python scripts/build_submission_package.py [--output PATH] [--skip-verify]
+    python scripts/build_submission_package.py [--output PATH] [--skip-verify] [--allow-dirty]
 """
 from __future__ import annotations
 
@@ -75,6 +80,39 @@ def check_freeze() -> None:
     if bad:
         raise SystemExit("paper/SHA256SUMS_ja.txt does not match the working tree "
                          f"(regenerate the freeze list first): {bad}")
+
+
+def check_pdf_fresh(pdf: Path) -> None:
+    inputs = [PAPER / name for name in MANUSCRIPT_SOURCES]
+    inputs += [PAPER / "figures" / name for name in FIGURES]
+    newest = max(inputs, key=lambda p: p.stat().st_mtime)
+    if pdf.stat().st_mtime < newest.stat().st_mtime:
+        raise SystemExit(f"{pdf} is older than {newest}: rebuild the PDF first")
+
+
+def dirty_packaged_files(entries: dict[str, Path]) -> list[str]:
+    """Packaged working-tree files that are modified or untracked relative to HEAD."""
+    status = subprocess.run(
+        ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", "."],
+        cwd=PROJECT, capture_output=True, text=True, check=True,
+    ).stdout
+    toplevel = Path(subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], cwd=PROJECT,
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()).resolve()
+    dirty: set[Path] = set()
+    records = iter(status.split("\0"))
+    for rec in records:
+        if not rec:
+            continue
+        code, path = rec[:2], rec[3:]
+        dirty.add((toplevel / path).resolve())
+        if code[0] in "RC":  # rename/copy: the next NUL-separated field is the source path
+            next(records, None)
+    generated = (PROJECT / "GIT_COMMIT").resolve()
+    hits = [name for name, src in entries.items()
+            if src.resolve() in dirty and src.resolve() != generated]
+    return sorted(hits)
 
 
 def supplement_start_page(reader: PdfReader) -> int:
@@ -166,13 +204,15 @@ def main() -> int:
                              "in the project root)")
     parser.add_argument("--skip-verify", action="store_true",
                         help="skip scripts/verify_all.py --static-only")
+    parser.add_argument("--allow-dirty", action="store_true",
+                        help="package modified/untracked files anyway and list them "
+                             "in WORKTREE_DIRTY.txt at the ZIP root")
     args = parser.parse_args()
 
     pdf = PAPER / PDF
     if not pdf.is_file():
         raise SystemExit(f"{pdf} not found: build it with LuaLaTeX + BibTeX first")
-    if pdf.stat().st_mtime < (PAPER / TEX).stat().st_mtime:
-        raise SystemExit(f"{pdf} is older than {TEX}: rebuild the PDF first")
+    check_pdf_fresh(pdf)
     check_freeze()
 
     commit = _git_head()
@@ -195,6 +235,22 @@ def main() -> int:
               f"supplement = p.{first_sup}-{n_pages}")
 
         entries = build_entries(workdir)
+        if any(src.resolve() == out.resolve() for src in entries.values()):
+            raise SystemExit(f"output ZIP conflicts with a packaged input: {out}")
+
+        dirty = dirty_packaged_files(entries)
+        if dirty:
+            listing = "\n".join(dirty)
+            if not args.allow_dirty:
+                raise SystemExit("packaged files differ from HEAD (commit them or pass "
+                                 f"--allow-dirty):\n{listing}")
+            print(f"WARNING: {len(dirty)} packaged file(s) differ from HEAD {commit[:12]}; "
+                  "listed in WORKTREE_DIRTY.txt", file=sys.stderr)
+            (workdir / "WORKTREE_DIRTY.txt").write_text(
+                f"# packaged files modified or untracked relative to {commit}\n"
+                f"{listing}\n", encoding="utf-8")
+            entries["WORKTREE_DIRTY.txt"] = workdir / "WORKTREE_DIRTY.txt"
+
         sums = "\n".join(f"{sha256(src)}  {name}" for name, src in sorted(entries.items())) + "\n"
         (workdir / "SHA256SUMS.txt").write_text(sums, encoding="utf-8")
         entries["SHA256SUMS.txt"] = workdir / "SHA256SUMS.txt"
