@@ -93,6 +93,7 @@ class RunResult:
     y_test_true: Optional[np.ndarray] = None
     y_test_pred: Optional[np.ndarray] = None
     test_indices: Optional[np.ndarray] = None
+    split_group: str = ""
 
     # Extra artefacts
     params: Dict[str, Any] = field(default_factory=dict)
@@ -220,6 +221,7 @@ def _make_result(
         split_policy=kwargs.get("split_policy", ""),
         seed=seed,
         fold=kwargs.get("fold", 0),
+        split_group=kwargs.get("split_group", ""),
         rmse_train=train_s["rmse"],
         rmse_test=test_s["rmse"],
         mae_train=train_s["mae"],

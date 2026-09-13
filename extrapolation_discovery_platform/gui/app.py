@@ -82,6 +82,14 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
 logger = logging.getLogger(__name__)
 
 
+def _fmt_score(x: Any) -> str:
+    """Format optional validity scores without rendering NaN."""
+    try:
+        return "N/A" if x is None or not np.isfinite(float(x)) else f"{float(x):.4f}"
+    except (TypeError, ValueError):
+        return "N/A"
+
+
 # ---------------------------------------------------------------------------
 # Session helpers (gr.State-backed, per-user)  -- Fix #1
 # ---------------------------------------------------------------------------
@@ -253,7 +261,7 @@ def _refresh_dashboard_data(
                 f"({best_run.workflow}/{best_run.feature_set})"
             )
         elif scores:
-            best_score = f"{scores[0].total:.4f}"
+            best_score = _fmt_score(scores[0].total)
         else:
             best_score = "--"
 
@@ -323,7 +331,7 @@ def _build_physical_interpretation_md(
         n_feat = _fs_sizes.get(fs_name, "?")
         r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
-        total = f"{vs.total:.4f}" if vs else "N/A"
+        total = _fmt_score(vs.total) if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""
         # Bootstrap CI (#9)
         if vs and getattr(vs, "rmse_mean", 0) > 0:
@@ -352,14 +360,23 @@ def _build_physical_interpretation_md(
         best = scores[0]
         lines.append(f"### 推奨特徴量セット: **{best.feature_set}**\n")
         lines.append(
-            f"- 総合妥当性スコア: {best.total:.4f}\n"
-            f"- 効果量: {best.effect_size:.4f} / "
-            f"安定性: {best.stability:.4f} / "
-            f"汎化性: {best.generalisation:.4f}\n"
-            f"- 外挿安全性: {best.extrapolation_safety:.4f} / "
-            f"リークペナルティ: {best.leak_penalty:.4f}\n"
-            f"- 多重共線性ペナルティ: {best.multicollinearity_penalty:.4f}"
+            f"- 総合妥当性スコア: {_fmt_score(best.total)}\n"
+            f"- 効果量: {_fmt_score(best.effect_size)} / "
+            f"安定性: {_fmt_score(best.stability)} / "
+            f"汎化性: {_fmt_score(best.generalisation)}\n"
+            f"- 外挿安全性: {_fmt_score(best.extrapolation_safety)} / "
+            f"リークペナルティ: {_fmt_score(best.leak_penalty)}\n"
+            f"- 多重共線性ペナルティ: {_fmt_score(best.multicollinearity_penalty)}"
         )
+        if any(
+            not np.isfinite(float(getattr(best, axis)))
+            for axis in (
+                "effect_size", "generalisation", "extrapolation_safety",
+            )
+        ):
+            lines.append(
+                "RandomCV 未実行のため効果量・汎化性は N/A（利用可能な軸のみで重みを再正規化）"
+            )
         lines.append("")
 
     # --- Physical Interpretation ---
@@ -373,7 +390,7 @@ def _build_physical_interpretation_md(
 
         lines.append(
             f"**{best.feature_set}** が最も高い妥当性スコア "
-            f"({best.total:.4f}) を示しました。"
+            f"({_fmt_score(best.total)}) を示しました。"
         )
         if origin_best:
             lines.append(f"> {origin_best}\n")
@@ -382,14 +399,14 @@ def _build_physical_interpretation_md(
         if delta < 0.05:
             lines.append(
                 f"2位の **{second.feature_set}** "
-                f"({second.total:.4f}) との差は小さく、"
+                f"({_fmt_score(second.total)}) との差は小さく、"
                 "両方の特徴量セットが同等に有効である可能性があります。"
             )
         else:
             lines.append(
                 f"2位の **{second.feature_set}** "
-                f"({second.total:.4f}) と比較して "
-                f"{delta:.4f} の差があり、"
+                f"({_fmt_score(second.total)}) と比較して "
+                f"{_fmt_score(delta)} の差があり、"
                 f"**{best.feature_set}** が明確に優位です。"
             )
         lines.append("")
@@ -605,13 +622,13 @@ def _build_physical_interpretation_md(
         lines.append(f"#### 計算例: **{best.feature_set}**\n")
         lines.append(
             f"$$\\text{{Total}} = "
-            f"0.30 \\times {best.effect_size:.4f} "
-            f"+ 0.20 \\times {best.stability:.4f} "
-            f"+ 0.30 \\times {best.generalisation:.4f} "
-            f"+ 0.20 \\times {best.extrapolation_safety:.4f} "
-            f"- 0.15 \\times {best.leak_penalty:.4f} "
-            f"- 0.10 \\times {best.multicollinearity_penalty:.4f} "
-            f"= \\mathbf{{{best.total:.4f}}}$$\n"
+            f"0.30 \\times {_fmt_score(best.effect_size)} "
+            f"+ 0.20 \\times {_fmt_score(best.stability)} "
+            f"+ 0.30 \\times {_fmt_score(best.generalisation)} "
+            f"+ 0.20 \\times {_fmt_score(best.extrapolation_safety)} "
+            f"- 0.15 \\times {_fmt_score(best.leak_penalty)} "
+            f"- 0.10 \\times {_fmt_score(best.multicollinearity_penalty)} "
+            f"= \\mathbf{{{_fmt_score(best.total)}}}$$\n"
         )
         lines.append("---\n")
 
@@ -2909,6 +2926,8 @@ def create_app() -> gr.Blocks:
                         "**CompositionBlock**（推奨）: 組成空間でkMeansクラスタリングを行い、"
                         "類似組成がtrain/testに混入しないように分割する。"
                         "真の外挿性能を評価できる。\n\n"
+                        "**CompositionGroupCV**: 完全一致組成を同一グループとして"
+                        "train/testから分離する。\n\n"
                         "**ElementExclusion**: 特定元素を含むサンプルをテストセットに割り当てる。"
                         "特定元素系への外挿能力を評価する。\n\n"
                         "**RandomCV** ⚠️ デフォルト無効: ランダムk-fold交差検証。"
@@ -2930,7 +2949,12 @@ def create_app() -> gr.Blocks:
                         sp_ee_check = gr.Checkbox(
                             label="✅ ElementExclusion",
                             value=True,
-                            info="特定元素の完全除外による外挿テスト",
+                            info="特定元素を含む試料を全て除外する zero-shot 元素外挿テスト（train≥50・test≤40% を満たす元素のみ）",
+                        )
+                        sp_cg_check = gr.Checkbox(
+                            label="CompositionGroupCV（同一組成を train/test で完全分離）",
+                            value=True,
+                            info="組成が完全一致する試料をグループ化し、未知組成への汎化を測る（RandomCV と CompositionBlock の中間の難易度）",
                         )
                         sp_rc_check = gr.Checkbox(
                             label="⚠️ RandomCV（リーク懸念あり・デフォルト無効）",
@@ -3364,7 +3388,8 @@ def create_app() -> gr.Blocks:
                                 )
                                 ind_sp = gr.Dropdown(
                                     label="分割方法 (Split Policy)",
-                                    choices=["CompositionBlock", "ElementExclusion",
+                                    choices=["CompositionBlock", "CompositionGroupCV",
+                                             "ElementExclusion",
                                              "Holdout", "RandomCV ⚠️(リーク懸念)"],
                                     value="CompositionBlock",
                                     info="CompositionBlock推奨。RandomCVはリーク懸念があるため診断用途のみ使用。",
@@ -3378,7 +3403,7 @@ def create_app() -> gr.Blocks:
                                 )
                                 ind_n_folds = gr.Slider(
                                     minimum=2, maximum=10, value=5, step=1,
-                                    label="Fold数 (RandomCV / CompositionBlock)",
+                                    label="Fold数 (RandomCV / CompositionBlock / CompositionGroupCV)",
                                     info="Holdout の場合は無視",
                                 )
                                 ind_test_size = gr.Slider(
@@ -3798,7 +3823,8 @@ def create_app() -> gr.Blocks:
                             label="特徴量セット",
                         )
                         disc_sp = gr.Dropdown(
-                            choices=["CompositionBlock","ElementExclusion","RandomCV","Holdout"],
+                            choices=["CompositionBlock","CompositionGroupCV",
+                                     "ElementExclusion","RandomCV","Holdout"],
                             value="CompositionBlock",
                             label="分割ポリシー",
                         )
@@ -4129,7 +4155,10 @@ def create_app() -> gr.Blocks:
                         runs_data.append({
                             "workflow": r.workflow,
                             "feature_set": r.feature_set,
-                            "split_policy": r.split_policy,
+                            "split_policy": (
+                                f"{r.split_policy} ({r.split_group})"
+                                if getattr(r, "split_group", "") else r.split_policy
+                            ),
                             "seed": int(r.seed),
                             "fold": int(r.fold),
                             "rmse_train": round(float(r.rmse_train), 4),
@@ -4364,6 +4393,7 @@ def create_app() -> gr.Blocks:
             csv_mode: str,
             use_sp_cb: bool,
             use_sp_ee: bool,
+            use_sp_cg: bool,
             use_sp_rc: bool,
             use_sp_ho: bool,
             n_folds_val: float,
@@ -4589,6 +4619,8 @@ def create_app() -> gr.Blocks:
                     selected_sps.append("CompositionBlock")
                 if use_sp_ee:
                     selected_sps.append("ElementExclusion")
+                if use_sp_cg:
+                    selected_sps.append("CompositionGroupCV")
                 if use_sp_rc:
                     selected_sps.append("RandomCV")
                 if use_sp_ho:
@@ -4865,7 +4897,7 @@ def create_app() -> gr.Blocks:
                 if scores:
                     log(
                         f"Best feature set: {scores[0].feature_set} "
-                        f"(score={scores[0].total:.4f})"
+                        f"(score={_fmt_score(scores[0].total)})"
                     )
 
                 for fs_key, ood_res in ood_results.items():
@@ -5192,7 +5224,7 @@ def create_app() -> gr.Blocks:
                 leak_auto_exclude, leak_corr_threshold,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
-                sp_cb_check, sp_ee_check, sp_rc_check, sp_ho_check,
+                sp_cb_check, sp_ee_check, sp_cg_check, sp_rc_check, sp_ho_check,
                 n_folds_slider,
                 test_size_slider,
                 state,

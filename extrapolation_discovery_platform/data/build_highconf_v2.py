@@ -6,6 +6,8 @@ v2 fixes the noise ceiling of v1 (HEA_ml_numeric_highconf.csv):
   microstructure flags such as B2/L1$_2$/Laves, number of phases),
 - drops the leak column ys_log10 and the coarse phase_* columns
   superseded by micro_*,
+- preserves missingness in physical and microstructure descriptors; fold-aware
+  imputation is performed later in ``pipeline.py``,
 - aggregates rows whose full feature vectors are identical
   (median yield strength) since they are indistinguishable to any model.
 
@@ -32,6 +34,23 @@ GRAIN_COL = "PROPERTY: grain size ($\\mu$m)"
 DENS_COL = "PROPERTY: Calculated Density (g/cm$^3$)"
 PROC_MAP = {"ANNEAL": "ANNEAL", "CAST": "CAST", "WROUGHT": "WROUGHT",
             "OTHER": "OTHER", "POWDER": "OTHER"}
+
+
+def derive_microstructure(micro: pd.Series) -> pd.DataFrame:
+    """Derive phase flags while preserving missing microstructure values."""
+    text = micro.astype("string")
+    missing = text.isna() | text.str.strip().str.lower().eq("unknown")
+    out = pd.DataFrame(index=micro.index)
+    out["micro_missing"] = missing.astype(float)
+    for phase in ["FCC", "BCC", "B2", "L12", "HCP", "Sec.", "Laves"]:
+        col = "micro_" + phase.replace(".", "")
+        out[col] = text.str.contains(
+            re.escape(phase), na=False,
+        ).astype(float).mask(missing)
+    out["micro_n_phases"] = (
+        text.str.count(r"\+").add(1.0).where(~missing)
+    )
+    return out
 
 
 def parse_formula(formula: str) -> dict:
@@ -86,19 +105,14 @@ def main(mpea_path: str) -> None:
     sub = sub.iloc[match].reset_index(drop=True)
 
     grain = pd.to_numeric(sub[GRAIN_COL], errors="coerce")
-    micro = sub["PROPERTY: Microstructure"].fillna("Unknown").astype(str)
+    micro = sub["PROPERTY: Microstructure"]
     dens = pd.to_numeric(sub[DENS_COL], errors="coerce")
 
     new = old.copy()
     new["grain_size_um_log10"] = np.log10(grain)
     new["grain_size_missing"] = grain.isna().astype(float)
-    new["grain_size_um_log10"] = new["grain_size_um_log10"].fillna(
-        float(np.nanmedian(new["grain_size_um_log10"])))
-    new["calc_density_gcm3"] = dens.fillna(dens.median())
-    for phase in ["FCC", "BCC", "B2", "L12", "HCP", "Sec.", "Laves"]:
-        col = "micro_" + phase.replace(".", "")
-        new[col] = micro.str.contains(re.escape(phase)).astype(float)
-    new["micro_n_phases"] = micro.str.count(r"\+") + 1.0
+    new["calc_density_gcm3"] = dens
+    new = pd.concat([new, derive_microstructure(micro)], axis=1)
     new = new.drop(columns=["ys_log10", "phase_BCC", "phase_FCC",
                             "phase_other"])
 

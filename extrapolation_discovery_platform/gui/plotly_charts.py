@@ -2716,10 +2716,9 @@ def plotly_combo_parity_grid(
     全 (FS, WF) の組み合わせを 1 次元に並べ、n_cols 列で折り返す。
     縦長になっても各セルを大きく保ち、読みやすさを優先する。
 
-    - 各セルの R² / RMSE は全 fold 集積データ点から直接計算
+    - 各セルの R² / RMSE は split policy（EE は除外元素）ごとに計算
     - 色 = Split Policy（重複サンプルは seen セットで除去）
-    - EE (ElementExclusion) は複数 fold で同一サンプルが重複するため
-      seen による dedup 後の点数 < CB の点数になることがある（仕様）
+    - 異なる split policy の予測値はメトリクス計算で混合しない
     """
     from plotly.subplots import make_subplots
     from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
@@ -2735,15 +2734,30 @@ def plotly_combo_parity_grid(
 
     wf_order = sorted({r.workflow    for r in filtered})
     fs_order = sorted({r.feature_set for r in filtered})[:max_fs]
-    sp_order = sorted({r.split_policy for r in filtered})
+    sp_order = sorted({
+        (r.split_policy, getattr(r, "split_group", ""))
+        for r in filtered
+    })
 
     SP_STYLES = {
         "CompositionBlock":  {"color": "#2196F3", "symbol": "circle"},
+        "CompositionGroupCV": {"color": "#1565C0", "symbol": "triangle-up"},
         "ElementExclusion":  {"color": "#FF5722", "symbol": "diamond"},
         "RandomCV":          {"color": "#4CAF50", "symbol": "cross"},
         "Holdout":           {"color": "#9C27B0", "symbol": "square"},
     }
-    def sp_style(sp):
+    ee_styles = [
+        {"color": "#FF5722", "symbol": "diamond"},
+        {"color": "#E64A19", "symbol": "diamond-open"},
+        {"color": "#F57C00", "symbol": "triangle-down"},
+        {"color": "#D84315", "symbol": "square"},
+    ]
+
+    ee_groups = sorted({g for sp, g in sp_order if sp == "ElementExclusion" and g})
+
+    def sp_style(sp, group=""):
+        if sp == "ElementExclusion" and group:
+            return ee_styles[ee_groups.index(group) % len(ee_styles)]
         return SP_STYLES.get(sp, {"color": "#888888", "symbol": "circle"})
 
     # 全 (FS, WF) の組み合わせを順番に並べる
@@ -2770,13 +2784,18 @@ def plotly_combo_parity_grid(
             continue
         ti = getattr(r, "test_indices", None)
         for i in range(len(r.y_test_true)):
-            key = (r.workflow, r.feature_set, r.split_policy,
+            group = getattr(r, "split_group", "")
+            key = (r.workflow, r.feature_set, r.split_policy, group,
                    int(ti[i]) if ti is not None else float(r.y_test_true[i]))
             if key in seen:
                 continue
             seen.add(key)
-            cell_data[(r.feature_set, r.workflow)][r.split_policy]["true"].append(float(r.y_test_true[i]))
-            cell_data[(r.feature_set, r.workflow)][r.split_policy]["pred"].append(float(r.y_test_pred[i]))
+            cell_data[(r.feature_set, r.workflow)][
+                (r.split_policy, group)
+            ]["true"].append(float(r.y_test_true[i]))
+            cell_data[(r.feature_set, r.workflow)][
+                (r.split_policy, group)
+            ]["pred"].append(float(r.y_test_pred[i]))
 
     # サブプロットタイトル（FS + WF の組み合わせ）
     subplot_titles = [
@@ -2806,24 +2825,10 @@ def plotly_combo_parity_grid(
 
         sp_dict = cell_data[(fs, wf)]
 
-        # 全 split をまとめた R² / RMSE
         all_true, all_pred = [], []
         for sp_d in sp_dict.values():
             all_true.extend(sp_d["true"])
             all_pred.extend(sp_d["pred"])
-
-        if len(all_true) >= 2:
-            try:
-                r2_val   = float(_r2(all_true, all_pred))
-                rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
-            except Exception:
-                r2_val = rmse_val = float("nan")
-        else:
-            r2_val = rmse_val = float("nan")
-
-        r2_str   = f"{r2_val:.3f}"   if math.isfinite(r2_val)   else "N/A"
-        rmse_str = f"{rmse_val:.3f}" if math.isfinite(rmse_val) else "N/A"
-        r2_warn  = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
 
         # y=x 参照線
         if all_true:
@@ -2838,13 +2843,18 @@ def plotly_combo_parity_grid(
             ), row=row, col=col)
 
         # split ごとに色分けして散布図を追加
-        for sp in sp_order:
-            if sp not in sp_dict or not sp_dict[sp]["true"]:
+        for series in sp_order:
+            if series not in sp_dict or not sp_dict[series]["true"]:
                 continue
-            sty = sp_style(sp)
-            show_legend = sp not in shown_sp
-            shown_sp.add(sp)
-            d = sp_dict[sp]
+            sp, group = series
+            display_name = (
+                f"ElementExclusion ({group})"
+                if sp == "ElementExclusion" and group else sp
+            )
+            sty = sp_style(sp, group)
+            show_legend = display_name not in shown_sp
+            shown_sp.add(display_name)
+            d = sp_dict[series]
             n_pts = len(d["true"])
             fig.add_trace(go.Scatter(
                 x=d["true"], y=d["pred"],
@@ -2855,13 +2865,13 @@ def plotly_combo_parity_grid(
                     size=6, opacity=0.6,
                     line=dict(width=0.4, color="rgba(0,0,0,0.4)"),
                 ),
-                name=sp,
-                legendgroup=sp,
+                name=display_name,
+                legendgroup=display_name,
                 showlegend=show_legend,
                 customdata=[[n_pts]] * n_pts,
                 hovertemplate=(
                     f"<b>{fs.replace('FS_','')} / {wf}</b><br>"
-                    f"Split: {sp} (n=%{{customdata[0]}}<br>"
+                    f"Split: {display_name} (n=%{{customdata[0]}})<br>"
                     "True: %{x:.3f}<br>Pred: %{y:.3f}"
                     "<extra></extra>"
                 ),
@@ -2882,31 +2892,36 @@ def plotly_combo_parity_grid(
             row=row, col=col,
         )
 
-    # 各セルの R²/RMSE を subplot タイトル注釈で補足
+    # 各 split series の R²/RMSE を subplot タイトル注釈で補足
     # make_subplots が生成したタイトル注釈を更新
     annots = list(fig.layout.annotations)
     for ci, (fs, wf) in enumerate(cells):
         sp_dict = cell_data[(fs, wf)]
-        all_true, all_pred = [], []
-        for sp_d in sp_dict.values():
-            all_true.extend(sp_d["true"])
-            all_pred.extend(sp_d["pred"])
-        if len(all_true) < 2:
-            continue
-        try:
-            r2_val   = float(_r2(all_true, all_pred))
-            rmse_val = float(math.sqrt(_mse(all_true, all_pred)))
-        except Exception:
-            continue
-        r2_warn = "⚠" if math.isfinite(r2_val) and r2_val < 0 else ""
-        # subplot タイトルの index = ci（make_subplots が同順で生成）
+        lines = []
+        for (sp, group), data in sp_dict.items():
+            if len(data["true"]) < 2:
+                continue
+            try:
+                r2_val = float(_r2(data["true"], data["pred"]))
+                rmse_val = float(math.sqrt(_mse(data["true"], data["pred"])))
+            except Exception:
+                continue
+            display_name = (
+                f"EE-{group}" if sp == "ElementExclusion" and group
+                else sp.replace("CompositionBlock", "CB")
+                    .replace("CompositionGroupCV", "CGCV")
+                    .replace("RandomCV", "RCV")
+                    .replace("Holdout", "HO")
+            )
+            lines.append(f"{display_name} R²={r2_val:.3f} RMSE={rmse_val:.3f}")
         if ci < len(annots):
             existing = annots[ci].text or ""
-            annots[ci].update(
-                text=(existing + f"<br><span style='font-size:9px;color:#555;'>"
-                      f"R²={r2_val:.3f}{r2_warn}  RMSE={rmse_val:.3f}</span>"),
-                font=dict(size=11),
-            )
+            if lines:
+                annots[ci].update(
+                    text=(existing + "<br><span style='font-size:9px;color:#555;'>"
+                          + "<br>".join(lines) + "</span>"),
+                    font=dict(size=11),
+                )
     fig.update_layout(annotations=annots)
 
     cell_px = 280
@@ -2915,8 +2930,8 @@ def plotly_combo_parity_grid(
             text=(
                 "パリティグリッド (3列)  FS / WF × Split Policy<br>"
                 "<span style='font-size:11px;color:#666;'>"
-                "R² / RMSE は各セルの全fold集積データから直接計算。"
-                "EE は複数fold重複サンプルを1点として表示</span>"
+                "R² / RMSE は分割方式ごと（EE は除外元素ごと）に別計算。"
+                "異なる分割方式を混合した値は表示しない</span>"
             ),
             font=dict(size=14),
         ),
@@ -3020,4 +3035,3 @@ def plotly_combo_metric_heatmap(
         margin=dict(t=80, b=60, l=80, r=20),
     )
     return fig
-

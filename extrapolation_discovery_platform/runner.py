@@ -138,6 +138,7 @@ class _Job(NamedTuple):
     quick: bool
     dim_reduction: bool = True
     force_pca: bool = False  # moderate VIF: force PCA on for linear models
+    split_group: str = ""
 
 
 def _run_job(
@@ -196,6 +197,7 @@ def _run_job(
         feature_set=job.fs_name,
         split_policy=job.sp_name,
         fold=job.fold,
+        split_group=job.split_group,
         test_indices=job.test_idx,
     )
 
@@ -355,7 +357,8 @@ class ExperimentRunner:
         Parameters
         ----------
         selected_split_policies : list of str, optional
-            Subset of ["CompositionBlock", "ElementExclusion", "RandomCV"].
+            Subset of ["CompositionBlock", "CompositionGroupCV",
+                       "ElementExclusion", "RandomCV"].
             Default (None) uses ["CompositionBlock", "ElementExclusion"] —
             RandomCV is intentionally excluded by default because:
 
@@ -379,7 +382,10 @@ class ExperimentRunner:
         t_start = time.time()
 
         # ── Resolve split policies (default: exclude RandomCV) ──────────
-        _ALL_POLICIES = ["CompositionBlock", "ElementExclusion", "RandomCV"]
+        _ALL_POLICIES = [
+            "CompositionBlock", "CompositionGroupCV",
+            "ElementExclusion", "RandomCV",
+        ]
         if selected_split_policies is None:
             # Default: CompositionBlock + ElementExclusion only.
             # RandomCV is excluded because it leaks compositionally similar
@@ -496,6 +502,7 @@ class ExperimentRunner:
             # ── Phase 4: Build job list ──
             jobs = self._phase4_build_jobs(
                 feature_sets, wf_names, fold_plan,
+                fold_labels=prep.fold_labels,
                 mc_reports=mc_reports,
             )
             logger.info(
@@ -686,6 +693,7 @@ class ExperimentRunner:
         feature_sets: List[FeatureSetName],
         wf_names: List[str],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
+        fold_labels: Optional[Dict[str, List[str]]] = None,
         mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[_Job]:
         jobs: List[_Job] = []
@@ -696,6 +704,8 @@ class ExperimentRunner:
             splitter_folds: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
             if "CompositionBlock" in fold_plan:
                 splitter_folds["CompositionBlock"] = fold_plan["CompositionBlock"]
+            if "CompositionGroupCV" in fold_plan:
+                splitter_folds["CompositionGroupCV"] = fold_plan["CompositionGroupCV"]
             if "ElementExclusion" in fold_plan:
                 splitter_folds["ElementExclusion"] = fold_plan["ElementExclusion"]
             rc_key = f"RandomCV_seed{seed}"
@@ -721,6 +731,8 @@ class ExperimentRunner:
                 )
 
                 for sp_name, folds in splitter_folds.items():
+                    _label_key = rc_key if sp_name == "RandomCV" else sp_name
+                    sp_labels = (fold_labels or {}).get(_label_key, [])
                     for fold_idx, (train_idx, test_idx) in enumerate(folds):
                         for wf_name in wf_names:
                             if wf_name not in allowed_wf:
@@ -737,6 +749,10 @@ class ExperimentRunner:
                                 quick=self._quick,
                                 dim_reduction=self._dim_reduction,
                                 force_pca=force_pca,
+                                split_group=(
+                                    sp_labels[fold_idx]
+                                    if fold_idx < len(sp_labels) else ""
+                                ),
                             ))
         if blocked_count > 0:
             logger.info(
@@ -940,6 +956,7 @@ class ExperimentRunner:
                 "workflow": r.workflow,
                 "feature_set": r.feature_set,
                 "split_policy": r.split_policy,
+                "split_group": r.split_group,
                 "seed": int(r.seed),
                 "fold": int(r.fold),
                 "rmse_train": round(float(r.rmse_train), 6),

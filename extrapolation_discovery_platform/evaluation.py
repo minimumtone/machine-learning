@@ -48,11 +48,11 @@ class ValidityScore:
     """Feature-set validity score across six dimensions."""
 
     feature_set: str
-    effect_size: float = 0.0
+    effect_size: float = float("nan")
     stability: float = 0.0
-    generalisation: float = 0.0
+    generalisation: float = float("nan")
     leak_penalty: float = 0.0
-    extrapolation_safety: float = 0.0
+    extrapolation_safety: float = float("nan")
     multicollinearity_penalty: float = 0.0
 
     # Weights can be overridden per-instance via FeatureValidityEvaluator
@@ -78,33 +78,59 @@ class ValidityScore:
           leak_penalty=-0.15, extrapolation_safety=0.20,
           multicollinearity_penalty=-0.10.
 
-        Score range:
-          - Best case (all 1.0, no penalties):  1.00
-          - Worst case (all 0.0, max penalties): -0.25
+        Missing positive axes are omitted and the remaining positive-axis
+        weights are renormalised. Penalty terms are then subtracted.
         """
         w = self._weights
-        return (
-            w.get("effect_size", 0.30) * self.effect_size
-            + w.get("stability", 0.20) * self.stability
-            + w.get("generalisation", 0.30) * self.generalisation
-            + w.get("leak_penalty", -0.15) * self.leak_penalty
-            + w.get("extrapolation_safety", 0.20) * self.extrapolation_safety
-            + w.get("multicollinearity_penalty", -0.10) * self.multicollinearity_penalty
+        positive = {
+            "effect_size": self.effect_size,
+            "stability": self.stability,
+            "generalisation": self.generalisation,
+            "extrapolation_safety": self.extrapolation_safety,
+        }
+        finite = {
+            name: value for name, value in positive.items()
+            if math.isfinite(value)
+        }
+        if not finite:
+            return float("nan")
+        weight_sum = sum(w.get(name, 0.0) for name in positive)
+        finite_weight_sum = sum(w.get(name, 0.0) for name in finite)
+        positive_total = (
+            sum(w.get(name, 0.0) * value for name, value in finite.items())
+            * weight_sum / finite_weight_sum
+            if finite_weight_sum > 0 else float("nan")
         )
+        leak_penalty = (
+            self.leak_penalty if math.isfinite(self.leak_penalty) else 0.0
+        )
+        multicollinearity_penalty = (
+            self.multicollinearity_penalty
+            if math.isfinite(self.multicollinearity_penalty) else 0.0
+        )
+        penalties = (
+            w.get("leak_penalty", -0.15) * leak_penalty
+            + w.get("multicollinearity_penalty", -0.10)
+            * multicollinearity_penalty
+        )
+        return positive_total + penalties if math.isfinite(positive_total) else float("nan")
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> Dict[str, Any]:
+        def _json_score(value: float) -> Optional[float]:
+            return round(value, 4) if math.isfinite(value) else None
+
         d: Dict[str, Any] = {
             "feature_set": self.feature_set,
-            "effect_size": round(self.effect_size, 4),
-            "stability": round(self.stability, 4),
-            "generalisation": round(self.generalisation, 4),
-            "leak_penalty": round(self.leak_penalty, 4),
-            "extrapolation_safety": round(self.extrapolation_safety, 4),
-            "multicollinearity_penalty": round(self.multicollinearity_penalty, 4),
-            "total": round(self.total, 4),
-            "rmse_mean": round(self.rmse_mean, 4),
-            "rmse_ci_lower": round(self.rmse_ci_lower, 4),
-            "rmse_ci_upper": round(self.rmse_ci_upper, 4),
+            "effect_size": _json_score(self.effect_size),
+            "stability": _json_score(self.stability),
+            "generalisation": _json_score(self.generalisation),
+            "leak_penalty": _json_score(self.leak_penalty),
+            "extrapolation_safety": _json_score(self.extrapolation_safety),
+            "multicollinearity_penalty": _json_score(self.multicollinearity_penalty),
+            "total": _json_score(self.total),
+            "rmse_mean": _json_score(self.rmse_mean),
+            "rmse_ci_lower": _json_score(self.rmse_ci_lower),
+            "rmse_ci_upper": _json_score(self.rmse_ci_upper),
         }
         if self.leak_suspects:
             d["leak_suspects"] = self.leak_suspects
@@ -174,15 +200,12 @@ class FeatureValidityEvaluator:
         base_key = FeatureSetName.FS_BASE.value
         base_runs_all = fs_runs.get(base_key, [])
         base_runs_random = [r for r in base_runs_all if r.split_policy == "RandomCV"]
-        # Fall back to all policies if RandomCV runs are missing (e.g. user
-        # disabled RandomCV), so scoring degrades gracefully rather than zeroing.
-        base_rmse = self._mean_test_rmse(base_runs_random) or self._mean_test_rmse(base_runs_all)
+        base_rmse = self._mean_test_rmse(base_runs_random)
         if base_rmse <= 0:
-            # FS_BASE has no runs or all-zero RMSE — cannot compute meaningful
-            # effect sizes so every feature set will get 0.
             logger.warning(
                 "Baseline (FS_BASE) RandomCV RMSE is 0 or has no runs; "
-                "effect_size for all feature sets will be 0. "
+                "effect_size/generalisation will be NaN and totals will "
+                "renormalise available axes. "
                 "Check that FS_BASE experiments completed successfully."
             )
 
@@ -196,12 +219,11 @@ class FeatureValidityEvaluator:
             # the apparent improvement of non-baseline feature sets.
             fs_random_runs = [r for r in fs_run_list if r.split_policy == "RandomCV"]
             fs_rmse_random = self._mean_test_rmse(fs_random_runs)
-            # Fallback to all policies when RandomCV is unavailable
-            fs_rmse = fs_rmse_random or self._mean_test_rmse(fs_run_list)
+            fs_rmse = fs_rmse_random
             if base_rmse > 0 and fs_rmse > 0:
                 vs.effect_size = max(0.0, (base_rmse - fs_rmse) / base_rmse)
             else:
-                vs.effect_size = 0.0
+                vs.effect_size = float("nan")
 
             # 2. Stability (inverse of coefficient of variation of RMSE across runs)
             rmses = [
@@ -241,7 +263,7 @@ class FeatureValidityEvaluator:
                     ood_errors[fs_name]
                 )
             else:
-                vs.extrapolation_safety = 0.5  # neutral when data not available
+                vs.extrapolation_safety = float("nan")
 
             # 6. Multicollinearity penalty (Phase 1)
             if mc_reports and fs_name in mc_reports:
@@ -257,7 +279,10 @@ class FeatureValidityEvaluator:
 
             scores.append(vs)
 
-        scores.sort(key=lambda s: s.total, reverse=True)
+        scores.sort(
+            key=lambda s: s.total if math.isfinite(s.total) else float("-inf"),
+            reverse=True,
+        )
         logger.info(
             "Validity evaluation complete. Top feature set: %s (total=%.4f)",
             scores[0].feature_set if scores else "N/A",
@@ -345,25 +370,10 @@ class FeatureValidityEvaluator:
         of typical RMSE improvements).  The old formula caused *all* feature
         sets to cluster around 0.1–0.4, making the ranking uninformative.
 
-        RandomCV が無効の場合でも常に 0.5（中立）にならないよう、Block のみの
-        場合は Block の改善率だけからスコアを計算する。
+        RandomCV と CompositionBlock の両方がない場合は NaN とする。
         """
-        if base_rmse <= 0:
-            return 0.5
-        if not random_runs and block_runs:
-            _block_only = [
-                float(r.rmse_test) for r in block_runs
-                if r.rmse_test > 0 and math.isfinite(r.rmse_test)
-            ]
-            if not _block_only:
-                return 0.5
-            block_rmse = sum(_block_only) / len(_block_only)
-            block_improve = (base_rmse - block_rmse) / base_rmse
-            if block_improve > 0:
-                return min(1.0, 0.5 + 0.5 * block_improve)
-            return max(0.1, 0.5 + 0.5 * block_improve)
-        if not random_runs or not block_runs:
-            return 0.5
+        if base_rmse <= 0 or not random_runs or not block_runs:
+            return float("nan")
         _rand_vals = [
             float(r.rmse_test) for r in random_runs
             if r.rmse_test > 0 and math.isfinite(r.rmse_test)
@@ -373,7 +383,7 @@ class FeatureValidityEvaluator:
             if r.rmse_test > 0 and math.isfinite(r.rmse_test)
         ]
         if not _rand_vals or not _block_vals:
-            return 0.5
+            return float("nan")
         rand_rmse = sum(_rand_vals) / len(_rand_vals)
         block_rmse = sum(_block_vals) / len(_block_vals)
         rand_improve = (base_rmse - rand_rmse) / base_rmse
