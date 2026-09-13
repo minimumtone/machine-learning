@@ -51,9 +51,9 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.provenance import build_provenance  # noqa: E402
-from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
+from scripts.sign_permutation import (  # noqa: E402
+    TEST_LABEL, sign_permutation_pvalue, stats_meta)
 
-TEST_LABEL = "sign-permutation-exact-midranks"
 EVAL = PROJECT / "evaluation"
 STATS_FILE = EVAL / "ablation_multirun_stats.json"
 
@@ -226,12 +226,7 @@ def main() -> int:
     payload = {
         "_meta": {
             "generated_by": "scripts/recompute_significance.py",
-            "n_runs": len(runs),
-            "test": "exact sign-permutation test of the Wilcoxon signed-rank "
-                    "statistic (midranks for tied |diff|) on per-query mean "
-                    "accuracy, full - condition (scripts/sign_permutation.py)",
-            "test_label": TEST_LABEL,
-            "correction": "Holm-Bonferroni across the ablated conditions",
+            **stats_meta(len(runs)),
             "bootstrap": {"n_resamples": BOOTSTRAP_N, "unit": "query", "seed": SEED},
         },
         "provenance": build_provenance(
@@ -248,7 +243,10 @@ def main() -> int:
     if args.apply:
         if not STATS_FILE.exists():
             sys.exit(f"{STATS_FILE} not found; cannot apply")
-        stats = json.load(open(STATS_FILE))
+        stored = json.load(open(STATS_FILE))
+        # _meta first so a reader sees which test produced the p-values
+        stats = {"_meta": stats_meta(len(runs)),
+                 **{k: v for k, v in stored.items() if k != "_meta"}}
         stats["significance_tests"] = {
             cond: {
                 "delta_pp": d["delta_pp"],
