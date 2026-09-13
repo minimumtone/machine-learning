@@ -17,7 +17,7 @@
 | `docker/docker-compose.yml` | PostgreSQL 15（初期化SQL自動投入） |
 | `few_shot_examples.json` | few-shot例45件（ルート直下） |
 | `tests/` | 単体テスト134件 |
-| `paper/` | 論文ソース（stam-m_ja.tex 日 / stam-m.tex 英）+ PDF + paper_data.json |
+| `paper/` | 論文ソース（stam-m_ja.tex 日本語凍結版；英語版は凍結版からの翻訳待ちで未収録）+ PDF + paper_data.json |
 | `pyproject.toml` | 依存関係定義 |
 
 ### 評価データセット
@@ -42,7 +42,7 @@
 - Docker + docker compose（PostgreSQL 15用）
 - OpenAI APIキー（gpt-5.5 アクセス権）
 - ディスク: ~2GB（reranker用torch含む場合 ~5GB）
-- LaTeX（PDF再生成する場合のみ）: lualatex（日本語版）+ pdflatex（英語版）
+- LaTeX（PDF再生成する場合のみ）: lualatex（日本語版）
 
 ## 3. セットアップ手順
 
@@ -147,7 +147,6 @@ L12_DSN=... TRANSFER_DSN=... OBF_TRANSFER_DSN=... python scripts/audit_vocabular
 python scripts/compute_all_figures.py   # paper/paper_data.json 再生成（SSoT）
 python scripts/generate_figures.py      # paper/figures/ の図再生成
 cd paper && lualatex stam-m_ja.tex && bibtex stam-m_ja && lualatex stam-m_ja.tex && lualatex stam-m_ja.tex  # 日本語版
-cd paper && lualatex stam-m.tex && bibtex stam-m && lualatex stam-m.tex && lualatex stam-m.tex              # 英語版
 ```
 
 ## 5. 判定基準（期待値）

@@ -21,7 +21,8 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT))
 
 from scripts.provenance import build_provenance  # noqa: E402
-from scripts.sign_permutation import sign_permutation_pvalue  # noqa: E402
+from scripts.sign_permutation import (  # noqa: E402
+    TEST_LABEL, sign_permutation_pvalue, stats_meta)
 
 EVAL_DIR = PROJECT / "evaluation"
 RESULTS_FILE = EVAL_DIR / "ablation_results.json"
@@ -157,7 +158,7 @@ def compute_significance(stats: dict) -> dict:
             "p_value": p_value,
             "n_nonzero": len(nonzero),
             "n_queries": len(qids),
-            "test": "sign-permutation-exact-midranks",
+            "test": TEST_LABEL,
         }
 
     adjusted = _holm(raw)
@@ -222,7 +223,8 @@ def main():
         significance = compute_significance(stats)
         stats_file = EVAL_DIR / "ablation_multirun_stats.json"
         with open(stats_file, "w") as f:
-            json.dump({"n_runs": len(runs),
+            json.dump({"_meta": stats_meta(len(runs)),
+                       "n_runs": len(runs),
                        "provenance": build_provenance(
                            EVAL_DIR / "evaluation_dataset.jsonl",
                            rescore_note=(

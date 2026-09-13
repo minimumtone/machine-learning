@@ -30,6 +30,23 @@ from collections.abc import Sequence
 from scipy.stats import rankdata
 
 TIE_DECIMALS = 9
+TEST_LABEL = "sign-permutation-exact-midranks"
+TEST_DESCRIPTION = (
+    "exact sign-permutation test of the Wilcoxon signed-rank statistic "
+    "(midranks for tied |diff|, |diff| rounded to "
+    f"{TIE_DECIMALS} decimals before ranking) on per-query mean accuracy, "
+    "full - condition (scripts/sign_permutation.py)")
+
+
+def stats_meta(n_runs: int) -> dict:
+    """``_meta`` block identifying the test behind stored ablation p-values."""
+    return {
+        "n_runs": n_runs,
+        "test": TEST_DESCRIPTION,
+        "test_label": TEST_LABEL,
+        "tie_decimals": TIE_DECIMALS,
+        "correction": "Holm-Bonferroni across the ablated conditions",
+    }
 
 
 def sign_permutation_pvalue(nonzero: Sequence[float]) -> float:
