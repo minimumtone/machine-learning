@@ -503,6 +503,7 @@ class ExperimentRunner:
             jobs = self._phase4_build_jobs(
                 feature_sets, wf_names, fold_plan,
                 fold_labels=prep.fold_labels,
+                selected_policies=active_policies,
                 mc_reports=mc_reports,
             )
             logger.info(
@@ -694,6 +695,7 @@ class ExperimentRunner:
         wf_names: List[str],
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
         fold_labels: Optional[Dict[str, List[str]]] = None,
+        selected_policies: Optional[List[str]] = None,
         mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
     ) -> List[_Job]:
         jobs: List[_Job] = []
@@ -709,7 +711,7 @@ class ExperimentRunner:
             if "ElementExclusion" in fold_plan:
                 splitter_folds["ElementExclusion"] = fold_plan["ElementExclusion"]
             rc_key = f"RandomCV_seed{seed}"
-            if rc_key in fold_plan:
+            if "RandomCV" in (selected_policies or []) and rc_key in fold_plan:
                 splitter_folds["RandomCV"] = fold_plan[rc_key]
             for fs_name in feature_sets:
                 fs_key = fs_name.value

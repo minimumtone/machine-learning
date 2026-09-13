@@ -734,6 +734,91 @@ class TestEvaluationHierarchy:
         texts = " ".join(str(a.text) for a in fig.layout.annotations)
         assert "R²=" not in texts or "EE-" in texts
 
+    def test_heatmap_metrics_separate_split_series(self):
+        from extrapolation_discovery_platform.gui.app import _cell_metrics
+        from sklearn.metrics import r2_score
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, group, pred):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, split_group=group,
+                seed=42, fold=0,
+                y_test_true=np.array([1.0, 2.0]),
+                y_test_pred=np.array(pred),
+                test_indices=np.array([0, 1]),
+            )
+
+        runs = [
+            run("ElementExclusion", "Co", [1.0, 2.0]),
+            run("ElementExclusion", "Ti", [3.0, 4.0]),
+            run("CompositionBlock", "", [1.5, 2.5]),
+        ]
+        wfs, labels, r2_z, *_ = _cell_metrics(runs)
+        assert wfs == ["WF-LIN"]
+        assert len(labels) == 3
+        pooled_r2 = r2_score(
+            [1.0, 2.0, 1.0, 2.0, 1.0, 2.0],
+            [1.0, 2.0, 3.0, 4.0, 1.5, 2.5],
+        )
+        assert all(row[0] != pooled_r2 for row in r2_z)
+
+    def test_cv_folds_aggregate_into_one_series(self):
+        from extrapolation_discovery_platform.gui.app import _cell_metrics
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(fold, idx):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", split_group=f"fold{fold}",
+                seed=42, fold=fold,
+                y_test_true=np.array([1.0, 2.0]) + idx[0],
+                y_test_pred=np.array([1.1, 1.9]) + idx[0],
+                test_indices=np.array(idx),
+            )
+
+        runs = [run(0, [0, 1]), run(1, [2, 3]), run(2, [4, 5])]
+        _, labels, r2_z, *_ = _cell_metrics(runs)
+        assert labels == ["BASE · CB"]
+        assert r2_z[0][0] is not None
+        fig = plotly_combo_parity_grid(runs)
+        texts = " ".join(str(a.text) for a in fig.layout.annotations)
+        assert texts.count("CB R²=") == 1
+
+    def test_stage1_does_not_fallback_to_randomcv(self):
+        from extrapolation_discovery_platform.features import (
+            FeatureCatalog,
+            FeatureSetName,
+        )
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+
+        n = 40
+        cols = FeatureCatalog.columns(FeatureSetName.FS_BASE)
+        features = pd.DataFrame(
+            np.arange(n * len(cols), dtype=float).reshape(n, len(cols)),
+            columns=cols,
+        )
+        target = pd.Series(np.arange(n, dtype=float))
+        compositions = pd.DataFrame({
+            "Co": np.full(n, 0.5),
+            "Ni": np.zeros(n),
+            "Ti": np.zeros(n),
+        })
+        prep = stage1_preprocess(
+            features_df=features,
+            target=target,
+            compositions_df=compositions,
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["ElementExclusion"],
+        )
+        assert not prep.success
+        assert not any(k.startswith("RandomCV") for k in prep.fold_plan)
+
     def test_derive_microstructure_preserves_missingness(self):
         from extrapolation_discovery_platform.data.build_highconf_v2 import (
             derive_microstructure,
