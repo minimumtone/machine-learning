@@ -76,6 +76,7 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
     plotly_parity_per_algorithm,
     plotly_parity_train_test,
     split_series_abbreviation,
+    split_series_key,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -107,7 +108,7 @@ def _cell_metrics(run_list: List[Any], sp_f: str = "All") -> Tuple:
     for r in filtered:
         if r.y_test_true is None or r.y_test_pred is None:
             continue
-        series = (r.split_policy, getattr(r, "split_group", ""))
+        series = split_series_key(r)
         ti = getattr(r, "test_indices", None)
         for i in range(len(r.y_test_true)):
             test_key = (
@@ -138,8 +139,7 @@ def _cell_metrics(run_list: List[Any], sp_f: str = "All") -> Tuple:
     rows = []
     for fs in fss:
         series_for_fs = {
-            (r.split_policy, getattr(r, "split_group", ""))
-            for r in filtered if r.feature_set == fs
+            split_series_key(r) for r in filtered if r.feature_set == fs
         }
         rows.extend((fs, series) for series in sorted(
             series_for_fs, key=series_sort_key,

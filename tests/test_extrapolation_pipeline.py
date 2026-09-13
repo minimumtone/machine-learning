@@ -763,6 +763,31 @@ class TestEvaluationHierarchy:
         )
         assert all(row[0] != pooled_r2 for row in r2_z)
 
+    def test_cv_folds_aggregate_into_one_series(self):
+        from extrapolation_discovery_platform.gui.app import _cell_metrics
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(fold, idx):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", split_group=f"fold{fold}",
+                seed=42, fold=fold,
+                y_test_true=np.array([1.0, 2.0]) + idx[0],
+                y_test_pred=np.array([1.1, 1.9]) + idx[0],
+                test_indices=np.array(idx),
+            )
+
+        runs = [run(0, [0, 1]), run(1, [2, 3]), run(2, [4, 5])]
+        _, labels, r2_z, *_ = _cell_metrics(runs)
+        assert labels == ["BASE · CB"]
+        assert r2_z[0][0] is not None
+        fig = plotly_combo_parity_grid(runs)
+        texts = " ".join(str(a.text) for a in fig.layout.annotations)
+        assert texts.count("CB R²=") == 1
+
     def test_stage1_does_not_fallback_to_randomcv(self):
         from extrapolation_discovery_platform.features import (
             FeatureCatalog,

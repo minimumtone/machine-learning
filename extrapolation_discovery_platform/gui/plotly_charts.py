@@ -76,6 +76,14 @@ def _records_to_df(records: List[Dict[str, Any]]) -> pd.DataFrame:
 logger = logging.getLogger(__name__)
 
 
+def split_series_key(run: Any) -> Tuple[str, str]:
+    """Series identity for metrics: (policy, excluded element) for
+    ElementExclusion, (policy, "") otherwise so CV folds aggregate."""
+    sp = run.split_policy
+    group = getattr(run, "split_group", "") if sp == "ElementExclusion" else ""
+    return sp, group
+
+
 def split_series_abbreviation(split_policy: str, split_group: str = "") -> str:
     """Return the compact label used for split-policy series."""
     if split_policy == "ElementExclusion" and split_group:
@@ -2747,7 +2755,7 @@ def plotly_combo_parity_grid(
     wf_order = sorted({r.workflow    for r in filtered})
     fs_order = sorted({r.feature_set for r in filtered})[:max_fs]
     sp_order = sorted({
-        (r.split_policy, getattr(r, "split_group", ""))
+        split_series_key(r)
         for r in filtered
     })
 
@@ -2795,8 +2803,8 @@ def plotly_combo_parity_grid(
         if r.workflow not in wf_order or r.feature_set not in fs_order:
             continue
         ti = getattr(r, "test_indices", None)
+        _sp, group = split_series_key(r)
         for i in range(len(r.y_test_true)):
-            group = getattr(r, "split_group", "")
             key = (r.workflow, r.feature_set, r.split_policy, group,
                    int(ti[i]) if ti is not None else float(r.y_test_true[i]))
             if key in seen:
