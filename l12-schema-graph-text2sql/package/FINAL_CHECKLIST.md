@@ -10,7 +10,7 @@
 - DB なし静的検証（`verify_all.py --static-only`）は `PASS=8 WARN=0 FAIL=0`。
 - DB-full 正式検証（`FULL_DB_TEST=1 verify_all.py --warnings-as-errors`）は `PASS=18 WARN=0 FAIL=0 SKIP=0`、pytest 166 passed（クリーン展開＋新規 venv で再確認済み）。
 - 日本語本文の数値照合（`verify_paper_numbers.py`、引数なし＝`paper/*.tex` グロブ）は `TeX files audited: 1 (stam-m_ja.tex)`・gating 0・exit 0、`verify_ssot.py` は 5/5 PASS。「gating 0」は日本語版の結果であり、英語版は未作成である。
-- 日本語 PDF は LuaLaTeX＋BibTeX でビルド済み（30ページ：本文＋参考文献 p.1–16、補足資料 p.17–30。未定義参照・未定義引用 0、overfull hbox 0）。日本語版は git タグ `ja-final` で凍結済み（`<MDR>/paper/SHA256SUMS_ja.txt`、13ファイル）。
+- 日本語 PDF は LuaLaTeX＋BibTeX でビルド済み（30ページ：本文＋参考文献 p.1–16、補足資料 S1–S14＝物理ページ 17–30。未定義参照・未定義引用 0、overfull hbox 0）。日本語版は git タグ `ja-final` で凍結済み（`<MDR>/paper/SHA256SUMS_ja.txt`、13ファイル）。
 - パッケージは `scripts/build_submission_package.py` で3区分（原稿本文 / Supplementary / MDR登録用）に機械的に組み立て、全ファイルの SHA-256 を `SHA256SUMS.txt` に列挙する。区分間で重複するファイル（原稿ソース・図・per_query 表）はすべてバイト同一。
 
 ## PDF 確認
