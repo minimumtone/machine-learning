@@ -171,3 +171,57 @@ ja_numbers.tsv rows changed, 10 rows identical), 13/13 OK.
    説明文書". Other file-name mentions in the manuscript (Section 2.2 MANIFEST.md, S2 evaluation/generated_sql/,
    compute_unified_difficulty.py, scoring_audit.json) were left as they are; each names a file that is in
    03_mdr_scripts_data/.
+
+## 12. v24d: manuscript aligned with the current implementation (external review, 6 items)
+
+Scope: text only in paper/stam-m_ja.tex. No implementation, evaluation value, SSOT value, figure PNG, table value or
+saved LLM output changed; no LLM call was re-run. Each item below was checked against the code
+(scripts/eval_ablation.py, llm/sql_generator.py, llm/schema_linker.py, llm/reranker.py, graph/traversal_engine.py,
+safety/sql_validator.py, evaluation/metrics.py, evaluation/metrics_strict.py) and the live DB (36 base tables,
+44 FK constraints, 41 undirected graph edges, 82 directed allowed-JOIN conditions).
+
+1. no_dict (documentation mismatch, since the first ablation implementation). The condition empties only the
+   schema-mapping dictionary (schema_linker.CONDITION_TABLE_MAP / CONDITION_COLUMN_MAP / map_conditions, 61 entries);
+   material_terms.yaml and the condition extractor stay active. Manuscript now says so in the ablation definition,
+   Section 4.2 ("スキーマ写像辞書を外すと"), the SchemaGraphSQL comparison and the dictionary-size study: 50/25/10 %
+   reduce both dictionaries together, 0 % disables the schema mapping only (identical to no_dict; the term dictionary
+   is back to full), so 0 % is not the continuation of 10 %. Table row label "0% (なし)" -> "0% (写像のみ無効)".
+   Limitation added: a condition removing both dictionaries was not measured.
+2. no_graph (documentation mismatch). eval_ablation passes table_graph=None, join_list=None, all_columns=None, so the
+   generator falls back to its fixed 6-table / 25-column / 5-JOIN context (material_entry, composition, structure,
+   phase_stability, calculation, calculated_property) and linked tables are restricted to those 6. Manuscript defines
+   no_graph as "FK graph + 36-table schema context both removed", and no longer interprets it as the graph alone.
+3. Shortest JOIN path (POLICY CHANGE). Before the pipeline integration (commit 07a7a976) the evaluation driver put the
+   greedy shortest-path ON conditions first in the allowed-JOIN list. In the current sql_pipeline the result of
+   generate_joins_for_tables() only decides whether the required tables are connected; the prompt receives every FK
+   edge touching a required table, in both directions (e.g. 38 conditions for material_entry/composition/structure/
+   phase_stability versus 3 shortest-path JOINs), and the prompt forbids JOINs outside that list. Section title
+   "FKグラフ上の貪欲最短経路JOIN制約" -> "FKグラフによるJOIN制約"; Figure 1 caption, supplement Algorithm S1 (caption
+   and preamble: path P is used for the connectivity check, not as a generation constraint), "P を SQL JOIN 句に変換"
+   removed, SchemaGraphSQL comparison (2) reworded.
+4. n-best (documentation mismatch, implementation unchanged since 48692511). GPT-5.5 is called n times (default 3)
+   independently with the same input; a rule-based SQL is added as a candidate when available; each candidate gets a
+   mechanical score (SQLGuard pass, trial execution, non-empty result, condition coverage, row-count plausibility);
+   final ranking = 0.6 mechanical + 0.4 GPT-5.5 semantic score; top-1 is used. no_nbest (n=1) skips the whole
+   multi-candidate path (scoring, rule-based candidate, reranker selection).
+5. SQLGuard (documentation mismatch). validate_sql() distinguishes rejected (errors) / warning / modified. Of the 15
+   checks, 12 reject (multiple statements, forbidden keywords, SELECT-only, dangerous functions, system tables,
+   CTE-body SELECT-only, tautology, allowed tables, allowed columns, subquery depth, function allowlist, complexity
+   budget), 2 warn only (non-FK JOIN, arithmetic column types; the SQL still executes) and 1 rewrites (LIMIT added
+   when missing / capped when too large). Each item in the main text and the supplement list is tagged
+   ［棄却］/［警告］/［書き換え］. "いずれかの検査に通らないSQLは棄却" and the "SELECT * 禁止" claim were removed.
+6. Common-column projection (metric-definition limitation, already partly disclosed). Recall, Precision, F1 and the
+   lenient common-column exact are all computed on cols(gen) ∩ cols(gold), so a missing required gold column is not
+   detected by any of them; only the strict exact result-set match (column list + typed rows) and the require-all
+   scoring-policy column (Table S20) detect it. Stated explicitly in Section 2.1.3 with references.
+Additional: no_reranker disables both rerank_sql_candidates and rerank_schema_tables (schema-link table reordering in the
+schema-linking section) while the local cross-encoder for few-shot example selection stays active; stated in the ablation
+definition.
+
+Gates (working tree, then repeated from the fresh ZIP extraction, see §13): ruff clean; pytest 166 passed;
+verify_ssot.py 5/5; verify_paper_numbers.py --tex stam-m_ja.tex exit 0, gating 0 (new TeX-not-in-JSON tokens are the
+implementation constants 0.6 / 12 / 41 / 82 / 38 quoted from the code and DB); LuaLaTeX 3 passes + BibTeX: 30 pages,
+undefined references 0, multiply-defined 0, overfull 0. Page split changed from main p.1-15 / supplement p.16-29 to
+main+references p.1-16 / supplement p.17-30 because of the added explanatory text (the references now end on p.16).
+SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK.
+ja-final re-tagged to the v24d commit.
