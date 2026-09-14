@@ -120,3 +120,172 @@ multiply-defined 0, overfull 8 (TikZ ER diagrams, unchanged); page split main p.
 verify_paper_numbers.py: exit 0, TeX files audited: 1 (stam-m_ja.tex); ja_numbers.tsv diff = the two edited
 sentences only (new in-JSON tokens 100 and 3 from the Abstract). verify_ssot.py 5/5. SHA256SUMS_ja.txt regenerated
 (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK. ja-final re-tagged to f8ab7fbc.
+
+## 11. v24c: manuscript text consolidation and Figure 1 redraw from the author review of v24b
+
+Scope: text and figure only. No number, SSOT value, figure PNG, table value or saved output changed.
+LuaLaTeX (3 passes + BibTeX): 29 pages, undefined references 0, multiply-defined 0, overfull 0 (v24b had 8, all from
+the old TikZ ER diagram); page split main p.1-15 / supplement p.16-29 unchanged. verify_paper_numbers.py --tex
+stam-m_ja.tex: exit 0, gating 0 (the only new TeX-not-in-JSON tokens are the LaTeX float parameters 0.85/0.9 and the
+minipage widths 0.46/0.55). verify_ssot.py 5/5. SHA256SUMS_ja.txt regenerated (stam-m_ja.tex, references.bib,
+ja_numbers.tsv rows changed, 10 rows identical), 13/13 OK.
+
+1. Introduction, SuperCon / PoLyInfo (RDF/SPARQL): replaced the "needs data conversion from RDB" contrast with the
+   shared problem setting (making implicit terminology and item relations explicit before querying); the ontology
+   work puts the knowledge on the data side, this work puts it on the query-generation side (dictionary, few-shot,
+   FK graph); both are compatible (dictionary vocabulary could be mapped to ontology vocabulary). Section 4 related
+   comparison text and table aligned: SPARQL marked with a dagger "query language; NL-to-query conversion not in
+   scope", "main difference" column states where the relations are made explicit. Future work (8) added.
+2. Introduction, challenge (3): "no standard benchmark for inorganic-materials RDB Text-to-SQL" is now stated after
+   citing LLM4Mat-Bench (property prediction) and the LLM-hackathon review (Zimmermann et al., MLST 2025, knowledge
+   graph / API prototypes, no SQL) and limited to "no benchmark with shared questions, gold SQL and expected results".
+   references.bib +1 (zimmermann2025hackathon; 35 authors, "and others").
+3. Introduction: the four-item contribution list was removed (every item is repeated in Sections 2-5 with the same
+   numbers) and replaced by one sentence naming the pipeline components and the evaluations. Heading "目的と貢献" ->
+   "目的". The enumitem formatting request for that list is therefore moot; \usepackage{enumitem} was already loaded.
+4. Limitations, ambiguous expressions: thresholds for "stable" / "high energy" are user dependent, so a unified test
+   is difficult; this study fixed them in advance (Section 2.1.2); a system should let the user see, confirm or
+   specify the threshold, which this system does not provide. No new quantitative experiment (author decision).
+   Future work (7) reworded accordingly.
+5. "CTE" occurrences 39 -> 9. Definition kept once in Section 2.1.1 ("以下、CTEを要するクエリを『多段計算クエリ』と
+   呼ぶ"); remaining uses are the SQLGuard checks (CTE-body SELECT-only, recursive CTE) in the main text and
+   supplement, the LLM-only table static-diagnosis note and one definition back-reference. Supplement section and
+   category names renamed ("多段計算クエリの5カテゴリ", categories 導出量計算のみ / +フィルター / +集約 / 多段 /
+   +列間比較). Duplicate difficulty-definition sentence at the start of Section 2.2 removed. Table 2 (ablation)
+   caption shortened; the test / Holm / bootstrap-CI definitions moved into the paragraph before the table.
+6. Figure 1 redrawn as an FK reference graph checked against db/001_schema.sql (+ 007 marker table = 36 tables):
+   30 tables shown, the 6 omitted named in the caption (property_definition, property_scope,
+   fixture_source_reference_set, material_defect, defect_type, schema_initialization_status). Solid arrows =
+   direct FK between shown tables; dashed arrows = FKs whose parent is calculation (calculated_property,
+   band_structure, density_of_states, elastic_tensor, thermal_property reach material_entry only via calculation).
+   The previous figure drew direct edges from those tables to material_entry, which do not exist in the DDL, and
+   the caption claimed "two paths"; both removed. Added: composition -> element, structure -> prototype_definition /
+   space_group, phase_stability -> reference_energy_set, material_synthesis -> literature_reference,
+   pure_element_reference -> element / reference_energy_set. Color legend added, multiplicity explicitly not shown,
+   identifiers no longer hyphenated mid-word, application_domain self-reference styled like the other edges.
+   Body text "主要テーブルの関係（ER図）" -> "主要テーブル間のFK参照グラフ（多重度は示さない）". Figure spans both
+   columns (figure*) with \dbltopfraction / \dblfloatpagefraction raised so it stays on page 3.
+7. Supplement: Figures S3 and S4 side by side in one figure environment (0.46\columnwidth each), S5 in its own
+   figure below (0.55\columnwidth); all three on p.26. Section S10 no longer names MANIFEST.md / README_SQL.md
+   (author instruction: do not name files not planned for distribution there); it now refers to "配布パッケージの
+   説明文書". Other file-name mentions in the manuscript (Section 2.2 MANIFEST.md, S2 evaluation/generated_sql/,
+   compute_unified_difficulty.py, scoring_audit.json) were left as they are; each names a file that is in
+   03_mdr_scripts_data/.
+
+## 12. v24d: manuscript aligned with the current implementation (external review, 6 items)
+
+Scope: text only in paper/stam-m_ja.tex. No implementation, evaluation value, SSOT value, figure PNG, table value or
+saved LLM output changed; no LLM call was re-run. Each item below was checked against the code
+(scripts/eval_ablation.py, llm/sql_generator.py, llm/schema_linker.py, llm/reranker.py, graph/traversal_engine.py,
+safety/sql_validator.py, evaluation/metrics.py, evaluation/metrics_strict.py) and the live DB (36 base tables,
+44 FK constraints, 41 undirected graph edges, 82 directed allowed-JOIN conditions).
+
+1. no_dict (documentation mismatch, since the first ablation implementation). The condition empties only the
+   schema-mapping dictionary (schema_linker.CONDITION_TABLE_MAP / CONDITION_COLUMN_MAP / map_conditions, 61 entries);
+   material_terms.yaml and the condition extractor stay active. Manuscript now says so in the ablation definition,
+   Section 4.2 ("スキーマ写像辞書を外すと"), the SchemaGraphSQL comparison and the dictionary-size study: 50/25/10 %
+   reduce both dictionaries together, 0 % disables the schema mapping only (identical to no_dict; the term dictionary
+   is back to full), so 0 % is not the continuation of 10 %. Table row label "0% (なし)" -> "0% (写像のみ無効)".
+   Limitation added: a condition removing both dictionaries was not measured.
+2. no_graph (documentation mismatch). eval_ablation passes table_graph=None, join_list=None, all_columns=None, so the
+   generator falls back to its fixed 6-table / 25-column / 5-JOIN context (material_entry, composition, structure,
+   phase_stability, calculation, calculated_property) and linked tables are restricted to those 6. Manuscript defines
+   no_graph as "FK graph + 36-table schema context both removed", and no longer interprets it as the graph alone.
+3. Shortest JOIN path (POLICY CHANGE). Before the pipeline integration (commit 07a7a976) the evaluation driver put the
+   greedy shortest-path ON conditions first in the allowed-JOIN list. In the current sql_pipeline the result of
+   generate_joins_for_tables() only decides whether the required tables are connected; the prompt receives every FK
+   edge touching a required table, in both directions (e.g. 38 conditions for material_entry/composition/structure/
+   phase_stability versus 3 shortest-path JOINs), and the prompt forbids JOINs outside that list. Section title
+   "FKグラフ上の貪欲最短経路JOIN制約" -> "FKグラフによるJOIN制約"; Figure 1 caption, supplement Algorithm S1 (caption
+   and preamble: path P is used for the connectivity check, not as a generation constraint), "P を SQL JOIN 句に変換"
+   removed, SchemaGraphSQL comparison (2) reworded.
+4. n-best (documentation mismatch, implementation unchanged since 48692511). GPT-5.5 is called n times (default 3)
+   independently with the same input; a rule-based SQL is added as a candidate when available; each candidate gets a
+   mechanical score (SQLGuard pass, trial execution, non-empty result, condition coverage, row-count plausibility);
+   final ranking = 0.6 mechanical + 0.4 GPT-5.5 semantic score; top-1 is used. no_nbest (n=1) skips the whole
+   multi-candidate path (scoring, rule-based candidate, reranker selection).
+5. SQLGuard (documentation mismatch). validate_sql() distinguishes rejected (errors) / warning / modified. Of the 15
+   checks, 12 reject (multiple statements, forbidden keywords, SELECT-only, dangerous functions, system tables,
+   CTE-body SELECT-only, tautology, allowed tables, allowed columns, subquery depth, function allowlist, complexity
+   budget), 2 warn only (non-FK JOIN, arithmetic column types; the SQL still executes) and 1 rewrites (LIMIT added
+   when missing / capped when too large). Each item in the main text and the supplement list is tagged
+   ［棄却］/［警告］/［書き換え］. "いずれかの検査に通らないSQLは棄却" and the "SELECT * 禁止" claim were removed.
+6. Common-column projection (metric-definition limitation, already partly disclosed). Recall, Precision, F1 and the
+   lenient common-column exact are all computed on cols(gen) ∩ cols(gold), so a missing required gold column is not
+   detected by any of them; only the strict exact result-set match (column list + typed rows) and the require-all
+   scoring-policy column (Table S20) detect it. Stated explicitly in Section 2.1.3 with references.
+Additional: no_reranker disables both rerank_sql_candidates and rerank_schema_tables (schema-link table reordering in the
+schema-linking section) while the local cross-encoder for few-shot example selection stays active; stated in the ablation
+definition.
+
+Gates (working tree, then repeated from the fresh ZIP extraction, see §13): ruff clean; pytest 166 passed;
+verify_ssot.py 5/5; verify_paper_numbers.py --tex stam-m_ja.tex exit 0, gating 0 (new TeX-not-in-JSON tokens are the
+implementation constants 0.6 / 12 / 41 / 82 / 38 quoted from the code and DB); LuaLaTeX 3 passes + BibTeX: 30 pages,
+undefined references 0, multiply-defined 0, overfull 0. Page split changed from main p.1-15 / supplement p.16-29 to
+main+references p.1-16 / supplement p.17-30 because of the added explanatory text (the references now end on p.16).
+SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK.
+ja-final re-tagged to the v24d commit.
+
+## 13. Fresh-extraction verification of the v24d ZIP (l12_text2sql_submission_v24d.zip, extracted to a new directory)
+- ZIP: 1,587 members; member list identical to the v24c ZIP; content differs in 14 members only (stam-m_ja.tex x2,
+  the three PDFs, SHA256SUMS_ja.txt, ja_numbers.tsv, GIT_COMMIT, README.md x3, FINAL_CHECKLIST.md, this log,
+  SHA256SUMS.txt); code and data byte-identical. SHA256SUMS.txt 1,586/1,586 OK.
+- verify_all.py --static-only PASS=8 WARN=0 FAIL=0; verify_all.py --warnings-as-errors (FULL_DB_TEST=1)
+  PASS=18 WARN=0 FAIL=0 SKIP=0; pytest 166 passed; ruff clean; verify_ssot.py 5/5;
+  verify_paper_numbers.py (default and --tex stam-m_ja.tex) exit 0, "TeX files audited: 1 (stam-m_ja.tex)";
+  SHA256SUMS_ja 13/13 OK; LuaLaTeX + BibTeX rebuild from the packaged sources: 30 pages, undefined 0.
+
+## 14. v24e: two follow-up findings from Devin Review on PR #589 (text only in paper/stam-m_ja.tex)
+
+Scope: no implementation, evaluation value, SSOT value, figure PNG, table value or saved LLM output changed; no LLM
+call re-run. Both findings were checked against llm/sql_generator.py (_score_sql_candidate, score constants),
+llm/domain_validator.py (validate_result_rows, penalty cap 30), llm/reranker.py (weight 0.4), safety/sql_guard.py,
+api/main.py, scripts/eval_ablation.py (exec_fn, normalize_limit) and evaluation/metrics.py (normalize_limit).
+
+1. n-best mechanical score (Section 2.4 omitted items that affect candidate ordering). The manuscript now lists every
+   component with its points: SQLGuard pass 30 (a failing candidate scores 0 and is not trial-executed), trial
+   execution success 20, non-empty result 10, condition coverage up to 20 (fraction of extracted prototype / element /
+   stability / sort conditions whose clause appears in the SQL; 20 when no such condition was extracted), row-count
+   plausibility 10 for 1-500 rows / 5 above 500, DISTINCT 5, LIMIT 5; after a successful trial execution the
+   materials-domain validation of the result rows (5 rules: prototype vs formula type, lattice-constant bounds,
+   E_hull vs stability condition, gamma-prime base elements, site-label validity) subtracts up to 30 points (floor 0).
+   Stated to be a candidate-ranking design value, not an evaluation metric.
+2. SQLGuard three-way classification vs evaluation-time execution (Section 2.7 and supplement S1 list preamble).
+   The reject / warn / rewrite execution control (rejected SQL not executed, rewritten SQL executed) is the behaviour of
+   the shipped execution layer (execute_sql() used by the API and UI). In the evaluation SQLGuard acts only as a
+   component of the n-best candidate score: failing candidates score 0 and are not trial-executed, but
+   _score_sql_candidate() passes the original candidate SQL (not validation["sql"]) to execute_fn, and
+   eval_ablation.py executes the selected SQL after normalize_limit() (adds LIMIT 10000 only when no LIMIT is
+   present; does not cap a larger explicit LIMIT) regardless of the SQLGuard verdict, including the case in which every
+   candidate failed. The manuscript now says so and describes SQLGuard's contribution to the evaluation values as
+   indirect (through candidate selection), with no_guard defined as "validation treated as always passing in the
+   candidate score". The supplement list preamble no longer implies that every path executes the rewritten SQL.
+
+Gates (working tree): ruff clean; pytest 166 passed (FULL_DB_TEST=1); verify_ssot.py 5/5; verify_all.py --static-only
+PASS=8 WARN=0 FAIL=0; verify_paper_numbers.py --tex stam-m_ja.tex exit 0, gating 0 (new TeX-not-in-JSON tokens are the
+score constants 30/20/10/500/5 quoted from the code); LuaLaTeX 3 passes + BibTeX: 30 pages, undefined 0,
+multiply-defined 0, overfull 0; page split unchanged (main+references p.1-16, supplement p.17-30).
+SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK.
+ja-final re-tagged to the v24e commit. Fresh-extraction gates of the v24e ZIP: see §15.
+
+## 15. Fresh-extraction verification of the v24e ZIP (l12_text2sql_submission_v24e.zip, GIT_COMMIT a0f238a1)
+(The copy of this log inside the v24e ZIP ends at §14; this section is recorded in the repository after the ZIP was built.)
+- ZIP: 7.4 MB, 1,587 members, SHA-256 bb260023e0fad47bf3fb29dd4073c7ce3b4f36fb95415121cb51a8b16a0a6e07. Member list identical
+  to the v24d ZIP; content differs in 11 members only (stam-m_ja.tex x2, the three PDFs, SHA256SUMS_ja.txt, ja_numbers.tsv,
+  GIT_COMMIT, this log, root README.md, SHA256SUMS.txt); code, data, figures, saved outputs byte-identical to v24d.
+  SHA256SUMS.txt 1,586/1,586 OK. Hygiene: no .pyc/__pycache__/.pytest_cache/.env/.git, no API-key patterns.
+- File-set diff sql_package vs `git ls-files`: package-only = GIT_COMMIT; source-only = the known exclusions (paper/ x10 and
+  paper/figures x6 -> shipped under 03/paper and 01_manuscript; the 4 paper scripts -> 03/paper_scripts; package/ docs and logs
+  -> ZIP root and 03/verification_logs; build_submission_package / repair / translate / eval_jp_reranker scripts; api/, ui/,
+  pyproject.toml, README*.md, MODEL_SNAPSHOT.md, .gitignore). Static file-reference scan result of §4 carries over (packaged
+  code byte-identical).
+- Level 0: verify_paper_numbers.py (default and --tex stam-m_ja.tex) exit 0, "TeX files audited: 1 (stam-m_ja.tex)";
+  verify_ssot.py 5/5; SHA256SUMS_ja 13/13 OK. PDFs: full 30 p, main 16 p, supplement 14 p (p.1 starts with 補足資料;
+  main p.16 contains the reference list end).
+- Level 1: verify_all.py --static-only PASS=8 WARN=0 FAIL=0; pytest 166 passed (FULL_DB_TEST=1); ruff clean; all 8 README
+  §2.2 regeneration entry points exit 0 — only scoring_audit.json and significance_recomputed.json changed, and only in
+  provenance generated_at / git_commit; generate_figures.py -> six PNGs byte-identical to the shipped ones.
+- Level 2 (PostgreSQL 15 container, existing DBs): verify_all.py --warnings-as-errors PASS=18 WARN=0 FAIL=0 SKIP=0;
+  compute_all_figures.py regenerated paper_data.json identical to the shipped one except _meta.generated_at / _meta.git_commit;
+  LuaLaTeX 3 passes + BibTeX from the packaged sources: 30 pages, undefined references 0.
+- Level 3 (paid API) not re-run by decision; saved outputs are the source of the published numbers.
