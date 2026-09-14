@@ -76,8 +76,12 @@ tex_in_json	1	1	  \item ドメイン用語の曖昧さ：     L1$_2$、$\gamma'$
 tex_in_json	2	2	item ドメイン用語の曖昧さ：     L1$_2$、$\gamma'$相、B2のような結晶構造名や
 tex_in_json	2	2	：     L1$_2$、$\gamma'$相、B2のような結晶構造名や物性用語はLLMの学習データに
 tex_in_json	4	4	：     材料分野のLLM評価は物性予測（LLM4Mat-Bench~\cite{rubungo20
-tex_in_json	36	36	（セクション~\ref{sec:method}）、36テーブルの検証RDB上で245クエリの主評価、アブ
-tex_in_json	245	245	c:method}）、36テーブルの検証RDB上で245クエリの主評価、アブレーション、一般化試験、言語依
+tex_in_json	4	4	ate}  これらの課題に対する本研究の貢献は次の4点である。(i)~材料ドメイン辞書・少数ショット例
+tex_in_json	36	36	ン~\ref{sec:method}）。(ii)~36テーブルの検証RDBと、gold SQL・期待結果
+tex_in_json	245	245	の検証RDBと、gold SQL・期待結果を付した245クエリによる多軸評価（セクション~\ref{sec
+tex_in_json	7	7	f{sec:evaluation}）。(iii)~7条件$\times$5ランのアブレーションと符号置
+tex_in_json	5	5	ation}）。(iii)~7条件$\times$5ランのアブレーションと符号置換検定による、各構成要
+tex_in_json	100	100	。(iv)~実装に関与していない共同著者が設計した100問、一般化試験A--D、日英の質問文による比較を通
 tex_in_json	1	1	る無機材料データを格納する正規化RDBを想定し、L1$_2$型金属間化合物を題材とする検証RDBを構築
 tex_in_json	2	2	材料データを格納する正規化RDBを想定し、L1$_2$型金属間化合物を題材とする検証RDBを構築した。
 tex_in_json	36	36	安定性・電子構造・機械的特性・表面特性などの情報を36の正規化テーブル（うち1つはスキーマ初期化状態の管
@@ -221,8 +225,9 @@ tex_in_json	10	10	場合は20点）、結果行数の妥当性（1--500行で10�
 tex_in_json	5	5	行数の妥当性（1--500行で10点、500行超で5点）、\texttt{DISTINCT}の使用（5
 tex_in_json	5	5	5点）、\texttt{DISTINCT}の使用（5点）、\texttt{LIMIT}の使用（5点）。
 tex_in_json	5	5	使用（5点）、\texttt{LIMIT}の使用（5点）。さらに、試行実行に成功した候補には結果行の材
-tex_in_json	5	5	ma'$相の基本元素の有無、サイトラベルの妥当性の5規則）を適用し、違反に応じて最大30点を減点する（
-tex_in_json	30	30	ラベルの妥当性の5規則）を適用し、違反に応じて最大30点を減点する（下限0点）。この配点は候補の順位を決
+tex_in_json	4	4	ll}$と安定性条件の整合、サイトラベルの妥当性の4規則。検査器には$\gamma'$相の基本元素（N
+tex_in_json	5	5	ma'$相の基本元素（Ni・Co）の有無を調べる第5の規則もあるが、この規則は質問文を参照するのに対し
+tex_in_json	30	30	候補採点では作動しない）を適用し、違反に応じて最大30点を減点する（下限0点）。この配点は候補の順位を決
 tex_in_json	0	0	）を適用し、違反に応じて最大30点を減点する（下限0点）。この配点は候補の順位を決めるための設計値であ
 tex_in_json	0.4	0.4	の重み付き和（機械的スコア 0.6：LLMスコア 0.4）で候補を並べ替え、最上位の1本を採用する。$n=
 tex_in_json	1	1	：LLMスコア 0.4）で候補を並べ替え、最上位の1本を採用する。$n=1$の場合はこの候補採点・ルー
@@ -984,7 +989,8 @@ tex_in_json	6	6	\setcounter{totalnumber}{6}  \appendix \renewcomman
 tex_in_json	0	0	on} \setcounter{section}{0} \setcounter{table}{0} \
 tex_in_json	0	0	n}{0} \setcounter{table}{0} \setcounter{figure}{0} 
 tex_in_json	0	0	}{0} \setcounter{figure}{0} \setcounter{equation}{0
-tex_in_json	0	0	0} \setcounter{equation}{0} \makeatletter \def\@sec
+tex_in_json	0	0	0} \setcounter{equation}{0} \setcounter{page}{1} \r
+tex_in_json	1	1	on}{0} \setcounter{page}{1} \renewcommand{\thepage}
 tex_in_json	1	1	etter \def\@seccntformat#1{\csname the#1\endcsname.
 tex_in_json	1	1	ccntformat#1{\csname the#1\endcsname.\hskip 0.5em} 
 tex_in_json	0.5	0.5	e the#1\endcsname.\hskip 0.5em} \makeatother  \begin{
@@ -1176,9 +1182,11 @@ tex_in_json	1	1	xttt{u.col = v.col}）を両方向で1本ずつ作り、許容JO
 tex_in_json	36	36	で1本ずつ作り、許容JOIN条件の全リストとする（36テーブル・44 FK制約は同一テーブル対の複数FK
 tex_in_json	44	44	、許容JOIN条件の全リストとする（36テーブル・44 FK制約は同一テーブル対の複数FKを1エッジにま
 tex_in_json	1	1	ーブル・44 FK制約は同一テーブル対の複数FKを1エッジにまとめて41エッジとなり、両方向で82本）
-tex_in_json	4	4	し、列挙外のJOINの使用を禁じる。必要テーブルが4テーブル程度でも、それに接する条件は数十本になる（
-tex_in_json	4	4	texttt{phase\_stability}の4テーブルで38本、最短経路は3本）ため、許容JOI
-tex_in_json	3	3	tability}の4テーブルで38本、最短経路は3本）ため、許容JOIN条件は最短経路より広い。エイ
+tex_in_json	4	4	含む別テーブルのエッジも混入する）。必要テーブルが4テーブル程度でも、列挙される条件は数十本になる（例
+tex_in_json	4	4	texttt{phase\_stability}の4テーブルで38本。うち必要テーブルに接するものが3
+tex_in_json	36	36	4テーブルで38本。うち必要テーブルに接するものが36本、2本は上記の混入。最短経路は3本）ため、許容J
+tex_in_json	2	2	ルで38本。うち必要テーブルに接するものが36本、2本は上記の混入。最短経路は3本）ため、許容JOIN
+tex_in_json	3	3	に接するものが36本、2本は上記の混入。最短経路は3本）ため、許容JOIN条件は最短経路より広い。エイ
 tex_in_json	4	4	表現とデータベーススキーマを対応付ける。  辞書は4つのカテゴリをカバーしている： (1)~プロトタイ
 tex_in_json	1	1	る。  辞書は4つのカテゴリをカバーしている： (1)~プロトタイプエイリアス（例：\texttt{L
 tex_in_json	1	1	L12} $\leftrightarrow$ [L1$_2$, Cu$_3$Au型, $\gamma'
@@ -2018,7 +2026,7 @@ tex_not_in_json	16	16	\     Hard & 30 & $12$--$16$ & 複合条件、集約 \\   
 tex_not_in_json	17	17	  Very Hard & 20 & $\geq 17$ & 材料設計クエリ \\     \botto
 tex_not_in_json	41	41	制約は同一テーブル対の複数FKを1エッジにまとめて41エッジとなり、両方向で82本）。SQL生成時には、
 tex_not_in_json	82	82	FKを1エッジにまとめて41エッジとなり、両方向で82本）。SQL生成時には、このリストのうち必要テーブ
-tex_not_in_json	38	38	{phase\_stability}の4テーブルで38本、最短経路は3本）ため、許容JOIN条件は最短経
+tex_not_in_json	38	38	{phase\_stability}の4テーブルで38本。うち必要テーブルに接するものが36本、2本は上
 tex_not_in_json	12	12	)~プロトタイプエイリアス（例：\texttt{L12} $\leftrightarrow$ [L1$_
 tex_not_in_json	0.001	0.001	ergy\_above\_hull} $\leq 0.001$~eV/atom; 「準安定」$\to$ $0.
 tex_not_in_json	0.001	0.001	01$~eV/atom; 「準安定」$\to$ $0.001 < E_\text{hull} \leq 0.0

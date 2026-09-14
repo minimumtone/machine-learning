@@ -289,3 +289,33 @@ ja-final re-tagged to the v24e commit. Fresh-extraction gates of the v24e ZIP: s
   compute_all_figures.py regenerated paper_data.json identical to the shipped one except _meta.generated_at / _meta.git_commit;
   LuaLaTeX 3 passes + BibTeX from the packaged sources: 30 pages, undefined references 0.
 - Level 3 (paid API) not re-run by decision; saved outputs are the source of the published numbers.
+
+## 16. v24f: supplement page numbering S1-S14, contribution paragraph, no_dict qualifier, two Devin Review follow-ups (text only in paper/stam-m_ja.tex)
+Branch devin/1789394264-v24f-suppl-pagenum from 659f1027 (the merge result of PR #589). Implementation, evaluation values, SSOT,
+figure PNGs and saved outputs are byte-identical to v24e; no LLM re-run.
+1. Supplement pages are now numbered S1-S14: the \appendix block resets the page counter to 1 and sets
+   \thepage to S\arabic{page}. Main text + references remain p.1-16 (physical pages 1-16); the supplement is physical
+   pages 17-30. p.1 still carries no visible page number (interact.cls title-page style; unchanged).
+2. Introduction "目的と貢献": the four contributions removed in v24c are restored as one compact paragraph
+   ((i) pipeline design, (ii) 36-table RDB + 245 queries with gold SQL / expected results, (iii) 7 conditions x 5 runs
+   ablation with sign-permutation tests, (iv) independent 100 questions, generalization A-D, JA/EN comparison).
+3. Conclusion: the "材料ドメイン辞書" sentence now states that the ablation measured the schema-mapping dictionary's
+   contribution (-9.8 pp) and that removing both dictionaries was not measured (pointer to the limitations section).
+4. Devin Review on PR #589, comment 4005939411 (gamma' base-element rule inactive in candidate scoring): confirmed.
+   llm/domain_validator.validate_result_rows(query="") -> _check_gamma_prime returns early unless the question contains a
+   gamma' keyword, and llm/sql_generator._score_sql_candidate() does not pass query=user_query. Section 2.4 now says four
+   rules are active in candidate scoring and that the fifth (gamma' Ni/Co) rule does not fire there because the question
+   text is not passed to the checker. Implementation unchanged (changing it would alter the pipeline that produced the
+   frozen ablation values).
+5. Devin Review on PR #589, comment 4005939583 (filtered_joins substring match): confirmed. The Allowed-JOINs filter is
+   `any(t in j for t in req)` on the condition string, so a required table name contained in another table name
+   (structure in band_structure; element in element_property / pure_element_reference; alloy_system in
+   material_alloy_system) admits edges that do not touch the required tables. Recount on the live FK graph (35 nodes,
+   41 edges, 82 directed conditions) for {material_entry, composition, structure, phase_stability}: 38 conditions
+   listed = 36 touching a required table + 2 contaminants (band_structure.calculation_id = calculation.calculation_id,
+   both directions); greedy shortest path = 3 JOINs. Supplement S7 now describes the substring extraction and gives the
+   36 + 2 breakdown; the "38" figure is kept because it is what the implementation emits. Implementation unchanged.
+Gates (working tree): verify_paper_numbers.py (default and --tex stam-m_ja.tex) exit 0, gating 0 (TeX files audited: 1);
+LuaLaTeX 3 passes + BibTeX: 30 pages, undefined references/citations 0, overfull 0; supplement title on physical p.17
+labelled S1, last page S14. SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows
+identical), 13/13 OK. ja-final re-tagged to the v24f commit. Fresh-extraction gates of the v24f ZIP: see §17.
