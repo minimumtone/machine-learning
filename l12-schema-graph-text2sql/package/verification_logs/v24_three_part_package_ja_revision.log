@@ -225,3 +225,45 @@ undefined references 0, multiply-defined 0, overfull 0. Page split changed from 
 main+references p.1-16 / supplement p.17-30 because of the added explanatory text (the references now end on p.16).
 SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK.
 ja-final re-tagged to the v24d commit.
+
+## 13. Fresh-extraction verification of the v24d ZIP (l12_text2sql_submission_v24d.zip, extracted to a new directory)
+- ZIP: 1,587 members; member list identical to the v24c ZIP; content differs in 13 files only (stam-m_ja.tex,
+  the three PDFs, SHA256SUMS_ja.txt, ja_numbers.tsv, GIT_COMMIT, README.md x2, FINAL_CHECKLIST.md, this log,
+  SHA256SUMS.txt, verification_logs/verify_all_dbfull.log); code and data byte-identical. SHA256SUMS.txt 1,586/1,586 OK.
+- verify_all.py --static-only PASS=8 WARN=0 FAIL=0; verify_all.py --warnings-as-errors (FULL_DB_TEST=1)
+  PASS=18 WARN=0 FAIL=0 SKIP=0; pytest 166 passed; ruff clean; verify_ssot.py 5/5;
+  verify_paper_numbers.py (default and --tex stam-m_ja.tex) exit 0, "TeX files audited: 1 (stam-m_ja.tex)";
+  SHA256SUMS_ja 13/13 OK; LuaLaTeX + BibTeX rebuild from the packaged sources: 30 pages, undefined 0.
+
+## 14. v24e: two follow-up findings from Devin Review on PR #589 (text only in paper/stam-m_ja.tex)
+
+Scope: no implementation, evaluation value, SSOT value, figure PNG, table value or saved LLM output changed; no LLM
+call re-run. Both findings were checked against llm/sql_generator.py (_score_sql_candidate, score constants),
+llm/domain_validator.py (validate_result_rows, penalty cap 30), llm/reranker.py (weight 0.4), safety/sql_guard.py,
+api/main.py, scripts/eval_ablation.py (exec_fn, normalize_limit) and evaluation/metrics.py (normalize_limit).
+
+1. n-best mechanical score (Section 2.4 omitted items that affect candidate ordering). The manuscript now lists every
+   component with its points: SQLGuard pass 30 (a failing candidate scores 0 and is not trial-executed), trial
+   execution success 20, non-empty result 10, condition coverage up to 20 (fraction of extracted prototype / element /
+   stability / sort conditions whose clause appears in the SQL; 20 when no such condition was extracted), row-count
+   plausibility 10 for 1-500 rows / 5 above 500, DISTINCT 5, LIMIT 5; after a successful trial execution the
+   materials-domain validation of the result rows (5 rules: prototype vs formula type, lattice-constant bounds,
+   E_hull vs stability condition, gamma-prime base elements, site-label validity) subtracts up to 30 points (floor 0).
+   Stated to be a candidate-ranking design value, not an evaluation metric.
+2. SQLGuard three-way classification vs evaluation-time execution (Section 2.7 and supplement S1 list preamble).
+   The reject / warn / rewrite execution control (rejected SQL not executed, rewritten SQL executed) is the behaviour of
+   the shipped execution layer (execute_sql() used by the API and UI). In the evaluation SQLGuard acts only as a
+   component of the n-best candidate score: failing candidates score 0 and are not trial-executed, but
+   _score_sql_candidate() passes the original candidate SQL (not validation["sql"]) to execute_fn, and
+   eval_ablation.py executes the selected SQL after normalize_limit() (adds LIMIT 10000 only when no LIMIT is
+   present; does not cap a larger explicit LIMIT) regardless of the SQLGuard verdict, including the case in which every
+   candidate failed. The manuscript now says so and describes SQLGuard's contribution to the evaluation values as
+   indirect (through candidate selection), with no_guard defined as "validation treated as always passing in the
+   candidate score". The supplement list preamble no longer implies that every path executes the rewritten SQL.
+
+Gates (working tree): ruff clean; pytest 166 passed (FULL_DB_TEST=1); verify_ssot.py 5/5; verify_all.py --static-only
+PASS=8 WARN=0 FAIL=0; verify_paper_numbers.py --tex stam-m_ja.tex exit 0, gating 0 (new TeX-not-in-JSON tokens are the
+score constants 30/20/10/500/5 quoted from the code); LuaLaTeX 3 passes + BibTeX: 30 pages, undefined 0,
+multiply-defined 0, overfull 0; page split unchanged (main+references p.1-16, supplement p.17-30).
+SHA256SUMS_ja.txt regenerated (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK.
+ja-final re-tagged to the v24e commit. Fresh-extraction gates of the v24e ZIP: see §15.
