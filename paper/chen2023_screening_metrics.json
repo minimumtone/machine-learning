@@ -1,0 +1,128 @@
+{
+  "_source": "Chen et al. 2023 (10.5281/zenodo.7633180), dataset quinaries_0.9Tm.csv.gz",
+  "_generated_by": "paper/chen2023_lattice_screening.py",
+  "models": {
+    "BCC": {
+      "omega_source": "SQS, DFT Vegard reference",
+      "q": 1.0,
+      "n_pairs": 445
+    },
+    "FCC": {
+      "omega_source": "L1_2, King reference",
+      "q": 0.13339949219488767,
+      "n_pairs": 441
+    }
+  },
+  "n_quinaries_total": 658008,
+  "n_stable_total": 30201,
+  "n_stable_by_phase": {
+    "BCC": 22631,
+    "HCP": 5906,
+    "FCC": 1664
+  },
+  "n_stable_bcc_fcc": 24295,
+  "n_predicted": 16442,
+  "coverage_fraction_of_stable_bcc_fcc": 0.676765,
+  "n_skipped": {
+    "phase_out_of_scope": 5906,
+    "excluded_element": 257,
+    "no_king_volume": 7586,
+    "missing_pairs": 10
+  },
+  "pair_coverage_histogram": {
+    "0": 2,
+    "1": 34,
+    "2": 3,
+    "3": 484,
+    "4": 7,
+    "5": 4,
+    "6": 7309,
+    "7": 3,
+    "9": 7,
+    "10": 16442
+  },
+  "bcc_stats": {
+    "n": 14887,
+    "a_pred_min_A": 2.8648,
+    "a_pred_max_A": 3.5183,
+    "a_pred_mean_A": 3.13,
+    "shift_mean_percent": -0.1676,
+    "shift_min_percent": -2.3038,
+    "shift_max_percent": 1.6947,
+    "shift_abs_median_percent": 0.3955,
+    "n_shift_abs_gt_1percent": 1238
+  },
+  "fcc_stats": {
+    "n": 1555,
+    "a_pred_min_A": 3.5828,
+    "a_pred_max_A": 4.1584,
+    "a_pred_mean_A": 3.8234,
+    "shift_mean_percent": 0.0173,
+    "shift_min_percent": -0.2248,
+    "shift_max_percent": 0.1557,
+    "shift_abs_median_percent": 0.045,
+    "n_shift_abs_gt_1percent": 0
+  },
+  "largest_corrections": [
+    {
+      "system": "Mg-Ni-Os-Re-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.3038,
+      "a_pred_A": 3.2
+    },
+    {
+      "system": "Mg-Ni-Os-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.28,
+      "a_pred_A": 3.1869
+    },
+    {
+      "system": "Co-Mg-Os-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.2798,
+      "a_pred_A": 3.1885
+    },
+    {
+      "system": "Mg-Os-Re-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.2691,
+      "a_pred_A": 3.2328
+    },
+    {
+      "system": "Mg-Mo-Os-Re-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.2167,
+      "a_pred_A": 3.2583
+    },
+    {
+      "system": "Ir-Mg-Os-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.2063,
+      "a_pred_A": 3.2282
+    },
+    {
+      "system": "Mg-Os-Rh-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.1863,
+      "a_pred_A": 3.2241
+    },
+    {
+      "system": "Mg-Mo-Os-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.1835,
+      "a_pred_A": 3.246
+    },
+    {
+      "system": "Al-Mg-Os-Re-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.1166,
+      "a_pred_A": 3.2736
+    },
+    {
+      "system": "Al-Mg-Os-Ru-Sc",
+      "phase": "BCC",
+      "shift_percent": -2.1017,
+      "a_pred_A": 3.2607
+    }
+  ]
+}
