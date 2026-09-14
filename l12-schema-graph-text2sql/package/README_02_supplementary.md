@@ -1,6 +1,6 @@
 # 02_supplementary — Supplementary Material
 
-- `stam-m_ja_supplementary.pdf`: 完全版 PDF（`../01_manuscript/stam-m_ja.pdf`）の補足資料ページ（p.16–29）。
+- `stam-m_ja_supplementary.pdf`: 完全版 PDF（`../01_manuscript/stam-m_ja.pdf`）の補足資料ページ（p.17–30）。
   S1 ユニットテスト分類 / S2 生成SQL例 / S3 LLM設定 / S4 100クエリ詳細（10行抜粋） / S5 条件間差分 / S6 独立クエリ詳細 /
   S7 方法の詳細（Algorithm S1、条件抽出器、MeCab辞書、SQLGuard 15チェック、OQMDレイアウト対応） /
   S8 結果の詳細（$\gamma'$候補全10行、格子定数27エントリ、感度分析、失敗内訳、安全性、採点監査） / S9 考察の補足 / S10 再現ワークフロー。
