@@ -120,3 +120,54 @@ multiply-defined 0, overfull 8 (TikZ ER diagrams, unchanged); page split main p.
 verify_paper_numbers.py: exit 0, TeX files audited: 1 (stam-m_ja.tex); ja_numbers.tsv diff = the two edited
 sentences only (new in-JSON tokens 100 and 3 from the Abstract). verify_ssot.py 5/5. SHA256SUMS_ja.txt regenerated
 (stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK. ja-final re-tagged to f8ab7fbc.
+
+## 11. v24c: manuscript text consolidation and Figure 1 redraw from the author review of v24b
+
+Scope: text and figure only. No number, SSOT value, figure PNG, table value or saved output changed.
+LuaLaTeX (3 passes + BibTeX): 29 pages, undefined references 0, multiply-defined 0, overfull 0 (v24b had 8, all from
+the old TikZ ER diagram); page split main p.1-15 / supplement p.16-29 unchanged. verify_paper_numbers.py --tex
+stam-m_ja.tex: exit 0, gating 0 (the only new TeX-not-in-JSON tokens are the LaTeX float parameters 0.85/0.9 and the
+minipage widths 0.46/0.55). verify_ssot.py 5/5. SHA256SUMS_ja.txt regenerated (stam-m_ja.tex, references.bib,
+ja_numbers.tsv rows changed, 10 rows identical), 13/13 OK.
+
+1. Introduction, SuperCon / PoLyInfo (RDF/SPARQL): replaced the "needs data conversion from RDB" contrast with the
+   shared problem setting (making implicit terminology and item relations explicit before querying); the ontology
+   work puts the knowledge on the data side, this work puts it on the query-generation side (dictionary, few-shot,
+   FK graph); both are compatible (dictionary vocabulary could be mapped to ontology vocabulary). Section 4 related
+   comparison text and table aligned: SPARQL marked with a dagger "query language; NL-to-query conversion not in
+   scope", "main difference" column states where the relations are made explicit. Future work (8) added.
+2. Introduction, challenge (3): "no standard benchmark for inorganic-materials RDB Text-to-SQL" is now stated after
+   citing LLM4Mat-Bench (property prediction) and the LLM-hackathon review (Zimmermann et al., MLST 2025, knowledge
+   graph / API prototypes, no SQL) and limited to "no benchmark with shared questions, gold SQL and expected results".
+   references.bib +1 (zimmermann2025hackathon; 35 authors, "and others").
+3. Introduction: the four-item contribution list was removed (every item is repeated in Sections 2-5 with the same
+   numbers) and replaced by one sentence naming the pipeline components and the evaluations. Heading "目的と貢献" ->
+   "目的". The enumitem formatting request for that list is therefore moot; \usepackage{enumitem} was already loaded.
+4. Limitations, ambiguous expressions: thresholds for "stable" / "high energy" are user dependent, so a unified test
+   is difficult; this study fixed them in advance (Section 2.1.2); a system should let the user see, confirm or
+   specify the threshold, which this system does not provide. No new quantitative experiment (author decision).
+   Future work (7) reworded accordingly.
+5. "CTE" occurrences 39 -> 9. Definition kept once in Section 2.1.1 ("以下、CTEを要するクエリを『多段計算クエリ』と
+   呼ぶ"); remaining uses are the SQLGuard checks (CTE-body SELECT-only, recursive CTE) in the main text and
+   supplement, the LLM-only table static-diagnosis note and one definition back-reference. Supplement section and
+   category names renamed ("多段計算クエリの5カテゴリ", categories 導出量計算のみ / +フィルター / +集約 / 多段 /
+   +列間比較). Duplicate difficulty-definition sentence at the start of Section 2.2 removed. Table 2 (ablation)
+   caption shortened; the test / Holm / bootstrap-CI definitions moved into the paragraph before the table.
+6. Figure 1 redrawn as an FK reference graph checked against db/001_schema.sql (+ 007 marker table = 36 tables):
+   30 tables shown, the 6 omitted named in the caption (property_definition, property_scope,
+   fixture_source_reference_set, material_defect, defect_type, schema_initialization_status). Solid arrows =
+   direct FK between shown tables; dashed arrows = FKs whose parent is calculation (calculated_property,
+   band_structure, density_of_states, elastic_tensor, thermal_property reach material_entry only via calculation).
+   The previous figure drew direct edges from those tables to material_entry, which do not exist in the DDL, and
+   the caption claimed "two paths"; both removed. Added: composition -> element, structure -> prototype_definition /
+   space_group, phase_stability -> reference_energy_set, material_synthesis -> literature_reference,
+   pure_element_reference -> element / reference_energy_set. Color legend added, multiplicity explicitly not shown,
+   identifiers no longer hyphenated mid-word, application_domain self-reference styled like the other edges.
+   Body text "主要テーブルの関係（ER図）" -> "主要テーブル間のFK参照グラフ（多重度は示さない）". Figure spans both
+   columns (figure*) with \dbltopfraction / \dblfloatpagefraction raised so it stays on page 3.
+7. Supplement: Figures S3 and S4 side by side in one figure environment (0.46\columnwidth each), S5 in its own
+   figure below (0.55\columnwidth); all three on p.26. Section S10 no longer names MANIFEST.md / README_SQL.md
+   (author instruction: do not name files not planned for distribution there); it now refers to "配布パッケージの
+   説明文書". Other file-name mentions in the manuscript (Section 2.2 MANIFEST.md, S2 evaluation/generated_sql/,
+   compute_unified_difficulty.py, scoring_audit.json) were left as they are; each names a file that is in
+   03_mdr_scripts_data/.
