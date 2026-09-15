@@ -1,0 +1,72 @@
+Periodic Voronoi analysis log
+Al-Nb_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-Nb_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-Nb_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-Ti_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-Ti_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-Ti_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-V_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-V_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Al-V_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+AlNbTiV_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+AlNbTiV_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+AlNbTiV_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Al_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Nb_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Nb_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Nb_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ta_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ta_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ta_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ti_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ti_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Ti_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Zr_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf-Zr_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+HfNbTaTiZr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+HfNbTaTiZr_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+HfNbTaTiZr_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Hf_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ta_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ta_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ta_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ti_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ti_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Ti_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-V_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-V_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-V_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Zr_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb-Zr_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Nb_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Ti_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Ti_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Ti_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Zr_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta-Zr_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Ta_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-V_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-V_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-V_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-Zr_s1.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti-Zr_s2.extxyz: Voronoi sum/cell volume = 1.00000000
+Ti_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+V_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
+Wrote 7424 per-atom rows to /home/ubuntu/repos/machine-learning/mlip_bader/voronoi_per_atom.csv.
+Wrote summary to /home/ubuntu/repos/machine-learning/mlip_bader/voronoi_summary.md and figure to /home/ubuntu/repos/machine-learning/mlip_bader/fig_delta_v_per_element.png.
+HfNbTaTiZr: f_cell=1.455777
+AlNbTiV: f_cell=-0.447389
+HfNbTaTiZr Hf: delta_HEA=-1.902289, delta_pred=-1.698836, f_i=1.1197602989055209
+HfNbTaTiZr Nb: delta_HEA=0.945288, delta_pred=0.927421, f_i=1.019265520771135
+HfNbTaTiZr Ta: delta_HEA=1.199858, delta_pred=1.116140, f_i=1.075006724037538
+HfNbTaTiZr Ti: delta_HEA=2.110708, delta_pred=2.410076, f_i=0.8757848328987691
+HfNbTaTiZr Zr: delta_HEA=-3.133792, delta_pred=-3.297869, f_i=0.9502475307220042
+AlNbTiV Al: delta_HEA=-0.327533, delta_pred=-1.169532, f_i=0.28005503624977446
+AlNbTiV Nb: delta_HEA=-1.376691, delta_pred=-1.526988, f_i=0.9015730986421978
+AlNbTiV Ti: delta_HEA=-0.312486, delta_pred=-0.690432, f_i=0.45259582905519297
+AlNbTiV V: delta_HEA=2.499556, delta_pred=2.307702, f_i=1.0831364944461848

@@ -1,0 +1,77 @@
+MACE-MP-0 small, float64, CPU; FrechetCellFilter hydrostatic_strain=False; FIRE fmax=0.01 eV/A, max 500 steps
+Loading MACE-MP-0 small (the model is cached by mace-torch).
+Relaxing seven pure BCC references.
+Hf              seed=0 converged=True steps= 17 volume=2829.032928 a=3.535786 energy=-1272.917253 elapsed=14.2s
+Nb              seed=0 converged=True steps= 17 volume=2344.563751 a=3.321192 energy=-1289.879631 elapsed=16.8s
+Ta              seed=0 converged=True steps= 29 volume=2343.587569 a=3.320731 energy=-1526.008008 elapsed=20.8s
+Ti              seed=0 converged=True steps= 30 volume=2194.103081 a=3.248571 energy=-1006.901581 elapsed=28.3s
+Zr              seed=0 converged=True steps= 21 volume=3004.349312 a=3.607366 energy=-1101.446811 elapsed=11.2s
+Al              seed=0 converged=True steps=120 volume=2154.615877 a=3.228965 energy=-468.495142 elapsed=85.1s
+V               seed=0 converged=True steps= 31 volume=1689.240706 a=2.977400 energy=-1167.378954 elapsed=23.2s
+Relaxing 15 random 50:50 binary cells, three seeds each.
+Hf-Nb           seed=0 converged=True steps=443 volume=2589.417940 a=3.433002 energy=-1271.032453 elapsed=234.6s
+Hf-Nb           seed=1 converged=True steps=427 volume=2591.234445 a=3.433805 energy=-1271.304611 elapsed=225.4s
+Hf-Nb           seed=2 converged=True steps=407 volume=2591.675861 a=3.434000 energy=-1271.350693 elapsed=211.2s
+Hf-Ta           seed=0 converged=True steps=433 volume=2588.273640 a=3.432496 energy=-1379.407468 elapsed=231.3s
+Hf-Ta           seed=1 converged=True steps=442 volume=2589.583108 a=3.433075 energy=-1379.612509 elapsed=228.1s
+Hf-Ta           seed=2 converged=True steps=443 volume=2588.606704 a=3.432643 energy=-1379.606545 elapsed=226.4s
+Hf-Ti           seed=0 converged=True steps=460 volume=2516.182047 a=3.400327 energy=-1138.772557 elapsed=240.0s
+Hf-Ti           seed=1 converged=True steps=451 volume=2516.021695 a=3.400255 energy=-1138.833414 elapsed=227.7s
+Hf-Ti           seed=2 converged=True steps=466 volume=2516.080065 a=3.400281 energy=-1138.817677 elapsed=241.4s
+Hf-Zr           seed=0 converged=True steps=398 volume=2916.308109 a=3.571778 energy=-1186.776907 elapsed=183.8s
+Hf-Zr           seed=1 converged=True steps=403 volume=2915.599349 a=3.571489 energy=-1186.786125 elapsed=178.2s
+Hf-Zr           seed=2 converged=True steps=395 volume=2916.398714 a=3.571815 energy=-1186.757683 elapsed=185.7s
+Nb-Ta           seed=0 converged=True steps=470 volume=2339.111141 a=3.318616 energy=-1406.174460 elapsed=257.6s
+Nb-Ta           seed=1 converged=True steps=460 volume=2338.856484 a=3.318495 energy=-1406.268893 elapsed=247.9s
+Nb-Ta           seed=2 converged=True steps=487 volume=2338.080441 a=3.318128 energy=-1406.207216 elapsed=266.9s
+Nb-Ti           seed=0 converged=True steps=477 volume=2282.055343 a=3.291411 energy=-1146.371545 elapsed=260.1s
+Nb-Ti           seed=1 converged=True steps=444 volume=2283.374262 a=3.292045 energy=-1146.404675 elapsed=240.6s
+Nb-Ti           seed=2 converged=True steps=449 volume=2281.645376 a=3.291214 energy=-1146.378480 elapsed=236.1s
+Nb-Zr           seed=0 converged=True steps=427 volume=2627.367291 a=3.449692 energy=-1181.328170 elapsed=214.4s
+Nb-Zr           seed=1 converged=True steps=439 volume=2629.376958 a=3.450571 energy=-1181.560574 elapsed=225.7s
+Nb-Zr           seed=2 converged=True steps=441 volume=2627.119088 a=3.449583 energy=-1181.364688 elapsed=229.2s
+Ta-Ti           seed=0 converged=True steps=480 volume=2273.098036 a=3.287099 energy=-1261.548575 elapsed=305.3s
+Ta-Ti           seed=1 converged=True steps=485 volume=2275.254628 a=3.288138 energy=-1261.617177 elapsed=275.7s
+Ta-Ti           seed=2 converged=True steps=498 volume=2273.710612 a=3.287394 energy=-1261.545187 elapsed=273.9s
+Ta-Zr           seed=0 converged=True steps=459 volume=2615.321675 a=3.444412 energy=-1290.886097 elapsed=272.9s
+Ta-Zr           seed=1 converged=True steps=463 volume=2615.740380 a=3.444595 energy=-1291.002100 elapsed=244.1s
+Ta-Zr           seed=2 converged=True steps=460 volume=2613.568328 a=3.443642 energy=-1290.924069 elapsed=259.2s
+Ti-Zr           seed=0 converged=True steps=383 volume=2597.707407 a=3.436661 energy=-1046.397999 elapsed=220.7s
+Ti-Zr           seed=1 converged=True steps=396 volume=2598.619338 a=3.437064 energy=-1046.413135 elapsed=347.7s
+Ti-Zr           seed=2 converged=True steps=382 volume=2598.026206 a=3.436802 energy=-1046.310582 elapsed=194.6s
+Al-Nb           seed=0 converged=False steps=500 volume=2407.416971 a=3.257012 energy=-875.316098 elapsed=268.0s
+Al-Nb           seed=1 converged=False steps=500 volume=2432.260675 a=3.259333 energy=-873.000220 elapsed=442.9s
+Al-Nb           seed=2 converged=False steps=500 volume=2390.284510 a=3.256855 energy=-874.587815 elapsed=266.1s
+Al-Ti           seed=0 converged=False steps=500 volume=2227.804242 a=3.209725 energy=-770.271476 elapsed=279.3s
+Al-Ti           seed=1 converged=False steps=500 volume=2275.262065 a=3.222583 energy=-763.694948 elapsed=279.8s
+Al-Ti           seed=2 converged=False steps=500 volume=2235.872209 a=3.210175 energy=-772.632343 elapsed=278.5s
+Al-V            seed=0 converged=False steps=500 volume=1909.749585 a=3.072682 energy=-835.430938 elapsed=300.1s
+Al-V            seed=1 converged=False steps=500 volume=1933.653355 a=3.075999 energy=-830.912300 elapsed=300.8s
+Al-V            seed=2 converged=False steps=500 volume=1913.750607 a=3.072356 energy=-836.440037 elapsed=297.3s
+Nb-V            seed=0 converged=True steps=468 volume=2016.495364 a=3.158438 energy=-1219.839436 elapsed=283.4s
+Nb-V            seed=1 converged=True steps=455 volume=2018.415152 a=3.159440 energy=-1219.862972 elapsed=279.9s
+Nb-V            seed=2 converged=True steps=479 volume=2016.808420 a=3.158602 energy=-1220.013969 elapsed=292.9s
+Ti-V            seed=0 converged=True steps=417 volume=1938.924312 a=3.117408 energy=-1074.578312 elapsed=284.2s
+Ti-V            seed=1 converged=True steps=421 volume=1939.847645 a=3.117903 energy=-1074.615853 elapsed=282.6s
+Ti-V            seed=2 converged=True steps=435 volume=1940.363538 a=3.118179 energy=-1074.570099 elapsed=273.2s
+Relaxing two multicomponent HEA cells, three seeds each.
+HfNbTaTiZr      seed=0 converged=True steps=487 volume=2523.731596 a=3.403724 energy=-1229.587619 elapsed=269.1s
+HfNbTaTiZr      seed=1 converged=True steps=479 volume=2522.764032 a=3.403289 energy=-1230.373351 elapsed=269.1s
+HfNbTaTiZr      seed=2 converged=True steps=484 volume=2522.468230 a=3.403156 energy=-1229.842526 elapsed=272.4s
+AlNbTiV         seed=0 converged=False steps=500 volume=2085.096737 a=3.193857 energy=-999.713643 elapsed=323.0s
+AlNbTiV         seed=1 converged=False steps=500 volume=2126.807041 a=3.215013 energy=-994.177757 elapsed=320.8s
+AlNbTiV         seed=2 converged=False steps=500 volume=2121.341862 a=3.212257 energy=-991.914880 elapsed=332.7s
+Wrote 58 relaxation rows to /home/ubuntu/repos/machine-learning/mlip_bader/relax_results.csv.
+Total relaxation wall time: 13582.3 s (3.77 h).
+Extending nine unconverged Al-containing mixed cells by up to 1500 FIRE steps.
+Al-Nb           seed=0 extension_converged=True extension_steps= 492 total_steps= 992 volume=2211.250691 a=3.257012 fmax=0.001160552493 elapsed=359.6s
+Al-Nb           seed=1 extension_converged=True extension_steps= 556 total_steps=1056 volume=2215.981889 a=3.259333 fmax=0.003602444971 elapsed=392.8s
+Al-Nb           seed=2 extension_converged=True extension_steps= 530 total_steps=1030 volume=2210.931433 a=3.256855 fmax=0.009164213102 elapsed=344.8s
+Al-Ti           seed=0 extension_converged=True extension_steps= 513 total_steps=1013 volume=2116.329603 a=3.209725 fmax=0.002489563117 elapsed=313.8s
+Al-Ti           seed=1 extension_converged=True extension_steps= 596 total_steps=1096 volume=2141.866293 a=3.222583 fmax=0.001429108324 elapsed=368.6s
+Al-Ti           seed=2 extension_converged=True extension_steps= 237 total_steps= 737 volume=2117.221191 a=3.210175 fmax=0.000810871892 elapsed=155.9s
+Al-V            seed=0 extension_converged=True extension_steps= 248 total_steps= 748 volume=1856.661049 a=3.072682 fmax=0.006046555920 elapsed=173.2s
+Al-V            seed=1 extension_converged=True extension_steps= 248 total_steps= 748 volume=1862.681335 a=3.075999 fmax=0.004776282910 elapsed=175.5s
+Al-V            seed=2 extension_converged=True extension_steps= 174 total_steps= 674 volume=1856.070284 a=3.072356 fmax=0.001248368587 elapsed=124.4s
+Corrected a_bcc_A=(2*V/N)^(1/3) and added fmax_final for all rows.
+Total relaxation wall time including 9-cell extension: 16490.9 s (4.58 h).
