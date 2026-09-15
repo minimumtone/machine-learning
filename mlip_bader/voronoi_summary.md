@@ -60,7 +60,7 @@ Periodic Voronoi volumes use scipy.spatial.Voronoi on a 3x3x3 image set.
 | Ti | 2.110708 | 0.060694 | 2.410076 | 0.875785 |  |
 | Zr | -3.133792 | 0.145269 | -3.297869 | 0.950248 |  |
 
-Cell: V_HEA/N = 19.712137 A^3; V_Vegard = 19.861334 A^3; Alonso full-additivity denominator = -0.103375 A^3; f_cell = 1.443265.
+Cell: V_HEA/N = 19.710843 A^3; V_Vegard = 19.861334 A^3; Alonso full-additivity denominator = -0.103375 A^3; f_cell = 1.455777.
 
 ## 3. AlNbTiV
 

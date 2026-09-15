@@ -59,7 +59,7 @@ V_s0.extxyz: Voronoi sum/cell volume = 1.00000000
 Zr_s0.extxyz: Voronoi sum/cell volume = 1.00000000
 Wrote 7424 per-atom rows to /home/ubuntu/repos/machine-learning/mlip_bader/voronoi_per_atom.csv.
 Wrote summary to /home/ubuntu/repos/machine-learning/mlip_bader/voronoi_summary.md and figure to /home/ubuntu/repos/machine-learning/mlip_bader/fig_delta_v_per_element.png.
-HfNbTaTiZr: f_cell=1.443265
+HfNbTaTiZr: f_cell=1.455777
 AlNbTiV: f_cell=-0.447389
 HfNbTaTiZr Hf: delta_HEA=-1.902289, delta_pred=-1.698836, f_i=1.1197602989055209
 HfNbTaTiZr Nb: delta_HEA=0.945288, delta_pred=0.927421, f_i=1.019265520771135

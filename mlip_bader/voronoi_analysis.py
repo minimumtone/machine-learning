@@ -132,7 +132,7 @@ def make_tables(frame: pd.DataFrame):
         hea = grouped[grouped.label == label]
         v_by_element = hea.groupby("element")["V_vor_A3"]
         vveg = sum(c[element] * pure_values[element] for element in c)
-        vcell = hea["V_vor_A3"].mean()
+        vcell = sum(c[element] * v_by_element.get_group(element).mean() for element in c)
         denominator = 0.0
         for first, second in itertools.permutations(c, 2):
             denominator += (

@@ -29,7 +29,10 @@ structures and results are written under `structures/` and
 `fig_delta_v_per_element.png`.
 The relaxation summary includes `a_bcc_A=(2V/N)^(1/3)`, the final
 atomic-force maximum `fmax_final` in eV/A, the convergence flag, and the
-number of FIRE steps.
+number of FIRE steps. Each cell receives up to 500 FIRE steps; cells that
+remain unconverged receive up to 1500 additional steps. The committed run
+extended the nine Al-Nb, Al-Ti, and Al-V binary cells; the three AlNbTiV HEA
+seeds were not extended.
 
 ## Bader inputs
 
@@ -55,7 +58,11 @@ After a VASP run, execute:
 
 This runs `chgsum.pl AECCAR0 AECCAR2`, `bader CHGCAR -ref CHGCAR_sum`, and
 `parse_bader.py`. The parser writes `bader_per_atom.csv` with the common
-`label, seed, atom_index, element` fields plus Bader volume and charge.
+`label, seed, atom_index, element` fields plus Bader volume, raw Bader
+electron count (`n_bader_e`), POTCAR valence count (`zval_e`), and
+`dQ_e=zval_e-n_bader_e`. Positive `dQ_e` means electron loss (cation-like).
+POTCAR must be present because the ACF.dat charge is the raw Bader electron
+count, not a charge difference.
 
 ## Caveats
 

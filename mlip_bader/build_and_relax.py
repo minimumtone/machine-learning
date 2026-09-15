@@ -69,6 +69,8 @@ def relax(atoms, calculator, label: str, seed: int) -> dict:
     optimizer = FIRE(filter_atoms, logfile=None, maxstep=0.15)
     started = time.perf_counter()
     optimizer.run(fmax=0.01, steps=500)
+    if not optimizer.converged():
+        optimizer.run(fmax=0.01, steps=1500)
     elapsed = time.perf_counter() - started
     converged = bool(optimizer.converged())
     nsteps = int(getattr(optimizer, "nsteps", 0))
@@ -106,7 +108,7 @@ def main() -> None:
     STRUCTURES.mkdir(parents=True, exist_ok=True)
     LOG.write_text(
         "MACE-MP-0 small, float64, CPU; FrechetCellFilter hydrostatic_strain=False; "
-        "FIRE fmax=0.01 eV/A, max 500 steps\n",
+        "FIRE fmax=0.01 eV/A, max 500+1500 steps for unconverged cells\n",
         encoding="utf-8",
     )
     started = time.perf_counter()
