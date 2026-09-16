@@ -27,6 +27,19 @@ logger = logging.getLogger(__name__)
 SplitIndices = Tuple[np.ndarray, np.ndarray]
 
 
+def composition_group_ids(compositions: pd.DataFrame) -> np.ndarray:
+    """Return stable integer ids for rounded composition groups."""
+    keys = [
+        tuple(np.round(row.astype(float), 4))
+        for row in compositions.to_numpy(dtype="float64", na_value=np.nan)
+    ]
+    ids: Dict[Tuple[float, ...], int] = {}
+    return np.asarray(
+        [ids.setdefault(key, len(ids)) for key in keys],
+        dtype=int,
+    )
+
+
 class BaseSplitter(ABC):
     """Abstract base class for all splitting strategies."""
 
@@ -345,13 +358,10 @@ class CompositionGroupCVSplitter(BaseSplitter):
         if len(compositions) != len(X):
             raise ValueError("X and compositions must have the same number of rows.")
 
-        comp_keys = [
-            tuple(np.round(row.astype(float), 4))
-            for row in compositions.to_numpy(dtype="float64", na_value=np.nan)
-        ]
-        groups: Dict[Tuple[float, ...], List[int]] = {}
-        for idx, key in enumerate(comp_keys):
-            groups.setdefault(key, []).append(idx)
+        group_ids = composition_group_ids(compositions)
+        groups: Dict[int, List[int]] = {}
+        for idx, group_id in enumerate(group_ids):
+            groups.setdefault(int(group_id), []).append(idx)
         n_groups = len(groups)
         self.fold_labels = []
         self._actual_n_splits = min(self._n_folds, n_groups)
@@ -367,18 +377,18 @@ class CompositionGroupCVSplitter(BaseSplitter):
         rng = np.random.RandomState(self._seed)
         group_items = list(groups.items())
         rng.shuffle(group_items)
-        fold_groups: List[List[Tuple[float, ...]]] = [
+        fold_groups: List[List[int]] = [
             [] for _ in range(self._actual_n_splits)
         ]
         fold_sizes = np.zeros(self._actual_n_splits, dtype=int)
-        for key, indices in group_items:
+        for group_id, indices in group_items:
             dest = int(np.argmin(fold_sizes))
-            fold_groups[dest].append(key)
+            fold_groups[dest].append(group_id)
             fold_sizes[dest] += len(indices)
 
         all_idx = np.arange(len(compositions))
         for fold_idx, keys in enumerate(fold_groups):
-            mask = np.array([key in keys for key in comp_keys], dtype=bool)
+            mask = np.isin(group_ids, keys)
             if not mask.any():
                 continue
             self.fold_labels.append(f"group{fold_idx}")

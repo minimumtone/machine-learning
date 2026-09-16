@@ -451,6 +451,9 @@ def run_individual(
                 leak_auto_exclude=leak_auto_exclude,
                 leak_corr_threshold=leak_corr_threshold,
                 generic_csv_mode=generic_csv_mode,
+                n_folds=n_folds,
+                test_size=test_size,
+                exclusion_elements=exclude_elements,
             )
             if not prep.success:
                 raise RuntimeError(f"Stage1 前処理失敗:\n{prep.error_message}")

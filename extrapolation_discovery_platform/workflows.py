@@ -23,7 +23,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import ARDRegression, LassoCV, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, GroupKFold
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -35,6 +35,26 @@ from extrapolation_discovery_platform._utils import (  # noqa: E402
     get_safe_n_jobs,
     safe_array as _safe_np,
 )
+
+
+def _inner_cv(
+    n_cv: int,
+    n_train: int,
+    groups: Optional[np.ndarray],
+    seed: int,
+) -> Any:
+    n = max(2, min(n_cv, n_train))
+    if groups is None:
+        return n
+    n_groups = len(np.unique(groups))
+    if n_groups < 2:
+        return n
+    n_splits = min(n, n_groups)
+    return list(
+        GroupKFold(n_splits=n_splits).split(
+            np.zeros(n_train), groups=groups
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -82,12 +102,12 @@ class RunResult:
     fold: int
 
     # Metrics
-    rmse_train: float = 0.0
-    rmse_test: float = 0.0
-    mae_train: float = 0.0
-    mae_test: float = 0.0
-    r2_train: float = 0.0
-    r2_test: float = 0.0
+    rmse_train: float = float("nan")
+    rmse_test: float = float("nan")
+    mae_train: float = float("nan")
+    mae_test: float = float("nan")
+    r2_train: float = float("nan")
+    r2_test: float = float("nan")
 
     # Predictions (test set)
     y_test_true: Optional[np.ndarray] = None
@@ -383,13 +403,14 @@ class WorkflowLASSO(BaseWorkflow):
         t0 = time.time()
         logger.debug("WF-LASSO: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
+        groups = kwargs.get("groups")
 
         steps: List[Tuple[str, Any]] = [
             ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scaler", StandardScaler()),
             *_make_pca_step(X_train.shape[1], self._dim_reduction),
             ("model", LassoCV(
-                cv=max(2, min(10, len(X_train))),
+                cv=_inner_cv(10, len(X_train), groups, seed),
                 random_state=seed, max_iter=10000,
             )),
         ]
@@ -554,6 +575,7 @@ class WorkflowXGB(BaseWorkflow):
         t0 = time.time()
         logger.debug("WF-XGB: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
+        groups = kwargs.get("groups")
 
         # Bug#3 fix: add StandardScaler before XGB.
         # XGB is scale-invariant for tree splits, but MAGPIE features span
@@ -572,7 +594,7 @@ class WorkflowXGB(BaseWorkflow):
         grid = GridSearchCV(
             pipe,
             self._param_grid(),
-            cv=max(2, min(self._n_cv, len(X_train))),
+            cv=_inner_cv(self._n_cv, len(X_train), groups, seed),
             scoring="neg_root_mean_squared_error",
             refit=True,
             n_jobs=_inner_jobs,
@@ -848,6 +870,7 @@ class WorkflowRF(BaseWorkflow):
         t0 = time.time()
         logger.debug("WF-RF: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
+        groups = kwargs.get("groups")
 
         _inner_jobs = get_safe_n_jobs()
         # Bug#3 fix: add StandardScaler before RandomForest.
@@ -867,7 +890,7 @@ class WorkflowRF(BaseWorkflow):
         grid = GridSearchCV(
             pipe,
             self._param_grid(),
-            cv=max(2, min(self._n_cv, len(X_train))),
+            cv=_inner_cv(self._n_cv, len(X_train), groups, seed),
             scoring="neg_root_mean_squared_error",
             refit=True,
             n_jobs=_inner_jobs,

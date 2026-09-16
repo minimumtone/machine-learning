@@ -58,10 +58,15 @@ from extrapolation_discovery_platform.splitters import (
     CompositionGroupCVSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
+    composition_group_ids,
 )
 from extrapolation_discovery_platform.workflows import RunResult
 
 logger = logging.getLogger(__name__)
+
+
+class _FoldLeakageError(ValueError):
+    pass
 
 
 def impute_by_train_median(
@@ -98,11 +103,15 @@ class PreprocessResult:
     # fold ごとの特徴量選択結果: {fs_key: {policy_key: [fold0の列, fold1の列, ...]}}
     # 各 fold の訓練データのみで選択することで fold 間のリークを防ぐ。
     fold_selected_cols: Dict[str, Dict[str, List[List[str]]]] = field(default_factory=dict)
+    fold_leak_suspects: Dict[str, Dict[str, List[Dict[str, float]]]] = field(
+        default_factory=dict
+    )
     fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = field(default_factory=dict)
     fold_labels: Dict[str, List[str]] = field(default_factory=dict)
     mc_reports: Dict[str, MulticollinearityReport] = field(default_factory=dict)
     fs_summaries: Dict[str, Any] = field(default_factory=dict)
     active_policies: List[str] = field(default_factory=list)
+    row_groups: Optional[np.ndarray] = None
     elapsed_sec: float = 0.0
     success: bool = False
     error_message: str = ""
@@ -158,7 +167,7 @@ class OODStageResult:
     ood_result: Optional[OODResult] = None
     primary_train_idx: Optional[np.ndarray] = None
     primary_test_idx:  Optional[np.ndarray] = None
-    ensemble_scores:   Optional[np.ndarray] = None
+    ensemble_scores:   Optional[np.ndarray] = None  # accumulated threshold ratios
     elapsed_sec: float = 0.0
     success: bool = False
     error_message: str = ""
@@ -247,7 +256,7 @@ def stage1_preprocess(
 
         result.mc_reports = mc_reports
 
-        # ── Step 2: 有効列決定（FS ごとに drop + leak 除外） ─────────
+        # ── Step 2: 有効列決定（FS ごとに定数・完全共線除去） ────────
         effective_cols: Dict[str, List[str]] = {}
         for fs_key in fs_key_list:
             # 初期列リストを取得
@@ -280,10 +289,6 @@ def stage1_preprocess(
             if rpt is not None:
                 drop_set = set(rpt.dropped_constant + rpt.dropped_perfect)
                 orig = [c for c in orig if c not in drop_set]
-                if leak_auto_exclude and rpt.leak_suspects:
-                    n_before = len(orig)
-                    orig = [c for c in orig if c not in rpt.leak_suspects]
-                    logger.info("Stage1 [%s]: leak除外 %d列", fs_key, n_before - len(orig))
 
             if not orig:
                 logger.warning("Stage1 [%s]: 有効列 0 — このFSをスキップ", fs_key)
@@ -398,6 +403,8 @@ def stage1_preprocess(
 
         result.fold_plan = fold_plan
         result.fold_labels = fold_labels
+        if split_comps is not None:
+            result.row_groups = composition_group_ids(split_comps)
 
         # ── Step 4: 特徴量選択（fold ごとに訓練データのみ・リーク防止） ─
         # 各 fold の train_idx のみを使って fold ごとに独立に選択する。
@@ -434,31 +441,62 @@ def stage1_preprocess(
 
             fs_summaries: Dict[str, Any] = {}
             fold_selected: Dict[str, Dict[str, List[List[str]]]] = {}
+            fold_leaks: Dict[str, Dict[str, List[Dict[str, float]]]] = {}
             for fs_key, cols in list(effective_cols.items()):
-                if len(cols) <= 3:
-                    # 列数が少なすぎる場合は選択不要
-                    continue
                 fold_selected[fs_key] = {}
+                fold_leaks[fs_key] = {}
                 for policy_key, folds in fold_plan.items():
                     per_fold: List[List[str]] = []
+                    per_fold_leaks: List[Dict[str, float]] = []
                     for fold_i, (tr_idx, _te_idx) in enumerate(folds):
-                        try:
-                            sel, summary = _select_cols(fs_key, cols, tr_idx)
-                            per_fold.append(sel)
-                            if fs_key not in fs_summaries:
-                                fs_summaries[fs_key] = summary
-                            logger.info(
-                                "Stage1 特徴量選択 [%s/%s fold%d]: %d→%d",
-                                fs_key, policy_key, fold_i, len(cols), len(sel),
+                        X_tr, = impute_by_train_median(
+                            features_df.iloc[tr_idx][cols]
+                        )
+                        y_tr = target.iloc[tr_idx]
+                        candidate_cols = list(cols)
+                        leak_suspects: Dict[str, float] = {}
+                        if leak_auto_exclude:
+                            leak_suspects = detect_target_leakage(
+                                X_tr[candidate_cols],
+                                y_tr,
+                                threshold=leak_corr_threshold,
                             )
-                        except Exception:
-                            per_fold.append(list(cols))
-                            logger.warning(
-                                "Stage1 特徴量選択失敗 [%s/%s fold%d] — 全列を維持:\n%s",
-                                fs_key, policy_key, fold_i, traceback.format_exc(),
+                            candidate_cols = [
+                                c for c in candidate_cols
+                                if c not in leak_suspects
+                            ]
+                        if not candidate_cols:
+                            raise _FoldLeakageError(
+                                f"Stage1: leak exclusion removed all columns "
+                                f"for {fs_key}/{policy_key}/fold{fold_i}"
                             )
+                        if len(candidate_cols) > 3:
+                            try:
+                                sel, summary = _select_cols(
+                                    fs_key, candidate_cols, tr_idx
+                                )
+                                if fs_key not in fs_summaries:
+                                    fs_summaries[fs_key] = summary
+                            except Exception:
+                                sel = list(candidate_cols)
+                                logger.warning(
+                                    "Stage1 特徴量選択失敗 [%s/%s fold%d] — "
+                                    "候補列を維持:\n%s",
+                                    fs_key, policy_key, fold_i,
+                                    traceback.format_exc(),
+                                )
+                        else:
+                            sel = candidate_cols
+                        per_fold.append(sel)
+                        per_fold_leaks.append(leak_suspects)
+                        logger.info(
+                            "Stage1 特徴量選択 [%s/%s fold%d]: %d→%d",
+                            fs_key, policy_key, fold_i, len(cols), len(sel),
+                        )
                     fold_selected[fs_key][policy_key] = per_fold
+                    fold_leaks[fs_key][policy_key] = per_fold_leaks
             result.fold_selected_cols = fold_selected
+            result.fold_leak_suspects = fold_leaks
             result.fs_summaries = fs_summaries
 
         result.effective_cols = effective_cols
@@ -469,6 +507,11 @@ def stage1_preprocess(
             len(effective_cols), len(fold_plan), result.elapsed_sec,
         )
 
+    except _FoldLeakageError:
+        result.error_message = traceback.format_exc()
+        result.elapsed_sec = time.time() - t0
+        result.success = False
+        raise
     except Exception:
         result.error_message = traceback.format_exc()
         result.elapsed_sec = time.time() - t0
@@ -526,6 +569,86 @@ def apply_extrapolation_guard(
     return run
 
 
+def train_fold(
+    X_fs: np.ndarray,
+    feature_cols: List[str],
+    y: np.ndarray,
+    train_idx: np.ndarray,
+    test_idx: np.ndarray,
+    *,
+    wf_name: str,
+    fs_name: str,
+    sp_name: str,
+    seed: int,
+    fold: int,
+    quick: bool,
+    dim_reduction: bool,
+    force_pca: bool = False,
+    split_group: str = "",
+    fold_cols: Optional[List[str]] = None,
+    groups: Optional[np.ndarray] = None,
+    mint_configs: Optional[Dict[str, Any]] = None,
+) -> RunResult:
+    """Train one fold through the shared workflow path."""
+    import os as _os
+
+    _os.environ["_EDP_INSIDE_WORKER"] = "1"
+    cols = list(feature_cols)
+    if fold_cols:
+        indices = [cols.index(c) for c in fold_cols if c in cols]
+        if not indices:
+            raise ValueError(f"No fold columns available for {fs_name}/fold{fold}")
+        X_fs = X_fs[:, indices]
+        cols = [cols[i] for i in indices]
+
+    X_train = pd.DataFrame(X_fs[train_idx], columns=cols)
+    X_test = pd.DataFrame(X_fs[test_idx], columns=cols)
+    y_train = pd.Series(y[train_idx])
+    y_test = pd.Series(y[test_idx])
+    X_train, X_test = impute_by_train_median(X_train, X_test)
+
+    from extrapolation_discovery_platform.individual_runner import (
+        _WORKFLOW_FACTORIES,
+    )
+
+    dim_for_wf = dim_reduction or force_pca
+    dim_for_wf = dim_for_wf if wf_name == "WF-LIN" else dim_reduction
+    if wf_name in _WORKFLOW_FACTORIES:
+        wf = _WORKFLOW_FACTORIES[wf_name](quick, dim_for_wf)
+    elif mint_configs is not None and wf_name in mint_configs:
+        from extrapolation_discovery_platform.integrations.mint_adapter import (
+            MIntWorkflowAdapter,
+        )
+        wf = MIntWorkflowAdapter(config=mint_configs[wf_name])
+    else:
+        raise KeyError(
+            f"Unknown workflow '{wf_name}'. "
+            f"Built-in: {list(_WORKFLOW_FACTORIES)}, "
+            f"MInt: {list(mint_configs or {})}"
+        )
+
+    run = wf.run(
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        seed=seed,
+        feature_set=fs_name,
+        split_policy=sp_name,
+        fold=fold,
+        split_group=split_group,
+        test_indices=test_idx,
+        groups=groups,
+    )
+    apply_extrapolation_guard(run, safe_array(y_train))
+    const_rmse = float(np.sqrt(np.mean(
+        (safe_array(y_test) - float(np.mean(safe_array(y_train)))) ** 2
+    )))
+    if const_rmse > 0 and math.isfinite(run.rmse_test):
+        run.artifacts["skill_vs_constant"] = 1.0 - run.rmse_test / const_rmse
+    return run
+
+
 def stage2_train(
     preprocess_result: PreprocessResult,
     features_df: pd.DataFrame,
@@ -555,27 +678,14 @@ def stage2_train(
     result = TrainResult()
 
     try:
-        # _WORKFLOW_FACTORIES は individual_runner.py で定義した
-        # {wf_name: (quick, dim_reduction) -> BaseWorkflow} の辞書
-        from extrapolation_discovery_platform.individual_runner import _WORKFLOW_FACTORIES
-
         # ── 有効列を取得 ──────────────────────────────────────────────
         fs_key = "generic" if generic_csv_mode else feature_set_name
-        effective_cols = preprocess_result.effective_cols.get(fs_key)
-
-        if not effective_cols:
-            # フォールバック: Stage1 がスキップされた場合など
-            if generic_csv_mode:
-                effective_cols = list(features_df.columns)
-            else:
-                try:
-                    effective_cols = [
-                        c for c in FeatureCatalog.columns(FeatureSetName(feature_set_name))
-                        if c in features_df.columns
-                    ]
-                except (ValueError, KeyError):
-                    effective_cols = list(features_df.columns)
-
+        if fs_key not in preprocess_result.effective_cols:
+            raise ValueError(
+                f"有効列が存在しない: feature_set='{fs_key}', "
+                f"利用可能 keys: {sorted(preprocess_result.effective_cols)}"
+            )
+        effective_cols = preprocess_result.effective_cols[fs_key]
         if not effective_cols:
             raise ValueError(f"有効列が空: feature_set='{feature_set_name}'")
 
@@ -617,49 +727,46 @@ def stage2_train(
         )
         labels = preprocess_result.fold_labels.get(plan_key, [])
 
-        # ── ワークフロー取得 ──────────────────────────────────────────
-        factory = _WORKFLOW_FACTORIES.get(workflow_name)
-        if factory is None:
-            raise ValueError(
-                f"未知のワークフロー '{workflow_name}'. "
-                f"使用可能: {sorted(_WORKFLOW_FACTORIES)}"
-            )
-
         # ── 各 fold で独立学習 ───────────────────────────────────────
-        X = pd.DataFrame(safe_array(features_df[effective_cols]), columns=effective_cols)
-        y = target.reset_index(drop=True)
+        X = safe_array(features_df[effective_cols])
+        y = safe_array(target.reset_index(drop=True))
         runs: List[RunResult] = []
+        report = preprocess_result.mc_reports.get(fs_key)
+        force_pca = bool(
+            report is not None
+            and report.multicollinearity_level == "moderate"
+        )
 
         for fold_idx, (train_idx, test_idx) in enumerate(splits):
-            fold_cols = effective_cols
-            if per_fold_cols is not None and fold_idx < len(per_fold_cols):
-                cand = [c for c in per_fold_cols[fold_idx] if c in X.columns]
-                if cand:
-                    fold_cols = cand
-            X_tr = pd.DataFrame(safe_array(X.iloc[train_idx][fold_cols]), columns=fold_cols)
-            X_te = pd.DataFrame(safe_array(X.iloc[test_idx][fold_cols]),  columns=fold_cols)
-            X_tr, X_te = impute_by_train_median(X_tr, X_te)
-            y_tr = y.iloc[train_idx].reset_index(drop=True)
-            y_te = y.iloc[test_idx].reset_index(drop=True)
-
-            # 毎 fold で新インスタンス（fold 間の独立性を保証）
-            wf = factory(quick, dim_reduction)
-            run = wf.run(
-                X_tr, y_tr, X_te, y_te,
-                seed=seed,
-                feature_set=feature_set_name,
-                split_policy=split_policy_name,
-                fold=fold_idx,
-                split_group=labels[fold_idx] if fold_idx < len(labels) else "",
-                test_indices=np.asarray(test_idx),
+            fold_cols = (
+                per_fold_cols[fold_idx]
+                if per_fold_cols is not None and fold_idx < len(per_fold_cols)
+                else None
             )
-            apply_extrapolation_guard(run, safe_array(y_tr))
-            # 定数予測器（訓練平均）に対するスキルスコア
-            const_rmse = float(np.sqrt(np.mean(
-                (safe_array(y_te) - float(np.mean(safe_array(y_tr)))) ** 2
-            )))
-            if const_rmse > 0 and math.isfinite(run.rmse_test):
-                run.artifacts["skill_vs_constant"] = 1.0 - run.rmse_test / const_rmse
+            groups = None
+            if (
+                split_policy_name != "RandomCV"
+                and preprocess_result.row_groups is not None
+            ):
+                groups = preprocess_result.row_groups[train_idx]
+            run = train_fold(
+                X,
+                effective_cols,
+                y,
+                train_idx,
+                test_idx,
+                wf_name=workflow_name,
+                fs_name=feature_set_name,
+                sp_name=split_policy_name,
+                seed=seed,
+                fold=fold_idx,
+                quick=quick,
+                dim_reduction=dim_reduction,
+                force_pca=force_pca,
+                split_group=labels[fold_idx] if fold_idx < len(labels) else "",
+                fold_cols=fold_cols,
+                groups=groups,
+            )
             runs.append(run)
             logger.info(
                 "Stage2 [%s/%s/%s] fold=%d: RMSE=%.4f R²=%.4f",
@@ -677,9 +784,9 @@ def stage2_train(
         def _std(xs: list) -> float:
             return float(np.std(xs)) if len(xs) > 1 else 0.0
 
-        valid_te  = [r.rmse_test  for r in runs if r.rmse_test  > 0 and math.isfinite(r.rmse_test)]
-        valid_tr  = [r.rmse_train for r in runs if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
-        valid_mae = [r.mae_test   for r in runs if r.mae_test   > 0 and math.isfinite(r.mae_test)]
+        valid_te  = [r.rmse_test for r in runs if math.isfinite(r.rmse_test)]
+        valid_tr  = [r.rmse_train for r in runs if math.isfinite(r.rmse_train)]
+        valid_mae = [r.mae_test for r in runs if math.isfinite(r.mae_test)]
         valid_r2  = [r.r2_test    for r in runs if math.isfinite(r.r2_test)]
 
         result.rmse_test_mean  = _mean(valid_te)
@@ -710,6 +817,11 @@ def stage2_train(
         result.elapsed_sec = time.time() - t0
         result.success = True
 
+    except ValueError:
+        result.error_message = traceback.format_exc()
+        result.elapsed_sec = time.time() - t0
+        result.success = False
+        raise
     except Exception:
         result.error_message = traceback.format_exc()
         result.elapsed_sec = time.time() - t0
@@ -805,7 +917,11 @@ def stage3_detect_ood(
                 detector.fit(X_tr)
                 fold_res = detector.score(X_te)
 
-                score_sum[te_idx]   += fold_res.composite_scores
+                if not np.isfinite(fold_res.ood_threshold) or fold_res.ood_threshold <= 0:
+                    continue
+                score_sum[te_idx] += (
+                    fold_res.composite_scores / fold_res.ood_threshold
+                )
                 score_count[te_idx] += 1
 
                 # primary fold を特定（bytes 比較で同一インデックスを判定）
@@ -828,6 +944,7 @@ def stage3_detect_ood(
                         det = OODDetector(k=min(10, len(tr_idx) - 1))
                         det.fit(X_tr)
                         primary_res = det.score(X_te)
+                        primary_train_idx = tr_idx
                         primary_test_idx = te_idx
                         break
                     except Exception:
@@ -842,15 +959,19 @@ def stage3_detect_ood(
         avg_scores = np.where(
             scored,
             score_sum[te] / np.maximum(score_count[te], 1),
-            primary_res.composite_scores,  # スコアなし fold は primary を使用
+            primary_res.composite_scores / primary_res.ood_threshold,
+            # スコアなし fold は primary を使用
         )
-        is_ood_avg = avg_scores > primary_res.ood_threshold
+        avg_ratio = avg_scores
+        is_ood_avg = avg_ratio > 1.0
         n_ood = int(is_ood_avg.sum())
 
         result.ood_result = OODResult(
             mahalanobis_scores=primary_res.mahalanobis_scores,
             knn_scores=primary_res.knn_scores,
-            composite_scores=np.ascontiguousarray(avg_scores),
+            composite_scores=np.ascontiguousarray(
+                avg_ratio * primary_res.ood_threshold
+            ),
             is_ood=np.ascontiguousarray(is_ood_avg),
             ood_threshold=primary_res.ood_threshold,
             ood_ratio=n_ood / max(len(avg_scores), 1),
