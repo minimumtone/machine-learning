@@ -86,6 +86,60 @@ def prepare_split_compositions(
     return compositions_df
 
 
+def feature_set_columns(
+    features_df: pd.DataFrame,
+    fs_key: str,
+    generic_csv_mode: bool,
+) -> List[str]:
+    """Return available source columns for one feature set."""
+    if generic_csv_mode:
+        return list(features_df.columns)
+    try:
+        catalog_cols = FeatureCatalog.all_columns()
+        cols = [
+            c for c in FeatureCatalog.columns(FeatureSetName(fs_key))
+            if c in features_df.columns
+        ]
+        cols.extend(
+            c for c in features_df.columns
+            if c not in catalog_cols and c not in cols
+        )
+        return cols
+    except (ValueError, KeyError):
+        return list(features_df.columns)
+
+
+def compute_mc_report(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    fs_key: str,
+    cols: List[str],
+    generic_csv_mode: bool,
+    leak_corr_threshold: float,
+    workflow_names: Optional[List[str]] = None,
+) -> Optional[MulticollinearityReport]:
+    """Compute one feature-set multicollinearity report."""
+    diag_df = features_df[cols].fillna(
+        features_df[cols].median(numeric_only=True).fillna(0.0)
+    )
+    if generic_csv_mode:
+        return _run_generic_mc(
+            diag_df, target, leak_corr_threshold
+        ).get("generic")
+    try:
+        fs = FeatureSetName(fs_key)
+    except ValueError:
+        return None
+    return run_phase0_multicollinearity(
+        diag_df,
+        [fs],
+        workflow_names or ["WF-LIN"],
+        len(features_df),
+        target=target,
+        leak_corr_threshold=leak_corr_threshold,
+    ).get(fs_key)
+
+
 def select_fold_columns(
     features_df: pd.DataFrame,
     target: pd.Series,
@@ -336,60 +390,39 @@ def stage1_preprocess(
 
     try:
         # ── Step 1: 多重共線性・リーク検出 ───────────────────────────
-        # Diagnostics-only fill; raw features remain unchanged for fitting.
-        diag_df = features_df.fillna(
-            features_df.median(numeric_only=True).fillna(0.0)
-        )
         if generic_csv_mode:
-            # generic CSV モード: features_df 全列に直接 VIF + リーク検出を適用
-            mc_reports = _run_generic_mc(diag_df, target, leak_corr_threshold)
             fs_key_list = ["generic"]
         else:
-            # HEA モード: FeatureSetName ベースで各 FS の MC 解析を実行
-            fs_enums: List[FeatureSetName] = []
             for name in feature_set_names:
                 try:
-                    fs_enums.append(FeatureSetName(name))
+                    FeatureSetName(name)
                 except ValueError:
                     logger.warning("Stage1: 未知の FS '%s' をスキップ", name)
-            mc_reports = (
-                run_phase0_multicollinearity(
-                    diag_df, fs_enums, workflow_names, len(features_df),
-                    target=target,
-                    leak_corr_threshold=leak_corr_threshold,
-                ) if fs_enums else {}
-            )
             fs_key_list = list(feature_set_names)
 
+        mc_reports: Dict[str, MulticollinearityReport] = {}
+        source_cols = {
+            fs_key: feature_set_columns(features_df, fs_key, generic_csv_mode)
+            for fs_key in fs_key_list
+        }
+        for fs_key in fs_key_list:
+            report = compute_mc_report(
+                features_df,
+                target,
+                fs_key,
+                source_cols[fs_key],
+                generic_csv_mode,
+                leak_corr_threshold,
+                workflow_names,
+            )
+            if report is not None:
+                mc_reports[fs_key] = report
         result.mc_reports = mc_reports
 
         # ── Step 2: 有効列決定（FS ごとに定数・完全共線除去） ────────
         effective_cols: Dict[str, List[str]] = {}
         for fs_key in fs_key_list:
-            # 初期列リストを取得
-            if generic_csv_mode:
-                orig = list(features_df.columns)
-            else:
-                try:
-                    catalog_cols = FeatureCatalog.all_columns()
-                    orig = [
-                        c for c in FeatureCatalog.columns(FeatureSetName(fs_key))
-                        if c in features_df.columns
-                    ]
-                    # Experimental/microstructural descriptors carry physics not
-                    # represented by composition-derived catalog features.
-                    extra_cols = [
-                        c for c in features_df.columns
-                        if c not in catalog_cols and c not in orig
-                    ]
-                    orig.extend(extra_cols)
-                    logger.info(
-                        "Stage1 [%s]: added %d extra non-catalog columns",
-                        fs_key, len(extra_cols),
-                    )
-                except (ValueError, KeyError):
-                    logger.warning("Stage1 [%s]: FS列取得失敗 — 全列を使用", fs_key)
-                    orig = list(features_df.columns)
+            orig = source_cols[fs_key]
 
             # MC レポートに基づいて不要列を除去
             rpt = mc_reports.get(fs_key)

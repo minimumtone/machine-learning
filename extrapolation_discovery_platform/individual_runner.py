@@ -393,6 +393,7 @@ def run_individual(
         # ══════════════════════════════════════════════════════════════
         from extrapolation_discovery_platform.pipeline import (
             PreprocessResult,
+            compute_mc_report,
             prepare_split_compositions,
             select_fold_columns,
             stage1_preprocess,
@@ -414,6 +415,7 @@ def run_individual(
                 else split_policy_name.replace(" ⚠️(リーク懸念)", "")
             )
             _labels: List[str] = []
+            split_comps = prepare_split_compositions(compositions_df)
             # 分割だけは再計算が必要（seed 統一のため）
             try:
                 _sp = split_policy_name.replace(" ⚠️(リーク懸念)", "")
@@ -421,7 +423,7 @@ def run_individual(
                     split_policy=_sp,
                     features_df=features_df,
                     target=target,
-                    compositions_df=compositions_df,
+                    compositions_df=split_comps,
                     seed=seed,
                     n_folds=n_folds,
                     test_size=test_size,
@@ -430,7 +432,9 @@ def run_individual(
                 _plan_key = f"RandomCV_seed{seed}" if _sp == "RandomCV" else _sp
                 _fold_plan_hint[_plan_key] = _splits
             except Exception:
-                logger.warning("個別実行: 分割再計算失敗:\n%s", traceback.format_exc())
+                raise RuntimeError(
+                    f"個別実行: 分割再計算失敗:\n{traceback.format_exc()}"
+                )
 
             # PreprocessResult の簡易版を作る
             prep = PreprocessResult(
@@ -440,6 +444,20 @@ def run_individual(
                 active_policies=[split_policy_name.replace(" ⚠️(リーク懸念)", "")],
                 success=True,
             )
+            report = compute_mc_report(
+                features_df,
+                target,
+                _fs_key,
+                prep.effective_cols[_fs_key],
+                generic_csv_mode,
+                leak_corr_threshold,
+                [workflow_name],
+            )
+            if report is None:
+                raise RuntimeError(
+                    f"個別実行: MC レポート生成失敗: feature_set='{_fs_key}'"
+                )
+            prep.mc_reports = {_fs_key: report}
             (
                 prep.fold_selected_cols,
                 prep.fold_leak_suspects,
@@ -452,7 +470,6 @@ def run_individual(
                 leak_auto_exclude=leak_auto_exclude,
                 leak_corr_threshold=leak_corr_threshold,
             )
-            split_comps = prepare_split_compositions(compositions_df)
             if split_comps is not None:
                 prep.row_groups = composition_group_ids(split_comps)
         else:
