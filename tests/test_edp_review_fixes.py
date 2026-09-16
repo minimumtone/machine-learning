@@ -168,6 +168,87 @@ def test_zero_rmse_is_valid_and_default_is_nan():
     )
 
 
+def test_zero_rmse_runs_are_perfectly_stable():
+    from extrapolation_discovery_platform.evaluation import (
+        FeatureValidityEvaluator,
+    )
+    from extrapolation_discovery_platform.workflows import RunResult
+
+    runs = [
+        RunResult("WF-LIN", "generic", "RandomCV", 42, 0, rmse_test=0.0),
+        RunResult("WF-LIN", "generic", "RandomCV", 42, 1, rmse_test=0.0),
+    ]
+    score = FeatureValidityEvaluator().evaluate(runs)[0]
+    assert score.stability == 1.0
+
+
+def test_ood_uses_fold_specific_leak_free_columns():
+    from extrapolation_discovery_platform.pipeline import (
+        stage1_preprocess,
+        stage3_detect_ood,
+    )
+
+    rng = np.random.default_rng(17)
+    X = pd.DataFrame(
+        rng.normal(size=(40, 4)),
+        columns=["leaky", "noise_a", "noise_b", "noise_c"],
+    )
+    y = pd.Series(np.linspace(100.0, 300.0, len(X)))
+    X["leaky"] = y.to_numpy()
+    compositions = pd.DataFrame(
+        rng.dirichlet(np.ones(4), len(X)),
+        columns=["Co", "Cr", "Fe", "Ni"],
+    )
+    prep = stage1_preprocess(
+        X,
+        y,
+        compositions,
+        ["generic"],
+        ["WF-LIN"],
+        [42],
+        ["CompositionBlock", "RandomCV"],
+        generic_csv_mode=True,
+        n_folds=4,
+    )
+    assert prep.success, prep.error_message
+
+    X_permuted = X.copy()
+    X_permuted["leaky"] = rng.permutation(X["leaky"].to_numpy())
+    kwargs = {
+        "features_df": X,
+        "effective_columns": prep.effective_cols["generic"],
+        "fold_plan": prep.fold_plan,
+        "fold_leak_suspects": prep.fold_leak_suspects["generic"],
+    }
+    leak_free = stage3_detect_ood(**kwargs)
+    leak_free_permuted = stage3_detect_ood(
+        **{**kwargs, "features_df": X_permuted}
+    )
+    assert leak_free.success, leak_free.error_message
+    assert leak_free_permuted.success, leak_free_permuted.error_message
+    assert np.allclose(
+        leak_free.ood_result.composite_scores,
+        leak_free_permuted.ood_result.composite_scores,
+    )
+
+    with_leak = stage3_detect_ood(
+        features_df=X,
+        effective_columns=prep.effective_cols["generic"],
+        fold_plan=prep.fold_plan,
+    )
+    with_leak_permuted = stage3_detect_ood(
+        features_df=X_permuted,
+        effective_columns=prep.effective_cols["generic"],
+        fold_plan=prep.fold_plan,
+    )
+    assert with_leak.success, with_leak.error_message
+    assert with_leak_permuted.success, with_leak_permuted.error_message
+    assert not np.allclose(
+        with_leak.ood_result.composite_scores,
+        with_leak_permuted.ood_result.composite_scores,
+    )
+
+
 def test_incomplete_candidate_is_excluded():
     from extrapolation_discovery_platform.model_selection import (
         CandidateResult,

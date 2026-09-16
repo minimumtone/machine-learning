@@ -566,6 +566,7 @@ def run_individual(
                 features_df=features_df,
                 effective_columns=_ood_cols,
                 fold_plan=prep.fold_plan,
+                fold_leak_suspects=prep.fold_leak_suspects.get(_ood_cols_key),
             )
             if ood_stage.success and ood_stage.ood_result is not None:
                 result.ood_result    = ood_stage.ood_result

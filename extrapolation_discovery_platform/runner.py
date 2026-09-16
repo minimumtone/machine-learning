@@ -552,6 +552,7 @@ class ExperimentRunner:
                     features_df=features_all,
                     effective_columns=_ood_cols,
                     fold_plan=fold_plan,
+                    fold_leak_suspects=prep.fold_leak_suspects.get(_fs_key),
                 )
                 if ood_stage.success and ood_stage.ood_result is not None:
                     ood_results[_fs_key] = ood_stage.ood_result

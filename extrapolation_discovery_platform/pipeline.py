@@ -28,7 +28,9 @@ stage2_train(preprocess_result, features_df, target,
              quick, dim_reduction, seed, generic_csv_mode)
     -> TrainResult
 
-stage3_detect_ood(features_df, effective_columns, fold_plan)
+stage3_detect_ood(
+    features_df, effective_columns, fold_plan, fold_leak_suspects
+)
     -> OODStageResult
 """
 from __future__ import annotations
@@ -896,6 +898,10 @@ def stage3_detect_ood(
     features_df: pd.DataFrame,
     effective_columns: List[str],
     fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
+    *,
+    fold_leak_suspects: Optional[
+        Dict[str, List[Dict[str, float]]]
+    ] = None,
 ) -> OODStageResult:
     """Stage 3: OOD 検出。
 
@@ -917,6 +923,8 @@ def stage3_detect_ood(
         Stage 1 の effective_cols から取得した OOD 計算対象列。
     fold_plan : dict
         Stage 1 の fold_plan。全 split policy の train/test インデックス。
+    fold_leak_suspects : dict, optional
+        Policy/fold-specific target-leakage columns excluded from OOD inputs.
     """
     t0 = time.time()
     result = OODStageResult()
@@ -930,12 +938,12 @@ def stage3_detect_ood(
                 f"{effective_columns[:5]}"
             )
 
-        # 全 split policy の全 fold を統合してアンサンブルに使用
-        all_folds: List[Tuple[np.ndarray, np.ndarray]] = []
-        for folds in fold_plan.values():
-            all_folds.extend(folds)
-
-        if not all_folds:
+        fold_entries = [
+            (policy_key, fold_i, tr_idx, te_idx)
+            for policy_key, folds in fold_plan.items()
+            for fold_i, (tr_idx, te_idx) in enumerate(folds)
+        ]
+        if not fold_entries:
             raise ValueError("fold_plan が空。Stage1 が正常に完了していない。")
 
         # primary fold の決定（CompositionBlock 優先、なければ先頭 fold）
@@ -947,23 +955,39 @@ def stage3_detect_ood(
         if primary_key is not None:
             primary_train_idx, primary_test_idx = fold_plan[primary_key][0]
         else:
-            primary_train_idx, primary_test_idx = all_folds[0]
+            _, _, primary_train_idx, primary_test_idx = fold_entries[0]
 
         n_samples = len(features_df)
-        X_arr = safe_array(features_df[ood_cols])
 
         # fold ごとにスコアを累積（アンサンブル用）
         score_sum   = np.zeros(n_samples, dtype=np.float64)
         score_count = np.zeros(n_samples, dtype=np.int32)
         primary_res: Optional[OODResult] = None
 
-        for tr_idx, te_idx in all_folds:
+        for policy_key, fold_i, tr_idx, te_idx in fold_entries:
             if len(tr_idx) < 2 or len(te_idx) < 1:
                 continue
             try:
+                suspects_by_fold = (fold_leak_suspects or {}).get(
+                    policy_key, []
+                )
+                suspects = (
+                    set(suspects_by_fold[fold_i])
+                    if fold_i < len(suspects_by_fold)
+                    else set()
+                )
+                fold_cols = [c for c in ood_cols if c not in suspects]
+                if not fold_cols:
+                    logger.warning(
+                        "Stage3: OOD fold skipped; all columns are leak suspects "
+                        "(policy=%s fold=%d)",
+                        policy_key,
+                        fold_i,
+                    )
+                    continue
                 actual_k = min(10, len(tr_idx) - 1)
-                X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
-                X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                X_tr = features_df[fold_cols].iloc[tr_idx].copy()
+                X_te = features_df[fold_cols].iloc[te_idx].copy()
                 X_tr, X_te = impute_by_train_median(X_tr, X_te)
 
                 # 各 fold で独立 fit（train が変われば OOD も変わる）
@@ -989,11 +1013,22 @@ def stage3_detect_ood(
 
         # primary が見つからなかった場合のフォールバック
         if primary_res is None:
-            for tr_idx, te_idx in all_folds:
+            for policy_key, fold_i, tr_idx, te_idx in fold_entries:
                 if len(tr_idx) >= 2:
                     try:
-                        X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
-                        X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                        suspects_by_fold = (fold_leak_suspects or {}).get(
+                            policy_key, []
+                        )
+                        suspects = (
+                            set(suspects_by_fold[fold_i])
+                            if fold_i < len(suspects_by_fold)
+                            else set()
+                        )
+                        fold_cols = [c for c in ood_cols if c not in suspects]
+                        if not fold_cols:
+                            continue
+                        X_tr = features_df[fold_cols].iloc[tr_idx].copy()
+                        X_te = features_df[fold_cols].iloc[te_idx].copy()
                         X_tr, X_te = impute_by_train_median(X_tr, X_te)
                         det = OODDetector(k=min(10, len(tr_idx) - 1))
                         det.fit(X_tr)
@@ -1042,7 +1077,7 @@ def stage3_detect_ood(
             "Stage3 OOD完了: %d/%d OOD (%.1f%%), %d folds, %.2fs",
             n_ood, len(avg_scores),
             100 * n_ood / max(len(avg_scores), 1),
-            len(all_folds), result.elapsed_sec,
+            len(fold_entries), result.elapsed_sec,
         )
 
     except Exception:
