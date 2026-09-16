@@ -23,7 +23,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import ARDRegression, LassoCV, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV, GroupKFold
+from sklearn.model_selection import GridSearchCV, GroupKFold, GroupShuffleSplit
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -329,9 +329,18 @@ class WorkflowLIN(BaseWorkflow):
         t0 = time.time()
         logger.debug("WF-LIN: train=%d, test=%d, features=%d",
                       len(X_train), len(X_test), X_train.shape[1])
+        groups = kwargs.get("groups")
 
         if self._alpha is None:
-            model_step: Any = RidgeCV(alphas=np.logspace(-2, 4, 25))
+            ridge_kwargs: Dict[str, Any] = {}
+            if groups is not None:
+                ridge_kwargs["cv"] = _inner_cv(
+                    5, len(X_train), groups, seed
+                )
+            model_step = RidgeCV(
+                alphas=np.logspace(-2, 4, 25),
+                **ridge_kwargs,
+            )
         else:
             model_step = Ridge(alpha=self._alpha)
         steps: List[Tuple[str, Any]] = [
@@ -629,21 +638,43 @@ class WorkflowXGB(BaseWorkflow):
                 else:
                     X_tr_transformed = _safe_np(X_train)
 
-                if sample_weight is None:
-                    X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
-                        X_tr_transformed, _safe_np(y_train),
-                        test_size=0.2, random_state=seed,
-                    )
-                    w_tr_es = None
+                if groups is None:
+                    if sample_weight is None:
+                        X_tr_es, X_val_es, y_tr_es, y_val_es = _tts(
+                            X_tr_transformed, _safe_np(y_train),
+                            test_size=0.2, random_state=seed,
+                        )
+                        w_tr_es = None
+                    else:
+                        (
+                            X_tr_es, X_val_es, y_tr_es, y_val_es,
+                            w_tr_es, w_val_es,
+                        ) = _tts(
+                            X_tr_transformed, _safe_np(y_train),
+                            np.asarray(sample_weight, dtype=float),
+                            test_size=0.2, random_state=seed,
+                        )
                 else:
-                    (
-                        X_tr_es, X_val_es, y_tr_es, y_val_es,
-                        w_tr_es, w_val_es,
-                    ) = _tts(
-                        X_tr_transformed, _safe_np(y_train),
-                        np.asarray(sample_weight, dtype=float),
-                        test_size=0.2, random_state=seed,
+                    es_split = GroupShuffleSplit(
+                        n_splits=1, test_size=0.2, random_state=seed
                     )
+                    es_tr_idx, es_val_idx = next(es_split.split(
+                        X_tr_transformed,
+                        _safe_np(y_train),
+                        groups=np.asarray(groups),
+                    ))
+                    X_tr_es = X_tr_transformed[es_tr_idx]
+                    X_val_es = X_tr_transformed[es_val_idx]
+                    y_values = _safe_np(y_train)
+                    y_tr_es = y_values[es_tr_idx]
+                    y_val_es = y_values[es_val_idx]
+                    if sample_weight is None:
+                        w_tr_es = None
+                        w_val_es = None
+                    else:
+                        weights = np.asarray(sample_weight, dtype=float)
+                        w_tr_es = weights[es_tr_idx]
+                        w_val_es = weights[es_val_idx]
 
                 es_params = best_model.get_params()
                 es_params["n_estimators"] = max(es_params.get("n_estimators", 200), 500)
