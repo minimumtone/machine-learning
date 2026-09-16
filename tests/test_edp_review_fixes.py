@@ -104,6 +104,39 @@ def test_ood_constant_range_is_informative():
     assert out[1] > 0.0
 
 
+def test_neighborhood_standardization_uses_training_rows_only():
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+
+    features = pd.DataFrame(
+        {
+            "x": [0.0, 1.0, 2.0, 3.0, 2.5],
+            "y": [0.0, 0.5, 1.0, 1.5, 1.25],
+        }
+    )
+    base = compute_neighborhood_plan(
+        features,
+        np.array([4]),
+        scope="neighborhood",
+        min_train_rows=1,
+    )
+    expanded = compute_neighborhood_plan(
+        pd.concat(
+            [
+                features,
+                pd.DataFrame({"x": [1e6], "y": [1e6]}),
+            ],
+            ignore_index=True,
+        ),
+        np.array([4, 5]),
+        scope="neighborhood",
+        min_train_rows=1,
+    )
+    np.testing.assert_allclose(base.distances[:4], expanded.distances[:4])
+    np.testing.assert_array_equal(base.copies[:4], expanded.copies[:4])
+
+
 def test_ood_ensemble_threshold_matches_flag():
     from extrapolation_discovery_platform.pipeline import stage3_detect_ood
 
