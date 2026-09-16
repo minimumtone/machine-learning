@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Parse Henkelman ACF.dat into per-atom Bader volume/charge data."""
+"""Parse Henkelman ACF.dat into per-atom Bader volume/charge data.
+
+Output column dQ_e = zval_e - n_bader_e; positive dQ_e means electron loss (cation-like).
+"""
 
 from __future__ import annotations
 
@@ -69,7 +72,6 @@ def main() -> None:
     output = calc_dir / "bader_per_atom.csv"
     with output.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        handle.write("# dQ_e = zval_e - n_bader_e; positive dQ_e means electron loss (cation-like).\n")
         writer.writerow(
             [
                 "label",
