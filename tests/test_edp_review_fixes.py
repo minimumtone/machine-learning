@@ -1,3 +1,4 @@
+import inspect
 import math
 
 import numpy as np
@@ -178,3 +179,61 @@ def test_incomplete_candidate_is_excluded():
     assert candidate.n_failed_folds == 1
     assert candidate.mean_rmse == float("inf")
     assert candidate.std_rmse == float("inf")
+
+
+def test_workflow_lin_uses_group_aware_ridge_cv():
+    from extrapolation_discovery_platform.workflows import WorkflowLIN
+
+    rng = np.random.default_rng(21)
+    X = pd.DataFrame(rng.normal(size=(30, 3)), columns=list("abc"))
+    y = pd.Series(rng.normal(size=30))
+    groups = np.repeat(np.arange(6), 5)
+    run = WorkflowLIN(dim_reduction=False).run(
+        X,
+        y,
+        X.iloc[:5],
+        y.iloc[:5],
+        seed=42,
+        groups=groups,
+    )
+    assert math.isfinite(run.params["alpha"])
+    assert "_inner_cv" in inspect.getsource(WorkflowLIN.run)
+
+
+def test_precomputed_individual_path_reuses_split_preprocessing(monkeypatch):
+    import extrapolation_discovery_platform.pipeline as pipeline
+    from extrapolation_discovery_platform.individual_runner import run_individual
+
+    rng = np.random.default_rng(31)
+    X = pd.DataFrame(rng.normal(size=(40, 4)), columns=list("abcd"))
+    y = pd.Series(np.linspace(100.0, 200.0, len(X)))
+    compositions = pd.DataFrame(
+        rng.dirichlet(np.ones(4), len(X)),
+        columns=["Co", "Cr", "Fe", "Ni"],
+    )
+    compositions.iloc[0, 0] = np.nan
+    captured = {}
+    original_stage2 = pipeline.stage2_train
+
+    def capture_stage2(*args, **kwargs):
+        captured["prep"] = kwargs["preprocess_result"]
+        return original_stage2(*args, **kwargs)
+
+    monkeypatch.setattr(pipeline, "stage2_train", capture_stage2)
+    result = run_individual(
+        "WF-LIN",
+        "generic",
+        "CompositionBlock",
+        features_df=X,
+        target=y,
+        compositions_df=compositions,
+        seed=42,
+        n_folds=3,
+        quick=True,
+        precomputed_columns=list(X.columns),
+        generic_csv_mode=True,
+    )
+    assert result.success, result.error_message
+    prep = captured["prep"]
+    assert prep.fold_plan
+    assert prep.mc_reports["generic"] is not None
