@@ -417,7 +417,7 @@ def _build_physical_interpretation_md(
 
     for fs_name in sorted(fs_data.keys()):
         fs_runs = fs_data[fs_name]
-        rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
+        rmses = [r.rmse_test for r in fs_runs if math.isfinite(r.rmse_test)]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
         r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"

@@ -329,8 +329,13 @@ class OODDetector:
         than any training sample – this is intentional.
         """
         def _norm(arr: np.ndarray, lo: float, hi: float) -> np.ndarray:
+            """Normalize training-range distances; constant ranges flag excess."""
             if hi - lo < 1e-12:
-                return np.zeros_like(arr)
+                return np.where(
+                    arr > hi,
+                    (arr - hi) / max(abs(hi), 1e-12) + 1.0,
+                    0.0,
+                )
             return (arr - lo) / (hi - lo)
 
         return (

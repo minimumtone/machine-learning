@@ -693,7 +693,7 @@ def plotly_parity_train_test(
     for wf, wf_run_list in wf_groups_rmse.items():
         # RMSE は RunResult から（train set の全点は集積していないため）
         rmses_tr = [float(r.rmse_train) for r in wf_run_list
-                    if r.rmse_train > 0 and math.isfinite(r.rmse_train)]
+                    if math.isfinite(r.rmse_train)]
         r2s_tr   = [float(r.r2_train)   for r in wf_run_list
                     if math.isfinite(r.r2_train)]
         # Test set R² / RMSE は集積した全点から計算
@@ -706,7 +706,7 @@ def plotly_parity_train_test(
                 rmse_te = float("nan"); r2_te = float("nan")
         else:
             rmses_te = [float(r.rmse_test) for r in wf_run_list
-                        if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
+                        if math.isfinite(r.rmse_test)]
             r2s_te   = [float(r.r2_test) for r in wf_run_list
                         if math.isfinite(r.r2_test)]
             rmse_te = sum(rmses_te)/len(rmses_te) if rmses_te else float("nan")
@@ -1805,7 +1805,7 @@ def build_fs_comparison_summary_md(
 
     for fs_name in sorted(fs_data.keys()):
         fs_runs = fs_data[fs_name]
-        rmses = [r.rmse_test for r in fs_runs if r.rmse_test > 0]
+        rmses = [r.rmse_test for r in fs_runs if math.isfinite(r.rmse_test)]
         r2s = [r.r2_test for r in fs_runs]
         n_feat = _fs_sizes.get(fs_name, "?")
         rmse_mean = f"{sum(rmses)/len(rmses):.2f}" if rmses else "N/A"
@@ -2352,7 +2352,7 @@ def plotly_metrics_comparison(
     for wf in wf_names:
         wlist = wf_groups[wf]
         rmses = [float(r.rmse_test) for r in wlist
-                 if r.rmse_test > 0 and math.isfinite(r.rmse_test)]
+                 if math.isfinite(r.rmse_test)]
         r2s   = [float(r.r2_test) for r in wlist if math.isfinite(r.r2_test)]
         rmse_means.append(float(np.mean(rmses))   if rmses else float("nan"))
         rmse_stds.append( float(np.std(rmses))    if len(rmses) > 1 else 0.0)
