@@ -42,23 +42,24 @@ def test_train_scope_leakage_keeps_global_diagnostic():
     )
 
 
-def test_stage2_missing_feature_set_raises():
+def test_stage2_missing_feature_set_returns_failure():
     from extrapolation_discovery_platform.pipeline import PreprocessResult, stage2_train
 
     X, y = _generic_frame()
-    with pytest.raises(ValueError, match="generic"):
-        stage2_train(
-            PreprocessResult(
-                effective_cols={},
-                fold_plan={"RandomCV_seed42": [(np.arange(30), np.arange(30, 40))]},
-            ),
-            X,
-            y,
-            "WF-LIN",
-            "RandomCV",
-            "generic",
-            generic_csv_mode=True,
-        )
+    result = stage2_train(
+        PreprocessResult(
+            effective_cols={},
+            fold_plan={"RandomCV_seed42": [(np.arange(30), np.arange(30, 40))]},
+        ),
+        X,
+        y,
+        "WF-LIN",
+        "RandomCV",
+        "generic",
+        generic_csv_mode=True,
+    )
+    assert result.success is False
+    assert "有効列" in result.error_message
 
 
 def test_shared_trainer_matches_stage2_and_adds_guard_artifact():

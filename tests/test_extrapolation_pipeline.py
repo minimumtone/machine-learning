@@ -82,7 +82,14 @@ class TestT1_Stage1Reproducibility:
         effective = prep.effective_cols[FeatureSetName.FS_BASE.value]
         assert "experimental_descriptor" in effective
         assert "delta_r" not in effective
-        assert "target_leak" not in effective
+        assert "target_leak" in effective
+        assert "target_leak" in prep.mc_reports[
+            FeatureSetName.FS_BASE.value
+        ].leak_suspects
+        for policy_cols in prep.fold_selected_cols[
+            FeatureSetName.FS_BASE.value
+        ].values():
+            assert all("target_leak" not in cols for cols in policy_cols)
 
     def test_hea_upload_keeps_partial_nan_and_pipeline_runs(self, sample_data, tmp_path):
         pytest.importorskip("gradio")
@@ -593,10 +600,13 @@ class TestT9_JobFactory:
     """T9: _run_job が _IR_FACTORIES に委譲している（二重実装なし）。"""
 
     def test_ir_factories_used(self):
-        from extrapolation_discovery_platform.runner import _run_job
-        src = inspect.getsource(_run_job)
-        assert "_IR_FACTORIES" in src, "_run_job が _IR_FACTORIES を使っていない"
-        assert "_BUILTIN_FACTORIES" not in src, "旧 _BUILTIN_FACTORIES が残存"
+        from extrapolation_discovery_platform import pipeline, runner
+        train_src = inspect.getsource(pipeline.train_fold)
+        run_src = inspect.getsource(runner._run_job)
+        assert "_WORKFLOW_FACTORIES" in train_src
+        assert "train_fold" in run_src
+        assert "_BUILTIN_FACTORIES" not in train_src
+        assert "_BUILTIN_FACTORIES" not in run_src
 
 
 class TestEvaluationHierarchy:
