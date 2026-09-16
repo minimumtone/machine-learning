@@ -65,16 +65,123 @@ from extrapolation_discovery_platform.workflows import RunResult
 logger = logging.getLogger(__name__)
 
 
-class _FoldLeakageError(ValueError):
-    pass
-
-
 def impute_by_train_median(
     X_train: pd.DataFrame, *others: pd.DataFrame
 ) -> Tuple[pd.DataFrame, ...]:
     """Fill NaN using medians of X_train only (0.0 if a column is all-NaN in train)."""
     med = X_train.median(axis=0, skipna=True).fillna(0.0)
     return tuple(df.fillna(med) for df in (X_train, *others))
+
+
+def prepare_split_compositions(
+    compositions_df: Optional[pd.DataFrame],
+) -> Optional[pd.DataFrame]:
+    """Fill composition values only for split and group assignment."""
+    if compositions_df is None:
+        return None
+    if compositions_df.isna().any().any():
+        return compositions_df.fillna(
+            compositions_df.median(numeric_only=True).fillna(0.0)
+        )
+    return compositions_df
+
+
+def select_fold_columns(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    effective_cols: Dict[str, List[str]],
+    fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]],
+    *,
+    leak_auto_exclude: bool,
+    leak_corr_threshold: float,
+) -> Tuple[
+    Dict[str, Dict[str, List[List[str]]]],
+    Dict[str, Dict[str, List[Dict[str, float]]]],
+    Dict[str, Any],
+]:
+    """Select features independently on each training fold."""
+    from extrapolation_discovery_platform.feature_selection import (
+        run_feature_selection,
+    )
+
+    def _select_cols(
+        fs_key: str,
+        cols: List[str],
+        train_idx: np.ndarray,
+    ) -> Tuple[List[str], Any]:
+        X_tr, = impute_by_train_median(features_df.iloc[train_idx][cols])
+        y_tr = target.iloc[train_idx]
+        summary = run_feature_selection(
+            X_tr,
+            y_tr,
+            methods=None,
+            consensus_threshold=2,
+            feature_set=fs_key,
+        )
+        min_cols = max(3, len(cols) // 5)
+        consensus = summary.consensus_features or []
+        if len(consensus) >= min_cols:
+            return consensus, summary
+        lasso = summary.results.get("Lasso")
+        lasso_feats = (lasso.selected_features if lasso else []) or []
+        if len(lasso_feats) >= min_cols:
+            return lasso_feats, summary
+        return list(cols), summary
+
+    fs_summaries: Dict[str, Any] = {}
+    fold_selected: Dict[str, Dict[str, List[List[str]]]] = {}
+    fold_leaks: Dict[str, Dict[str, List[Dict[str, float]]]] = {}
+    for fs_key, cols in list(effective_cols.items()):
+        fold_selected[fs_key] = {}
+        fold_leaks[fs_key] = {}
+        for policy_key, folds in fold_plan.items():
+            per_fold: List[List[str]] = []
+            per_fold_leaks: List[Dict[str, float]] = []
+            for fold_i, (tr_idx, _te_idx) in enumerate(folds):
+                X_tr, = impute_by_train_median(features_df.iloc[tr_idx][cols])
+                y_tr = target.iloc[tr_idx]
+                candidate_cols = list(cols)
+                leak_suspects: Dict[str, float] = {}
+                if leak_auto_exclude:
+                    leak_suspects = detect_target_leakage(
+                        X_tr[candidate_cols],
+                        y_tr,
+                        threshold=leak_corr_threshold,
+                    )
+                    candidate_cols = [
+                        c for c in candidate_cols if c not in leak_suspects
+                    ]
+                if not candidate_cols:
+                    raise ValueError(
+                        f"Stage1: leak exclusion removed all columns "
+                        f"for {fs_key}/{policy_key}/fold{fold_i}"
+                    )
+                if len(candidate_cols) > 3:
+                    try:
+                        sel, summary = _select_cols(
+                            fs_key, candidate_cols, tr_idx
+                        )
+                        if fs_key not in fs_summaries:
+                            fs_summaries[fs_key] = summary
+                    except Exception:
+                        sel = list(candidate_cols)
+                        logger.warning(
+                            "Stage1 特徴量選択失敗 [%s/%s fold%d] — "
+                            "候補列を維持:\n%s",
+                            fs_key, policy_key, fold_i,
+                            traceback.format_exc(),
+                        )
+                else:
+                    sel = candidate_cols
+                per_fold.append(sel)
+                per_fold_leaks.append(leak_suspects)
+                logger.info(
+                    "Stage1 特徴量選択 [%s/%s fold%d]: %d→%d",
+                    fs_key, policy_key, fold_i, len(cols), len(sel),
+                )
+            fold_selected[fs_key][policy_key] = per_fold
+            fold_leaks[fs_key][policy_key] = per_fold_leaks
+    return fold_selected, fold_leaks, fs_summaries
 
 
 # ---------------------------------------------------------------------------
@@ -304,12 +411,7 @@ def stage1_preprocess(
         _seed0 = seeds[0] if seeds else 42
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
         fold_labels: Dict[str, List[str]] = {}
-        split_comps = compositions_df
-        if compositions_df is not None and compositions_df.isna().any().any():
-            # Fold assignment is unsupervised; fill only to define split blocks.
-            split_comps = compositions_df.fillna(
-                compositions_df.median(numeric_only=True).fillna(0.0)
-            )
+        split_comps = prepare_split_compositions(compositions_df)
 
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
@@ -406,98 +508,19 @@ def stage1_preprocess(
         if split_comps is not None:
             result.row_groups = composition_group_ids(split_comps)
 
-        # ── Step 4: 特徴量選択（fold ごとに訓練データのみ・リーク防止） ─
-        # 各 fold の train_idx のみを使って fold ごとに独立に選択する。
-        # 単一 fold の train_idx で選んだ列を全 fold に適用すると、
-        # 他 fold のテストサンプルが選択時に可視となりリークするため。
-        # generic CSV モードでも同じ選択ロジックを適用する。
         if fold_plan:
-            from extrapolation_discovery_platform.feature_selection import run_feature_selection
-
-            def _select_cols(fs_key: str, cols: List[str],
-                             train_idx: np.ndarray) -> Tuple[List[str], Any]:
-                """train_idx のみを使った特徴量選択。(選択列, summary) を返す。"""
-                X_tr, = impute_by_train_median(features_df.iloc[train_idx][cols])
-                y_tr = target.iloc[train_idx]
-                summary = run_feature_selection(
-                    X_tr, y_tr,
-                    methods=None,           # 全手法: Lasso, AIC, BIC, ARD
-                    consensus_threshold=2,  # 2手法以上で選択された列を採用
-                    feature_set=fs_key,
-                )
-                # コンセンサス特徴量（2手法以上で選択）が十分あれば採用
-                # ただし元の列数の 20% 未満になる場合はスキップ
-                min_cols = max(3, len(cols) // 5)
-                consensus = summary.consensus_features or []
-                if len(consensus) >= min_cols:
-                    return consensus, summary
-                # Lasso フォールバック：最低 min_cols 列を保証
-                lasso = summary.results.get("Lasso")
-                lasso_feats = (lasso.selected_features if lasso else []) or []
-                if len(lasso_feats) >= min_cols:
-                    return lasso_feats, summary
-                # 選択結果が不十分 → 全列を維持（特徴量選択をスキップ）
-                return list(cols), summary
-
-            fs_summaries: Dict[str, Any] = {}
-            fold_selected: Dict[str, Dict[str, List[List[str]]]] = {}
-            fold_leaks: Dict[str, Dict[str, List[Dict[str, float]]]] = {}
-            for fs_key, cols in list(effective_cols.items()):
-                fold_selected[fs_key] = {}
-                fold_leaks[fs_key] = {}
-                for policy_key, folds in fold_plan.items():
-                    per_fold: List[List[str]] = []
-                    per_fold_leaks: List[Dict[str, float]] = []
-                    for fold_i, (tr_idx, _te_idx) in enumerate(folds):
-                        X_tr, = impute_by_train_median(
-                            features_df.iloc[tr_idx][cols]
-                        )
-                        y_tr = target.iloc[tr_idx]
-                        candidate_cols = list(cols)
-                        leak_suspects: Dict[str, float] = {}
-                        if leak_auto_exclude:
-                            leak_suspects = detect_target_leakage(
-                                X_tr[candidate_cols],
-                                y_tr,
-                                threshold=leak_corr_threshold,
-                            )
-                            candidate_cols = [
-                                c for c in candidate_cols
-                                if c not in leak_suspects
-                            ]
-                        if not candidate_cols:
-                            raise _FoldLeakageError(
-                                f"Stage1: leak exclusion removed all columns "
-                                f"for {fs_key}/{policy_key}/fold{fold_i}"
-                            )
-                        if len(candidate_cols) > 3:
-                            try:
-                                sel, summary = _select_cols(
-                                    fs_key, candidate_cols, tr_idx
-                                )
-                                if fs_key not in fs_summaries:
-                                    fs_summaries[fs_key] = summary
-                            except Exception:
-                                sel = list(candidate_cols)
-                                logger.warning(
-                                    "Stage1 特徴量選択失敗 [%s/%s fold%d] — "
-                                    "候補列を維持:\n%s",
-                                    fs_key, policy_key, fold_i,
-                                    traceback.format_exc(),
-                                )
-                        else:
-                            sel = candidate_cols
-                        per_fold.append(sel)
-                        per_fold_leaks.append(leak_suspects)
-                        logger.info(
-                            "Stage1 特徴量選択 [%s/%s fold%d]: %d→%d",
-                            fs_key, policy_key, fold_i, len(cols), len(sel),
-                        )
-                    fold_selected[fs_key][policy_key] = per_fold
-                    fold_leaks[fs_key][policy_key] = per_fold_leaks
-            result.fold_selected_cols = fold_selected
-            result.fold_leak_suspects = fold_leaks
-            result.fs_summaries = fs_summaries
+            (
+                result.fold_selected_cols,
+                result.fold_leak_suspects,
+                result.fs_summaries,
+            ) = select_fold_columns(
+                features_df,
+                target,
+                effective_cols,
+                fold_plan,
+                leak_auto_exclude=leak_auto_exclude,
+                leak_corr_threshold=leak_corr_threshold,
+            )
 
         result.effective_cols = effective_cols
         result.elapsed_sec = time.time() - t0
@@ -507,11 +530,6 @@ def stage1_preprocess(
             len(effective_cols), len(fold_plan), result.elapsed_sec,
         )
 
-    except _FoldLeakageError:
-        result.error_message = traceback.format_exc()
-        result.elapsed_sec = time.time() - t0
-        result.success = False
-        raise
     except Exception:
         result.error_message = traceback.format_exc()
         result.elapsed_sec = time.time() - t0
@@ -595,6 +613,14 @@ def train_fold(
     _os.environ["_EDP_INSIDE_WORKER"] = "1"
     cols = list(feature_cols)
     if fold_cols:
+        missing = [c for c in fold_cols if c not in cols]
+        if missing:
+            logger.warning(
+                "Missing fold columns for %s/fold%d: %s",
+                fs_name,
+                fold,
+                missing,
+            )
         indices = [cols.index(c) for c in fold_cols if c in cols]
         if not indices:
             raise ValueError(f"No fold columns available for {fs_name}/fold{fold}")
@@ -817,11 +843,6 @@ def stage2_train(
         result.elapsed_sec = time.time() - t0
         result.success = True
 
-    except ValueError:
-        result.error_message = traceback.format_exc()
-        result.elapsed_sec = time.time() - t0
-        result.success = False
-        raise
     except Exception:
         result.error_message = traceback.format_exc()
         result.elapsed_sec = time.time() - t0

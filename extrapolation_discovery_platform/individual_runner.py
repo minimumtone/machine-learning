@@ -51,6 +51,7 @@ from extrapolation_discovery_platform.splitters import (
     CompositionGroupCVSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
+    composition_group_ids,
 )
 from extrapolation_discovery_platform.ood import OODResult
 from extrapolation_discovery_platform.multicollinearity import (
@@ -391,6 +392,9 @@ def run_individual(
         #   全 fold アンサンブル OOD → OODStageResult
         # ══════════════════════════════════════════════════════════════
         from extrapolation_discovery_platform.pipeline import (
+            PreprocessResult,
+            prepare_split_compositions,
+            select_fold_columns,
             stage1_preprocess,
             stage2_train,
             stage3_detect_ood,
@@ -429,7 +433,6 @@ def run_individual(
                 logger.warning("個別実行: 分割再計算失敗:\n%s", traceback.format_exc())
 
             # PreprocessResult の簡易版を作る
-            from extrapolation_discovery_platform.pipeline import PreprocessResult
             prep = PreprocessResult(
                 effective_cols={_fs_key: _valid_cols if _valid_cols else list(features_df.columns)},
                 fold_plan=_fold_plan_hint,
@@ -437,6 +440,21 @@ def run_individual(
                 active_policies=[split_policy_name.replace(" ⚠️(リーク懸念)", "")],
                 success=True,
             )
+            (
+                prep.fold_selected_cols,
+                prep.fold_leak_suspects,
+                prep.fs_summaries,
+            ) = select_fold_columns(
+                features_df,
+                target,
+                prep.effective_cols,
+                prep.fold_plan,
+                leak_auto_exclude=leak_auto_exclude,
+                leak_corr_threshold=leak_corr_threshold,
+            )
+            split_comps = prepare_split_compositions(compositions_df)
+            if split_comps is not None:
+                prep.row_groups = composition_group_ids(split_comps)
         else:
             # 新規実行 → Stage1 を完全実行
             _sp_clean = split_policy_name.replace(" ⚠️(リーク懸念)", "")
