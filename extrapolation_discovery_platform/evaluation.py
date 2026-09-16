@@ -264,7 +264,12 @@ class FeatureValidityEvaluator:
                 _mean = sum(rmses) / len(rmses)
                 _var = sum((x - _mean) ** 2 for x in rmses) / len(rmses)
                 _std = _var ** 0.5
-                cv = _std / _mean if _mean > 0 else 1.0
+                if _mean > 0:
+                    cv = _std / _mean
+                elif _std == 0:
+                    cv = 0.0
+                else:
+                    cv = 1.0
                 vs.stability = max(0.0, 1.0 - cv)
             else:
                 vs.stability = float("nan")
