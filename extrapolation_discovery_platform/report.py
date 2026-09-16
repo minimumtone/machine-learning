@@ -33,6 +33,14 @@ from extrapolation_discovery_platform.workflows import RunResult
 logger = logging.getLogger(__name__)
 
 
+def _fmt_score(value: float, digits: int = 4) -> str:
+    """Format validity scores without rendering non-finite values."""
+    try:
+        return "N/A" if not np.isfinite(float(value)) else f"{float(value):.{digits}f}"
+    except (TypeError, ValueError):
+        return "N/A"
+
+
 class ReportGenerator:
     """Generate a Markdown experiment report.
 
@@ -123,8 +131,8 @@ class ReportGenerator:
         # ---- 2. Feature Validity Ranking ----
         lines.append("## 2. Feature Set Validity Ranking")
         lines.append("")
-        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | MC Penalty | RMSE (95% CI) | **Total** |")
-        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|------------|---------------|-----------|")
+        lines.append("| Rank | Feature Set | Effect Size | Stability | Generalisation | Leak Penalty | Extrap. Safety | MC Penalty | Coverage | RMSE (95% CI) | **Total** |")
+        lines.append("|------|-------------|-------------|-----------|----------------|--------------|----------------|------------|----------|---------------|-----------|")
         for i, s in enumerate(validity_scores):
             # Format Bootstrap CI if available (#9)
             if s.rmse_mean > 0 and s.rmse_ci_lower != s.rmse_ci_upper:
@@ -134,12 +142,13 @@ class ReportGenerator:
             else:
                 ci_str = "N/A"
             lines.append(
-                f"| {i+1} | {s.feature_set} | {s.effect_size:.4f} | "
-                f"{s.stability:.4f} | {s.generalisation:.4f} | "
-                f"{s.leak_penalty:.4f} | {s.extrapolation_safety:.4f} | "
-                f"{s.multicollinearity_penalty:.4f} | "
+                f"| {i+1} | {s.feature_set} | {_fmt_score(s.effect_size)} | "
+                f"{_fmt_score(s.stability)} | {_fmt_score(s.generalisation)} | "
+                f"{_fmt_score(s.leak_penalty)} | {_fmt_score(s.extrapolation_safety)} | "
+                f"{_fmt_score(s.multicollinearity_penalty)} | "
+                f"{_fmt_score(s.coverage, 2)} | "
                 f"{ci_str} | "
-                f"**{s.total:.4f}** |"
+                f"**{_fmt_score(s.total)}** |"
             )
         lines.append("")
 

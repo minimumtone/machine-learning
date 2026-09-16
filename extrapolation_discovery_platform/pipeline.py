@@ -55,12 +55,21 @@ from extrapolation_discovery_platform.multicollinearity import (
 from extrapolation_discovery_platform.ood import OODDetector, OODResult
 from extrapolation_discovery_platform.splitters import (
     CompositionBlockSplitter,
+    CompositionGroupCVSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
 )
 from extrapolation_discovery_platform.workflows import RunResult
 
 logger = logging.getLogger(__name__)
+
+
+def impute_by_train_median(
+    X_train: pd.DataFrame, *others: pd.DataFrame
+) -> Tuple[pd.DataFrame, ...]:
+    """Fill NaN using medians of X_train only (0.0 if a column is all-NaN in train)."""
+    med = X_train.median(axis=0, skipna=True).fillna(0.0)
+    return tuple(df.fillna(med) for df in (X_train, *others))
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +85,8 @@ class PreprocessResult:
     effective_cols : dict {fs_key: [col, ...]}
         多重共線性除去・リーク除去・特徴量選択後の有効列。
     fold_plan : dict {policy_key: [(train_idx, test_idx), ...]}
-        分割計画。CompositionBlock / ElementExclusion / RandomCV_seedN。
+        分割計画。CompositionBlock / CompositionGroupCV /
+        ElementExclusion / RandomCV_seedN。
     mc_reports : dict {fs_key: MulticollinearityReport}
         多重共線性診断レポート。
     fs_summaries : dict
@@ -89,6 +99,7 @@ class PreprocessResult:
     # 各 fold の訓練データのみで選択することで fold 間のリークを防ぐ。
     fold_selected_cols: Dict[str, Dict[str, List[List[str]]]] = field(default_factory=dict)
     fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = field(default_factory=dict)
+    fold_labels: Dict[str, List[str]] = field(default_factory=dict)
     mc_reports: Dict[str, MulticollinearityReport] = field(default_factory=dict)
     fs_summaries: Dict[str, Any] = field(default_factory=dict)
     active_policies: List[str] = field(default_factory=list)
@@ -190,14 +201,16 @@ def stage1_preprocess(
         HEA モード: ["FS_BASE", "FS_ALL", ...] など FeatureSetName.value の文字列。
         generic_csv_mode=True のとき無視し features_df 全列を 1 セットとして使用。
     active_policies : list of str
-        有効にする分割ポリシー。["CompositionBlock", "ElementExclusion"] が推奨。
+        有効にする分割ポリシー。["CompositionBlock", "CompositionGroupCV",
+        "ElementExclusion"] が推奨。
         "RandomCV" を含めるとデータリーク懸念あり（デフォルト無効）。
     n_folds : int
         分割数（デフォルト 5）。2〜10 の範囲で指定する。
         小さいほど1 fold あたりの訓練データが増え、大きいほど評価が安定する。
     test_size : float
         Holdout 分割時のテストデータ比率（デフォルト 0.2 = 20%）。
-        CompositionBlock / ElementExclusion / RandomCV では無視される。
+        CompositionBlock / CompositionGroupCV / ElementExclusion /
+        RandomCV では無視される。
     exclusion_elements : list of str, optional
         ElementExclusion で除外対象とする元素のリスト。
         None の場合は ElementExclusionSplitter の既定値を使用。
@@ -207,9 +220,13 @@ def stage1_preprocess(
 
     try:
         # ── Step 1: 多重共線性・リーク検出 ───────────────────────────
+        # Diagnostics-only fill; raw features remain unchanged for fitting.
+        diag_df = features_df.fillna(
+            features_df.median(numeric_only=True).fillna(0.0)
+        )
         if generic_csv_mode:
             # generic CSV モード: features_df 全列に直接 VIF + リーク検出を適用
-            mc_reports = _run_generic_mc(features_df, target, leak_corr_threshold)
+            mc_reports = _run_generic_mc(diag_df, target, leak_corr_threshold)
             fs_key_list = ["generic"]
         else:
             # HEA モード: FeatureSetName ベースで各 FS の MC 解析を実行
@@ -221,7 +238,7 @@ def stage1_preprocess(
                     logger.warning("Stage1: 未知の FS '%s' をスキップ", name)
             mc_reports = (
                 run_phase0_multicollinearity(
-                    features_df, fs_enums, workflow_names, len(features_df),
+                    diag_df, fs_enums, workflow_names, len(features_df),
                     target=target,
                     leak_corr_threshold=leak_corr_threshold,
                 ) if fs_enums else {}
@@ -281,14 +298,22 @@ def stage1_preprocess(
         # 特徴量選択は訓練 idx のスライスが必要なため、分割を先に行う。
         _seed0 = seeds[0] if seeds else 42
         fold_plan: Dict[str, List[Tuple[np.ndarray, np.ndarray]]] = {}
+        fold_labels: Dict[str, List[str]] = {}
+        split_comps = compositions_df
+        if compositions_df is not None and compositions_df.isna().any().any():
+            # Fold assignment is unsupervised; fill only to define split blocks.
+            split_comps = compositions_df.fillna(
+                compositions_df.median(numeric_only=True).fillna(0.0)
+            )
 
         if "CompositionBlock" in active_policies:
             if compositions_df is not None:
                 try:
                     cb = CompositionBlockSplitter(n_folds=n_folds, seed=_seed0)
-                    folds = list(cb.split(features_df, target, compositions=compositions_df))
+                    folds = list(cb.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["CompositionBlock"] = folds
+                        fold_labels["CompositionBlock"] = list(cb.fold_labels)
                         logger.info("Stage1: CompositionBlock %d folds", len(folds))
                     else:
                         logger.warning("Stage1: CompositionBlock — fold 0件")
@@ -298,13 +323,31 @@ def stage1_preprocess(
             else:
                 logger.warning("Stage1: CompositionBlock — compositions_df が None")
 
+        if "CompositionGroupCV" in active_policies:
+            if compositions_df is not None:
+                try:
+                    cg = CompositionGroupCVSplitter(n_folds=n_folds, seed=_seed0)
+                    folds = list(cg.split(features_df, target, compositions=split_comps))
+                    if folds:
+                        fold_plan["CompositionGroupCV"] = folds
+                        fold_labels["CompositionGroupCV"] = list(cg.fold_labels)
+                        logger.info("Stage1: CompositionGroupCV %d folds", len(folds))
+                    else:
+                        logger.warning("Stage1: CompositionGroupCV — fold 0件")
+                except Exception:
+                    logger.warning("Stage1: CompositionGroupCV 分割失敗:\n%s",
+                                   traceback.format_exc())
+            else:
+                logger.warning("Stage1: CompositionGroupCV — compositions_df が None")
+
         if "ElementExclusion" in active_policies:
             if compositions_df is not None:
                 try:
                     ee = ElementExclusionSplitter(target_elements=exclusion_elements)
-                    folds = list(ee.split(features_df, target, compositions=compositions_df))
+                    folds = list(ee.split(features_df, target, compositions=split_comps))
                     if folds:
                         fold_plan["ElementExclusion"] = folds
+                        fold_labels["ElementExclusion"] = list(ee.fold_labels)
                         logger.info("Stage1: ElementExclusion %d folds", len(folds))
                     else:
                         logger.warning("Stage1: ElementExclusion — fold 0件")
@@ -319,9 +362,11 @@ def stage1_preprocess(
             for seed in seeds:
                 try:
                     rc = RandomCVSplitter(n_folds=n_folds, seed=seed)
-                    folds = list(rc.split(features_df, target, compositions=compositions_df))
+                    folds = list(rc.split(features_df, target, compositions=split_comps))
                     if folds:
-                        fold_plan[f"RandomCV_seed{seed}"] = folds
+                        key = f"RandomCV_seed{seed}"
+                        fold_plan[key] = folds
+                        fold_labels[key] = list(rc.fold_labels)
                         logger.info("Stage1: RandomCV seed=%d %d folds", seed, len(folds))
                 except Exception:
                     logger.warning("Stage1: RandomCV seed=%d 失敗:\n%s",
@@ -336,23 +381,23 @@ def stage1_preprocess(
                 _tr, _te = _tts(_idx, test_size=test_size,
                                  random_state=_seed0, shuffle=True)
                 fold_plan["Holdout"] = [(np.array(_tr), np.array(_te))]
+                fold_labels["Holdout"] = ["fold0"]
                 logger.info("Stage1: Holdout train=%d test=%d (test_size=%.2f)",
                             len(_tr), len(_te), test_size)
             except Exception:
                 logger.warning("Stage1: Holdout 分割失敗:\n%s", traceback.format_exc())
 
-        # 全ポリシーで fold が空の場合のフォールバック
+        # Requested policies must produce folds; never substitute RandomCV.
         if not fold_plan:
-            logger.warning(
-                "Stage1: 全分割ポリシーで fold 0。"
-                "RandomCV seed=%d でフォールバック", _seed0
+            raise ValueError(
+                f"Stage1: 要求された分割ポリシー {active_policies} はいずれも "
+                "fold を生成できませんでした（ElementExclusion は "
+                "train≥50 / test≤40% の元素が必要）。RandomCV を明示的に "
+                "選択してください。"
             )
-            rc_fb = RandomCVSplitter(n_folds=n_folds, seed=_seed0)
-            folds = list(rc_fb.split(features_df, target, compositions=compositions_df))
-            if folds:
-                fold_plan[f"RandomCV_seed{_seed0}"] = folds
 
         result.fold_plan = fold_plan
+        result.fold_labels = fold_labels
 
         # ── Step 4: 特徴量選択（fold ごとに訓練データのみ・リーク防止） ─
         # 各 fold の train_idx のみを使って fold ごとに独立に選択する。
@@ -365,7 +410,7 @@ def stage1_preprocess(
             def _select_cols(fs_key: str, cols: List[str],
                              train_idx: np.ndarray) -> Tuple[List[str], Any]:
                 """train_idx のみを使った特徴量選択。(選択列, summary) を返す。"""
-                X_tr = features_df.iloc[train_idx][cols]
+                X_tr, = impute_by_train_median(features_df.iloc[train_idx][cols])
                 y_tr = target.iloc[train_idx]
                 summary = run_feature_selection(
                     X_tr, y_tr,
@@ -502,7 +547,8 @@ def stage2_train(
     Parameters
     ----------
     split_policy_name : str
-        "CompositionBlock" / "ElementExclusion" / "RandomCV" のいずれか。
+        "CompositionBlock" / "CompositionGroupCV" /
+        "ElementExclusion" / "RandomCV" のいずれか。
         fold_plan に対応するキーが存在しない場合はエラーを返す。
     """
     t0 = time.time()
@@ -569,6 +615,7 @@ def stage2_train(
             .get(fs_key, {})
             .get(plan_key)
         )
+        labels = preprocess_result.fold_labels.get(plan_key, [])
 
         # ── ワークフロー取得 ──────────────────────────────────────────
         factory = _WORKFLOW_FACTORIES.get(workflow_name)
@@ -591,6 +638,7 @@ def stage2_train(
                     fold_cols = cand
             X_tr = pd.DataFrame(safe_array(X.iloc[train_idx][fold_cols]), columns=fold_cols)
             X_te = pd.DataFrame(safe_array(X.iloc[test_idx][fold_cols]),  columns=fold_cols)
+            X_tr, X_te = impute_by_train_median(X_tr, X_te)
             y_tr = y.iloc[train_idx].reset_index(drop=True)
             y_te = y.iloc[test_idx].reset_index(drop=True)
 
@@ -602,6 +650,7 @@ def stage2_train(
                 feature_set=feature_set_name,
                 split_policy=split_policy_name,
                 fold=fold_idx,
+                split_group=labels[fold_idx] if fold_idx < len(labels) else "",
                 test_indices=np.asarray(test_idx),
             )
             apply_extrapolation_guard(run, safe_array(y_tr))
@@ -692,7 +741,8 @@ def stage3_detect_ood(
         - RunResult には OOD 情報を含めない（分離の原則）
         - 各 fold で独立 fit → train set が変われば OOD スコアも変わる
         - 全 fold スコアをアンサンブル（平均）して代表値を決定
-        - primary fold（CompositionBlock の先頭 fold 優先）の結果を GUI に使用
+        - primary fold（CompositionBlock、次に CompositionGroupCV の先頭 fold）
+          の結果を GUI に使用
         - GUI の OOD Map タブ・OOD サマリーのみがこの出力を参照する
 
     Parameters
@@ -723,8 +773,13 @@ def stage3_detect_ood(
             raise ValueError("fold_plan が空。Stage1 が正常に完了していない。")
 
         # primary fold の決定（CompositionBlock 優先、なければ先頭 fold）
-        if "CompositionBlock" in fold_plan and fold_plan["CompositionBlock"]:
-            primary_train_idx, primary_test_idx = fold_plan["CompositionBlock"][0]
+        primary_key = next(
+            (key for key in ("CompositionBlock", "CompositionGroupCV")
+             if key in fold_plan and fold_plan[key]),
+            None,
+        )
+        if primary_key is not None:
+            primary_train_idx, primary_test_idx = fold_plan[primary_key][0]
         else:
             primary_train_idx, primary_test_idx = all_folds[0]
 
@@ -743,6 +798,7 @@ def stage3_detect_ood(
                 actual_k = min(10, len(tr_idx) - 1)
                 X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
                 X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                X_tr, X_te = impute_by_train_median(X_tr, X_te)
 
                 # 各 fold で独立 fit（train が変われば OOD も変わる）
                 detector = OODDetector(k=actual_k)
@@ -768,6 +824,7 @@ def stage3_detect_ood(
                     try:
                         X_tr = pd.DataFrame(X_arr[tr_idx], columns=ood_cols)
                         X_te = pd.DataFrame(X_arr[te_idx], columns=ood_cols)
+                        X_tr, X_te = impute_by_train_median(X_tr, X_te)
                         det = OODDetector(k=min(10, len(tr_idx) - 1))
                         det.fit(X_tr)
                         primary_res = det.score(X_te)
