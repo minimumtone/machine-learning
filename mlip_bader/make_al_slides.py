@@ -7,6 +7,7 @@ slides/ and assembles slides/al_effect_bcc_hea.pptx.
 
 from __future__ import annotations
 
+import itertools
 from pathlib import Path
 
 import matplotlib
@@ -99,6 +100,18 @@ def analyse() -> dict:
             )
         hea[label] = rows
 
+    f_cell: dict[str, float] = {}
+    for label in HEAS:
+        c = composition(label)
+        cell = grouped[grouped.label == label]
+        vveg = sum(c[e] * pure[e] for e in c)
+        vcell = sum(c[e] * cell[cell.element == e]["V_vor_A3"].mean() for e in c)
+        denominator = sum(
+            c[a] * c[b] * (pure[a] + pure[b]) * omega["-".join(sorted((a, b)))]
+            for a, b in itertools.permutations(c, 2)
+        )
+        f_cell[label] = (vcell - vveg) / denominator if abs(denominator) > 1e-12 else np.nan
+
     return {
         "frame": frame,
         "relax": relax,
@@ -106,6 +119,7 @@ def analyse() -> dict:
         "binary_delta": binary_delta,
         "omega": omega,
         "hea": hea,
+        "f_cell": f_cell,
     }
 
 
@@ -190,6 +204,7 @@ def fig_al_hist(res) -> Path:
 def fig_alv_hist(res) -> Path:
     frame = res["frame"]
     pure = res["pure"]
+    bd = res["binary_delta"]
     fig, ax = plt.subplots(figsize=(12, 6.4), constrained_layout=True)
     bins = np.linspace(12.5, 17.5, 45)
     sub = frame[frame.label == "Al-V"]
@@ -200,7 +215,7 @@ def fig_alv_hist(res) -> Path:
         ax.axvline(pure[element], color=color, linestyle="--", linewidth=2, label=f"純 {element} BCC ({pure[element]:.2f})")
     ax.set_xlabel("Voronoi 体積 (Å$^3$)")
     ax.set_ylabel("確率密度")
-    ax.set_title("Al–V 二元系：Al は収縮（−1.92）、V は膨張（+0.93）")
+    ax.set_title(f"Al–V 二元系：Al は収縮（{bd[('Al', 'V')]:+.2f}）、V は膨張（{bd[('V', 'Al')]:+.2f}）")
     ax.legend(fontsize=16)
     return savefig(fig, "fig_alv_hist.png")
 
@@ -376,7 +391,19 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
     hea = {label: {r["element"]: r for r in rows} for label, rows in res["hea"].items()}
     relax = res["relax"]
     al_hea = hea["AlNbTiV"]["Al"]
+    f_cell = res["f_cell"]
+    hz_f = [r["f"] for r in hea["HfNbTaTiZr"].values()]
+    ti_hea = hea["AlNbTiV"]["Ti"]
+    pure_steps = relax[relax.label.isin(PURE) & (relax.label != "Al")]["nsteps"]
+    al_steps = int(relax[relax.label == "Al"]["nsteps"].iloc[0])
     alnbtiv = relax[relax.label == "AlNbTiV"]
+    alnbtiv_spread = alnbtiv.volume_A3.max() / alnbtiv.volume_A3.min() - 1
+    alti = relax[relax.label == "Al-Ti"].set_index("seed").volume_A3
+    alti_spread = alti.max() / alti.drop(alti.idxmax()).mean() - 1
+    hz_err = max(abs(r["delta_hea"] - r["delta_pred"]) for r in hea["HfNbTaTiZr"].values())
+    non_al_omega = {k: v for k, v in omega.items() if not k.startswith("Al-")}
+    non_al_rank = sorted(non_al_omega, key=non_al_omega.get)
+    rest_abs = max(abs(non_al_omega[k]) for k in non_al_rank[2:]) * 100
     al_pairs_steps = relax[relax.label.isin(AL_PAIRS)]["nsteps"]
     other_pairs_steps = relax[relax.label.str.contains("-") & ~relax.label.isin(AL_PAIRS)]["nsteps"]
 
@@ -445,7 +472,7 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
             [f"Al (BCC, MACE): V = {pure['Al']:.2f} Å", ("3", {"sup": True}), f"（a = {relax[relax.label=='Al'].a_bcc_A.iloc[0]:.3f} Å）"],
             ["実験 FCC Al の原子体積 16.6 Å", ("3", {"sup": True}), " とほぼ同じ → MACE は BCC-Al を FCC 相当の体積で記述"],
             [f"Ti ({pure['Ti']:.2f}) > Al ({pure['Al']:.2f}) > V ({pure['V']:.2f})：AlNbTiV 中では Al は「大きい元素」ではない"],
-            ["純 Al BCC セルの緩和には 120 ステップ（他の純元素は 17–31）→ 力学的不安定性の兆候"],
+            [f"純 Al BCC セルの緩和には {al_steps} ステップ（他の純元素は {int(pure_steps.min())}–{int(pure_steps.max())}）→ 力学的不安定性の兆候"],
         ],
         Inches(8.7), Inches(1.6), Inches(4.3), Inches(5.2), size=17,
     )
@@ -458,7 +485,7 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
         s,
         [
             [f"Al–V: Ω = {omega['Al-V']*100:.1f}%、Al–Ti: {omega['Al-Ti']*100:.1f}%、Al–Nb: {omega['Al-Nb']*100:.1f}%"],
-            [f"非 Al 対の最大収縮は Ta–Zr ({omega['Ta-Zr']*100:.1f}%)、Nb–Zr ({omega['Nb-Zr']*100:.1f}%)；他は |Ω| < 0.6%"],
+            [f"非 Al 対の最大収縮は {non_al_rank[0].replace('-', '–')} ({non_al_omega[non_al_rank[0]]*100:.1f}%)、{non_al_rank[1].replace('-', '–')} ({non_al_omega[non_al_rank[1]]*100:.1f}%)；他は |Ω| ≤ {rest_abs:.1f}%"],
             ["Al を含む 3 対がすべて収縮側の上位 5 位以内 → Al–遷移金属間の d–sp 混成・電荷移動による結合短縮を示唆"],
             ["格子定数論文の DFT-B2 Ω", ("sf", {"sub": True}), "（Al 対は全て負）と符号が整合"],
         ],
@@ -504,9 +531,9 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
     add_bullets(
         s,
         [
-            ["HfNbTaTiZr：5 元素すべて予測と実測が一致（誤差 ≤ 0.3 Å", ("3", {"sup": True}), "）"],
+            [f"HfNbTaTiZr：5 元素すべて予測と実測が一致（誤差 ≤ {hz_err:.2f} Å", ("3", {"sup": True}), "）"],
             [f"AlNbTiV の Al：予測 {al_hea['delta_pred']:+.2f} → 実測 {al_hea['delta_hea']:+.2f} Å", ("3", {"sup": True}), "（seed 間 σ = ", f"{al_hea['std']:.2f}", "）"],
-            [f"Ti も予測 {hea['AlNbTiV']['Ti']['delta_pred']:+.2f} → 実測 {hea['AlNbTiV']['Ti']['delta_hea']:+.2f} と半減"],
+            [f"Ti も予測 {ti_hea['delta_pred']:+.2f} → 実測 {ti_hea['delta_hea']:+.2f}（f = {ti_hea['f']:.2f}）"],
             [f"V は {hea['AlNbTiV']['V']['delta_hea']:+.2f}（予測 {hea['AlNbTiV']['V']['delta_pred']:+.2f}）で加法的に膨張"],
             ["エラーバー：3 seed の元素平均体積の標準偏差"],
         ],
@@ -515,7 +542,7 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
 
     # 9. Survival ratio
     s = prs.slides.add_slide(blank)
-    add_title(s, f"生存率 f：Al だけが f = {al_hea['f']:.2f}（二元系効果の 7 割を喪失）")
+    add_title(s, f"生存率 f：Al だけが f = {al_hea['f']:.2f}（二元系効果の {(1 - al_hea['f']) * 100:.0f}% を喪失）")
     add_picture_fit(s, figs["survival"], Inches(0.4), Inches(1.35), Inches(8.6), Inches(5.5))
     hz = hea["HfNbTaTiZr"]
     add_bullets(
@@ -523,8 +550,8 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
         [
             [f"HfNbTaTiZr：f = {min(r['f'] for r in hz.values()):.2f}–{max(r['f'] for r in hz.values()):.2f} → 二元系の過剰体積がほぼ完全に転写（q ≈ 1 の描像と整合）"],
             [f"AlNbTiV：V {hea['AlNbTiV']['V']['f']:.2f}、Nb {hea['AlNbTiV']['Nb']['f']:.2f} は加法的だが、Ti {hea['AlNbTiV']['Ti']['f']:.2f}、", ("Al ", {"bold": True, "color": RED}), (f"{al_hea['f']:.2f}", {"bold": True, "color": RED}), " と Al 周りで加法性が破れる"],
-            ["セル全体でも AlNbTiV は f", ("cell", {"sub": True}), " = −0.45（Vegard より膨張）vs HfNbTaTiZr 1.46"],
-            ["解釈：Al–V の強い収縮（−1.92）は Al–V 対が多数を占める二元系特有で、4 元系では Al 近傍の V 濃度が半分になり Nb/Ti に置き換わるため、Al–V 電荷移動による収縮が非線形に弱まる"],
+            ["セル全体でも AlNbTiV は f", ("cell", {"sub": True}), f" = {f_cell['AlNbTiV']:.2f}（Vegard より{'膨張' if f_cell['AlNbTiV'] < 0 else '収縮'}）vs HfNbTaTiZr {f_cell['HfNbTaTiZr']:.2f}"],
+            [f"解釈：Al–V の強い収縮（{bd[('Al', 'V')]:+.2f}）は Al–V 対が多数を占める二元系特有で、4 元系では Al 近傍の V 濃度が半分になり Nb/Ti に置き換わるため、Al–V 電荷移動による収縮が非線形に弱まる"],
         ],
         Inches(9.0), Inches(1.6), Inches(4.0), Inches(5.2), size=16,
     )
@@ -539,7 +566,7 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
         s,
         [
             [f"Al–V 中の Al（{al_in['Al-V'].mean():.2f}）だけが大きく低体積側；Al–Nb ({al_in['Al-Nb'].mean():.2f})、Al–Ti ({al_in['Al-Ti'].mean():.2f}) は純 Al ({pure['Al']:.2f}) に近い"],
-            [f"AlNbTiV 中の Al は {al_in['AlNbTiV'].mean():.2f} Å", ("3", {"sup": True}), f"（σ = {al_in['AlNbTiV'].std():.2f}）：分布が広がり、平均は純 Al の −0.33 のみ"],
+            [f"AlNbTiV 中の Al は {al_in['AlNbTiV'].mean():.2f} Å", ("3", {"sup": True}), f"（σ = {al_in['AlNbTiV'].std():.2f}）：分布が広がり、平均は純 Al の {al_hea['delta_hea']:+.2f} のみ"],
             ["二元系の「Al–V 収縮」は V 濃度 50% という極端な環境でのみ顕在化 → 組成に対して非線形"],
             ["Al の体積は近傍の V 数に強く依存すると推測（Bader 電荷での確認が次段階）"],
         ],
@@ -555,8 +582,8 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
         [
             [f"Al–X 二元系：平均 {al_pairs_steps.mean():.0f} ステップ（非 Al 対 {other_pairs_steps.mean():.0f}）。9 セル全て 500 超で延長緩和が必要"],
             ["AlNbTiV：3 seed とも 500 ステップで未収束。seed 0 は f", ("max", {"sub": True}), f" = {alnbtiv.fmax_final.min():.3f}、seed 1/2 は ≈ {alnbtiv.fmax_final.max():.2f} eV/Å"],
-            [f"seed 間で体積が {alnbtiv.volume_A3.min()/128:.2f}–{alnbtiv.volume_A3.max()/128:.2f} Å", ("3", {"sup": True}), "/atom と 2% ばらつく → f", ("Al", {"sub": True}), " = 0.28 の不確かさは大きい"],
-            ["Al-Ti seed 1 も他 seed より 1.2% 大きい体積で収束 → 複数の局所安定構造の存在"],
+            [f"seed 間で体積が {alnbtiv.volume_A3.min()/128:.2f}–{alnbtiv.volume_A3.max()/128:.2f} Å", ("3", {"sup": True}), f"/atom と {alnbtiv_spread*100:.0f}% ばらつく → f", ("Al", {"sub": True}), f" = {al_hea['f']:.2f} の不確かさは大きい"],
+            [f"Al-Ti seed {int(alti.idxmax())} も他 seed より {alti_spread*100:.1f}% 大きい体積で収束 → 複数の局所安定構造の存在"],
             ["MACE-MP-0 はスピン非分極、占有はランダム（SQS ではない）、Voronoi 体積 ≠ Bader 体積"],
         ],
         Inches(8.7), Inches(1.6), Inches(4.3), Inches(5.2), size=16,
@@ -584,8 +611,8 @@ def build_pptx(res, figs: dict[str, Path]) -> None:
     add_bullets(
         s,
         [
-            [("二元系：", {"bold": True}), f"Al 対は Vegard 収縮側の上位（Ω = {omega['Al-V']*100:.1f}〜{omega['Al-Nb']*100:.1f}%、Al–V が 15 対中最大）。特に Al–V では Al が −1.92 Å", ("3", {"sup": True}), " 縮み V が +0.93 膨らむ"],
-            [("HEA：", {"bold": True}), "HfNbTaTiZr は 5 元素とも f ≈ 0.88–1.12 で完全加法。AlNbTiV では ", ("f", {"bold": True, "color": RED}), ("Al", {"sub": True, "bold": True, "color": RED}), (" = 0.28", {"bold": True, "color": RED}), "、Ti も 0.45 と Al 周辺で加法性が破れる"],
+            [("二元系：", {"bold": True}), f"Al 対は Vegard 収縮側の上位（Ω = {omega['Al-V']*100:.1f}〜{omega['Al-Nb']*100:.1f}%、Al–V が 15 対中最大）。特に Al–V では Al が {bd[('Al', 'V')]:+.2f} Å", ("3", {"sup": True}), f" 縮み V が {bd[('V', 'Al')]:+.2f} 膨らむ"],
+            [("HEA：", {"bold": True}), f"HfNbTaTiZr は 5 元素とも f ≈ {min(hz_f):.2f}–{max(hz_f):.2f} で完全加法。AlNbTiV では ", ("f", {"bold": True, "color": RED}), ("Al", {"sub": True, "bold": True, "color": RED}), (f" = {al_hea['f']:.2f}", {"bold": True, "color": RED}), f"、Ti も {ti_hea['f']:.2f} と Al 周辺で加法性が破れる"],
             [("機構仮説：", {"bold": True}), "Al の収縮は Al–V 電荷移動による近傍依存効果で、4 元系で V 近傍が希釈されると非線形に弱まる"],
             [("含意：", {"bold": True}), "Ω", ("sf", {"sub": True}), " 加法モデル（q = 1）は耐火 BCC HEA では妥当だが、Al 含有 HEA では Al 対の Ω を過大に効かせる → 格子定数を過小予測する方向のバイアス"],
             [("留保：", {"bold": True}), "AlNbTiV は未収束・seed 依存性あり。Bader 解析と延長緩和で定量値を確定する必要がある"],
