@@ -1,5 +1,6 @@
 import inspect
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -91,6 +92,39 @@ def test_shared_trainer_matches_stage2_and_adds_guard_artifact():
     )
     assert "n_pred_clipped" in staged.runs[0].artifacts
     assert "n_pred_clipped" in direct.artifacts
+
+
+def test_train_fold_does_not_mark_serial_process(monkeypatch):
+    from extrapolation_discovery_platform.pipeline import train_fold
+
+    monkeypatch.delenv("_EDP_INSIDE_WORKER", raising=False)
+    rng = np.random.default_rng(17)
+    X = rng.normal(size=(12, 2))
+    y = np.linspace(100.0, 200.0, len(X))
+    result = train_fold(
+        X,
+        ["a", "b"],
+        y,
+        np.arange(8),
+        np.arange(8, 12),
+        wf_name="WF-RF",
+        fs_name="generic",
+        sp_name="RandomCV",
+        seed=42,
+        fold=0,
+        quick=True,
+        dim_reduction=False,
+    )
+    assert result.rmse_test >= 0.0
+    assert "_EDP_INSIDE_WORKER" not in os.environ
+
+
+def test_worker_initializer_marks_process(monkeypatch):
+    from extrapolation_discovery_platform.runner import _worker_init
+
+    monkeypatch.delenv("_EDP_INSIDE_WORKER", raising=False)
+    _worker_init()
+    assert os.environ["_EDP_INSIDE_WORKER"] == "1"
 
 
 def test_ood_constant_range_is_informative():

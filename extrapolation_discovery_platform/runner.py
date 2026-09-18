@@ -72,6 +72,11 @@ logger = logging.getLogger(__name__)
 from extrapolation_discovery_platform._utils import safe_array  # noqa: E402
 
 
+def _worker_init() -> None:
+    """Mark ProcessPool workers so nested estimators stay serial."""
+    os.environ["_EDP_INSIDE_WORKER"] = "1"
+
+
 class RunRegistry:
     """In-memory registry of experiment runs with JSON export."""
 
@@ -830,7 +835,8 @@ class ExperimentRunner:
                         pass
         else:
             with concurrent.futures.ProcessPoolExecutor(
-                max_workers=self._n_workers
+                max_workers=self._n_workers,
+                initializer=_worker_init,
             ) as executor:
                 future_to_job = {
                     executor.submit(

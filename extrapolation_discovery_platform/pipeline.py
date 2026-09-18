@@ -643,9 +643,6 @@ def train_fold(
     mint_configs: Optional[Dict[str, Any]] = None,
 ) -> RunResult:
     """Train one fold through the shared workflow path."""
-    import os as _os
-
-    _os.environ["_EDP_INSIDE_WORKER"] = "1"
     cols = list(feature_cols)
     if fold_cols:
         missing = [c for c in fold_cols if c not in cols]
