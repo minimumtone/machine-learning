@@ -220,10 +220,14 @@ class FeatureValidityEvaluator:
         base_key = FeatureSetName.FS_BASE.value
         base_runs_all = fs_runs.get(base_key, [])
         base_runs_random = [r for r in base_runs_all if r.split_policy == "RandomCV"]
-        base_rmse = self._mean_test_rmse(base_runs_random)
-        if base_rmse <= 0:
+        base_runs_block = [
+            r for r in base_runs_all if r.split_policy == "CompositionBlock"
+        ]
+        base_rmse_random = self._mean_test_rmse(base_runs_random)
+        base_rmse_block = self._mean_test_rmse(base_runs_block)
+        if not math.isfinite(base_rmse_random):
             logger.warning(
-                "Baseline (FS_BASE) RandomCV RMSE is 0 or has no runs; "
+                "Baseline (FS_BASE) RandomCV RMSE is unavailable; "
                 "effect_size/generalisation will be NaN and totals will "
                 "renormalise available axes. "
                 "Check that FS_BASE experiments completed successfully."
@@ -240,21 +244,32 @@ class FeatureValidityEvaluator:
             fs_random_runs = [r for r in fs_run_list if r.split_policy == "RandomCV"]
             fs_rmse_random = self._mean_test_rmse(fs_random_runs)
             fs_rmse = fs_rmse_random
-            if base_rmse > 0 and fs_rmse > 0:
-                vs.effect_size = max(0.0, (base_rmse - fs_rmse) / base_rmse)
+            if (
+                math.isfinite(base_rmse_random)
+                and base_rmse_random > 0
+                and math.isfinite(fs_rmse)
+            ):
+                vs.effect_size = max(
+                    0.0, (base_rmse_random - fs_rmse) / base_rmse_random
+                )
             else:
                 vs.effect_size = float("nan")
 
             # 2. Stability (inverse of coefficient of variation of RMSE across runs)
             rmses = [
                 r.rmse_test for r in fs_run_list
-                if r.rmse_test > 0 and np.isfinite(r.rmse_test)
+                if np.isfinite(r.rmse_test)
             ]
             if len(rmses) > 1:
                 _mean = sum(rmses) / len(rmses)
                 _var = sum((x - _mean) ** 2 for x in rmses) / len(rmses)
                 _std = _var ** 0.5
-                cv = _std / _mean if _mean > 0 else 1.0
+                if _mean > 0:
+                    cv = _std / _mean
+                elif _std == 0:
+                    cv = 0.0
+                else:
+                    cv = 1.0
                 vs.stability = max(0.0, 1.0 - cv)
             else:
                 vs.stability = float("nan")
@@ -264,10 +279,14 @@ class FeatureValidityEvaluator:
             # ElementExclusion or future split policies.
             random_runs = [r for r in fs_run_list if r.split_policy == "RandomCV"]
             block_runs = [r for r in fs_run_list if r.split_policy == "CompositionBlock"]
-            vs.generalisation = self._generalisation_score(random_runs, block_runs, base_rmse)
+            vs.generalisation = self._generalisation_score(
+                random_runs, block_runs, base_rmse_random, base_rmse_block
+            )
 
             # 4. Leak suspicion (combine behavioural + correlation-based)
-            behavioural_penalty = self._leak_penalty(random_runs, block_runs, base_rmse)
+            behavioural_penalty = self._leak_penalty(
+                random_runs, block_runs, base_rmse_random, base_rmse_block
+            )
             corr_penalty = 0.0
             if mc_reports and fs_name in mc_reports and mc_reports[fs_name].leak_suspects:
                 # Scale: 1 suspect at 0.85 → 0.3, 3+ suspects → capped at 1.0
@@ -358,25 +377,21 @@ class FeatureValidityEvaluator:
     @staticmethod
     def _mean_test_rmse(runs: List[RunResult]) -> float:
         if not runs:
-            return 0.0
-        # Bug#1 fix: exclude failed runs (rmse_test == 0 or non-finite).
-        # Previously all runs including crashed ones (rmse_test=0.0) were
-        # averaged, artificially pulling base_rmse toward 0 and making
-        # every FS's effect_size collapse to 0 — causing all algorithms to
-        # appear identical.
+            return float("nan")
         vals = [
             float(r.rmse_test) for r in runs
-            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            if math.isfinite(r.rmse_test)
         ]
         if not vals:
-            return 0.0
+            return float("nan")
         return sum(vals) / len(vals)
 
     @staticmethod
     def _generalisation_score(
         random_runs: List[RunResult],
         block_runs: List[RunResult],
-        base_rmse: float,
+        base_rmse_random: float,
+        base_rmse_block: float,
     ) -> float:
         """Score [0, 1]: both splits improve -> 1, divergent -> 0.
 
@@ -392,22 +407,29 @@ class FeatureValidityEvaluator:
 
         RandomCV と CompositionBlock の両方がない場合は NaN とする。
         """
-        if base_rmse <= 0 or not random_runs or not block_runs:
+        if (
+            not math.isfinite(base_rmse_random)
+            or not math.isfinite(base_rmse_block)
+            or not random_runs
+            or not block_runs
+        ):
             return float("nan")
         _rand_vals = [
             float(r.rmse_test) for r in random_runs
-            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            if math.isfinite(r.rmse_test)
         ]
         _block_vals = [
             float(r.rmse_test) for r in block_runs
-            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            if math.isfinite(r.rmse_test)
         ]
         if not _rand_vals or not _block_vals:
             return float("nan")
         rand_rmse = sum(_rand_vals) / len(_rand_vals)
         block_rmse = sum(_block_vals) / len(_block_vals)
-        rand_improve = (base_rmse - rand_rmse) / base_rmse
-        block_improve = (base_rmse - block_rmse) / base_rmse
+        if base_rmse_random <= 0 or base_rmse_block <= 0:
+            return float("nan")
+        rand_improve = (base_rmse_random - rand_rmse) / base_rmse_random
+        block_improve = (base_rmse_block - block_rmse) / base_rmse_block
         _eps = 1e-9
         if rand_improve > _eps and block_improve > _eps:
             # Bug#4: clamp product to [0, inf) before sqrt to prevent
@@ -429,28 +451,37 @@ class FeatureValidityEvaluator:
     def _leak_penalty(
         random_runs: List[RunResult],
         block_runs: List[RunResult],
-        base_rmse: float,
+        base_rmse_random: float,
+        base_rmse_block: float,
     ) -> float:
         """Detect leak: Random improves a lot but Block degrades.
 
         RandomCV が無効の場合は、Block の train/test 乖離（train は大幅改善
         するが test は悪化）を代替の振る舞いシグナルとして用いる。
         """
-        if base_rmse <= 0:
+        if not math.isfinite(base_rmse_random) and random_runs:
+            return 0.0
+        if not math.isfinite(base_rmse_block) and block_runs:
             return 0.0
         if not random_runs and block_runs:
             _tr_vals = [
                 float(r.rmse_train) for r in block_runs
-                if r.rmse_train > 0 and math.isfinite(r.rmse_train)
+                if math.isfinite(r.rmse_train)
             ]
             _te_vals = [
                 float(r.rmse_test) for r in block_runs
-                if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+                if math.isfinite(r.rmse_test)
             ]
             if not _tr_vals or not _te_vals:
                 return 0.0
-            train_improve = (base_rmse - sum(_tr_vals) / len(_tr_vals)) / base_rmse
-            test_change = (base_rmse - sum(_te_vals) / len(_te_vals)) / base_rmse
+            if base_rmse_block <= 0:
+                return 0.0
+            train_improve = (
+                base_rmse_block - sum(_tr_vals) / len(_tr_vals)
+            ) / base_rmse_block
+            test_change = (
+                base_rmse_block - sum(_te_vals) / len(_te_vals)
+            ) / base_rmse_block
             if train_improve > 0.05 and test_change < -0.02:
                 return min(1.0, train_improve - test_change)
             return 0.0
@@ -459,18 +490,24 @@ class FeatureValidityEvaluator:
         # Bug#1b fix: filter failed runs before averaging
         _rand_vals = [
             float(r.rmse_test) for r in random_runs
-            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            if math.isfinite(r.rmse_test)
         ]
         _block_vals = [
             float(r.rmse_test) for r in block_runs
-            if r.rmse_test > 0 and math.isfinite(r.rmse_test)
+            if math.isfinite(r.rmse_test)
         ]
         if not _rand_vals or not _block_vals:
             return 0.0
         rand_rmse = sum(_rand_vals) / len(_rand_vals)
         block_rmse = sum(_block_vals) / len(_block_vals)
-        rand_improve = (base_rmse - rand_rmse) / base_rmse
-        block_change = (base_rmse - block_rmse) / base_rmse
+        if base_rmse_random <= 0 or base_rmse_block <= 0:
+            return 0.0
+        rand_improve = (
+            base_rmse_random - rand_rmse
+        ) / base_rmse_random
+        block_change = (
+            base_rmse_block - block_rmse
+        ) / base_rmse_block
         if rand_improve > 0.05 and block_change < -0.02:
             return min(1.0, rand_improve - block_change)
         return 0.0
@@ -492,7 +529,7 @@ class FeatureValidityEvaluator:
         id_err = np.abs(errors[~is_ood])
         # Ratio of OOD error to ID error (want < 2x)
         ratio = ood_err.mean() / max(id_err.mean(), 1e-6)
-        err_score = max(0.0, 1.0 - (ratio - 1.0) / 2.0)
+        err_score = min(1.0, max(0.0, 1.0 - (ratio - 1.0) / 2.0))
 
         # Uncertainty should increase for OOD — use gradient score
         # (Review: binary score doesn't reflect magnitude of uncertainty increase)
@@ -501,8 +538,8 @@ class FeatureValidityEvaluator:
             id_unc = float(uncertainties[~is_ood].mean())
             if id_unc > 1e-10:
                 unc_ratio = ood_unc / id_unc
-                # ratio<1 → 0.0, ratio=1 → 0.5, ratio=2 → 1.0
-                unc_score = max(0.0, min(1.0, 0.5 * unc_ratio - 0.5)) if unc_ratio >= 1.0 else 0.0
+                # ratio<1 is below 0.5; ratio=1 → 0.5; ratio=2 → 1.0
+                unc_score = min(1.0, max(0.0, 0.5 * unc_ratio))
             else:
                 unc_score = 1.0 if ood_unc > 1e-10 else 0.5
         else:

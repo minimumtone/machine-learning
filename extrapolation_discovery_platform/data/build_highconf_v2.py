@@ -107,6 +107,12 @@ def main(mpea_path: str) -> None:
     grain = pd.to_numeric(sub[GRAIN_COL], errors="coerce")
     micro = sub["PROPERTY: Microstructure"]
     dens = pd.to_numeric(sub[DENS_COL], errors="coerce")
+    bad = grain.notna() & (grain <= 0)
+    if bad.any():
+        raise SystemExit(
+            f"Non-positive grain sizes at source rows: "
+            f"{list(grain.index[bad])}"
+        )
 
     new = old.copy()
     new["grain_size_um_log10"] = np.log10(grain)

@@ -61,7 +61,7 @@ from extrapolation_discovery_platform.model_selection import (
     run_model_selection,
 )
 from extrapolation_discovery_platform._compat import as_serializable
-from extrapolation_discovery_platform.pipeline import stage1_preprocess
+from extrapolation_discovery_platform.pipeline import stage1_preprocess, train_fold
 
 if TYPE_CHECKING:
     from extrapolation_discovery_platform.ood import OODResult
@@ -70,6 +70,11 @@ logger = logging.getLogger(__name__)
 
 
 from extrapolation_discovery_platform._utils import safe_array  # noqa: E402
+
+
+def _worker_init() -> None:
+    """Mark ProcessPool workers so nested estimators stay serial."""
+    os.environ["_EDP_INSIDE_WORKER"] = "1"
 
 
 class RunRegistry:
@@ -140,6 +145,8 @@ class _Job(NamedTuple):
     dim_reduction: bool = True
     force_pca: bool = False  # moderate VIF: force PCA on for linear models
     split_group: str = ""
+    fold_cols: Optional[Tuple[str, ...]] = None
+    groups: Optional[np.ndarray] = None
 
 
 def _run_job(
@@ -149,57 +156,25 @@ def _run_job(
     y: np.ndarray,
     mint_configs: Optional[Dict[str, "MIntWorkflowConfig"]] = None,
 ) -> RunResult:
-    """Execute one training run (pure, picklable).
-
-    Delegates workflow instantiation to individual_runner._WORKFLOW_FACTORIES
-    so that runner.py and individual_runner.py share a single source of truth
-    for how each workflow is constructed.  Previously both modules duplicated
-    the factory dict, so changes to one (e.g. adding StandardScaler to WF-XGB)
-    were not automatically reflected in the other.
-    """
-    import os as _os
-    import pandas as _pd
-
-    _os.environ["_EDP_INSIDE_WORKER"] = "1"
-
-    X_train = _pd.DataFrame(X_fs[job.train_idx], columns=feature_cols)
-    X_test  = _pd.DataFrame(X_fs[job.test_idx],  columns=feature_cols)
-    y_train = _pd.Series(y[job.train_idx])
-    y_test  = _pd.Series(y[job.test_idx])
-    from extrapolation_discovery_platform.pipeline import impute_by_train_median
-    X_train, X_test = impute_by_train_median(X_train, X_test)
-
-    # --- single source of truth: delegate to individual_runner ---
-    from extrapolation_discovery_platform.individual_runner import (
-        _WORKFLOW_FACTORIES as _IR_FACTORIES,
-    )
-    _dr  = job.dim_reduction
-    _pca = _dr or job.force_pca
-
-    # WF-LIN gets force_pca treatment; all others use the standard _dr flag
-    _dim_r_for_wf = _pca if job.wf_name == "WF-LIN" else _dr
-
-    if job.wf_name in _IR_FACTORIES:
-        wf = _IR_FACTORIES[job.wf_name](job.quick, _dim_r_for_wf)
-    elif mint_configs is not None and job.wf_name in mint_configs:
-        from extrapolation_discovery_platform.integrations.mint_adapter import (
-            MIntWorkflowAdapter,
-        )
-        wf = MIntWorkflowAdapter(config=mint_configs[job.wf_name])
-    else:
-        raise KeyError(
-            f"Unknown workflow '{job.wf_name}'. "
-            f"Built-in: {list(_IR_FACTORIES)}, MInt: {list(mint_configs or {})}"
-        )
-
-    return wf.run(
-        X_train, y_train, X_test, y_test,
+    """Execute one training run through the shared fold trainer."""
+    return train_fold(
+        X_fs,
+        feature_cols,
+        y,
+        job.train_idx,
+        job.test_idx,
+        wf_name=job.wf_name,
+        fs_name=job.fs_name,
+        sp_name=job.sp_name,
         seed=job.seed,
-        feature_set=job.fs_name,
-        split_policy=job.sp_name,
         fold=job.fold,
+        quick=job.quick,
+        dim_reduction=job.dim_reduction,
+        force_pca=job.force_pca,
         split_group=job.split_group,
-        test_indices=job.test_idx,
+        fold_cols=list(job.fold_cols) if job.fold_cols else None,
+        groups=job.groups,
+        mint_configs=mint_configs,
     )
 
 
@@ -505,6 +480,8 @@ class ExperimentRunner:
                 fold_labels=prep.fold_labels,
                 selected_policies=active_policies,
                 mc_reports=mc_reports,
+                fold_selected_cols=prep.fold_selected_cols,
+                row_groups=prep.row_groups,
             )
             logger.info(
                 "Starting experiment: %d jobs, %d workers",
@@ -580,6 +557,7 @@ class ExperimentRunner:
                     features_df=features_all,
                     effective_columns=_ood_cols,
                     fold_plan=fold_plan,
+                    fold_leak_suspects=prep.fold_leak_suspects.get(_fs_key),
                 )
                 if ood_stage.success and ood_stage.ood_result is not None:
                     ood_results[_fs_key] = ood_stage.ood_result
@@ -639,7 +617,7 @@ class ExperimentRunner:
             rmse_sums: dict = defaultdict(float)
             rmse_counts: dict = defaultdict(int)
             for r in self._registry.runs:
-                if np.isfinite(r.rmse_test) and r.rmse_test > 0:
+                if np.isfinite(r.rmse_test):
                     rmse_sums[r.feature_set] += r.rmse_test
                     rmse_counts[r.feature_set] += 1
             if rmse_sums:
@@ -697,6 +675,10 @@ class ExperimentRunner:
         fold_labels: Optional[Dict[str, List[str]]] = None,
         selected_policies: Optional[List[str]] = None,
         mc_reports: Optional[Dict[str, MulticollinearityReport]] = None,
+        fold_selected_cols: Optional[
+            Dict[str, Dict[str, List[List[str]]]]
+        ] = None,
+        row_groups: Optional[np.ndarray] = None,
     ) -> List[_Job]:
         jobs: List[_Job] = []
         blocked_count = 0
@@ -735,6 +717,9 @@ class ExperimentRunner:
                 for sp_name, folds in splitter_folds.items():
                     _label_key = rc_key if sp_name == "RandomCV" else sp_name
                     sp_labels = (fold_labels or {}).get(_label_key, [])
+                    selected = (fold_selected_cols or {}).get(fs_key, {}).get(
+                        _label_key, []
+                    )
                     for fold_idx, (train_idx, test_idx) in enumerate(folds):
                         for wf_name in wf_names:
                             if wf_name not in allowed_wf:
@@ -754,6 +739,15 @@ class ExperimentRunner:
                                 split_group=(
                                     sp_labels[fold_idx]
                                     if fold_idx < len(sp_labels) else ""
+                                ),
+                                fold_cols=(
+                                    tuple(selected[fold_idx])
+                                    if fold_idx < len(selected) else None
+                                ),
+                                groups=(
+                                    None if sp_name == "RandomCV"
+                                    or row_groups is None
+                                    else row_groups[train_idx]
                                 ),
                             ))
         if blocked_count > 0:
@@ -841,7 +835,8 @@ class ExperimentRunner:
                         pass
         else:
             with concurrent.futures.ProcessPoolExecutor(
-                max_workers=self._n_workers
+                max_workers=self._n_workers,
+                initializer=_worker_init,
             ) as executor:
                 future_to_job = {
                     executor.submit(

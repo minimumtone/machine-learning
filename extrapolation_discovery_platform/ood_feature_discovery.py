@@ -168,12 +168,29 @@ def compute_neighborhood_plan(
     is_eval = np.zeros(n_orig, dtype=bool)
     is_eval[ood_eval_idx] = True
 
-    # 標準化 Euclid 距離（分散ゼロ列は除外、NaN は列中央値）
+    # 標準化 Euclid 距離（非評価行の統計、分散ゼロ列は除外）
     num = features_df.select_dtypes(include=[np.number]).astype("float64")
-    num = num.fillna(num.median())
-    std = num.std(ddof=0)
-    num = num.loc[:, std > 0]
-    Z = ((num - num.mean()) / num.std(ddof=0)).to_numpy()
+    train_mask = ~is_eval
+    if int(train_mask.sum()) < 2:
+        logger.warning(
+            "train_scope=%s: fewer than two non-evaluation rows; "
+            "using all-row standardization",
+            scope,
+        )
+        med = num.median()
+        num = num.fillna(med)
+        mean = num.mean()
+        std = num.std(ddof=0)
+    else:
+        train_num = num.loc[train_mask]
+        med = train_num.median()
+        num = num.fillna(med)
+        train_num = num.loc[train_mask]
+        mean = train_num.mean()
+        std = train_num.std(ddof=0)
+    usable = std > 0
+    num = num.loc[:, usable]
+    Z = ((num - mean[usable]) / std[usable]).to_numpy()
 
     if len(ood_eval_idx) == 0 or Z.shape[1] == 0:
         logger.warning(

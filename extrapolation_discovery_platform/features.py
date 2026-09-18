@@ -751,7 +751,8 @@ def compute_magpie_features(
 
     for prop_name, data_key in _MAGPIE_PROP_KEYS:
         values = _get_magpie_property_values(props, data_key)
-        stats = _compute_magpie_stats(values, fracs)
+        mask = fracs > 0
+        stats = _compute_magpie_stats(values[mask], fracs[mask] / fracs[mask].sum())
         for stat_name, stat_val in stats.items():
             col = f"MagpieData {stat_name} {prop_name}"
             result[col] = stat_val
@@ -778,10 +779,14 @@ def compute_features_single(
 
     elems = list(composition.keys())
     fracs_raw = np.array([composition[e] for e in elems], dtype=np.float64)
+    if np.any(~np.isfinite(fracs_raw)) or np.any(fracs_raw < 0):
+        raise ValueError("Composition fractions must be finite and non-negative")
     total = fracs_raw.sum()
-    if total <= 0:
-        raise ValueError("Composition fractions must be positive and sum > 0")
-    fracs = fracs_raw / total  # normalise
+    if not np.isfinite(total) or total <= 0:
+        raise ValueError("Composition fractions must sum to a finite value > 0")
+    mask = fracs_raw > 0
+    elems = [e for e, keep in zip(elems, mask) if keep]
+    fracs = fracs_raw[mask] / total
 
     # Gather per-element properties
     props = [_ElementDB.get(e) for e in elems]

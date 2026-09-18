@@ -108,6 +108,7 @@ class CandidateResult:
     models: List[Any] = field(default_factory=list)
     mean_rmse: float = 0.0
     std_rmse: float = 0.0
+    n_failed_folds: int = 0
     median_n_features: Optional[int] = None
 
 
@@ -139,6 +140,7 @@ class ModelSelectionResult:
                     "name": c.name,
                     "mean_rmse": round(c.mean_rmse, 6),
                     "std_rmse": round(c.std_rmse, 6),
+                    "n_failed_folds": c.n_failed_folds,
                     "median_n_features": c.median_n_features,
                 }
                 for c in self.all_candidates
@@ -494,13 +496,7 @@ def nested_cv_evaluate(
 
     # Compute summary statistics
     for name, cr in results.items():
-        scores = [s for s in cr.outer_scores if np.isfinite(s)]
-        if scores:
-            cr.mean_rmse = float(np.mean(scores))
-            cr.std_rmse = float(np.std(scores))
-        else:
-            cr.mean_rmse = float("inf")
-            cr.std_rmse = float("inf")
+        _summarize_candidate(cr)
 
         # Compute median selected features across outer folds
         n_features_list: List[int] = []
@@ -539,6 +535,28 @@ def _count_param_combinations(param_dist: Dict[str, Any]) -> int:
         else:
             total *= 10  # scipy.stats distributions: assume ~10 samples
     return total
+
+
+def _summarize_candidate(cr: CandidateResult) -> CandidateResult:
+    """Summarize outer-fold scores and mark incomplete candidates."""
+    cr.n_failed_folds = sum(
+        1 for score in cr.outer_scores if not np.isfinite(score)
+    )
+    scores = [score for score in cr.outer_scores if np.isfinite(score)]
+    if cr.n_failed_folds:
+        cr.mean_rmse = float("inf")
+        cr.std_rmse = float("inf")
+        logger.warning(
+            "Excluding %s from ranking: %d/%d outer folds failed",
+            cr.name, cr.n_failed_folds, len(cr.outer_scores),
+        )
+    elif scores:
+        cr.mean_rmse = float(np.mean(scores))
+        cr.std_rmse = float(np.std(scores))
+    else:
+        cr.mean_rmse = float("inf")
+        cr.std_rmse = float("inf")
+    return cr
 
 
 # ---------------------------------------------------------------------------
@@ -622,6 +640,8 @@ def refit_and_save(
     y: pd.Series,
     out_dir: Path,
     random_state: int = 42,
+    n_inner: int = 3,
+    n_iter: int = 20,
 ) -> Tuple[Optional[Path], Optional[Path], Optional[List[str]]]:
     """Refit best pipeline on full data and save model + metadata.
 
@@ -651,45 +671,32 @@ def refit_and_save(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Use the best params from the most successful outer fold
-    best_params = None
-    best_model_from_folds = None
-    best_fold_rmse = float("inf")
-    for i, (score, params, model) in enumerate(zip(
-        best_candidate.outer_scores,
-        best_candidate.best_params_per_fold,
-        best_candidate.models,
-    )):
-        if np.isfinite(score) and score < best_fold_rmse and model is not None:
-            best_fold_rmse = score
-            best_params = params
-            best_model_from_folds = model
-
-    # Clone and refit on full data
-    pipe = clone(pipeline_template)
-
-    if best_params:
-        try:
-            pipe.set_params(**best_params)
-        except Exception:
-            logger.warning(
-                "Failed to set best_params for %s — using defaults",
-                best_candidate.name,
-            )
-    elif best_params is None:
-        # best_params is None (e.g. LassoCV selects alpha internally).
-        # This is expected for CV-based estimators.  For HPO-based
-        # candidates (XGB, RF) it means all folds failed — log a warning.
-        if param_dist is not None:
-            logger.warning(
-                "No best_params found for %s (all folds may have failed) "
-                "— refitting with default hyperparameters",
-                best_candidate.name,
-            )
-
     X_arr = safe_array(X)
     y_arr = safe_array(y).ravel()
-    pipe.fit(X_arr, y_arr)
+    best_params = None
+    if param_dist:
+        labels = make_stratify_labels(y_arr, n_bins=min(5, n_inner))
+        inner_cv = list(
+            StratifiedKFold(
+                n_splits=n_inner, shuffle=True, random_state=random_state,
+            ).split(X_arr, labels)
+        )
+        search = RandomizedSearchCV(
+            clone(pipeline_template),
+            param_distributions=param_dist,
+            n_iter=min(n_iter, _count_param_combinations(param_dist)),
+            cv=inner_cv,
+            scoring="neg_root_mean_squared_error",
+            random_state=random_state,
+            n_jobs=get_safe_n_jobs(),
+            error_score=np.nan,
+        )
+        search.fit(X_arr, y_arr)
+        pipe = search.best_estimator_
+        best_params = search.best_params_
+    else:
+        pipe = clone(pipeline_template)
+        pipe.fit(X_arr, y_arr)
 
     # Extract selected features
     selected_features: Optional[List[str]] = None
@@ -876,6 +883,7 @@ def run_model_selection(
         model_path, meta_path, sel_features = refit_and_save(
             best, best_pipeline, best_param_dist,
             X, y, out_dir, random_state=random_state,
+            n_inner=n_inner, n_iter=n_iter,
         )
         result.model_path = str(model_path) if model_path else None
         result.meta_path = str(meta_path) if meta_path else None
