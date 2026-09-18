@@ -74,3 +74,16 @@ count, not a charge difference.
   Henkelman code.
 * The per-element survival ratio is flagged as unreliable when the predicted
   excess-volume magnitude is below 0.05 A^3.
+
+## Slides on the Al effect
+
+```bash
+pip install python-pptx
+python mlip_bader/make_al_slides.py
+```
+
+`make_al_slides.py` recomputes the Al-related numbers from
+`voronoi_per_atom.csv` and `relax_results.csv` (no MACE run needed) and writes
+`slides/al_effect_bcc_hea.pptx` plus its figures (`slides/fig_*.png`). The deck
+covers the Al-Nb/Al-Ti/Al-V binary excess volumes, the AlNbTiV survival ratio
+`f_Al = 0.28` versus HfNbTaTiZr, and the convergence caveats.
