@@ -87,7 +87,7 @@ def build_pool() -> list[dict]:
     for i, h in enumerate(ALONSO_TABLE2):
         pool.append({
             "comp": h["comp"], "struct": h["struct"], "a_exp": h["a_exp"],
-            "ref": "Alonso2005_Table2", "origin": "calibration",
+            "ref": "CorenoAlonso2021_Table2", "origin": "calibration",
             "idx": i, "eset": major_elements(h["comp"]),
         })
     for i, h in enumerate(INDEPENDENT_TEST):
@@ -424,7 +424,7 @@ def main() -> None:
     for h in pool:
         ref_counts[h["ref"]] += 1
     for ref, cnt in sorted(ref_counts.items(), key=lambda kv: -kv[1]):
-        if ref == "Alonso2005_Table2" or cnt < 2:
+        if ref == "CorenoAlonso2021_Table2" or cnt < 2:
             continue
         tr = [h for h in pool if h["ref"] != ref]
         te = [h for h in pool if h["ref"] == ref]
