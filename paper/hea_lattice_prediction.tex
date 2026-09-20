@@ -78,8 +78,8 @@ King~\cite{King1966}は体積サイズファクター$\Omega_\text{sf}$を導入
 \end{equation}
 $\Omega_\text{sf} > 0$はVegard則からの膨張、$\Omega_\text{sf} < 0$は収縮を意味し、電荷移動や$d$--$d$軌道混成など原子サイズ差だけでは説明できない化学結合効果を反映する。Kingの$\Omega_\text{sf}$は\textbf{実験値}に基づき、対象は希薄固溶体に限られていた。
 
-\paragraph{Coreño-Alonso (2004): 化合物での検証}
-Coreño-Alonso \& Coreño-Alonso~\cite{CorenoAlonso2004}はKingの$\Omega_\text{sf}$を二元系金属間化合物（B2およびL1$_2$構造）に拡張した。しかし化合物の体積も\textbf{実験値}に依拠しており、Miedemaモデル~\cite{deBoer1988}による半経験的推算との相関は$r = 0.71$にとどまった。BCC型（B2）とFCC型（L1$_2$）で異なる$\Omega_\text{sf}$が得られることは示されたが、多成分合金への体系的な適用には至らなかった。
+\paragraph{Coreño-Alonso (2004, 2006): 化合物での検証}
+Coreño-Alonso~\cite{CorenoAlonso2004,CorenoAlonso2006}はKingの$\Omega_\text{sf}$を二元系金属間化合物（B2およびL1$_2$構造）に拡張した。しかし化合物の体積も\textbf{実験値}に依拠しており、Miedemaモデル~\cite{deBoer1988}による半経験的推算との相関は$r = 0.71$にとどまった。BCC型（B2）とFCC型（L1$_2$）で異なる$\Omega_\text{sf}$が得られることは示されたが、多成分合金への体系的な適用には至らなかった。
 
 \paragraph{Alonso (2022): 多成分HEAへの拡張}
 Alonsoら~\cite{Alonso2021}はKingの$\Omega_\text{sf}$を多成分HEAに拡張する予測式を提案した：
@@ -211,7 +211,8 @@ VASP（本研究） & 1,483 & 2,808 & 4,291 \\
 収束判定と物理的格子定数範囲（2.0--8.0~\AA）でのフィルタリング後、B2で465・L1$_2$で441のユニーク元素ペアを得た。同一ペアに複数データソースがある場合は中央値を採用し外れ値の影響を緩和した。3ソース間の$\Omega_\text{sf}$は高い整合性を示し（B2 $r = 0.990$、L1$_2$ $r = 0.990$）、統合前後の平均変化量は$|\Delta\Omega| < 0.006$であった。
 
 \subsubsection{HEA検証データ}
-主検証セットはAlonso~\cite{Alonso2021} Table~2の64個の立方晶HEA（BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素）である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を14文献~\cite{Senkov2012,Senkov2013_ActaMat,Otto2013,Niu2017,Stepanov2015,Dirras2016,Yao2016,Freudenberger2017,Wang2019,Tseng2019,Reget2020,Chen2022,Kantelis2025,Chen2023}から収集した。19元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
+実測格子定数95件：Coreño Alonsoら（2021）\cite{Alonso2021}のTable~2から64件を採用し、別途31件を追加した。BCC 29、FCC 35、$a = 2.883$--$3.856$~\AA、22元素である。独立テストセットとしてAlonsoデータ外の31 HEA（BCC 17、FCC 14）を14文献~\cite{Senkov2012,Senkov2013_ActaMat,Otto2013,Niu2017,Stepanov2015,Dirras2016,Yao2016,Freudenberger2017,Wang2019,Tseng2019,Reget2020,Chen2022,Kantelis2025,Chen2023}から収集した。19元素をカバーし、耐火金属系BCC（Tseng 2019、Reget 2020）、貴金属系FCC（Freudenberger 2017）、三元系BCC（Chen 2022: HfNbZr）、CALPHAD予測＋合成検証（Chen 2023: AlCoMnNiV, CoFeMnNiZn）を含む。ただしBCC 17合金はHf-Mo-Nb-Ta-Ti-Zrの系統的サブセットが主体であり、FCC 14合金もAu-Cu-Ni-Pd-Pt系とCoCrFeMnNi派生に偏る。実効的な化学多様性は合金数より限定的である点に留意が必要である。
+\textbf{備考}: 原著Table~2にはデータ行が67行あり、うち2行はV/Z（原子あたり単位胞体積）で格子定数が報告されておらず、1行は実測格子定数が空欄のため、64件を採用した。原著本文の「68件」との不一致は原著側の記載である。原著のVegard予測値と、本研究でKingの純元素体積から再計算した値に差がある。転記の一致は確認済みだが、差の原因は未確定である。
 
 \begin{table}[H]
 \centering
@@ -695,13 +696,13 @@ DFT-$\Omega_\text{sf}$モデルが全カテゴリで最良である。全体RMSE
 \toprule
 family & $n$ & 構造 & 参照文献 \\
 \midrule
-Al--Co--Cr--Fe--Mn--Mo--Ni--Pd--V--Zn & 41 & FCC & \texttt{Alonso2005\_Table2, Chen2023\_NatCommun, Niu2017\_SciRep, Otto2013\_ActaMat, Wang2019\_ScriptaMat} \\
-Al--Cr--Hf--Mo--Nb--Ta--Ti--V--W--Zr & 40 & BCC & \texttt{Alonso2005\_Table2, Chen2022\_ActaMat, Dirras2016\_MaterCharact, Kantelis2025\_AIPAdv, Reget2020\_Metals, Senkov2012\_Intermet, Senkov2013\_ActaMat, Stepanov2015\_JAlloyCompd, Tseng2019\_Entropy, Yao2016\_Entropy} \\
+Al--Co--Cr--Fe--Mn--Mo--Ni--Pd--V--Zn & 41 & FCC & \texttt{CorenoAlonso2021\_Table2, Chen2023\_NatCommun, Niu2017\_SciRep, Otto2013\_ActaMat, Wang2019\_ScriptaMat} \\
+Al--Cr--Hf--Mo--Nb--Ta--Ti--V--W--Zr & 40 & BCC & \texttt{CorenoAlonso2021\_Table2, Chen2022\_ActaMat, Dirras2016\_MaterCharact, Kantelis2025\_AIPAdv, Reget2020\_Metals, Senkov2012\_Intermet, Senkov2013\_ActaMat, Stepanov2015\_JAlloyCompd, Tseng2019\_Entropy, Yao2016\_Entropy} \\
 Au--Cu--Ni--Pd--Pt & 6 & FCC & \texttt{Freudenberger2017\_Metals} \\
-Al--Cr--Cu--Fe--Mo--Ni--V & 3 & BCC & \texttt{Alonso2005\_Table2} \\
-Ir--Os--Pd--Pt--Rh--Ru & 2 & FCC & \texttt{Alonso2005\_Table2} \\
-Cr--Fe--Ta--V--W & 1 & BCC & \texttt{Alonso2005\_Table2} \\
-Co--Cr--Cu--Ni--Zn & 1 & BCC & \texttt{Alonso2005\_Table2} \\
+Al--Cr--Cu--Fe--Mo--Ni--V & 3 & BCC & \texttt{CorenoAlonso2021\_Table2} \\
+Ir--Os--Pd--Pt--Rh--Ru & 2 & FCC & \texttt{CorenoAlonso2021\_Table2} \\
+Cr--Fe--Ta--V--W & 1 & BCC & \texttt{CorenoAlonso2021\_Table2} \\
+Co--Cr--Cu--Ni--Zn & 1 & BCC & \texttt{CorenoAlonso2021\_Table2} \\
 Al--Co--Mn--Ni--V & 1 & BCC & \texttt{Chen2023\_NatCommun} \\
 \bottomrule
 \end{tabular}
