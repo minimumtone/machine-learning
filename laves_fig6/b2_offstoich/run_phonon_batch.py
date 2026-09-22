@@ -14,6 +14,10 @@ RELAX = os.path.join(BASE, 'relax')
 AN = os.path.join(BASE, 'analysis')
 KB = 8.617333262e-5
 T_LIST = [1273.0, 1473.0]
+DISPLACEMENT = 0.01
+MESH = (4, 4, 4)
+MACE_MODEL = 'medium'
+CACHE_VERSION = '1'
 
 
 def load_atoms(path):
@@ -45,8 +49,8 @@ def run_phonon(path):
     at = load_atoms(path)
     ph_atoms, sc = phonopy_from_ase(at)
     ph = Phonopy(ph_atoms, supercell_matrix=sc, primitive_matrix='P')
-    calc = mace_mp(model='medium', default_dtype='float64', device='cpu')
-    ph.generate_displacements(distance=0.01, is_plusminus=False, is_diagonal=True)
+    calc = mace_mp(model=MACE_MODEL, default_dtype='float64', device='cpu')
+    ph.generate_displacements(distance=DISPLACEMENT, is_plusminus=False, is_diagonal=True)
     supercells = ph.supercells_with_displacements
     n_disp = len(supercells)
     n_atom = len(ph.supercell)
@@ -62,21 +66,70 @@ def run_phonon(path):
         forces[i] = a.get_forces()
     ph.forces = forces
     ph.produce_force_constants(fc_calculator='traditional')
-    ph.run_mesh([4, 4, 4])
+    ph.run_mesh(list(MESH))
     ph.run_thermal_properties(t_min=0, t_max=max(T_LIST) + 100, t_step=10)
     tp = ph.thermal_properties
     temps = tp.temperatures
     free = tp.free_energy
     natom = len(ph.primitive if ph.primitive is not None else ph.supercell)
     f_per_atom = np.array([float(f) * 0.010364272 / natom for f in free])
-    return {T: float(np.interp(T, temps, f_per_atom)) for T in T_LIST}
+    fvib = {T: float(np.interp(T, temps, f_per_atom)) for T in T_LIST}
+
+    # Cache with source-file metadata so a re-relaxed structure invalidates old results.
+    src_stat = os.stat(path)
+    row = {
+        'structure': path,
+        'n_atoms': natom,
+        'source_mtime': str(src_stat.st_mtime),
+        'source_size': str(src_stat.st_size),
+        'distance': str(DISPLACEMENT),
+        'mesh': 'x'.join(str(m) for m in MESH),
+        'model': MACE_MODEL,
+        'cache_version': CACHE_VERSION,
+    }
+    for T in T_LIST:
+        row[f'F_vib_{T:.0f}K'] = fvib[T]
+    out_path = path.replace('.extxyz', '_fvib.csv')
+    with open(out_path, 'w', newline='') as fp:
+        writer = csv.DictWriter(fp, fieldnames=list(row.keys()))
+        writer.writeheader()
+        writer.writerow(row)
+    return fvib
 
 
-def load_existing(fvib_path):
+def _fvib_key(row, T):
+    """Return a value from a cache row, accepting both old and new key names."""
+    for suffix in (f'{T:.0f}K', f'{T:.0f}'):
+        key = f'F_vib_{suffix}'
+        if key in row:
+            return row[key]
+    raise KeyError(f'No F_vib column for T={T} in cache row')
+
+
+def load_existing(fvib_path, src_path):
+    """Return cached F_vib if the source file has not changed.
+
+    Recompute when the source extxyz is newer than the cache (mtime).  If the
+    cache carries metadata (source_size, distance, mesh, model), also validate
+    those; legacy caches without metadata are accepted as-is when the source is
+    not newer.
+    """
+    if not os.path.exists(fvib_path):
+        return None
+    src_stat = os.stat(src_path)
+    cache_stat = os.stat(fvib_path)
+    if src_stat.st_mtime > cache_stat.st_mtime:
+        return None
     with open(fvib_path) as fp:
         reader = csv.DictReader(fp)
         row = next(reader)
-    return {T: float(row[f'F_vib_{T:.0f}K']) for T in T_LIST}
+    if 'source_size' in row and str(src_stat.st_size) != row['source_size']:
+        return None
+    if (row.get('distance', str(DISPLACEMENT)) != str(DISPLACEMENT) or
+            row.get('mesh', 'x'.join(str(m) for m in MESH)) != 'x'.join(str(m) for m in MESH) or
+            row.get('model', MACE_MODEL) != MACE_MODEL):
+        return None
+    return {T: float(_fvib_key(row, T)) for T in T_LIST}
 
 
 if __name__ == '__main__':
@@ -101,11 +154,12 @@ if __name__ == '__main__':
             print('missing', path)
             continue
         fvib_path = path.replace('.extxyz', '_fvib.csv')
-        if os.path.exists(fvib_path):
-            fvib = load_existing(fvib_path)
-            print('reusing', fvib_path, fvib)
-        else:
+        fvib = load_existing(fvib_path, path)
+        if fvib is None:
             fvib = run_phonon(path)
+            print('computed', fvib_path, fvib)
+        else:
+            print('reusing', fvib_path, fvib)
         rows.append({
             'file': f,
             'x_target': x_target_from_name(f),
