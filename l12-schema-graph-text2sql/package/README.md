@@ -141,6 +141,10 @@ Windows（PowerShell）での同等手順は `FINAL_CHECKLIST.md` にある。
 
 ## 4. 版履歴（v24）
 
+- v24b: 著者レビューによる原稿2箇所の修正（数値・SSOT・図・保存済み出力・ページ割りは v24 と同一）。
+  (1) Abstract に「86.1\% は期待される行の回収率であり、SQLの完全一致率ではない」の注記を戻し、一般化試験（スキーマの異なる3種のRDB）と独立設計クエリ（実装に関与しない共同著者による100問）を数値なしで具体化。
+  (2) $E_\text{hull}$ の平易な説明を「その組成における最安定状態（他の相への分解を含む）のエネルギーからの差」に修正（凸包の定義に合わせた）。
+  `ja-final` を再移動し `SHA256SUMS_ja.txt` / `ja_numbers.tsv` を更新（詳細は `verification_logs/v24_three_part_package_ja_revision.log` §10）。
 - v24: 日本語原稿の改稿（Abstract 短縮、DFT計算由来データであることの早期明示、平易化）。数値・SSOT・図・保存済み出力は v23e と同一。
   PDF 30→29ページ。関連研究として LLM4Mat-Bench（Rubungo et al., MLST 2025）を序論と LLM-only ベースライン節に各1文で追加（`references.bib` +1）。
   `ja-final` を `119230bb` へ移動し `SHA256SUMS_ja.txt` / `ja_numbers.tsv` を更新。

@@ -103,3 +103,20 @@ Probe results (working tree at the package commit): untracked evaluation/__zz_di
 `--output paper/cover_letter_ja.md` -> refused, file untouched; `touch paper/references.bib` -> refused
 ("older than .../references.bib"). The final v24 ZIP was rebuilt from the clean commit, so it contains no
 WORKTREE_DIRTY.txt; the file set equals the previous build except GIT_COMMIT, README.md, this log and SHA256SUMS.txt.
+
+## 10. v24b: two manuscript corrections from the author review of v24 (commit f8ab7fbc, ja-final moved)
+
+1. Abstract: the v24 shortening had dropped the qualifier that execution recall is not exact-match. Restored as
+   one clause after 86.1%: "この値は期待される行の回収率であり、SQLの完全一致率ではない" (strict result-set
+   match is 10.6% in the body). In the same sentence the secondary results are now named without numbers:
+   "実装に関与していない共同著者が設計した100問、スキーマの異なる3種のRDBへの一般化試験" (B/C/D of the four
+   generalization variants; A shares the main schema and is therefore not counted).
+2. Section 2 (evaluation set): the plain-language gloss of E_hull said "同じ組成で到達可能な最安定状態", which
+   restricts the reference to a single phase of the same composition. Replaced with "その組成における最安定状態の
+   エネルギーからの差。最安定状態には他の相への分解を含む", matching the convex-hull definition.
+
+No number, figure, table, SSOT value or saved output changed. LuaLaTeX: 29 pages, undefined references 0,
+multiply-defined 0, overfull 8 (TikZ ER diagrams, unchanged); page split main p.1-15 / supplement p.16-29 unchanged.
+verify_paper_numbers.py: exit 0, TeX files audited: 1 (stam-m_ja.tex); ja_numbers.tsv diff = the two edited
+sentences only (new in-JSON tokens 100 and 3 from the Abstract). verify_ssot.py 5/5. SHA256SUMS_ja.txt regenerated
+(stam-m_ja.tex and ja_numbers.tsv rows changed, 11 rows identical), 13/13 OK. ja-final re-tagged to f8ab7fbc.
