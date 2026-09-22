@@ -59,6 +59,33 @@ class ApprovalRequestBody(BaseModel):
     by: str = "human"
 
 
+class PlanCalculationRequest(BaseModel):
+    session_id: str
+    hypothesis_id: str | None = None
+    hypothesis_text: str | None = None
+
+
+class CalculationJobRequest(BaseModel):
+    session_id: str
+    code: str
+    elements: list[str]
+    params: dict[str, Any] = Field(default_factory=dict)
+    description: str = ""
+    estimated_node_hours: float = 1.0
+
+
+class AnalysisProposalRequest(BaseModel):
+    session_id: str
+    purpose: str
+    script: str | None = None
+    job_id: str | None = None
+
+
+class AnalysisRunRequest(BaseModel):
+    session_id: str
+    max_fix_attempts: int = 2
+
+
 class HypothesisPatch(BaseModel):
     session_id: str
     status: str | None = None
@@ -223,6 +250,58 @@ def complete(session_id: str) -> dict[str, Any]:
     state = _load(session_id)
     m.complete(state)
     return {"agent_state": state.agent_state.value}
+
+
+# 計算コード選択（仮説 → コード推薦）
+@app.post("/api/agent/calculations/plan")
+def plan_calculation(req: PlanCalculationRequest) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        return m.plan_calculation(state, hypothesis_id=req.hypothesis_id,
+                                  hypothesis_text=req.hypothesis_text)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+# 計算ジョブ提案（入力生成 → 承認付き提案）
+@app.post("/api/agent/calculations/jobs")
+def propose_calculation_job(req: CalculationJobRequest) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        job = m.propose_calculation_job(
+            state, req.code, req.elements, params=req.params,
+            description=req.description,
+            estimated_node_hours=req.estimated_node_hours)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return job.model_dump()
+
+
+# 解析提案（スクリプト生成 → 承認要求）
+@app.post("/api/agent/analyses")
+def propose_analysis(req: AnalysisProposalRequest) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        approval = m.propose_analysis(state, req.purpose, script=req.script,
+                                      job_id=req.job_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return approval.model_dump()
+
+
+# 承認済み解析の実行（エラー時は自動修正して再試行、結果を返却）
+@app.post("/api/agent/analyses/{approval_id}/run")
+def run_analysis(approval_id: str, req: AnalysisRunRequest) -> dict[str, Any]:
+    m = get_manager()
+    state = _load(req.session_id)
+    try:
+        return m.run_approved_analysis(state, approval_id,
+                                       max_fix_attempts=req.max_fix_attempts)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 # 承認解決（Human-in-the-loop §10）

@@ -63,7 +63,7 @@ PYTHONPATH=src python -m pytest tests/ -q                        # 受入試験
 ```
 
 - セッション状態は `$MI_HUB_DATA/agent_sessions/*.json` に永続化され、再開可能。
-- `OPENAI_API_KEY` 設定時は目標構造化・仮説候補生成に LLM を使用(未設定時は決定論的フォールバック)。
+- LLM は複数プロバイダを OpenAI 互換 API 経由で切替可能: OpenAI (`OPENAI_API_KEY`) / Claude (`ANTHROPIC_API_KEY`) / Gemini (`GEMINI_API_KEY`) / ローカルLLM (Ollama 等、`MI_HUB_LLM_BASE_URL`)。`MI_HUB_LLM_PROVIDER` で選択、`MI_HUB_LLM_MODEL` でモデル上書き。UI サイドバーからも切替可能(キー未設定時は決定論的フォールバック)。
 - 高コスト操作(モデル一括実行・DFT 提案等)は承認されるまで実行されない(§11)。
 - 反証条件の変更・仮説の正式採用/反証は人間のみが行える(§5.8, §10)。
 - MVP 制限: 自動反復 5 回・モデル実行 30 件・DFT/実験は提案のみ(§18)。
