@@ -8,8 +8,10 @@ and antisite branches using the per-atom Helmholtz free energy G_i:
     c_vac^hybrid = sum_i p_i (1 - n_atoms_i / n_sites_i)
 
 G_i is re-computed at the requested temperatures from the 0 K formation
-energy Ef and the configurational degeneracy g_i = C(n_sub, n_defect) of the
-point-defect sublattice, where n_sub = n_sites / 2.
+energy Ef, the per-atom vibrational free energy F_vib(T) (computed with
+phonopy + MACE-MP-0 if available), and the configurational degeneracy
+g_i = C(n_sub, n_defect) of the point-defect sublattice, where
+n_sub = n_sites / 2.
 
 Outputs:
   analysis/b2_offstoich_hybrid_c_vac.csv : hybrid c_vac and Al-antisite
@@ -103,9 +105,46 @@ def perfect_G_eV():
     )
 
 
+def build_fvib_interpolators(fvib, T_list):
+    """Return {branch: {T: callable(x)}} for per-atom vibrational free energy.
+
+    Falls back to 0.0 when no data are available; extrapolates flat outside the
+    sampled x range.
+    """
+    interps = {br: {T: (lambda x: 0.0) for T in T_list} for br in ('vacancy', 'antisite', 'perfect')}
+    if fvib is None:
+        return interps
+    for br in interps:
+        sub = fvib[fvib['branch'] == br].sort_values('x_target')
+        if sub.empty:
+            continue
+        xs = sub['x_target'].values
+        for T in T_list:
+            ys = sub[f'F_vib_{T:.0f}'].values
+            interps[br][T] = lambda x, xs=xs, ys=ys: float(np.interp(x, xs, ys))
+    return interps
+
+
+def fvib_for_row(row, interps, T):
+    """Per-atom vibrational free energy for a branch-means or synthetic row."""
+    if abs(row.x_Al_target - 0.5) < 1e-9:
+        # Both branches collapse to the perfect B2 state at x=0.5.
+        return interps['perfect'][T](0.5)
+    if row.branch in interps:
+        return interps[row.branch][T](row.x_Al_target)
+    return 0.0
+
+
 def main():
     bm = pd.read_csv(os.path.join(AN, 'b2_offstoich_branch_means.csv'))
     perfect_Ef = perfect_G_eV()
+
+    # Load per-atom vibrational free energy if available.
+    fvib_path = os.path.join(AN, 'phonon_fvib.csv')
+    if os.path.exists(fvib_path):
+        fvib = pd.read_csv(fvib_path)
+    else:
+        fvib = None
 
     # Build the working branch table (no perfect row) and add per-row quantities.
     br = bm[bm.branch != 'perfect'].copy()
@@ -126,11 +165,16 @@ def main():
     ])
     br = pd.concat([br, perfect_rows], ignore_index=True)
 
+    # Add the per-atom vibrational free energy if phonon data are available.
+    interps = build_fvib_interpolators(fvib, T_LIST)
+    for T in T_LIST:
+        br[f'F_vib_{T:.0f}'] = br.apply(lambda r: fvib_for_row(r, interps, T), axis=1)
+
     # Helmholtz free energy per atom for the two requested temperatures.
     for T in T_LIST:
         kT = KB_EV * T
         br[f'G_{T:.0f}'] = br.apply(
-            lambda r: r.Ef - kT * ln_comb(n_sublattice(r), r.n_defect) / r.n_atoms,
+            lambda r: r.Ef + r[f'F_vib_{T:.0f}'] - kT * ln_comb(n_sublattice(r), r.n_defect) / r.n_atoms,
             axis=1,
         )
 
