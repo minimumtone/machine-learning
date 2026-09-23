@@ -1,2 +1,2 @@
-structure,n_atoms,formula,volume,volume_per_atom,F_vib_1273K,F_vib_1473K
-relax/b2_x0.530_vacNi_s0.extxyz,121,Al64Ni57,1513.2965236287944,12.506582839907392,-0.46291165665593537,-0.5875633790521357
+structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
+relax/b2_x0.530_vacNi_s0.extxyz,121,e5fb13a7a8f49d145a560df101a330e90790392ff5b045dcc8f4dcecd3ecd0fd,15302,1786971132.6716218,0.01,4x4x4,medium,2,-0.46291165665593537,-0.5875633790521357

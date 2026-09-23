@@ -1,2 +1,2 @@
-structure,n_atoms,formula,volume,volume_per_atom,F_vib_1273K,F_vib_1473K
-relax/b2_x0.530_antisiteAl_s0.extxyz,128,Al68Ni60,1560.1930851108184,12.189008477428269,-0.4677913583754281,-0.5931694089597487
+structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
+relax/b2_x0.530_antisiteAl_s0.extxyz,128,9c68b910c2909d3ea4f6185585295dc2e9c15c081f408e5ea7e213c9f3b52c2e,16163,1786971132.6676219,0.01,4x4x4,medium,2,-0.4677913583754281,-0.5931694089597487

@@ -1,2 +1,2 @@
-structure,n_atoms,source_mtime,source_size,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
-relax/b2_x0.540_vacNi_s0.extxyz,119,1786443350.1784225,15055,0.01,4x4x4,medium,1,-0.4779199773293461,-0.6059911063341349
+structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
+relax/b2_x0.540_vacNi_s0.extxyz,119,e17fa204a9e505d8caac3daa29bd96f647fdbb8ca226736631f37a0d5dc912a8,15055,1786443350.1784225,0.01,4x4x4,medium,2,-0.4779199773293461,-0.6059911063341349
