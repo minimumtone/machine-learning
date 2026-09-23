@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Batch phonon F_vib computations and collect to analysis/phonon_fvib.csv."""
-import os, sys, csv, glob, re
+import os, sys, csv, glob, re, hashlib
 from ase import Atoms
 from ase.io import read
 import numpy as np
@@ -17,7 +17,16 @@ T_LIST = [1273.0, 1473.0]
 DISPLACEMENT = 0.01
 MESH = (4, 4, 4)
 MACE_MODEL = 'medium'
-CACHE_VERSION = '1'
+CACHE_VERSION = '2'
+
+
+def file_hash(path, algorithm='sha256'):
+    """Return a hex digest of a file's contents."""
+    h = hashlib.new(algorithm)
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def load_atoms(path):
@@ -75,13 +84,16 @@ def run_phonon(path):
     f_per_atom = np.array([float(f) * 0.010364272 / natom for f in free])
     fvib = {T: float(np.interp(T, temps, f_per_atom)) for T in T_LIST}
 
-    # Cache with source-file metadata so a re-relaxed structure invalidates old results.
+    # Cache with source-file hash and calculation settings.  If the source
+    # structure or any setting changes, load_existing detects the mismatch and
+    # recomputes instead of reusing stale values.
     src_stat = os.stat(path)
     row = {
         'structure': path,
         'n_atoms': natom,
-        'source_mtime': str(src_stat.st_mtime),
+        'source_hash': file_hash(path),
         'source_size': str(src_stat.st_size),
+        'source_mtime': str(src_stat.st_mtime),
         'distance': str(DISPLACEMENT),
         'mesh': 'x'.join(str(m) for m in MESH),
         'model': MACE_MODEL,
@@ -107,27 +119,34 @@ def _fvib_key(row, T):
 
 
 def load_existing(fvib_path, src_path):
-    """Return cached F_vib if the source file has not changed.
+    """Return cached F_vib if the source file and calculation settings match.
 
-    Recompute when the source extxyz is newer than the cache (mtime).  If the
-    cache carries metadata (source_size, distance, mesh, model), also validate
-    those; legacy caches without metadata are accepted as-is when the source is
-    not newer.
+    Recompute when the cache version, source content hash, source size,
+    displacement, mesh, or MACE model do not match the current script.
+    Legacy caches missing any of these metadata are treated as stale and
+    recomputed.
     """
     if not os.path.exists(fvib_path):
         return None
-    src_stat = os.stat(src_path)
-    cache_stat = os.stat(fvib_path)
-    if src_stat.st_mtime > cache_stat.st_mtime:
-        return None
     with open(fvib_path) as fp:
         reader = csv.DictReader(fp)
-        row = next(reader)
-    if 'source_size' in row and str(src_stat.st_size) != row['source_size']:
+        try:
+            row = next(reader)
+        except StopIteration:
+            return None
+
+    required = {'cache_version', 'source_hash', 'source_size', 'distance', 'mesh', 'model'}
+    if not required.issubset(row.keys()):
         return None
-    if (row.get('distance', str(DISPLACEMENT)) != str(DISPLACEMENT) or
-            row.get('mesh', 'x'.join(str(m) for m in MESH)) != 'x'.join(str(m) for m in MESH) or
-            row.get('model', MACE_MODEL) != MACE_MODEL):
+    if row['cache_version'] != CACHE_VERSION:
+        return None
+    if row['source_hash'] != file_hash(src_path):
+        return None
+    if str(os.stat(src_path).st_size) != row['source_size']:
+        return None
+    if (row['distance'] != str(DISPLACEMENT) or
+            row['mesh'] != 'x'.join(str(m) for m in MESH) or
+            row['model'] != MACE_MODEL):
         return None
     return {T: float(_fvib_key(row, T)) for T in T_LIST}
 

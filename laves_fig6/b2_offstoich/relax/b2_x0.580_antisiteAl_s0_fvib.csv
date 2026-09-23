@@ -1,2 +1,2 @@
-structure,n_atoms,source_mtime,source_size,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
-relax/b2_x0.580_antisiteAl_s0.extxyz,128,1786443350.1784225,16158,0.01,4x4x4,medium,1,-0.48052020384289534,-0.6079454871267874
+structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
+relax/b2_x0.580_antisiteAl_s0.extxyz,128,7206e83827e9189b480b90e09c01ec4310bfa69ab77ab2cec31d64dea841875c,16158,1786443350.1784225,0.01,4x4x4,medium,2,-0.48052020384289534,-0.6079454871267874
