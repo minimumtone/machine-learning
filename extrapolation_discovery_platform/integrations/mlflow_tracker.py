@@ -251,6 +251,7 @@ class MLflowTracker:
             "workflow": run_result.workflow,
             "feature_set": run_result.feature_set,
             "split_policy": run_result.split_policy,
+            "split_group": run_result.split_group,
             "seed": str(run_result.seed),
             "fold": str(run_result.fold),
         })

@@ -81,6 +81,12 @@ class DiscoveryRoundResult:
     baseline_ood_rmse: float = float("nan")
 
     improvement: float = float("nan")  # (baseline_ood_rmse - ood_rmse) / baseline_ood_rmse
+
+    # 訓練スコープの記録（結果の再現・解釈に必須。局所訓練では n が小さい）
+    train_scope: str = "global"
+    n_train_rows: int = 0            # 訓練に使った元データ行数（複製前・重複なし）
+    n_train_aug: int = 0             # 複製を含む訓練行数
+    n_ood_eval: int = 0              # OOD 評価行数
     success: bool = False
     error_message: str = ""
     elapsed_sec: float = 0.0
@@ -93,9 +99,150 @@ class FeatureDiscoveryResult:
     best_feature: str = ""
     best_improvement: float = float("nan")
     n_boundary_samples: int = 0
+    n_ood_eval: int = 0
+    train_scope: str = "global"
+    n_train_rows: int = 0
     elapsed_sec: float = 0.0
     success: bool = False
     error_message: str = ""
+
+
+# ---------------------------------------------------------------------------
+# 訓練スコープ（OOD 近辺のみで学習するための行選択／複製計画）
+# ---------------------------------------------------------------------------
+
+TRAIN_SCOPES = ("global", "neighborhood", "kernel")
+
+
+@dataclass
+class NeighborhoodPlan:
+    """OOD 評価行との特徴量空間距離に基づく訓練行の複製回数。
+
+    copies[i] は元データ行 i を訓練に何回入れるか（0 = 訓練から除外）。
+    OOD 評価行は常に 0。候補特徴量・目的変数には一切依存しない
+    （全候補で同一の訓練行集合を使うため、また y を見ないため）。
+    """
+    scope: str
+    copies: np.ndarray               # int, shape (n_orig,)
+    distances: np.ndarray            # 各行から最近傍 OOD 評価行までの標準化距離
+    bandwidth: float                 # kernel の h（neighborhood では閾値距離）
+    n_train_rows: int                # copies >= 1 の行数
+    n_train_aug: int                 # copies の総和
+
+    @property
+    def is_global(self) -> bool:
+        return self.scope == "global"
+
+
+def compute_neighborhood_plan(
+    features_df: pd.DataFrame,
+    ood_eval_idx: np.ndarray,
+    scope: str = "global",
+    neighborhood_quantile: float = 0.3,
+    kernel_max_copies: int = 4,
+    min_train_rows: int = 30,
+) -> NeighborhoodPlan:
+    """OOD 評価行の近傍に訓練を絞る／重み付けする計画を作る。
+
+    Parameters
+    ----------
+    features_df : pd.DataFrame
+        元の特徴量行列（候補特徴量を含まないこと）。数値列のみ距離計算に使う。
+    ood_eval_idx : np.ndarray
+        OOD 評価行の元インデックス。これらは訓練から必ず除外する。
+    scope : {"global", "neighborhood", "kernel"}
+        global      : 全行を 1 回ずつ（従来動作。境界複製は augment_dataset 側）。
+        neighborhood: 最近傍 OOD 評価行までの距離が下位 `neighborhood_quantile`
+                      に入る行だけを訓練に使う（min_train_rows を下回らない）。
+        kernel      : 全行を残しつつ、距離に応じた Gaussian 重み
+                      w = exp(-d^2 / 2h^2)（h = 距離の中央値）で
+                      1 + round(w * (kernel_max_copies - 1)) 回複製する。
+                      sample_weight を持たない WF でも同じ効果が得られる。
+    """
+    if scope not in TRAIN_SCOPES:
+        raise ValueError(f"train_scope は {TRAIN_SCOPES} のいずれか: {scope!r}")
+
+    n_orig = len(features_df)
+    ood_eval_idx = np.unique(np.asarray(ood_eval_idx, dtype=int))
+    ood_eval_idx = ood_eval_idx[(ood_eval_idx >= 0) & (ood_eval_idx < n_orig)]
+    is_eval = np.zeros(n_orig, dtype=bool)
+    is_eval[ood_eval_idx] = True
+
+    # 標準化 Euclid 距離（分散ゼロ列は除外、NaN は列中央値）
+    num = features_df.select_dtypes(include=[np.number]).astype("float64")
+    num = num.fillna(num.median())
+    std = num.std(ddof=0)
+    num = num.loc[:, std > 0]
+    Z = ((num - num.mean()) / num.std(ddof=0)).to_numpy()
+
+    if len(ood_eval_idx) == 0 or Z.shape[1] == 0:
+        logger.warning(
+            "train_scope=%s: no OOD rows or usable numeric features; "
+            "falling back to all non-OOD rows",
+            scope,
+        )
+        copies = np.ones(n_orig, dtype=int)
+        copies[ood_eval_idx] = 0
+        distances = np.full(n_orig, np.nan)
+        plan = NeighborhoodPlan(
+            scope=scope,
+            copies=copies,
+            distances=distances,
+            bandwidth=float("nan"),
+            n_train_rows=int((copies >= 1).sum()),
+            n_train_aug=int(copies.sum()),
+        )
+        logger.info(
+            "train_scope=%s: n_ood_eval=%d  n_train_rows=%d  n_train_aug=%d",
+            scope, len(ood_eval_idx), plan.n_train_rows, plan.n_train_aug,
+        )
+        return plan
+
+    distances = np.full(n_orig, np.nan)
+    if len(ood_eval_idx) > 0 and Z.shape[1] > 0:
+        from sklearn.neighbors import NearestNeighbors
+        nn = NearestNeighbors(n_neighbors=1).fit(Z[is_eval])
+        d, _ = nn.kneighbors(Z[~is_eval])
+        distances[~is_eval] = d[:, 0]
+    distances[is_eval] = 0.0
+
+    copies = np.ones(n_orig, dtype=int)
+    bandwidth = float("nan")
+    cand = np.flatnonzero(~is_eval)
+
+    if scope == "neighborhood" and len(cand) > 0:
+        d_c = distances[cand]
+        q = float(np.clip(neighborhood_quantile, 0.0, 1.0))
+        thr = float(np.quantile(d_c, q))
+        keep = d_c <= thr
+        # 最低行数を保証（距離の近い順に補充）
+        if keep.sum() < min(min_train_rows, len(cand)):
+            order = np.argsort(d_c)
+            keep = np.zeros(len(cand), dtype=bool)
+            keep[order[:min(min_train_rows, len(cand))]] = True
+            thr = float(d_c[order[min(min_train_rows, len(cand)) - 1]])
+        copies[cand] = keep.astype(int)
+        bandwidth = thr
+    elif scope == "kernel" and len(cand) > 0:
+        d_c = distances[cand]
+        h = float(np.median(d_c))
+        if not np.isfinite(h) or h <= 0:
+            h = 1.0
+        w = np.exp(-0.5 * (d_c / h) ** 2)
+        copies[cand] = 1 + np.rint(w * max(kernel_max_copies - 1, 0)).astype(int)
+        bandwidth = h
+
+    copies[is_eval] = 0
+
+    plan = NeighborhoodPlan(
+        scope=scope, copies=copies, distances=distances, bandwidth=bandwidth,
+        n_train_rows=int((copies >= 1).sum()), n_train_aug=int(copies.sum()),
+    )
+    logger.info(
+        "train_scope=%s: n_ood_eval=%d  n_train_rows=%d  n_train_aug=%d  h/thr=%.3f",
+        scope, len(ood_eval_idx), plan.n_train_rows, plan.n_train_aug, bandwidth,
+    )
+    return plan
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +304,8 @@ def identify_boundary_samples(
 # Step 2: データセット拡張
 # ---------------------------------------------------------------------------
 
-def augment_dataset(
+
+def _prepare_base(
     features_df: pd.DataFrame,
     target: pd.Series,
     boundary_info: BoundarySampleInfo,
@@ -165,20 +313,6 @@ def augment_dataset(
     extra_features_df: Optional[pd.DataFrame] = None,
     candidate_col: Optional[str] = None,
 ) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray]:
-    """境界サンプルを訓練データに追加した拡張データセットを構築する。
-
-    Returns
-    -------
-    X_aug : pd.DataFrame
-        拡張後の特徴量行列（元データ + 境界サンプルの重複を除去）
-    y_aug : pd.Series
-        拡張後のターゲット
-    train_idx_aug : np.ndarray
-        拡張データ内の訓練インデックス。OOD 評価行は含まない
-        （元データから OOD 評価行を除いた行 + 境界サンプルの複製行）。
-    ood_eval_idx : np.ndarray
-        OOD 評価用インデックス（拡張データ内での位置）。train_idx_aug と素。
-    """
     n_orig = len(features_df)
 
     # 追加特徴量を結合
@@ -207,16 +341,87 @@ def augment_dataset(
         if ood_test_idx is not None
         else boundary_info.boundary_indices
     )
-    # 有効なインデックスのみ
     boundary_orig_idx = boundary_orig_idx[boundary_orig_idx < n_orig]
 
-    # OOD 評価行（元インデックス内の OOD サンプル）— 訓練から完全に除外する
+    # OOD 評価行（元インデックス内の OOD サンプル）—訓練から完全に除外する
     ood_orig_idx = (
         ood_test_idx[boundary_info.ood_indices]
         if ood_test_idx is not None
         else boundary_info.ood_indices
     )
     ood_orig_idx = np.unique(ood_orig_idx[ood_orig_idx < n_orig])
+
+    return X_base, y_base, boundary_orig_idx, ood_orig_idx
+
+
+def augment_dataset(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    boundary_info: BoundarySampleInfo,
+    ood_test_idx: Optional[np.ndarray],
+    extra_features_df: Optional[pd.DataFrame] = None,
+    candidate_col: Optional[str] = None,
+    neighborhood_plan: Optional[NeighborhoodPlan] = None,
+) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray]:
+    """境界サンプルを訓練データに追加した拡張データセットを構築する。
+
+    neighborhood_plan が None または scope="global" のときは従来どおり
+    「全行 + 境界サンプル複製」。それ以外では plan.copies に従って
+    訓練行を選択・複製し、境界複製は行わない（plan が近傍性を担う）。
+
+    Returns
+    -------
+    X_aug : pd.DataFrame
+        拡張後の特徴量行列（元データ + 境界サンプルの重複を除去）
+    y_aug : pd.Series
+        拡張後のターゲット
+    train_idx_aug : np.ndarray
+        拡張データ内の訓練インデックス。OOD 評価行は含まない
+        （元データから OOD 評価行を除いた行 + 境界サンプルの複製行）。
+    ood_eval_idx : np.ndarray
+        OOD 評価用インデックス（拡張データ内での位置）。train_idx_aug と素。
+    """
+    X_base, y_base, boundary_orig_idx, ood_orig_idx = _prepare_base(
+        features_df=features_df,
+        target=target,
+        boundary_info=boundary_info,
+        ood_test_idx=ood_test_idx,
+        extra_features_df=extra_features_df,
+        candidate_col=candidate_col,
+    )
+    n_orig = len(X_base)
+
+    # ── 局所訓練スコープ（neighborhood / kernel）────────────────────
+    if neighborhood_plan is not None and not neighborhood_plan.is_global:
+        if len(neighborhood_plan.copies) != n_orig:
+            raise ValueError(
+                f"neighborhood_plan.copies の長さ ({len(neighborhood_plan.copies)}) が "
+                f"features_df の行数 ({n_orig}) と一致しません"
+            )
+        copies = neighborhood_plan.copies.copy()
+        copies[ood_orig_idx] = 0            # OOD 評価行は常に訓練から除外
+        base_rows = np.flatnonzero(copies >= 1)
+        extra_rows = np.repeat(np.arange(n_orig), np.clip(copies - 1, 0, None))
+        if len(extra_rows) > 0:
+            X_aug = pd.concat(
+                [X_base, X_base.iloc[extra_rows].reset_index(drop=True)],
+                ignore_index=True,
+            )
+            y_aug = pd.concat(
+                [y_base, y_base.iloc[extra_rows].reset_index(drop=True)],
+                ignore_index=True,
+            )
+        else:
+            X_aug, y_aug = X_base, y_base
+        train_idx = np.concatenate(
+            [base_rows, np.arange(n_orig, n_orig + len(extra_rows))]
+        )
+        logger.info(
+            "augment[%s]: n_orig=%d  n_train_rows=%d  n_train_aug=%d  n_ood_eval=%d",
+            neighborhood_plan.scope, n_orig, len(base_rows), len(train_idx),
+            len(ood_orig_idx),
+        )
+        return X_aug, y_aug, train_idx, ood_orig_idx
 
     if len(boundary_orig_idx) == 0:
         # 境界サンプルなし → 元データから OOD 評価行を除いた行を訓練にする
@@ -247,6 +452,51 @@ def augment_dataset(
     return X_aug, y_aug, train_idx, ood_eval_idx
 
 
+def augment_dataset_weighted(
+    features_df: pd.DataFrame,
+    target: pd.Series,
+    boundary_info: BoundarySampleInfo,
+    ood_test_idx: Optional[np.ndarray],
+    extra_features_df: Optional[pd.DataFrame] = None,
+    candidate_col: Optional[str] = None,
+    neighborhood_plan: Optional[NeighborhoodPlan] = None,
+) -> Tuple[pd.DataFrame, pd.Series, np.ndarray, np.ndarray, np.ndarray]:
+    """Build an unreplicated training set and return its row multiplicities."""
+    X_base, y_base, boundary_orig_idx, ood_orig_idx = _prepare_base(
+        features_df=features_df,
+        target=target,
+        boundary_info=boundary_info,
+        ood_test_idx=ood_test_idx,
+        extra_features_df=extra_features_df,
+        candidate_col=candidate_col,
+    )
+    n_orig = len(X_base)
+
+    if neighborhood_plan is not None and not neighborhood_plan.is_global:
+        if len(neighborhood_plan.copies) != n_orig:
+            raise ValueError(
+                f"neighborhood_plan.copies の長さ ({len(neighborhood_plan.copies)}) が "
+                f"features_df の行数 ({n_orig}) と一致しません"
+            )
+        copies = neighborhood_plan.copies.copy()
+        copies[ood_orig_idx] = 0
+        train_idx = np.flatnonzero(copies >= 1)
+        sample_weight = np.asarray(copies[train_idx])
+    else:
+        boundary_orig_idx = np.setdiff1d(boundary_orig_idx, ood_orig_idx)
+        train_idx = np.setdiff1d(np.arange(n_orig), ood_orig_idx)
+        sample_weight = np.ones(len(train_idx), dtype=int)
+        sample_weight[np.isin(train_idx, boundary_orig_idx)] += 1
+
+    logger.info(
+        "augment_weighted[%s]: n_orig=%d  n_train_rows=%d  "
+        "n_train_aug=%.0f  n_ood_eval=%d",
+        neighborhood_plan.scope if neighborhood_plan else "global",
+        n_orig, len(train_idx), sample_weight.sum(), len(ood_orig_idx),
+    )
+    return X_base, y_base, train_idx, ood_orig_idx, sample_weight
+
+
 # ---------------------------------------------------------------------------
 # Step 3: 特徴量探索ラウンド
 # ---------------------------------------------------------------------------
@@ -269,6 +519,7 @@ def run_feature_discovery_round(
     boundary_margin: float = 0.5,
     generic_csv_mode: Optional[bool] = None,
     baseline_cache: Optional[Dict[str, Tuple[float, float]]] = None,
+    neighborhood_plan: Optional[NeighborhoodPlan] = None,
 ) -> DiscoveryRoundResult:
     """1 候補特徴量での再学習と OOD 予測性能評価を実行する。
 
@@ -277,6 +528,8 @@ def run_feature_discovery_round(
     baseline_cache : dict, optional
         {workflow_name: (baseline_rmse, baseline_r2)}。候補間で不変のベースライン
         を再計算しないためのキャッシュ。
+    neighborhood_plan : NeighborhoodPlan, optional
+        訓練スコープ。None は "global"（従来動作）。
     """
     t0 = time.time()
     result = DiscoveryRoundResult(
@@ -341,14 +594,21 @@ def run_feature_discovery_round(
         )
 
         # ── 拡張データセット構築 ─────────────────────────────────────────
-        X_aug, y_aug, train_aug_idx, ood_eval_idx = augment_dataset(
-            features_df=features_df,
-            target=target,
-            boundary_info=boundary,
-            ood_test_idx=ood_test_idx,
-            extra_features_df=extra_features_df,
-            candidate_col=candidate_feature if candidate_feature else None,
+        X_aug, y_aug, train_aug_idx, ood_eval_idx, sample_weight = (
+            augment_dataset_weighted(
+                features_df=features_df,
+                target=target,
+                boundary_info=boundary,
+                ood_test_idx=ood_test_idx,
+                extra_features_df=extra_features_df,
+                candidate_col=candidate_feature if candidate_feature else None,
+                neighborhood_plan=neighborhood_plan,
+            )
         )
+        result.train_scope = neighborhood_plan.scope if neighborhood_plan else "global"
+        result.n_train_aug = int(round(sample_weight.sum()))
+        result.n_train_rows = int(len(train_aug_idx))
+        result.n_ood_eval = int(len(ood_eval_idx))
 
         if len(ood_eval_idx) == 0:
             logger.warning("OOD 評価サンプルが 0 件 — スコアを計算できません")
@@ -357,11 +617,11 @@ def run_feature_discovery_round(
             return result
 
         # ── 拡張データで再学習 ───────────────────────────────────────────
-        # 有効列を取得（追加特徴量を含む）
+        # 有効列を取得（追加特徴量を含む）。行は複製せず、重みだけを渡す。
         aug_fs_name = "generic" if generic_csv_mode else feature_set_name
         prep_aug = stage1_preprocess(
-            features_df=X_aug,
-            target=y_aug,
+            features_df=X_aug.reset_index(drop=True),
+            target=y_aug.reset_index(drop=True),
             compositions_df=compositions_df,
             feature_set_names=[feature_set_name],
             workflow_names=[workflow_name],
@@ -395,7 +655,11 @@ def run_feature_discovery_round(
         y_ood = y_aug.iloc[ood_eval_idx]
 
         from extrapolation_discovery_platform._utils import safe_array
-        from extrapolation_discovery_platform.pipeline import apply_extrapolation_guard
+        from extrapolation_discovery_platform.pipeline import (
+            apply_extrapolation_guard,
+            impute_by_train_median,
+        )
+        X_tr, X_ood = impute_by_train_median(X_tr, X_ood)
         wf = factory(quick, True)
         run_aug = wf.run(
             pd.DataFrame(safe_array(X_tr), columns=effective_cols),
@@ -403,6 +667,7 @@ def run_feature_discovery_round(
             pd.DataFrame(safe_array(X_ood), columns=effective_cols),
             y_ood.reset_index(drop=True),
             seed=seed,
+            sample_weight=sample_weight,
             feature_set=aug_fs_name,
             split_policy=split_policy,
             fold=0,
@@ -415,7 +680,7 @@ def run_feature_discovery_round(
 
         # 同一の train/OOD 分割で候補列なしに学習したベースライン OOD RMSE。
         # baseline_rmse（CV 平均）とは評価データが異なるため直接比較しない。
-        _ood_cache_key = f"{workflow_name}__ood_baseline"
+        _ood_cache_key = f"{workflow_name}__ood_baseline__{result.train_scope}"
         if not candidate_feature:
             result.baseline_ood_rmse = run_aug.rmse_test
             if baseline_cache is not None:
@@ -429,19 +694,24 @@ def run_feature_discovery_round(
                 result.baseline_ood_rmse = cached_ood[0]
             else:
                 base_cols = [c for c in effective_cols if c != candidate_feature]
+                X_base_tr, X_base_ood = impute_by_train_median(
+                    X_aug.iloc[train_aug_idx][base_cols],
+                    X_aug.iloc[ood_eval_idx][base_cols],
+                )
                 wf_base = factory(quick, True)
                 run_base = wf_base.run(
                     pd.DataFrame(
-                        safe_array(X_aug.iloc[train_aug_idx][base_cols]),
+                        safe_array(X_base_tr),
                         columns=base_cols,
                     ),
                     y_tr.reset_index(drop=True),
                     pd.DataFrame(
-                        safe_array(X_aug.iloc[ood_eval_idx][base_cols]),
+                        safe_array(X_base_ood),
                         columns=base_cols,
                     ),
                     y_ood.reset_index(drop=True),
                     seed=seed,
+                    sample_weight=sample_weight,
                     feature_set=aug_fs_name,
                     split_policy=split_policy,
                     fold=0,
@@ -503,6 +773,10 @@ def run_feature_discovery(
     progress_callback: Optional[Any] = None,
     generic_csv_mode: Optional[bool] = None,
     include_negative_control: bool = True,
+    train_scope: str = "global",
+    neighborhood_quantile: float = 0.3,
+    kernel_max_copies: int = 4,
+    min_train_rows: int = 30,
 ) -> FeatureDiscoveryResult:
     """複数候補特徴量 × 複数 WF の探索を一括実行する。
 
@@ -520,6 +794,15 @@ def run_feature_discovery(
         True のとき、先頭候補を行方向にシャッフルしたネガティブ
         コントロール列（情報ゼロ）を自動追加する。有用な候補はこの
         列を上回る improvement を示すべきである。
+    train_scope : {"global", "neighborhood", "kernel"}
+        訓練行のスコープ。"global" は従来動作（全行 + 境界複製）。
+        "neighborhood" は OOD 評価行に近い訓練行のみ、"kernel" は距離に応じた
+        複製で OOD 近辺を重み付けする。compute_neighborhood_plan() を参照。
+        近辺のみで学習すると全データ使用時に平均化されて見えなくなる
+        OOD 近辺の分散が損失に反映されるが、n が小さくなるため
+        n_train_rows / n_ood_eval を必ず結果と一緒に報告すること。
+    neighborhood_quantile, kernel_max_copies, min_train_rows
+        compute_neighborhood_plan() に渡すパラメータ。
     """
     t0 = time.time()
     result = FeatureDiscoveryResult()
@@ -527,6 +810,26 @@ def run_feature_discovery(
     try:
         boundary = identify_boundary_samples(ood_result, n_ood_samples, boundary_margin)
         result.n_boundary_samples = boundary.n_boundary
+
+        # 訓練スコープ計画（候補・目的変数に依存しないので全ラウンドで共有）
+        n_orig = len(features_df)
+        ood_orig_idx = (
+            np.asarray(ood_test_idx)[boundary.ood_indices]
+            if ood_test_idx is not None else boundary.ood_indices
+        )
+        ood_orig_idx = np.unique(ood_orig_idx[ood_orig_idx < n_orig])
+        plan = compute_neighborhood_plan(
+            features_df, ood_orig_idx, scope=train_scope,
+            neighborhood_quantile=neighborhood_quantile,
+            kernel_max_copies=kernel_max_copies,
+            min_train_rows=min_train_rows,
+        )
+        result.train_scope = train_scope
+        result.n_ood_eval = int(len(ood_orig_idx))
+        result.n_train_rows = (
+            plan.n_train_rows if not plan.is_global
+            else int(n_orig - len(ood_orig_idx))
+        )
 
         # ネガティブコントロール: 先頭候補をシャッフルした列を追加
         candidate_features = list(candidate_features)
@@ -579,6 +882,7 @@ def run_feature_discovery(
                     boundary_margin=boundary_margin,
                     generic_csv_mode=generic_csv_mode,
                     baseline_cache=baseline_cache,
+                    neighborhood_plan=plan,
                 )
                 result.rounds.append(round_res)
                 done += 1
@@ -599,9 +903,11 @@ def run_feature_discovery(
         result.success = True
 
         logger.info(
-            "FeatureDiscovery 完了: %d rounds  best=%s  improvement=%.3f  %.2fs",
+            "FeatureDiscovery 完了: %d rounds  best=%s  improvement=%.3f  "
+            "scope=%s n_train=%d n_ood_eval=%d  %.2fs",
             len(result.rounds), result.best_feature,
             result.best_improvement if math.isfinite(result.best_improvement) else 0.0,
+            result.train_scope, result.n_train_rows, result.n_ood_eval,
             result.elapsed_sec,
         )
 

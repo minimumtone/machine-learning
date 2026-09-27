@@ -84,6 +84,202 @@ class TestT1_Stage1Reproducibility:
         assert "delta_r" not in effective
         assert "target_leak" not in effective
 
+    def test_hea_upload_keeps_partial_nan_and_pipeline_runs(self, sample_data, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.features import FeatureSetName
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess, stage2_train
+
+        _, y, comp = sample_data
+        raw = comp.copy()
+        raw["ys"] = y.to_numpy()
+        rng = np.random.default_rng(7)
+        grain = rng.uniform(1, 100, len(raw))
+        grain[::4] = np.nan
+        raw["grain_size_um"] = grain
+        raw["all_missing"] = np.nan
+        csv_path = tmp_path / "hea_nan.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(_File(), "ys", session)
+        feats = session["features_df"]
+        assert "grain_size_um" in feats.columns
+        assert "all_missing" not in feats.columns
+        assert feats["grain_size_um"].isna().sum() == np.isnan(grain).sum()
+
+        prep = stage1_preprocess(
+            features_df=feats, target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"], seeds=[42],
+            active_policies=["RandomCV"],
+        )
+        assert prep.success, prep.error_message
+        assert "grain_size_um" in prep.effective_cols[FeatureSetName.FS_BASE.value]
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "RandomCV", "FS_BASE",
+            quick=True, seed=42,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
+    def test_impute_by_train_median_uses_train_only(self):
+        from extrapolation_discovery_platform.pipeline import impute_by_train_median
+
+        train = pd.DataFrame({"a": [1.0, np.nan, 3.0, 5.0], "b": [np.nan] * 4})
+        test = pd.DataFrame({"a": [np.nan, 100.0], "b": [2.0, np.nan]})
+        imputed_train, imputed_test = impute_by_train_median(train, test)
+
+        assert imputed_train.loc[1, "a"] == pytest.approx(3.0)
+        assert imputed_test.loc[0, "a"] == pytest.approx(3.0)
+        assert imputed_train["b"].eq(0.0).all()
+        assert imputed_test.loc[1, "b"] == pytest.approx(0.0)
+
+    def test_workflow_keeps_all_nan_column_alignment(self):
+        from extrapolation_discovery_platform.workflows import WorkflowLIN, WorkflowRF
+
+        rng = np.random.default_rng(12)
+        a_train = rng.normal(size=40)
+        c_train = rng.normal(size=40)
+        X_train = pd.DataFrame({
+            "a": a_train,
+            "b": np.nan,
+            "c": c_train,
+        })
+        X_test = pd.DataFrame({
+            "a": rng.normal(size=10),
+            "b": np.nan,
+            "c": rng.normal(size=10),
+        })
+        y_train = pd.Series(2.0 * a_train + c_train + rng.normal(scale=0.01, size=40))
+        y_test = pd.Series(rng.normal(size=10))
+
+        lin = WorkflowLIN(dim_reduction=False).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+        rf = WorkflowRF(quick=True, dim_reduction=False).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+
+        assert set(lin.artifacts["coef_raw"]) == {"a", "b", "c"}
+        assert set(rf.artifacts["feature_importance"]) == {"a", "b", "c"}
+        assert abs(lin.artifacts["coef_raw"]["a"]) > abs(lin.artifacts["coef_raw"]["b"])
+
+    def test_generic_upload_keeps_nan_and_pipeline_runs(self, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess,
+            stage2_train,
+        )
+
+        rng = np.random.default_rng(11)
+        n = 60
+        raw = pd.DataFrame({
+            "feature_a": rng.normal(size=n),
+            "feature_b": rng.normal(size=n),
+            "feature_c": rng.normal(size=n),
+        })
+        raw.loc[::5, "feature_b"] = np.nan
+        raw["target"] = (
+            2.0 * raw["feature_a"].fillna(0.0)
+            - raw["feature_c"]
+            + rng.normal(scale=0.1, size=n)
+        )
+        csv_path = tmp_path / "generic_nan.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(
+            _File(),
+            "target",
+            session,
+            selected_features=["feature_a", "feature_b", "feature_c"],
+            force_generic=True,
+        )
+        feats = session["features_df"]
+        assert feats["feature_b"].isna().sum() == raw["feature_b"].isna().sum()
+
+        prep = stage1_preprocess(
+            features_df=feats,
+            target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=["generic"],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["RandomCV"],
+            generic_csv_mode=True,
+        )
+        assert prep.success, prep.error_message
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "RandomCV", "generic",
+            quick=True, seed=42, generic_csv_mode=True,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
+    def test_generic_nan_composition_block_split_runs(self, tmp_path):
+        pytest.importorskip("gradio")
+        from extrapolation_discovery_platform.gui.app import _handle_csv_upload
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess,
+            stage2_train,
+        )
+
+        rng = np.random.default_rng(11)
+        n = 60
+        raw = pd.DataFrame({
+            "feature_a": rng.normal(size=n),
+            "feature_b": rng.normal(size=n),
+            "feature_c": rng.normal(size=n),
+        })
+        raw.loc[::5, "feature_b"] = np.nan
+        raw["target"] = (
+            2.0 * raw["feature_a"].fillna(0.0)
+            - raw["feature_c"]
+            + rng.normal(scale=0.1, size=n)
+        )
+        csv_path = tmp_path / "generic_nan_composition_block.csv"
+        raw.to_csv(csv_path, index=False)
+
+        class _File:
+            name = str(csv_path)
+
+        session: dict = {}
+        _handle_csv_upload(
+            _File(),
+            "target",
+            session,
+            selected_features=["feature_a", "feature_b", "feature_c"],
+            force_generic=True,
+        )
+        feats = session["features_df"]
+        prep = stage1_preprocess(
+            features_df=feats,
+            target=session["target"],
+            compositions_df=session["compositions_df"],
+            feature_set_names=["generic"],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["CompositionBlock"],
+            generic_csv_mode=True,
+        )
+        assert prep.success, prep.error_message
+        assert "CompositionBlock" in prep.fold_plan
+        train = stage2_train(
+            prep, feats, session["target"], "WF-LIN", "CompositionBlock", "generic",
+            quick=True, seed=42, generic_csv_mode=True,
+        )
+        assert train.success, train.error_message
+        assert math.isfinite(train.rmse_test_mean)
+
     def test_effective_cols_identical(self, sample_data):
         from extrapolation_discovery_platform.pipeline import stage1_preprocess
         from extrapolation_discovery_platform.features import FeatureSetName
@@ -202,6 +398,34 @@ class TestT4_RunnerDelegation:
         assert "FS_ALL" in runner._effective_cols
         assert len(runner._effective_cols["FS_ALL"]) > 0
 
+    def test_runner_passes_exclusion_elements_to_stage1(
+        self, sample_data, monkeypatch,
+    ):
+        from extrapolation_discovery_platform.pipeline import PreprocessResult
+        from extrapolation_discovery_platform.runner import ExperimentRunner
+
+        X, y, comp = sample_data
+        captured = {}
+
+        def _stage1_stub(**kwargs):
+            captured.update(kwargs)
+            return PreprocessResult(success=False, error_message="stub")
+
+        monkeypatch.setattr(
+            "extrapolation_discovery_platform.runner.stage1_preprocess",
+            _stage1_stub,
+        )
+        runner = ExperimentRunner(
+            seeds=[42], quick=True, exclude_elements=["Ti"],
+        )
+        with pytest.raises(RuntimeError):
+            runner.run(
+                comp, X, y,
+                selected_workflows=["WF-LIN"],
+                selected_feature_sets=["FS_BASE"],
+                selected_split_policies=["ElementExclusion"],
+            )
+        assert captured["exclusion_elements"] == ["Ti"]
 
 class TestT5_IndividualDelegation:
     """T5: individual_runner.py が pipeline.py に委譲している。"""
@@ -373,6 +597,325 @@ class TestT9_JobFactory:
         src = inspect.getsource(_run_job)
         assert "_IR_FACTORIES" in src, "_run_job が _IR_FACTORIES を使っていない"
         assert "_BUILTIN_FACTORIES" not in src, "旧 _BUILTIN_FACTORIES が残存"
+
+
+class TestEvaluationHierarchy:
+    def test_element_exclusion_thresholds_and_labels(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({
+            "A": [1.0, 0.5, 1e-5, 0.0, 0.0, 0.0],
+            "B": [0.0, 0.5, 0.99999, 1.0, 1.0, 1.0],
+            "C": [0.0] * 6,
+        })
+        X = pd.DataFrame({"x": np.arange(len(comp))})
+        y = pd.Series(np.arange(len(comp), dtype=float))
+        splitter = ElementExclusionSplitter(
+            target_elements=["A", "B", "C"],
+            min_test_size=1,
+            min_train_size=2,
+            max_test_fraction=0.8,
+        )
+        folds = list(splitter.split(X, y, compositions=comp))
+        assert splitter.fold_labels == ["A"]
+        assert len(folds) == 1
+        assert 2 not in folds[0][1]
+
+    def test_element_exclusion_skips_small_train(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({"A": [1.0] * 5 + [0.0] * 2})
+        splitter = ElementExclusionSplitter(
+            target_elements=["A"], min_test_size=1,
+            min_train_size=3, max_test_fraction=1.0,
+        )
+        assert list(splitter.split(comp, compositions=comp)) == []
+        assert splitter.fold_labels == []
+
+    def test_element_exclusion_skips_large_test_fraction(self):
+        from extrapolation_discovery_platform.splitters import (
+            ElementExclusionSplitter,
+        )
+
+        comp = pd.DataFrame({"A": [1.0] * 8 + [0.0] * 2})
+        splitter = ElementExclusionSplitter(
+            target_elements=["A"], min_test_size=1,
+            min_train_size=1, max_test_fraction=0.4,
+        )
+        assert list(splitter.split(comp, compositions=comp)) == []
+        assert splitter.fold_labels == []
+
+    def test_composition_group_cv_keeps_groups_together(self):
+        from extrapolation_discovery_platform.splitters import (
+            CompositionGroupCVSplitter,
+        )
+
+        comp = pd.DataFrame({
+            "A": [0.1, 0.1, 0.2, 0.2, 0.3, 0.4],
+            "B": [0.9, 0.9, 0.8, 0.8, 0.7, 0.6],
+        })
+        X = pd.DataFrame({"x": np.arange(len(comp))})
+        folds = list(CompositionGroupCVSplitter(3, 42).split(X, compositions=comp))
+        seen = []
+        for train, test in folds:
+            assert set(train).isdisjoint(set(test))
+            train_keys = {tuple(comp.iloc[i].round(4)) for i in train}
+            test_keys = {tuple(comp.iloc[i].round(4)) for i in test}
+            assert train_keys.isdisjoint(test_keys)
+            seen.extend(test.tolist())
+        assert sorted(seen) == list(range(len(comp)))
+
+    def test_stage2_propagates_element_labels(self, sample_data):
+        from extrapolation_discovery_platform.pipeline import (
+            stage1_preprocess, stage2_train,
+        )
+        from extrapolation_discovery_platform.features import FeatureSetName
+
+        X, y, comp = sample_data
+        comp = pd.DataFrame({
+            "Co": np.r_[np.full(10, 0.5), np.zeros(70)],
+            "Ni": np.r_[np.zeros(10), np.full(10, 0.5), np.zeros(60)],
+            "Fe": np.r_[np.full(10, 0.5), np.zeros(10), np.full(60, 0.5)],
+        })
+        prep = stage1_preprocess(
+            X, y, comp, [FeatureSetName.FS_BASE.value], ["WF-LIN"],
+            seeds=[42], active_policies=["ElementExclusion"],
+            exclusion_elements=["Co", "Ni"], n_folds=3,
+        )
+        assert prep.success, prep.error_message
+        train = stage2_train(
+            prep, X, y, "WF-LIN", "ElementExclusion", "FS_BASE",
+            quick=True, seed=42,
+        )
+        assert train.success, train.error_message
+        expected = set(prep.fold_labels["ElementExclusion"])
+        assert expected
+        assert {r.split_group for r in train.runs} <= expected
+
+    def test_missing_randomcv_scores_are_nan_but_total_is_finite(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, rmse):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, seed=42, fold=0,
+                rmse_test=rmse, rmse_train=rmse,
+            )
+
+        scores = FeatureValidityEvaluator().evaluate([
+            run("CompositionBlock", 100.0),
+            run("ElementExclusion", 200.0),
+        ])
+        score = scores[0]
+        assert math.isnan(score.effect_size)
+        assert math.isnan(score.generalisation)
+        assert math.isfinite(score.total)
+        assert score.to_dict()["effect_size"] is None
+
+    def test_validity_coverage_excludes_missing_ood_axis(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        runs = [
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="RandomCV", seed=42, fold=0,
+                rmse_test=100.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="RandomCV", seed=42, fold=1,
+                rmse_test=110.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=0,
+                rmse_test=120.0,
+            ),
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=1,
+                rmse_test=130.0,
+            ),
+        ]
+        score = FeatureValidityEvaluator().evaluate(runs)[0]
+        assert score.coverage == pytest.approx(0.8)
+        assert score.to_dict()["coverage"] == 0.8
+
+        ood_errors = {"FS_BASE": {
+            "errors": np.array([1.0, 2.0]),
+            "uncertainties": np.array([0.1, 0.1]),
+            "is_ood": np.array([False, False]),
+        }}
+        score = FeatureValidityEvaluator().evaluate(runs, ood_errors)[0]
+        assert math.isnan(score.extrapolation_safety)
+        assert score.coverage == pytest.approx(0.8)
+
+    def test_single_block_run_has_nan_stability_and_total(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        score = FeatureValidityEvaluator().evaluate([
+            RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", seed=42, fold=0,
+                rmse_test=100.0,
+            ),
+        ])[0]
+        assert math.isnan(score.stability)
+        assert score.coverage == 0.0
+        assert math.isnan(score.total)
+        assert score.to_dict()["total"] is None
+
+    def test_randomcv_scores_remain_finite(self):
+        from extrapolation_discovery_platform.evaluation import (
+            FeatureValidityEvaluator,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, rmse):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, seed=42, fold=0,
+                rmse_test=rmse, rmse_train=rmse,
+            )
+
+        score = FeatureValidityEvaluator().evaluate([
+            run("RandomCV", 100.0),
+            run("CompositionBlock", 120.0),
+        ])[0]
+        assert math.isfinite(score.effect_size)
+        assert math.isfinite(score.generalisation)
+        assert math.isfinite(score.total)
+
+    def test_parity_grid_separates_element_groups(self):
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(group):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="ElementExclusion", split_group=group,
+                seed=42, fold=0,
+                y_test_true=np.array([1.0, 2.0]),
+                y_test_pred=np.array([1.1, 1.9]),
+                test_indices=np.array([0, 1]),
+            )
+
+        fig = plotly_combo_parity_grid([run("Ti"), run("Nb")])
+        scatters = [t for t in fig.data if t.mode == "markers"]
+        assert sum(len(t.x) for t in scatters) == 4
+        texts = " ".join(str(a.text) for a in fig.layout.annotations)
+        assert "R²=" not in texts or "EE-" in texts
+
+    def test_heatmap_metrics_separate_split_series(self):
+        from extrapolation_discovery_platform.gui.app import _cell_metrics
+        from sklearn.metrics import r2_score
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(policy, group, pred):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy=policy, split_group=group,
+                seed=42, fold=0,
+                y_test_true=np.array([1.0, 2.0]),
+                y_test_pred=np.array(pred),
+                test_indices=np.array([0, 1]),
+            )
+
+        runs = [
+            run("ElementExclusion", "Co", [1.0, 2.0]),
+            run("ElementExclusion", "Ti", [3.0, 4.0]),
+            run("CompositionBlock", "", [1.5, 2.5]),
+        ]
+        wfs, labels, r2_z, *_ = _cell_metrics(runs)
+        assert wfs == ["WF-LIN"]
+        assert len(labels) == 3
+        pooled_r2 = r2_score(
+            [1.0, 2.0, 1.0, 2.0, 1.0, 2.0],
+            [1.0, 2.0, 3.0, 4.0, 1.5, 2.5],
+        )
+        assert all(row[0] != pooled_r2 for row in r2_z)
+
+    def test_cv_folds_aggregate_into_one_series(self):
+        from extrapolation_discovery_platform.gui.app import _cell_metrics
+        from extrapolation_discovery_platform.gui.plotly_charts import (
+            plotly_combo_parity_grid,
+        )
+        from extrapolation_discovery_platform.workflows import RunResult
+
+        def run(fold, idx):
+            return RunResult(
+                workflow="WF-LIN", feature_set="FS_BASE",
+                split_policy="CompositionBlock", split_group=f"fold{fold}",
+                seed=42, fold=fold,
+                y_test_true=np.array([1.0, 2.0]) + idx[0],
+                y_test_pred=np.array([1.1, 1.9]) + idx[0],
+                test_indices=np.array(idx),
+            )
+
+        runs = [run(0, [0, 1]), run(1, [2, 3]), run(2, [4, 5])]
+        _, labels, r2_z, *_ = _cell_metrics(runs)
+        assert labels == ["BASE · CB"]
+        assert r2_z[0][0] is not None
+        fig = plotly_combo_parity_grid(runs)
+        texts = " ".join(str(a.text) for a in fig.layout.annotations)
+        assert texts.count("CB R²=") == 1
+
+    def test_stage1_does_not_fallback_to_randomcv(self):
+        from extrapolation_discovery_platform.features import (
+            FeatureCatalog,
+            FeatureSetName,
+        )
+        from extrapolation_discovery_platform.pipeline import stage1_preprocess
+
+        n = 40
+        cols = FeatureCatalog.columns(FeatureSetName.FS_BASE)
+        features = pd.DataFrame(
+            np.arange(n * len(cols), dtype=float).reshape(n, len(cols)),
+            columns=cols,
+        )
+        target = pd.Series(np.arange(n, dtype=float))
+        compositions = pd.DataFrame({
+            "Co": np.full(n, 0.5),
+            "Ni": np.zeros(n),
+            "Ti": np.zeros(n),
+        })
+        prep = stage1_preprocess(
+            features_df=features,
+            target=target,
+            compositions_df=compositions,
+            feature_set_names=[FeatureSetName.FS_BASE.value],
+            workflow_names=["WF-LIN"],
+            seeds=[42],
+            active_policies=["ElementExclusion"],
+        )
+        assert not prep.success
+        assert not any(k.startswith("RandomCV") for k in prep.fold_plan)
+
+    def test_derive_microstructure_preserves_missingness(self):
+        from extrapolation_discovery_platform.data.build_highconf_v2 import (
+            derive_microstructure,
+        )
+
+        out = derive_microstructure(pd.Series(["FCC", "FCC+B2", None, "Unknown"]))
+        assert out["micro_n_phases"].iloc[:2].tolist() == [1.0, 2.0]
+        assert out["micro_n_phases"].iloc[2:].isna().all()
+        assert out["micro_missing"].tolist() == [0.0, 0.0, 1.0, 1.0]
+        assert out.filter(like="micro_").iloc[2:, 1:].isna().all().all()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

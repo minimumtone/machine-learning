@@ -24,6 +24,7 @@ import pytest
 from extrapolation_discovery_platform.dataset import generate_hea_dataset
 from extrapolation_discovery_platform.ood_feature_discovery import (
     augment_dataset,
+    augment_dataset_weighted,
     identify_boundary_samples,
     run_feature_discovery,
 )
@@ -204,3 +205,211 @@ def test_gc_is_not_globally_disabled():
     assert gc.isenabled(), (
         "_compat.install() が循環 GC をプロセス全体で停止しています"
     )
+
+
+# ---------------------------------------------------------------------------
+# 9. 訓練スコープ（OOD 近辺のみで学習）
+# ---------------------------------------------------------------------------
+
+def test_neighborhood_plan_excludes_ood_eval_and_respects_scope(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, _y, _prep, ood = prepared
+    b = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[b.ood_indices])
+    n = len(feat)
+
+    g = compute_neighborhood_plan(feat, ood_idx, scope="global")
+    assert g.is_global and g.n_train_rows == n - len(ood_idx)
+    assert (g.copies[ood_idx] == 0).all()
+
+    nb = compute_neighborhood_plan(feat, ood_idx, scope="neighborhood",
+                                   neighborhood_quantile=0.3, min_train_rows=20)
+    assert (nb.copies[ood_idx] == 0).all()
+    assert 20 <= nb.n_train_rows < n - len(ood_idx)
+    # 近い行が残り、遠い行が落ちている
+    kept = nb.distances[nb.copies >= 1]
+    dropped = nb.distances[(nb.copies == 0) & ~np.isin(np.arange(n), ood_idx)]
+    if len(dropped):
+        assert kept.max() <= dropped.min() + 1e-12
+
+    k = compute_neighborhood_plan(feat, ood_idx, scope="kernel", kernel_max_copies=4)
+    assert (k.copies[ood_idx] == 0).all()
+    non_eval = ~np.isin(np.arange(n), ood_idx)
+    assert k.copies[non_eval].min() >= 1 and k.copies[non_eval].max() <= 4
+    # 距離が短いほど複製回数が多い（単調）
+    order = np.argsort(k.distances[non_eval])
+    c = k.copies[non_eval][order]
+    assert (np.diff(c) <= 0).all()
+
+
+def test_neighborhood_plan_with_no_ood_eval_rows(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, _y, _prep, _ood = prepared
+    for scope in ("neighborhood", "kernel"):
+        plan = compute_neighborhood_plan(
+            feat, np.array([], dtype=int), scope=scope,
+        )
+        assert plan.copies.min() == 1
+        assert plan.n_train_rows == len(feat)
+        assert plan.n_train_aug == len(feat)
+
+
+def test_augment_with_plan_keeps_ood_rows_out_of_training(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, y, _prep, ood = prepared
+    b = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[b.ood_indices])
+    for scope in ("neighborhood", "kernel"):
+        plan = compute_neighborhood_plan(feat, ood_idx, scope=scope)
+        X_aug, y_aug, tr, ev = augment_dataset(feat, y, b, ood.primary_test_idx,
+                                               neighborhood_plan=plan)
+        assert len(X_aug) == len(y_aug) == plan.n_train_aug + len(ev) + (
+            len(feat) - plan.n_train_rows - len(ev))
+        assert len(np.intersect1d(tr, ev)) == 0
+        assert len(tr) == plan.n_train_aug
+        # 複製行は元行の写し
+        for j in tr[tr >= len(feat)]:
+            src = X_aug.iloc[j].to_numpy()
+            assert np.isfinite(src).all()
+
+
+def test_augment_weighted_matches_replication_multiplicity(prepared):
+    from extrapolation_discovery_platform.ood_feature_discovery import (
+        compute_neighborhood_plan,
+    )
+    _comps, feat, y, _prep, ood = prepared
+    boundary = identify_boundary_samples(ood.ood_result, 0, 0.5)
+    ood_idx = np.unique(ood.primary_test_idx[boundary.ood_indices])
+    n_orig = len(feat)
+
+    for scope in ("global", "kernel"):
+        plan = compute_neighborhood_plan(feat, ood_idx, scope=scope)
+        X_rep, y_rep, train_rep, ood_rep = augment_dataset(
+            features_df=feat, target=y, boundary_info=boundary,
+            ood_test_idx=ood.primary_test_idx, neighborhood_plan=plan,
+        )
+        X_weight, y_weight, train_weight, ood_weight, sample_weight = (
+            augment_dataset_weighted(
+                features_df=feat, target=y, boundary_info=boundary,
+                ood_test_idx=ood.primary_test_idx, neighborhood_plan=plan,
+            )
+        )
+
+        assert len(X_rep) == len(y_rep)
+        assert len(X_weight) == len(y_weight) == n_orig
+        assert sample_weight.sum() == len(train_rep)
+        assert set(train_weight).isdisjoint(set(ood_weight))
+        assert len(train_weight) == (
+            plan.n_train_rows if scope == "kernel"
+            else n_orig - len(ood_rep)
+        )
+        if scope == "kernel":
+            assert sample_weight.min() >= 1
+            assert sample_weight.max() <= 4
+
+
+def test_sample_weight_is_honored_by_workflows():
+    from extrapolation_discovery_platform.individual_runner import (
+        _WORKFLOW_FACTORIES,
+    )
+
+    rng = np.random.default_rng(23)
+    X = pd.DataFrame(rng.normal(size=(40, 3)), columns=["a", "b", "c"])
+    y = pd.Series(3.0 * X["a"] - 2.0 * X["b"] + rng.normal(scale=0.1, size=40))
+    y.iloc[:5] += 20.0
+    X_train, X_test = X.iloc[:30], X.iloc[30:]
+    y_train, y_test = y.iloc[:30], y.iloc[30:]
+    weights = np.ones(len(X_train))
+    weights[:5] = 10.0
+
+    for workflow_name in ("WF-LIN", "WF-RF"):
+        plain = _WORKFLOW_FACTORIES[workflow_name](True, True).run(
+            X_train, y_train, X_test, y_test, seed=42,
+        )
+        weighted = _WORKFLOW_FACTORIES[workflow_name](True, True).run(
+            X_train, y_train, X_test, y_test, seed=42,
+            sample_weight=weights,
+        )
+        assert not np.allclose(plain.y_test_pred, weighted.y_test_pred)
+
+    ard = _WORKFLOW_FACTORIES["WF-ARD"](True, True).run(
+        X_train, y_train, X_test, y_test, seed=42,
+        sample_weight=weights,
+    )
+    assert np.isfinite(ard.rmse_test)
+
+
+def test_weighted_train_metrics_match_replication():
+    from extrapolation_discovery_platform.workflows import WorkflowLIN
+
+    rng = np.random.default_rng(31)
+    X_train = pd.DataFrame(
+        rng.normal(size=(40, 3)),
+        columns=["a", "b", "c"],
+    )
+    y_train = pd.Series(
+        2.0 * X_train["a"] - 1.5 * X_train["b"]
+        + 0.5 * X_train["c"] + rng.normal(scale=0.05, size=40)
+    )
+    X_test = pd.DataFrame(
+        rng.normal(size=(10, 3)),
+        columns=X_train.columns,
+    )
+    y_test = pd.Series(rng.normal(size=10))
+    weights = np.tile(np.array([1, 2, 3, 2]), 10)
+    rep = np.repeat(np.arange(len(X_train)), weights)
+    workflow = WorkflowLIN(alpha=1.0, dim_reduction=False)
+    weighted = workflow.run(
+        X_train, y_train, X_test, y_test, seed=42,
+        sample_weight=weights,
+    )
+    replicated = WorkflowLIN(alpha=1.0, dim_reduction=False).run(
+        X_train.iloc[rep].reset_index(drop=True),
+        y_train.iloc[rep].reset_index(drop=True),
+        X_test, y_test, seed=42,
+    )
+
+    np.testing.assert_allclose(
+        weighted.rmse_train, replicated.rmse_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.mae_train, replicated.mae_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.r2_train, replicated.r2_train, rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        weighted.y_test_pred, replicated.y_test_pred, rtol=1e-6,
+    )
+
+
+def test_discovery_runs_under_each_train_scope(prepared):
+    comps, feat, y, _prep, ood = prepared
+    cands = _candidates(y, len(feat))
+    for scope in ("global", "neighborhood", "kernel"):
+        res = run_feature_discovery(
+            workflow_names=["WF-LIN"], feature_set_name="FS_ALL",
+            split_policy="CompositionBlock",
+            features_df=feat, target=y, compositions_df=comps,
+            ood_result=ood.ood_result, ood_test_idx=ood.primary_test_idx,
+            candidate_features=["informative_desc"], extra_features_df=cands,
+            seed=42, n_folds=5, quick=True, train_scope=scope,
+            include_negative_control=False,
+        )
+        assert res.success, res.error_message
+        assert res.train_scope == scope
+        assert res.n_ood_eval > 0
+        for r in res.rounds:
+            assert r.success, r.error_message
+            assert r.train_scope == scope
+            assert r.n_ood_eval == res.n_ood_eval
+            assert r.n_train_rows == res.n_train_rows
+            assert np.isfinite(r.ood_rmse)
+        base = [r for r in res.rounds if not r.candidate_feature][0]
+        assert abs(base.improvement) < 1e-9

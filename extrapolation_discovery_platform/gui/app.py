@@ -40,11 +40,13 @@ import datetime
 import faulthandler
 import html as html_mod
 import logging
+import math
 import queue
 import threading
 import time
 import traceback
 import warnings
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
@@ -54,6 +56,7 @@ faulthandler.enable()
 import gradio as gr
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error, r2_score
 
 from extrapolation_discovery_platform.gui.plotly_charts import (
     build_summary_stats_md,
@@ -72,6 +75,8 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
     plotly_parity_grid_by_algorithm,
     plotly_parity_per_algorithm,
     plotly_parity_train_test,
+    split_series_abbreviation,
+    split_series_key,
     plotly_target_histogram,
     plotly_uncertainty_ood,
     plotly_validity_ranking,
@@ -80,6 +85,100 @@ from extrapolation_discovery_platform.gui.plotly_charts import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _fmt_score(x: Any) -> str:
+    """Format optional validity scores without rendering NaN."""
+    try:
+        return "N/A" if x is None or not np.isfinite(float(x)) else f"{float(x):.4f}"
+    except (TypeError, ValueError):
+        return "N/A"
+
+
+def _cell_metrics(run_list: List[Any], sp_f: str = "All") -> Tuple:
+    """Calculate heatmap metrics independently for each split series."""
+    filtered = [
+        r for r in run_list
+        if sp_f == "All" or r.split_policy == sp_f
+    ]
+    wfs = sorted({r.workflow for r in filtered})
+    fss = sorted({r.feature_set for r in filtered})
+    cell = defaultdict(lambda: {"true": [], "pred": []})
+    seen = set()
+    for r in filtered:
+        if r.y_test_true is None or r.y_test_pred is None:
+            continue
+        series = split_series_key(r)
+        ti = getattr(r, "test_indices", None)
+        for i in range(len(r.y_test_true)):
+            test_key = (
+                int(ti[i]) if ti is not None else float(r.y_test_true[i])
+            )
+            key = (r.workflow, r.feature_set, series, test_key)
+            if key in seen:
+                continue
+            seen.add(key)
+            cell[(r.workflow, r.feature_set, series)]["true"].append(
+                float(r.y_test_true[i])
+            )
+            cell[(r.workflow, r.feature_set, series)]["pred"].append(
+                float(r.y_test_pred[i])
+            )
+
+    def series_sort_key(series):
+        policy, group = series
+        rank = {
+            "RandomCV": 0,
+            "CompositionGroupCV": 1,
+            "CompositionBlock": 2,
+            "ElementExclusion": 3,
+            "Holdout": 4,
+        }.get(policy, 99)
+        return rank, group
+
+    rows = []
+    for fs in fss:
+        series_for_fs = {
+            split_series_key(r) for r in filtered if r.feature_set == fs
+        }
+        rows.extend((fs, series) for series in sorted(
+            series_for_fs, key=series_sort_key,
+        ))
+
+    r2_z, rmse_z, txt_r2, txt_rmse, row_labels = [], [], [], [], []
+    for fs, series in rows:
+        row_r2, row_rmse, row_txt_r2, row_txt_rmse = [], [], [], []
+        label = f"{fs.replace('FS_', '')} · {split_series_abbreviation(*series)}"
+        row_labels.append(label)
+        for wf in wfs:
+            d = cell[(wf, fs, series)]
+            if len(d["true"]) < 2:
+                row_r2.append(None)
+                row_rmse.append(None)
+                row_txt_r2.append("N/A")
+                row_txt_rmse.append("N/A")
+                continue
+            try:
+                r2_val = float(r2_score(d["true"], d["pred"]))
+                rmse_val = float(math.sqrt(mean_squared_error(
+                    d["true"], d["pred"],
+                )))
+            except Exception:
+                r2_val = rmse_val = None
+            row_r2.append(r2_val)
+            row_rmse.append(rmse_val)
+            warn = "⚠" if r2_val is not None and r2_val < 0 else ""
+            row_txt_r2.append(
+                f"{r2_val:.3f}{warn}" if r2_val is not None else "N/A"
+            )
+            row_txt_rmse.append(
+                f"{rmse_val:.3f}" if rmse_val is not None else "N/A"
+            )
+        r2_z.append(row_r2)
+        rmse_z.append(row_rmse)
+        txt_r2.append(row_txt_r2)
+        txt_rmse.append(row_txt_rmse)
+    return wfs, row_labels, r2_z, rmse_z, txt_r2, txt_rmse
 
 
 # ---------------------------------------------------------------------------
@@ -253,7 +352,7 @@ def _refresh_dashboard_data(
                 f"({best_run.workflow}/{best_run.feature_set})"
             )
         elif scores:
-            best_score = f"{scores[0].total:.4f}"
+            best_score = _fmt_score(scores[0].total)
         else:
             best_score = "--"
 
@@ -323,7 +422,7 @@ def _build_physical_interpretation_md(
         n_feat = _fs_sizes.get(fs_name, "?")
         r2_mean = f"{sum(r2s)/len(r2s):.4f}" if r2s else "N/A"
         vs = score_map.get(fs_name)
-        total = f"{vs.total:.4f}" if vs else "N/A"
+        total = _fmt_score(vs.total) if vs else "N/A"
         recommend = "**Best**" if fs_name == best_fs else ""
         # Bootstrap CI (#9)
         if vs and getattr(vs, "rmse_mean", 0) > 0:
@@ -352,14 +451,23 @@ def _build_physical_interpretation_md(
         best = scores[0]
         lines.append(f"### 推奨特徴量セット: **{best.feature_set}**\n")
         lines.append(
-            f"- 総合妥当性スコア: {best.total:.4f}\n"
-            f"- 効果量: {best.effect_size:.4f} / "
-            f"安定性: {best.stability:.4f} / "
-            f"汎化性: {best.generalisation:.4f}\n"
-            f"- 外挿安全性: {best.extrapolation_safety:.4f} / "
-            f"リークペナルティ: {best.leak_penalty:.4f}\n"
-            f"- 多重共線性ペナルティ: {best.multicollinearity_penalty:.4f}"
+            f"- 総合妥当性スコア: {_fmt_score(best.total)}\n"
+            f"- 効果量: {_fmt_score(best.effect_size)} / "
+            f"安定性: {_fmt_score(best.stability)} / "
+            f"汎化性: {_fmt_score(best.generalisation)}\n"
+            f"- 外挿安全性: {_fmt_score(best.extrapolation_safety)} / "
+            f"リークペナルティ: {_fmt_score(best.leak_penalty)}\n"
+            f"- 多重共線性ペナルティ: {_fmt_score(best.multicollinearity_penalty)}"
         )
+        if any(
+            not np.isfinite(float(getattr(best, axis)))
+            for axis in (
+                "effect_size", "generalisation", "extrapolation_safety",
+            )
+        ):
+            lines.append(
+                "RandomCV 未実行のため効果量・汎化性は N/A（利用可能な軸のみで重みを再正規化）"
+            )
         lines.append("")
 
     # --- Physical Interpretation ---
@@ -373,7 +481,7 @@ def _build_physical_interpretation_md(
 
         lines.append(
             f"**{best.feature_set}** が最も高い妥当性スコア "
-            f"({best.total:.4f}) を示しました。"
+            f"({_fmt_score(best.total)}) を示しました。"
         )
         if origin_best:
             lines.append(f"> {origin_best}\n")
@@ -382,14 +490,14 @@ def _build_physical_interpretation_md(
         if delta < 0.05:
             lines.append(
                 f"2位の **{second.feature_set}** "
-                f"({second.total:.4f}) との差は小さく、"
+                f"({_fmt_score(second.total)}) との差は小さく、"
                 "両方の特徴量セットが同等に有効である可能性があります。"
             )
         else:
             lines.append(
                 f"2位の **{second.feature_set}** "
-                f"({second.total:.4f}) と比較して "
-                f"{delta:.4f} の差があり、"
+                f"({_fmt_score(second.total)}) と比較して "
+                f"{_fmt_score(delta)} の差があり、"
                 f"**{best.feature_set}** が明確に優位です。"
             )
         lines.append("")
@@ -605,13 +713,13 @@ def _build_physical_interpretation_md(
         lines.append(f"#### 計算例: **{best.feature_set}**\n")
         lines.append(
             f"$$\\text{{Total}} = "
-            f"0.30 \\times {best.effect_size:.4f} "
-            f"+ 0.20 \\times {best.stability:.4f} "
-            f"+ 0.30 \\times {best.generalisation:.4f} "
-            f"+ 0.20 \\times {best.extrapolation_safety:.4f} "
-            f"- 0.15 \\times {best.leak_penalty:.4f} "
-            f"- 0.10 \\times {best.multicollinearity_penalty:.4f} "
-            f"= \\mathbf{{{best.total:.4f}}}$$\n"
+            f"0.30 \\times {_fmt_score(best.effect_size)} "
+            f"+ 0.20 \\times {_fmt_score(best.stability)} "
+            f"+ 0.30 \\times {_fmt_score(best.generalisation)} "
+            f"+ 0.20 \\times {_fmt_score(best.extrapolation_safety)} "
+            f"- 0.15 \\times {_fmt_score(best.leak_penalty)} "
+            f"- 0.10 \\times {_fmt_score(best.multicollinearity_penalty)} "
+            f"= \\mathbf{{{_fmt_score(best.total)}}}$$\n"
         )
         lines.append("---\n")
 
@@ -647,10 +755,7 @@ def _refresh_results_data(
             plotly_combo_parity_grid,
         )
         from plotly.subplots import make_subplots as _msub
-        from sklearn.metrics import r2_score as _r2, mean_squared_error as _mse
-        from collections import defaultdict
         import plotly.graph_objects as _go
-        import math
 
         runs   = session.get("runs", [])
         scores = session.get("validity_scores", [])
@@ -683,62 +788,23 @@ def _refresh_results_data(
         )
 
         # ── メイン2: WF × FS ヒートマップ (R² | RMSE 並列) ───────────────
-        def _cell_metrics(run_list, sp_f="All"):
-            fl = [r for r in run_list if sp_f == "All" or r.split_policy == sp_f]
-            wfs = sorted({r.workflow    for r in fl})
-            fss = sorted({r.feature_set for r in fl})
-            cell = defaultdict(lambda: {"true": [], "pred": []})
-            seen = set()
-            for r in fl:
-                if r.y_test_true is None or r.y_test_pred is None:
-                    continue
-                ti = getattr(r, "test_indices", None)
-                for i in range(len(r.y_test_true)):
-                    key = (r.workflow, r.feature_set,
-                           int(ti[i]) if ti is not None else float(r.y_test_true[i]))
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    cell[(r.workflow, r.feature_set)]["true"].append(float(r.y_test_true[i]))
-                    cell[(r.workflow, r.feature_set)]["pred"].append(float(r.y_test_pred[i]))
-            r2_z, rmse_z, txt_r2, txt_rmse = [], [], [], []
-            for fs in fss:
-                rr, rm, tr, tm = [], [], [], []
-                for wf in wfs:
-                    d = cell[(wf, fs)]
-                    if len(d["true"]) < 2:
-                        rr.append(None); rm.append(None)
-                        tr.append("N/A"); tm.append("N/A")
-                        continue
-                    try:
-                        r2_v   = float(_r2(d["true"], d["pred"]))
-                        rmse_v = float(math.sqrt(_mse(d["true"], d["pred"])))
-                    except Exception:
-                        r2_v = rmse_v = None
-                    rr.append(r2_v); rm.append(rmse_v)
-                    warn = "⚠" if r2_v is not None and r2_v < 0 else ""
-                    tr.append(f"{r2_v:.3f}{warn}" if r2_v is not None else "N/A")
-                    tm.append(f"{rmse_v:.3f}"      if rmse_v is not None else "N/A")
-                r2_z.append(rr); rmse_z.append(rm)
-                txt_r2.append(tr); txt_rmse.append(tm)
-            return wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse
+        wfs, row_labels, r2_z, rmse_z, txt_r2, txt_rmse = _cell_metrics(
+            runs, parity_sp_val,
+        )
 
-        wfs, fss, r2_z, rmse_z, txt_r2, txt_rmse = _cell_metrics(runs, parity_sp_val)
-        fs_labels = [f.replace("FS_", "") for f in fss]
-
-        if wfs and fss:
+        if wfs and row_labels:
             heat_fig = _msub(rows=1, cols=2,
                              subplot_titles=["R² (高いほど良)", "RMSE (低いほど良)"],
                              horizontal_spacing=0.14)
             heat_fig.add_trace(_go.Heatmap(
-                z=r2_z, x=wfs, y=fs_labels,
+                z=r2_z, x=wfs, y=row_labels,
                 text=txt_r2, texttemplate="%{text}", textfont=dict(size=9),
                 colorscale="RdYlGn", zmin=-1, zmax=1,
                 colorbar=dict(title="R²", thickness=10, len=0.7, x=0.44),
                 hovertemplate="WF:%{x} FS:%{y}<br>R²=%{text}<extra></extra>",
             ), row=1, col=1)
             heat_fig.add_trace(_go.Heatmap(
-                z=rmse_z, x=wfs, y=fs_labels,
+                z=rmse_z, x=wfs, y=row_labels,
                 text=txt_rmse, texttemplate="%{text}", textfont=dict(size=9),
                 colorscale="RdYlGn_r",
                 colorbar=dict(title="RMSE", thickness=10, len=0.7, x=1.0),
@@ -749,10 +815,11 @@ def _refresh_results_data(
                     text=("WF × FS メトリクスヒートマップ "
                           f"(Split={parity_sp_val})<br>"
                           "<span style='font-size:10px;color:#666;'>"
-                          "全fold集積データから直接計算 / ⚠ は R²<0</span>"),
+                          "split-seriesごとに計算（異なる分割方式は混合しない）"
+                          " / ⚠ は R²<0</span>"),
                     font=dict(size=12),
                 ),
-                height=max(280, len(fss)*50 + 120),
+                height=max(280, len(row_labels)*50 + 120),
                 margin=dict(t=80, b=60, l=80, r=20),
             )
             heat_fig.update_xaxes(tickangle=-35, tickfont=dict(size=9))
@@ -1444,15 +1511,13 @@ def _handle_generic_csv(
     parts: List[pd.DataFrame] = []
     if numeric_feat_cols:
         num_df = raw_valid[numeric_feat_cols].copy()
-        # Fill NaN with column median
-        for col in num_df.columns:
-            if num_df[col].isna().any():
-                median_val = num_df[col].median()
-                num_df[col] = num_df[col].fillna(
-                    median_val if pd.notna(median_val) else 0.0
-                )
+        all_missing = [col for col in num_df.columns if num_df[col].isna().all()]
+        for col in all_missing:
+            logger.warning("列 '%s' は全行欠損のためスキップ", col)
+        num_df = num_df.drop(columns=all_missing)
         num_df = num_df.astype("float64")
-        parts.append(num_df)
+        if not num_df.empty:
+            parts.append(num_df)
 
     # 文字列列 → 元素記号列と判定してMAGPIE/周期律表プロパティに変換
     # ワンホットベクトルは元素間の化学的類似性を失うため使用しない。
@@ -1510,12 +1575,6 @@ def _handle_generic_csv(
                 prop_records.append(row_props)
 
             prop_df = pd.DataFrame(prop_records, dtype="float64")
-            # NaN を列中央値で埋める
-            for c in prop_df.columns:
-                if prop_df[c].isna().any():
-                    med = prop_df[c].median()
-                    prop_df[c] = prop_df[c].fillna(med if pd.notna(med) else 0.0)
-
             parts.append(prop_df)
             logger.info(
                 "列 '%s' を MAGPIE/周期律表プロパティ %d 列に変換しました。",
@@ -1933,7 +1992,7 @@ def _handle_csv_upload(
         for col in extra_numeric_cols:
             values = pd.to_numeric(source_extra[col], errors="coerce")
             if values.notna().any():
-                features_df[col] = values
+                features_df[col] = values.astype("float64")
                 carried_extra_cols.append(col)
         logger.info(
             "HEA CSV: carried over %d extra numeric columns: %s",
@@ -2917,6 +2976,8 @@ def create_app() -> gr.Blocks:
                         "**CompositionBlock**（推奨）: 組成空間でkMeansクラスタリングを行い、"
                         "類似組成がtrain/testに混入しないように分割する。"
                         "真の外挿性能を評価できる。\n\n"
+                        "**CompositionGroupCV**: 完全一致組成を同一グループとして"
+                        "train/testから分離する。\n\n"
                         "**ElementExclusion**: 特定元素を含むサンプルをテストセットに割り当てる。"
                         "特定元素系への外挿能力を評価する。\n\n"
                         "**RandomCV** ⚠️ デフォルト無効: ランダムk-fold交差検証。"
@@ -2938,7 +2999,12 @@ def create_app() -> gr.Blocks:
                         sp_ee_check = gr.Checkbox(
                             label="✅ ElementExclusion",
                             value=True,
-                            info="特定元素の完全除外による外挿テスト",
+                            info="特定元素を含む試料を全て除外する zero-shot 元素外挿テスト（train≥50・test≤40% を満たす元素のみ）",
+                        )
+                        sp_cg_check = gr.Checkbox(
+                            label="CompositionGroupCV（同一組成を train/test で完全分離）",
+                            value=True,
+                            info="組成が完全一致する試料をグループ化し、未知組成への汎化を測る（RandomCV と CompositionBlock の中間の難易度）",
                         )
                         sp_rc_check = gr.Checkbox(
                             label="⚠️ RandomCV（リーク懸念あり・デフォルト無効）",
@@ -3372,7 +3438,8 @@ def create_app() -> gr.Blocks:
                                 )
                                 ind_sp = gr.Dropdown(
                                     label="分割方法 (Split Policy)",
-                                    choices=["CompositionBlock", "ElementExclusion",
+                                    choices=["CompositionBlock", "CompositionGroupCV",
+                                             "ElementExclusion",
                                              "Holdout", "RandomCV ⚠️(リーク懸念)"],
                                     value="CompositionBlock",
                                     info="CompositionBlock推奨。RandomCVはリーク懸念があるため診断用途のみ使用。",
@@ -3386,7 +3453,7 @@ def create_app() -> gr.Blocks:
                                 )
                                 ind_n_folds = gr.Slider(
                                     minimum=2, maximum=10, value=5, step=1,
-                                    label="Fold数 (RandomCV / CompositionBlock)",
+                                    label="Fold数 (RandomCV / CompositionBlock / CompositionGroupCV)",
                                     info="Holdout の場合は無視",
                                 )
                                 ind_test_size = gr.Slider(
@@ -3806,7 +3873,8 @@ def create_app() -> gr.Blocks:
                             label="特徴量セット",
                         )
                         disc_sp = gr.Dropdown(
-                            choices=["CompositionBlock","ElementExclusion","RandomCV","Holdout"],
+                            choices=["CompositionBlock","CompositionGroupCV",
+                                     "ElementExclusion","RandomCV","Holdout"],
                             value="CompositionBlock",
                             label="分割ポリシー",
                         )
@@ -4137,7 +4205,10 @@ def create_app() -> gr.Blocks:
                         runs_data.append({
                             "workflow": r.workflow,
                             "feature_set": r.feature_set,
-                            "split_policy": r.split_policy,
+                            "split_policy": (
+                                f"{r.split_policy} ({r.split_group})"
+                                if getattr(r, "split_group", "") else r.split_policy
+                            ),
                             "seed": int(r.seed),
                             "fold": int(r.fold),
                             "rmse_train": round(float(r.rmse_train), 4),
@@ -4372,6 +4443,7 @@ def create_app() -> gr.Blocks:
             csv_mode: str,
             use_sp_cb: bool,
             use_sp_ee: bool,
+            use_sp_cg: bool,
             use_sp_rc: bool,
             use_sp_ho: bool,
             n_folds_val: float,
@@ -4597,6 +4669,8 @@ def create_app() -> gr.Blocks:
                     selected_sps.append("CompositionBlock")
                 if use_sp_ee:
                     selected_sps.append("ElementExclusion")
+                if use_sp_cg:
+                    selected_sps.append("CompositionGroupCV")
                 if use_sp_rc:
                     selected_sps.append("RandomCV")
                 if use_sp_ho:
@@ -4873,7 +4947,7 @@ def create_app() -> gr.Blocks:
                 if scores:
                     log(
                         f"Best feature set: {scores[0].feature_set} "
-                        f"(score={scores[0].total:.4f})"
+                        f"(score={_fmt_score(scores[0].total)})"
                     )
 
                 for fs_key, ood_res in ood_results.items():
@@ -5200,7 +5274,7 @@ def create_app() -> gr.Blocks:
                 leak_auto_exclude, leak_corr_threshold,
                 run_csv_upload, run_csv_target,
                 csv_feature_checks, csv_mode_radio,
-                sp_cb_check, sp_ee_check, sp_rc_check, sp_ho_check,
+                sp_cb_check, sp_ee_check, sp_cg_check, sp_rc_check, sp_ho_check,
                 n_folds_slider,
                 test_size_slider,
                 state,
