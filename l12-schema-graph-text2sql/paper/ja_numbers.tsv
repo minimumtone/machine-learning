@@ -63,7 +63,9 @@ tex_in_json	2	2	かずに実行できる。5プロトタイプ（L1$_2$/B2/NaCl/
 tex_in_json	3	3	L1$_2$/B2/NaCl/NiAs/BiF$_3$）・36テーブルの検証RDB上で245の自然言語
 tex_in_json	36	36	2$/B2/NaCl/NiAs/BiF$_3$）・36テーブルの検証RDB上で245の自然言語クエリを評
 tex_in_json	245	245	s/BiF$_3$）・36テーブルの検証RDB上で245の自然言語クエリを評価した結果、行レベルの実行再現
-tex_in_json	86.1%	86.1	然言語クエリを評価した結果、行レベルの実行再現率は86.1%であった。実装に関与していない共同著者が設計したク
+tex_in_json	86.1%	86.1	然言語クエリを評価した結果、行レベルの実行再現率は86.1%であった（この値は期待される行の回収率であり、SQ
+tex_in_json	100	100	ではない）。実装に関与していない共同著者が設計した100問、スキーマの異なる3種のRDBへの一般化試験、日
+tex_in_json	3	3	いない共同著者が設計した100問、スキーマの異なる3種のRDBへの一般化試験、日英の質問文による評価の
 tex_in_json	1	1	素の寄与はablation study（構成要素を1つずつ外して性能変化を測る実験）と統計検定で評価し
 tex_in_json	1.5	1.5	ス \end{keywords} \vspace{1.5em} }]   \section{はじめに} \
 tex_in_json	1	1	別子列）で結びつける設計方針である。この設計では、1つの質問に答えるために複数のテーブルをJOIN（F
@@ -1860,7 +1862,7 @@ tex_not_in_json	17	17	16$、VH $\geq 17$。閾値 8/12/17 は分布から機械�
 tex_not_in_json	144	144	はない：設計時に付与した主評価245問のラベルとは144/245で一致し、不一致101件のうち92件（91
 tex_not_in_json	101	101	245問のラベルとは144/245で一致し、不一致101件のうち92件（91.1%）は隣接層間のずれである
 tex_not_in_json	101	101	追加） & \texttt{q\_expert\_101}--\texttt{q\_expert\_115
-tex_not_in_json	0.001	0.001	表す量）が$E_\text{hull} \leq 0.001$~eV/atomであることと定義した（準安定：$
+tex_not_in_json	0.001	0.001	を含む）が$E_\text{hull} \leq 0.001$~eV/atomであることと定義した（準安定：$
 tex_not_in_json	0.001	0.001	$~eV/atomであることと定義した（準安定：$0.001 < E_\text{hull} \leq 0.0
 tex_not_in_json	0.05	0.05	001 < E_\text{hull} \leq 0.05$、不安定：$E_\text{hull} > 0.
 tex_not_in_json	0.05	0.05	05$、不安定：$E_\text{hull} > 0.05$）。gold SQL・辞書・少数ショット例はすべ
