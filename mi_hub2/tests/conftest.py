@@ -5,4 +5,13 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _no_llm(monkeypatch):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    for env in (
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "MI_HUB_LLM_BASE_URL",
+        "MI_HUB_LLM_PROVIDER",
+        "MI_HUB_LLM_MODEL",
+    ):
+        monkeypatch.delenv(env, raising=False)

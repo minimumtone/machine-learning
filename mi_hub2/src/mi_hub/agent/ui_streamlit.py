@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import html
 import os
 import time
 
@@ -15,11 +16,13 @@ from mi_hub.agent import llm
 from mi_hub.agent.graphrag import GraphRAGProvider, build_default_provider
 from mi_hub.agent.loop import ResearchManager
 from mi_hub.agent.models import ApprovalRequest, Evidence, SessionState
+from mi_hub.agent.oqmd import OQMDProvider
 from mi_hub.agent.states import HypothesisState
 
 APPROVAL_KIND_LABELS = {
     "task_execution": "タスク実行",
     "script_execution": "スクリプト実行",
+    "job_submission": "外部ジョブ投入",
 }
 
 
@@ -34,7 +37,9 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
         claim=f"スクリプト実行（exit code {res['exit_code']}）: {approval.description}",
         conditions={
             "approval_id": approval.approval_id,
+            "exit_code": res["exit_code"],
             "stdout": res["stdout"][-2000:],
+            "stderr": res["stderr"][-2000:],
             "workdir": workdir,
             "generated_files": res["generated_files"],
         },
@@ -52,6 +57,16 @@ def execute_script_approval(manager: ResearchManager, s: SessionState,
         files = "\n".join(f"- {workdir}/{f}" for f in res["generated_files"])
         reply += f"\n\n生成ファイル:\n{files}"
     reply += "\n\n実行結果は証拠タブに記録しました。"
+    comment = llm.science_comment(
+        s.goal.statement if s.goal else "", "計算結果",
+        {"description": approval.description,
+         "exit_code": res["exit_code"],
+         "stdout": res["stdout"][-3000:],
+         "generated_files": res["generated_files"]})
+    if comment:
+        reply += f"\n\n【エージェント所見（計算結果）】\n{comment}"
+        s.audit("ResearchManager", "science_comment",
+                approval_id=approval.approval_id, kind="計算結果")
     return reply
 
 
@@ -78,12 +93,12 @@ def render_research_loop(s: SessionState) -> None:
             f'font-size:0.78rem;white-space:nowrap;">{stage}</span>'
         )
     arrow = '<span style="color:#bbb;font-size:0.75rem;">→</span>'
-    html = ('<div style="display:flex;gap:4px;align-items:center;'
-            'flex-wrap:wrap;margin-bottom:8px;">' + arrow.join(pills) + "</div>")
+    block = ('<div style="display:flex;gap:4px;align-items:center;'
+             'flex-wrap:wrap;margin-bottom:8px;">' + arrow.join(pills) + "</div>")
     if current is None:
-        html += (f'<div style="font-size:0.8rem;color:#888;">現在の状態: '
-                 f'<b>{s.agent_state.value}</b>（ループ外）</div>')
-    st.markdown(html, unsafe_allow_html=True)
+        block += (f'<div style="font-size:0.8rem;color:#888;">現在の状態: '
+                  f'<b>{s.agent_state.value}</b>（ループ外）</div>')
+    st.markdown(block, unsafe_allow_html=True)
 
 
 AUDIT_ACTION_LABELS = {
@@ -96,6 +111,10 @@ AUDIT_ACTION_LABELS = {
     "approval_resolved": ("\U0001f44d", "承認判断"),
     "script_executed": ("\U0001f4bb", "スクリプト実行"),
     "case_report_exported": ("\U0001f4c4", "事例レポート出力"),
+    "case_knowledge_ingested": ("\U0001f9e0", "事例ナレッジ取込"),
+    "job_proposed": ("\U0001f4e6", "ジョブ提案"),
+    "job_submitted": ("\U0001f680", "ジョブ投入"),
+    "job_finished": ("\U0001f3c1", "ジョブ終了"),
 }
 
 
@@ -128,6 +147,8 @@ def render_timeline(s: SessionState) -> None:
         return
     for ts, icon, label, detail in events:
         t = time.strftime("%m/%d %H:%M:%S", time.localtime(ts))
+        label = html.escape(label)
+        detail = html.escape(detail)
         st.markdown(
             f'<div style="border-left:3px solid #ddd;padding:2px 0 2px 10px;'
             f'margin-left:4px;"><span style="color:#999;font-size:0.75rem;">{t}</span>'
@@ -169,6 +190,7 @@ def get_manager() -> ResearchManager:
     manager = ResearchManager()
     graphrag_dir = os.path.join(str(manager.store.base_dir), "graphrag")
     manager.gateway.register_knowledge_provider(build_default_provider(graphrag_dir))
+    manager.gateway.register_knowledge_provider(OQMDProvider())
     return manager
 
 
@@ -191,8 +213,9 @@ with st.sidebar:
         m.generate_plan(state)
         st.session_state["sid"] = state.session_id
         st.rerun()
-    if selected != "(新規)":
+    if selected != "(新規)" and selected != st.session_state.get("last_selected"):
         st.session_state["sid"] = selected
+    st.session_state["last_selected"] = selected
     if st.session_state.get("sid"):
         cur = m.store.load(st.session_state["sid"])
         if cur is not None and st.button("事例レポートを書き出す"):
@@ -203,6 +226,39 @@ with st.sidebar:
                     "レポートをダウンロード", rf.read(),
                     file_name=f"case_report_{cur.session_id}.md",
                 )
+    st.markdown("---")
+    st.header("LLM設定")
+    providers = llm.available_providers()
+    if providers:
+        cur_p = llm.current_provider()
+        labels = {
+            "openai": "OpenAI",
+            "anthropic": "Claude (Anthropic)",
+            "gemini": "Gemini",
+            "local": "ローカルLLM (OpenAI互換)",
+        }
+        choice = st.selectbox(
+            "プロバイダ",
+            providers,
+            index=providers.index(cur_p) if cur_p in providers else 0,
+            format_func=lambda p: labels.get(p, p),
+        )
+        os.environ["MI_HUB_LLM_PROVIDER"] = choice
+        model_override = st.text_input(
+            "モデル名（空欄で既定）",
+            os.environ.get("MI_HUB_LLM_MODEL", ""),
+            help="例: gpt-4o / claude-sonnet-4-20250514 / gemini-2.0-flash / llama3.1",
+        )
+        if model_override.strip():
+            os.environ["MI_HUB_LLM_MODEL"] = model_override.strip()
+        else:
+            os.environ.pop("MI_HUB_LLM_MODEL", None)
+    else:
+        st.caption(
+            "利用可能なLLMがありません。OPENAI_API_KEY / ANTHROPIC_API_KEY / "
+            "GEMINI_API_KEY のいずれか、またはローカルLLMの MI_HUB_LLM_BASE_URL "
+            "を設定してください（未設定時は決定論的フォールバック）。"
+        )
 
 sid = st.session_state.get("sid")
 if not sid:
@@ -245,8 +301,9 @@ with chat_col:
             )
             if state.agent_state.value == "awaiting_approval":
                 reply += (
-                    "\n\n**承認待ちの操作:**\n" + pending_approval_summary(state)
-                    + "\n\nチャットで「承認」/「却下」と入力するか、承認タブから操作できます。"
+                    "\n\n**承認をお願いします。**次の操作を実行してよろしいですか？\n"
+                    + pending_approval_summary(state)
+                    + "\n\n実行する場合は「承認」、しない場合は「却下」と入力してください（承認タブからも操作可）。"
                 )
             if state.evaluations and state.evaluations[-1].data_gaps:
                 gaps = "\n".join(f"- {g}" for g in state.evaluations[-1].data_gaps)
@@ -279,14 +336,17 @@ with chat_col:
             req = ApprovalRequest(
                 kind="script_execution",
                 description=(intent_info.get("reason") or user_msg)[:80],
-                payload={"script": script},
+                payload={"script": script,
+                         "summary": llm.summarize_proposal(
+                             (intent_info.get("reason") or user_msg)[:80], script)},
             )
             state.approvals.append(req)
             state.audit("human_chat", "script_proposed", approval_id=req.approval_id)
             reply = (
-                "以下のスクリプトを提案します（未実行）。内容を確認の上、"
-                "チャットで「承認」と入力するか承認タブから承認すると実行されます。\n\n"
-                f"```bash\n{script}\n```"
+                f"「{req.description}」という提案がありますが、実行しますか？（未実行）\n\n"
+                f"{req.payload['summary']}\n\n"
+                f"```bash\n{script}\n```\n\n"
+                "実行する場合は「承認」、しない場合は「却下」と入力してください。"
             )
         else:
             # 自由対話（LLM）。実行や承認は行わず、議論・説明・案内のみ。
@@ -314,7 +374,8 @@ with chat_col:
                     + (f"停止理由: {state.stop_reason}。" if state.stop_reason else "")
                     + "\n\n「実行を続けて」でタスクを進められます。"
                     "承認・仮説判定はAgentペインの各タブから操作してください。"
-                    "（自由対話には OPENAI_API_KEY の設定が必要です）"
+                    "（自由対話には LLM の APIキー設定が必要です: OPENAI_API_KEY / "
+                    "ANTHROPIC_API_KEY / GEMINI_API_KEY / MI_HUB_LLM_BASE_URL）"
                 )
         state.chat_history.append({"role": "assistant", "content": reply})
         m.store.save(state)
@@ -360,7 +421,7 @@ with agent_col:
             for gap in state.evaluations[-1].data_gaps:
                 st.write(f"- {gap}")
 
-    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴", "タイムライン"])
+    tabs = st.tabs(["計画", "仮説", "承認", "証拠", "エラー", "履歴", "タイムライン", "ジョブ"])
 
     with tabs[0]:
         if state.plan:
@@ -477,7 +538,10 @@ with agent_col:
                     + f" / 要求: {time.strftime('%H:%M:%S', time.localtime(a.requested_at))}"
                 )
                 if a.kind == "script_execution" and a.payload.get("script"):
-                    st.code(a.payload["script"], language="bash")
+                    if a.payload.get("summary"):
+                        st.markdown(a.payload["summary"])
+                    with st.expander("スクリプト本文（実行される内容）"):
+                        st.code(a.payload["script"], language="bash")
                 cols = st.columns(2)
                 if cols[0].button("承認", key=f"ok-{a.approval_id}", type="primary"):
                     m.resolve_approval(state, a.approval_id, True)
@@ -532,3 +596,34 @@ with agent_col:
 
     with tabs[6]:
         render_timeline(state)
+
+    with tabs[7]:
+        st.caption(
+            f"スケジューラ: {m.scheduler.name}（MI_HUB_SCHEDULER で切替） / "
+            f"ノード時間: {state.budget.used_node_hours:.1f}"
+            f" / {state.budget.max_node_hours:.1f} h"
+        )
+        if st.button("ジョブ状態を更新（ポーリング）"):
+            updated = m.poll_jobs(state)
+            if updated:
+                st.success(f"{len(updated)} 件のジョブ状態を更新しました")
+            st.rerun()
+        if state.jobs:
+            st.dataframe(pd.DataFrame([
+                {"job": j.job_id, "name": j.name, "kind": j.kind,
+                 "state": j.state, "scheduler_job_id": j.scheduler_job_id,
+                 "推定ノード時間": j.estimated_node_hours,
+                 "workdir": j.workdir}
+                for j in state.jobs
+            ]), use_container_width=True)
+            for j in state.jobs:
+                if j.state == "proposed":
+                    approval = state.approval(j.approval_id) if j.approval_id else None
+                    if approval and approval.status == "approved":
+                        if st.button(f"投入: {j.name}", key=f"submit-{j.job_id}"):
+                            m.submit_approved_job(state, j.job_id)
+                            st.rerun()
+                    else:
+                        st.info(f"{j.name}: 承認待ち（承認タブで判断してください）")
+        else:
+            st.write("外部ジョブはまだありません。")

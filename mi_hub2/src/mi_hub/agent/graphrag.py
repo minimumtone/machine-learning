@@ -172,6 +172,23 @@ class GraphRAGProvider(KnowledgeProvider):
             json.dump({"docs": self.docs, "edges": self.edges}, f,
                       ensure_ascii=False, indent=1)
 
+    def ingest_case_report(self, session_id: str, goal_statement: str,
+                           report_text: str) -> list[str]:
+        """事例レポートを事例ナレッジとしてグラフへ取り込む。
+
+        同一セッションの再取込は上書き扱い。過去事例の手法・結果が
+        検索・仮説候補・プロセス改善提案の根拠に使われるようになる。
+        """
+        entities = self.add_document(
+            doc_id=f"case:{session_id}",
+            title=f"事例: {goal_statement[:60]}",
+            text=report_text,
+            source=f"case_report/{session_id}",
+        )
+        self._log("case_ingested", session_id=session_id,
+                  entities=len(entities))
+        return entities
+
     # ---------- 検索（KnowledgeProvider インターフェイス） ----------
     def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         q_ents = [e for e in self.tokenizer.extract_entities(query)
@@ -292,10 +309,17 @@ class GraphRAGProvider(KnowledgeProvider):
         counts: dict[str, int] = {}
         with open(self.log_path, encoding="utf-8") as f:
             for line in f:
-                entry = json.loads(line)
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
                 if entry.get("action") != "search":
                     continue
-                for tok in MaterialsTokenizer._segment(entry.get("query", "")):
+                # 名詞連続の複合語（例: 積層欠陥エネルギー）を候補として抽出する
+                for tok in self.tokenizer.extract_entities(entry.get("query", "")):
                     if len(tok) >= 3 and tok not in self.tokenizer.user_terms:
                         counts[tok] = counts.get(tok, 0) + 1
         new_terms = sorted(t for t, c in counts.items() if c >= min_count)

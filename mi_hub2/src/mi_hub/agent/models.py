@@ -134,11 +134,14 @@ class Budget(BaseModel):
     used_model_runs: int = 0
     max_gpu_hours: float = 10.0
     used_gpu_hours: float = 0.0
+    max_node_hours: float = 24.0  # 外部ジョブ（DFT等）のノード時間上限
+    used_node_hours: float = 0.0
 
     def exceeded(self) -> bool:
         return (
             self.used_model_runs >= self.max_model_runs
             or self.used_gpu_hours >= self.max_gpu_hours
+            or self.used_node_hours >= self.max_node_hours
         )
 
 
@@ -194,6 +197,24 @@ class Observation(BaseModel):
     iterations_remaining: int = 0
 
 
+class JobRecord(BaseModel):
+    """外部スケジューラ（Slurm等）へ投入したジョブの記録。"""
+
+    job_id: str = Field(default_factory=lambda: _uid("JOB"))
+    scheduler_job_id: str | None = None
+    scheduler: str = "local_mock"
+    name: str = ""
+    kind: str = "dft"
+    state: str = "proposed"  # proposed / pending / running / completed / failed / cancelled
+    workdir: str = ""
+    script: str = ""
+    approval_id: str | None = None
+    estimated_node_hours: float = 0.0
+    submitted_at: float | None = None
+    finished_at: float | None = None
+    detail: dict[str, Any] = Field(default_factory=dict)
+
+
 class SessionState(BaseModel):
     """研究セッションの作業記憶（§7.1、§15）。"""
 
@@ -214,6 +235,13 @@ class SessionState(BaseModel):
     next_action_candidates: list[str] = Field(default_factory=list)
     stop_reason: str | None = None
     chat_history: list[dict[str, str]] = Field(default_factory=list)
+    jobs: list[JobRecord] = Field(default_factory=list)
+
+    def job(self, jid: str) -> JobRecord | None:
+        for j in self.jobs:
+            if j.job_id == jid:
+                return j
+        return None
 
     def hypothesis(self, hid: str) -> Hypothesis | None:
         for h in self.hypotheses:
