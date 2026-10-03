@@ -1,2 +1,2 @@
-structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,F_vib_1273K,F_vib_1473K
-relax/b2_x0.580_vacNi_s0.extxyz,110,62a31e2902acfa556bc12ce01d7927f68015afa79c2d9128af0a367fadc9aa1a,13969,1786443350.1784225,0.01,4x4x4,medium,2,-0.4629828656764893,-0.5875504036231496
+structure,n_atoms,source_hash,source_size,source_mtime,distance,mesh,model,cache_version,min_freq_THz,n_imag_modes,n_modes,F_vib_1273K,F_vib_1473K
+/home/ubuntu/repos/machine-learning/laves_fig6/b2_offstoich/relax/b2_x0.580_vacNi_s0.extxyz,110,62a31e2902acfa556bc12ce01d7927f68015afa79c2d9128af0a367fadc9aa1a,13969,1786443350.1784225,0.01,4x4x4,medium,3,0.5920,0,10560,-0.5147261963030397,-0.651404453608665

@@ -26,7 +26,7 @@ def phonopy_from_ase(at):
 
 
 def compute_force_sets(ph, calc, plusminus=False, distance=0.01):
-    """Generate displacements, compute MACE forces for each, return force array."""
+    """Generate displacements and return residual-subtracted force sets."""
     ph.generate_displacements(distance=distance, is_plusminus=plusminus, is_diagonal=True)
     supercells = ph.supercells_with_displacements
     n_disp = len(supercells)
@@ -41,7 +41,15 @@ def compute_force_sets(ph, calc, plusminus=False, distance=0.01):
         )
         a.calc = calc
         forces[i] = a.get_forces()
-    return forces
+    ref = Atoms(
+        symbols=ph.supercell.symbols,
+        positions=ph.supercell.positions,
+        cell=ph.supercell.cell,
+        pbc=True,
+    )
+    ref.calc = calc
+    # Subtract residual forces of the undisplaced (finite-fmax) structure.
+    return forces - ref.get_forces()[None, :, :]
 
 
 def fvib_from_phonopy(ph, T_list, mesh_dim):

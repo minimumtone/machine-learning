@@ -17,7 +17,7 @@ T_LIST = [1273.0, 1473.0]
 DISPLACEMENT = 0.01
 MESH = (4, 4, 4)
 MACE_MODEL = 'medium'
-CACHE_VERSION = '2'
+CACHE_VERSION = '3'
 
 
 def file_hash(path, algorithm='sha256'):
@@ -73,9 +73,18 @@ def run_phonon(path):
         )
         a.calc = calc
         forces[i] = a.get_forces()
-    ph.forces = forces
+    ref = Atoms(
+        symbols=ph.supercell.symbols,
+        positions=ph.supercell.positions,
+        cell=ph.supercell.cell,
+        pbc=True,
+    )
+    ref.calc = calc
+    # Subtract residual forces of the undisplaced (finite-fmax) structure.
+    ph.forces = forces - ref.get_forces()[None, :, :]
     ph.produce_force_constants(fc_calculator='traditional')
     ph.run_mesh(list(MESH))
+    freqs = ph.mesh.frequencies
     ph.run_thermal_properties(t_min=0, t_max=max(T_LIST) + 100, t_step=10)
     tp = ph.thermal_properties
     temps = tp.temperatures
@@ -98,6 +107,9 @@ def run_phonon(path):
         'mesh': 'x'.join(str(m) for m in MESH),
         'model': MACE_MODEL,
         'cache_version': CACHE_VERSION,
+        'min_freq_THz': f'{float(freqs.min()):.4f}',
+        'n_imag_modes': str(int(np.sum(freqs < -0.1))),
+        'n_modes': str(int(freqs.size)),
     }
     for T in T_LIST:
         row[f'F_vib_{T:.0f}K'] = fvib[T]
@@ -135,7 +147,8 @@ def load_existing(fvib_path, src_path):
         except StopIteration:
             return None
 
-    required = {'cache_version', 'source_hash', 'source_size', 'distance', 'mesh', 'model'}
+    required = {'cache_version', 'source_hash', 'source_size', 'distance', 'mesh', 'model',
+                'min_freq_THz', 'n_imag_modes', 'n_modes'}
     if not required.issubset(row.keys()):
         return None
     if row['cache_version'] != CACHE_VERSION:
@@ -151,8 +164,14 @@ def load_existing(fvib_path, src_path):
     return {T: float(_fvib_key(row, T)) for T in T_LIST}
 
 
+def read_mode_info(fvib_path):
+    with open(fvib_path) as fp:
+        row = next(csv.DictReader(fp))
+    return {k: row[k] for k in ('min_freq_THz', 'n_imag_modes', 'n_modes')}
+
+
 if __name__ == '__main__':
-    torch.set_num_threads(4)
+    torch.set_num_threads(8)
     # select representative s0 files
     files = [
         'b2_x0.500_perfect.extxyz',
@@ -186,11 +205,13 @@ if __name__ == '__main__':
             'n_atoms': len(read(path)),
             'F_vib_1273': fvib[1273.0],
             'F_vib_1473': fvib[1473.0],
+            **read_mode_info(fvib_path),
         })
         print(f, fvib)
     out_path = os.path.join(AN, 'phonon_fvib.csv')
     with open(out_path, 'w', newline='') as fp:
-        writer = csv.DictWriter(fp, fieldnames=['file','x_target','branch','n_atoms','F_vib_1273','F_vib_1473'])
+        writer = csv.DictWriter(fp, fieldnames=['file','x_target','branch','n_atoms','F_vib_1273','F_vib_1473',
+                                                'min_freq_THz','n_imag_modes','n_modes'])
         writer.writeheader()
         writer.writerows(rows)
     print('wrote', out_path)
