@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Batch phonon F_vib computations and collect to analysis/phonon_fvib.csv."""
-import os, sys, csv, glob, re
+import os, sys, csv, glob, re, hashlib
 from ase import Atoms
 from ase.io import read
 import numpy as np
@@ -17,7 +17,16 @@ T_LIST = [1273.0, 1473.0]
 DISPLACEMENT = 0.01
 MESH = (4, 4, 4)
 MACE_MODEL = 'medium'
-CACHE_VERSION = '1'
+CACHE_VERSION = '3'
+
+
+def file_hash(path, algorithm='sha256'):
+    """Return a hex digest of a file's contents."""
+    h = hashlib.new(algorithm)
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def load_atoms(path):
@@ -64,9 +73,18 @@ def run_phonon(path):
         )
         a.calc = calc
         forces[i] = a.get_forces()
-    ph.forces = forces
+    ref = Atoms(
+        symbols=ph.supercell.symbols,
+        positions=ph.supercell.positions,
+        cell=ph.supercell.cell,
+        pbc=True,
+    )
+    ref.calc = calc
+    # Subtract residual forces of the undisplaced (finite-fmax) structure.
+    ph.forces = forces - ref.get_forces()[None, :, :]
     ph.produce_force_constants(fc_calculator='traditional')
     ph.run_mesh(list(MESH))
+    freqs = ph.mesh.frequencies
     ph.run_thermal_properties(t_min=0, t_max=max(T_LIST) + 100, t_step=10)
     tp = ph.thermal_properties
     temps = tp.temperatures
@@ -75,17 +93,23 @@ def run_phonon(path):
     f_per_atom = np.array([float(f) * 0.010364272 / natom for f in free])
     fvib = {T: float(np.interp(T, temps, f_per_atom)) for T in T_LIST}
 
-    # Cache with source-file metadata so a re-relaxed structure invalidates old results.
+    # Cache with source-file hash and calculation settings.  If the source
+    # structure or any setting changes, load_existing detects the mismatch and
+    # recomputes instead of reusing stale values.
     src_stat = os.stat(path)
     row = {
         'structure': path,
         'n_atoms': natom,
-        'source_mtime': str(src_stat.st_mtime),
+        'source_hash': file_hash(path),
         'source_size': str(src_stat.st_size),
+        'source_mtime': str(src_stat.st_mtime),
         'distance': str(DISPLACEMENT),
         'mesh': 'x'.join(str(m) for m in MESH),
         'model': MACE_MODEL,
         'cache_version': CACHE_VERSION,
+        'min_freq_THz': f'{float(freqs.min()):.4f}',
+        'n_imag_modes': str(int(np.sum(freqs < -0.1))),
+        'n_modes': str(int(freqs.size)),
     }
     for T in T_LIST:
         row[f'F_vib_{T:.0f}K'] = fvib[T]
@@ -107,33 +131,47 @@ def _fvib_key(row, T):
 
 
 def load_existing(fvib_path, src_path):
-    """Return cached F_vib if the source file has not changed.
+    """Return cached F_vib if the source file and calculation settings match.
 
-    Recompute when the source extxyz is newer than the cache (mtime).  If the
-    cache carries metadata (source_size, distance, mesh, model), also validate
-    those; legacy caches without metadata are accepted as-is when the source is
-    not newer.
+    Recompute when the cache version, source content hash, source size,
+    displacement, mesh, or MACE model do not match the current script.
+    Legacy caches missing any of these metadata are treated as stale and
+    recomputed.
     """
     if not os.path.exists(fvib_path):
         return None
-    src_stat = os.stat(src_path)
-    cache_stat = os.stat(fvib_path)
-    if src_stat.st_mtime > cache_stat.st_mtime:
-        return None
     with open(fvib_path) as fp:
         reader = csv.DictReader(fp)
-        row = next(reader)
-    if 'source_size' in row and str(src_stat.st_size) != row['source_size']:
+        try:
+            row = next(reader)
+        except StopIteration:
+            return None
+
+    required = {'cache_version', 'source_hash', 'source_size', 'distance', 'mesh', 'model',
+                'min_freq_THz', 'n_imag_modes', 'n_modes'}
+    if not required.issubset(row.keys()):
         return None
-    if (row.get('distance', str(DISPLACEMENT)) != str(DISPLACEMENT) or
-            row.get('mesh', 'x'.join(str(m) for m in MESH)) != 'x'.join(str(m) for m in MESH) or
-            row.get('model', MACE_MODEL) != MACE_MODEL):
+    if row['cache_version'] != CACHE_VERSION:
+        return None
+    if row['source_hash'] != file_hash(src_path):
+        return None
+    if str(os.stat(src_path).st_size) != row['source_size']:
+        return None
+    if (row['distance'] != str(DISPLACEMENT) or
+            row['mesh'] != 'x'.join(str(m) for m in MESH) or
+            row['model'] != MACE_MODEL):
         return None
     return {T: float(_fvib_key(row, T)) for T in T_LIST}
 
 
+def read_mode_info(fvib_path):
+    with open(fvib_path) as fp:
+        row = next(csv.DictReader(fp))
+    return {k: row[k] for k in ('min_freq_THz', 'n_imag_modes', 'n_modes')}
+
+
 if __name__ == '__main__':
-    torch.set_num_threads(4)
+    torch.set_num_threads(8)
     # select representative s0 files
     files = [
         'b2_x0.500_perfect.extxyz',
@@ -167,11 +205,13 @@ if __name__ == '__main__':
             'n_atoms': len(read(path)),
             'F_vib_1273': fvib[1273.0],
             'F_vib_1473': fvib[1473.0],
+            **read_mode_info(fvib_path),
         })
         print(f, fvib)
     out_path = os.path.join(AN, 'phonon_fvib.csv')
     with open(out_path, 'w', newline='') as fp:
-        writer = csv.DictWriter(fp, fieldnames=['file','x_target','branch','n_atoms','F_vib_1273','F_vib_1473'])
+        writer = csv.DictWriter(fp, fieldnames=['file','x_target','branch','n_atoms','F_vib_1273','F_vib_1473',
+                                                'min_freq_THz','n_imag_modes','n_modes'])
         writer.writeheader()
         writer.writerows(rows)
     print('wrote', out_path)
