@@ -145,7 +145,9 @@ class ToolGateway:
             if score > 0:
                 hits.append((score, doc))
         hits.sort(key=lambda x: -x[0])
-        return [d for _, d in hits[:limit]]
+        # 共有辞書の汚染を防ぐためコピーを返す
+        return [{**d, "conditions": dict(d.get("conditions", {}))}
+                for _, d in hits[:limit]]
 
     # --- t2ModelQuery ---
     def search_models(self, target_property: str, elements: list[str],
@@ -241,9 +243,10 @@ class ToolGateway:
                 "generated_files": generated,
             }
         except subprocess.TimeoutExpired:
+            generated = sorted(set(os.listdir(workdir)) - before) if workdir else []
             return {"exit_code": -1, "stdout": "",
                     "stderr": f"timeout: 実行が {timeout_s} 秒を超過",
-                    "workdir": workdir, "generated_files": []}
+                    "workdir": workdir, "generated_files": generated}
         finally:
             os.unlink(path)
 
