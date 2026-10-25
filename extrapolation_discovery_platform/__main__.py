@@ -330,6 +330,7 @@ def cmd_report(args: argparse.Namespace) -> None:
             split_policy=row["split_policy"],
             seed=int(row["seed"]),
             fold=int(row["fold"]),
+            split_group=str(row.get("split_group", "")),
             rmse_train=float(row["rmse_train"]),
             rmse_test=float(row["rmse_test"]),
             mae_train=float(row["mae_train"]),

@@ -48,6 +48,7 @@ from extrapolation_discovery_platform.features import (
 )
 from extrapolation_discovery_platform.splitters import (
     CompositionBlockSplitter,
+    CompositionGroupCVSplitter,
     ElementExclusionSplitter,
     RandomCVSplitter,
 )
@@ -239,25 +240,35 @@ def _make_splits(
     n_folds: int,
     test_size: float,
     exclude_elements: Optional[List[str]],
-) -> List[Tuple[np.ndarray, np.ndarray]]:
-    """指定された分割ポリシーに従い (train_idx, test_idx) のリストを返す。"""
+) -> Tuple[List[Tuple[np.ndarray, np.ndarray]], List[str]]:
+    """指定された分割ポリシーに従い splits と fold labels を返す。"""
 
     if split_policy in ("RandomCV", "RandomCV ⚠️(リーク懸念)"):
         splitter = RandomCVSplitter(n_folds=n_folds, seed=seed)
-        return list(splitter.split(features_df, target, compositions=compositions_df))
+        splits = list(splitter.split(features_df, target, compositions=compositions_df))
+        return splits, list(splitter.fold_labels)
 
     elif split_policy == "CompositionBlock":
         if compositions_df is None:
             raise ValueError("CompositionBlock 分割には compositions_df が必要です。")
         splitter = CompositionBlockSplitter(n_folds=n_folds, seed=seed)
-        return list(splitter.split(features_df, target, compositions=compositions_df))
+        splits = list(splitter.split(features_df, target, compositions=compositions_df))
+        return splits, list(splitter.fold_labels)
+
+    elif split_policy == "CompositionGroupCV":
+        if compositions_df is None:
+            raise ValueError("CompositionGroupCV 分割には compositions_df が必要です。")
+        splitter = CompositionGroupCVSplitter(n_folds=n_folds, seed=seed)
+        splits = list(splitter.split(features_df, target, compositions=compositions_df))
+        return splits, list(splitter.fold_labels)
 
     elif split_policy == "ElementExclusion":
         if compositions_df is None:
             raise ValueError("ElementExclusion 分割には compositions_df が必要です。")
         elems = exclude_elements or ["Co", "Ni", "Ti"]
         splitter = ElementExclusionSplitter(target_elements=elems)
-        return list(splitter.split(features_df, target, compositions=compositions_df))
+        splits = list(splitter.split(features_df, target, compositions=compositions_df))
+        return splits, list(splitter.fold_labels)
 
     elif split_policy == "Holdout":
         # 単純なホールドアウト（fold=1）
@@ -268,12 +279,13 @@ def _make_splits(
         n_test = max(1, int(n * test_size))
         test_idx  = shuffled[:n_test]
         train_idx = shuffled[n_test:]
-        return [(train_idx, test_idx)]
+        return [(train_idx, test_idx)], ["fold0"]
 
     else:
         raise ValueError(
             f"未知の分割ポリシー: '{split_policy}'. "
-            f"使用可能: RandomCV, CompositionBlock, ElementExclusion, Holdout"
+            f"使用可能: RandomCV, CompositionBlock, CompositionGroupCV, "
+            f"ElementExclusion, Holdout"
         )
 
 
@@ -318,19 +330,21 @@ def run_individual(
     feature_set_name : str
         使用する特徴量セット名。FS_BASE / FS_THERMO / FS_SIZE / FS_ELECTRON / FS_ALL / FS_MAGPIE
     split_policy_name : str
-        分割ポリシー。RandomCV / CompositionBlock / ElementExclusion / Holdout
+        分割ポリシー。RandomCV / CompositionBlock / CompositionGroupCV /
+        ElementExclusion / Holdout
     features_df : pd.DataFrame
         特徴量行列（全特徴量を含む、FS列の選択はここで行う）
     target : pd.Series
         目的変数
     compositions_df : pd.DataFrame, optional
-        元素組成行列（CompositionBlock / ElementExclusion 分割に必要）
+        元素組成行列（CompositionBlock / CompositionGroupCV /
+        ElementExclusion 分割に必要）
     seed : int
         乱数シード
     test_size : float
         Holdout 分割時のテスト比率
     n_folds : int
-        RandomCV / CompositionBlock の分割数
+        RandomCV / CompositionBlock / CompositionGroupCV の分割数
     exclude_elements : list of str, optional
         ElementExclusion で除外する元素リスト
     quick : bool
@@ -390,10 +404,16 @@ def run_individual(
             _valid_cols = [c for c in precomputed_columns if c in features_df.columns]
             _fs_key = "generic" if generic_csv_mode else feature_set_name
             _fold_plan_hint: dict = {}  # 分割は Stage1 相当を再実行
+            _plan_key = (
+                f"RandomCV_seed{seed}"
+                if split_policy_name.replace(" ⚠️(リーク懸念)", "") == "RandomCV"
+                else split_policy_name.replace(" ⚠️(リーク懸念)", "")
+            )
+            _labels: List[str] = []
             # 分割だけは再計算が必要（seed 統一のため）
             try:
                 _sp = split_policy_name.replace(" ⚠️(リーク懸念)", "")
-                _splits = _make_splits(
+                _splits, _labels = _make_splits(
                     split_policy=_sp,
                     features_df=features_df,
                     target=target,
@@ -413,6 +433,7 @@ def run_individual(
             prep = PreprocessResult(
                 effective_cols={_fs_key: _valid_cols if _valid_cols else list(features_df.columns)},
                 fold_plan=_fold_plan_hint,
+                fold_labels={_plan_key: _labels},
                 active_policies=[split_policy_name.replace(" ⚠️(リーク懸念)", "")],
                 success=True,
             )
