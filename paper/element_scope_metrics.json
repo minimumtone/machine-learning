@@ -1,0 +1,317 @@
+{
+  "scope_definition": {
+    "candidate_A": [
+      "Al",
+      "Co",
+      "Cr",
+      "Cu",
+      "Fe",
+      "Hf",
+      "Mn",
+      "Mo",
+      "Nb",
+      "Ni",
+      "Ta",
+      "Ti",
+      "V",
+      "W",
+      "Zn",
+      "Zr"
+    ],
+    "scope_excluded_elements": [
+      "Si"
+    ],
+    "candidate_B_derived_from": [
+      "ALONSO_TABLE2",
+      "INDEPENDENT_TEST"
+    ],
+    "candidate_B": [
+      "Al",
+      "Au",
+      "Co",
+      "Cr",
+      "Cu",
+      "Fe",
+      "Hf",
+      "Ir",
+      "Mn",
+      "Mo",
+      "Nb",
+      "Ni",
+      "Os",
+      "Pd",
+      "Pt",
+      "Rh",
+      "Ru",
+      "Ta",
+      "Ti",
+      "V",
+      "W",
+      "Zn",
+      "Zr"
+    ]
+  },
+  "exclude_elements": [
+    "Ce",
+    "Dy",
+    "Er",
+    "Eu",
+    "Gd",
+    "Ho",
+    "La",
+    "Lu",
+    "Nd",
+    "Pr",
+    "Sm",
+    "Tb",
+    "Tm",
+    "Y",
+    "Yb"
+  ],
+  "full_database_pair_counts": {
+    "SQS_BCC": 445,
+    "SQS_FCC_DFT_reference_raw": 120,
+    "SQS_FCC_King_reference_raw": 112,
+    "B2": 465,
+    "L1_2": 441
+  },
+  "full_ordered_q": {
+    "BCC": 0.4860687238190625,
+    "FCC": 0.13339949219488767
+  },
+  "results": {
+    "all_elements": {
+      "label": "all_elements",
+      "elements": [
+        "Ag",
+        "Al",
+        "Au",
+        "Be",
+        "Ca",
+        "Co",
+        "Cr",
+        "Cu",
+        "Fe",
+        "Hf",
+        "Ir",
+        "Mg",
+        "Mn",
+        "Mo",
+        "Nb",
+        "Ni",
+        "Os",
+        "Pb",
+        "Pd",
+        "Pt",
+        "Re",
+        "Rh",
+        "Ru",
+        "Sc",
+        "Sn",
+        "Ta",
+        "Ti",
+        "V",
+        "W",
+        "Zn",
+        "Zr"
+      ],
+      "n_elements": 31,
+      "sqs_pairs": {
+        "BCC": 445,
+        "FCC_DFT_reference": 111,
+        "FCC_King_reference": 112
+      },
+      "ordered_pairs": {
+        "B2": 465,
+        "L1_2": 441
+      },
+      "calibration_all_elements_in_scope": {
+        "BCC": 29,
+        "FCC": 35
+      },
+      "independent_test_all_elements_in_scope": {
+        "BCC": 17,
+        "FCC": 14
+      },
+      "q_optimized": {
+        "BCC": 0.4860687238190625,
+        "FCC": 0.13339949219488767
+      },
+      "independent_test_rmse_q1": {
+        "BCC": 0.014009735459751163,
+        "FCC": 0.023514648531552662,
+        "ALL": 0.018903641420808644
+      },
+      "independent_test_rmse_q_optimized": {
+        "BCC": 0.015728249847714197,
+        "FCC": 0.015231342548259107,
+        "ALL": 0.015505812101918202
+      },
+      "chen": {
+        "BCC": {
+          "stable_all_elements_in_scope": 14897,
+          "stable_10_pair_covered": 14887,
+          "median_abs_correction_percent": 0.39554419099796484,
+          "n_abs_correction_gt_1percent": 1238
+        },
+        "FCC": {
+          "stable_all_elements_in_scope": 1555,
+          "stable_10_pair_covered": 1555,
+          "median_abs_correction_percent": 0.045026689949614604,
+          "n_abs_correction_gt_1percent": 0
+        }
+      }
+    },
+    "candidate_A_practical_16": {
+      "label": "candidate_A_practical_16",
+      "elements": [
+        "Al",
+        "Co",
+        "Cr",
+        "Cu",
+        "Fe",
+        "Hf",
+        "Mn",
+        "Mo",
+        "Nb",
+        "Ni",
+        "Ta",
+        "Ti",
+        "V",
+        "W",
+        "Zn",
+        "Zr"
+      ],
+      "n_elements": 16,
+      "sqs_pairs": {
+        "BCC": 120,
+        "FCC_DFT_reference": 29,
+        "FCC_King_reference": 30
+      },
+      "ordered_pairs": {
+        "B2": 120,
+        "L1_2": 120
+      },
+      "calibration_all_elements_in_scope": {
+        "BCC": 29,
+        "FCC": 31
+      },
+      "independent_test_all_elements_in_scope": {
+        "BCC": 17,
+        "FCC": 5
+      },
+      "q_optimized": {
+        "BCC": 0.4860687238190625,
+        "FCC": 0.13181219165035962
+      },
+      "independent_test_rmse_q1": {
+        "BCC": 0.014009735459751163,
+        "FCC": 0.029742777412100813,
+        "ALL": 0.018780792570912863
+      },
+      "independent_test_rmse_q_optimized": {
+        "BCC": 0.015728249847714197,
+        "FCC": 0.010491633331568771,
+        "ALL": 0.014702806141325065
+      },
+      "chen": {
+        "BCC": {
+          "stable_all_elements_in_scope": 1506,
+          "stable_10_pair_covered": 1506,
+          "median_abs_correction_percent": 0.5147142821660149,
+          "n_abs_correction_gt_1percent": 134
+        },
+        "FCC": {
+          "stable_all_elements_in_scope": 33,
+          "stable_10_pair_covered": 33,
+          "median_abs_correction_percent": 0.1133682712616328,
+          "n_abs_correction_gt_1percent": 0
+        }
+      }
+    },
+    "candidate_B_data_driven_23": {
+      "label": "candidate_B_data_driven_23",
+      "elements": [
+        "Al",
+        "Au",
+        "Co",
+        "Cr",
+        "Cu",
+        "Fe",
+        "Hf",
+        "Ir",
+        "Mn",
+        "Mo",
+        "Nb",
+        "Ni",
+        "Os",
+        "Pd",
+        "Pt",
+        "Rh",
+        "Ru",
+        "Ta",
+        "Ti",
+        "V",
+        "W",
+        "Zn",
+        "Zr"
+      ],
+      "n_elements": 23,
+      "sqs_pairs": {
+        "BCC": 253,
+        "FCC_DFT_reference": 81,
+        "FCC_King_reference": 82
+      },
+      "ordered_pairs": {
+        "B2": 253,
+        "L1_2": 253
+      },
+      "calibration_all_elements_in_scope": {
+        "BCC": 29,
+        "FCC": 35
+      },
+      "independent_test_all_elements_in_scope": {
+        "BCC": 17,
+        "FCC": 14
+      },
+      "q_optimized": {
+        "BCC": 0.4860687238190625,
+        "FCC": 0.13339949219488767
+      },
+      "independent_test_rmse_q1": {
+        "BCC": 0.014009735459751163,
+        "FCC": 0.023514648531552662,
+        "ALL": 0.018903641420808644
+      },
+      "independent_test_rmse_q_optimized": {
+        "BCC": 0.015728249847714197,
+        "FCC": 0.015231342548259107,
+        "ALL": 0.015505812101918202
+      },
+      "chen": {
+        "BCC": {
+          "stable_all_elements_in_scope": 9438,
+          "stable_10_pair_covered": 9438,
+          "median_abs_correction_percent": 0.34357761759471406,
+          "n_abs_correction_gt_1percent": 321
+        },
+        "FCC": {
+          "stable_all_elements_in_scope": 1322,
+          "stable_10_pair_covered": 1322,
+          "median_abs_correction_percent": 0.04501655377858084,
+          "n_abs_correction_gt_1percent": 0
+        }
+      }
+    }
+  },
+  "be": {
+    "BCC_SQS_pairs": 30,
+    "FCC_SQS_pairs": 0,
+    "B2_pairs": 30,
+    "L1_2_pairs": 6,
+    "ALONSO_BCC_alloys": 0,
+    "ALONSO_FCC_alloys": 0,
+    "INDEPENDENT_BCC_alloys": 0,
+    "INDEPENDENT_FCC_alloys": 0
+  }
+}
