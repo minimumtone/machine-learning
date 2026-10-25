@@ -1,0 +1,32 @@
+SYSTEM = dilute Al solid solution
+
+# Electronic relaxation
+ENCUT  = 520
+PREC   = Accurate
+EDIFF  = 1E-6
+NELM   = 200
+LREAL  = .FALSE.
+
+# Ionic relaxation
+IBRION = 2
+ISIF   = 3
+NSW    = 100
+EDIFFG = -0.01
+
+# Smearing (metals)
+ISMEAR = 1
+SIGMA  = 0.2
+
+# Exchange-correlation
+GGA    = PE
+
+# Spin polarization (important for 3d metals)
+ISPIN  = 2
+
+# Output
+LORBIT = 11
+LWAVE  = .FALSE.
+LCHARG = .FALSE.
+
+# Performance
+NCORE  = 4
