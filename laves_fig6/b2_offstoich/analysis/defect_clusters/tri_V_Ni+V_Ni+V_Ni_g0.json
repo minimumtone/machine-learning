@@ -1,0 +1,1 @@
+{"name": "tri_V_Ni+V_Ni+V_Ni_g0", "types": ["V_Ni", "V_Ni", "V_Ni"], "sites": [0, 2, 8], "kind": "triple", "geometry": "V_Ni-V_Ni:2NN/V_Ni-V_Ni:2NN/V_Ni-V_Ni:3NN", "n_Ni": 61, "n_Al": 64, "n_atoms": 125, "energy_eV": -673.3177675552092, "volume_A3": 1525.3688019379485, "converged": true, "n_steps": 22, "time_s": 82.91696429252625}
