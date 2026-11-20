@@ -1,0 +1,1 @@
+{"name": "pair_Al_Ni+Al_Ni_2NN", "types": ["Al_Ni", "Al_Ni"], "sites": [0, 2], "kind": "pair", "geometry": "2NN", "n_Ni": 62, "n_Al": 66, "n_atoms": 128, "energy_eV": -686.8869359194276, "volume_A3": 1545.7708919870217, "converged": true, "n_steps": 31, "time_s": 116.24167275428772}

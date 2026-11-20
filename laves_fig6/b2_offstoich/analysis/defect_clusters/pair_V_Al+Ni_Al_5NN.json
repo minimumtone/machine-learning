@@ -1,0 +1,1 @@
+{"name": "pair_V_Al+Ni_Al_5NN", "types": ["V_Al", "Ni_Al"], "sites": [1, 43], "kind": "pair", "geometry": "5NN", "n_Ni": 65, "n_Al": 62, "n_atoms": 127, "energy_eV": -690.0310046789707, "volume_A3": 1525.604414526822, "converged": true, "n_steps": 29, "time_s": 112.2611095905304}

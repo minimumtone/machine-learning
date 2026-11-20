@@ -1,0 +1,1 @@
+{"name": "pair_Al_Ni+Ni_Al_far", "types": ["Al_Ni", "Ni_Al"], "sites": [0, 43], "kind": "pair_far", "geometry": "far(7.49A)", "n_Ni": 64, "n_Al": 64, "n_atoms": 128, "energy_eV": -691.8763936661633, "volume_A3": 1534.595611987707, "converged": true, "n_steps": 21, "time_s": 77.68076348304749}

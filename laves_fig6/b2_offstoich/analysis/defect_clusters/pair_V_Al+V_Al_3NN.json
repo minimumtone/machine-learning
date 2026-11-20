@@ -1,0 +1,1 @@
+{"name": "pair_V_Al+V_Al_3NN", "types": ["V_Al", "V_Al"], "sites": [1, 11], "kind": "pair", "geometry": "3NN", "n_Ni": 64, "n_Al": 62, "n_atoms": 126, "energy_eV": -683.124450865399, "volume_A3": 1522.730866945308, "converged": true, "n_steps": 22, "time_s": 84.5727789402008}

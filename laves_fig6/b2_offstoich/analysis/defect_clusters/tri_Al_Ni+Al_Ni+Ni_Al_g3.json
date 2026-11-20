@@ -1,0 +1,1 @@
+{"name": "tri_Al_Ni+Al_Ni+Ni_Al_g3", "types": ["Al_Ni", "Al_Ni", "Ni_Al"], "sites": [0, 42, 1], "kind": "triple", "geometry": "Al_Ni-Al_Ni:5NN/Al_Ni-Ni_Al:1NN/Al_Ni-Ni_Al:1NN", "n_Ni": 63, "n_Al": 65, "n_atoms": 128, "energy_eV": -689.1303083480991, "volume_A3": 1542.1272305472894, "converged": true, "n_steps": 31, "time_s": 124.04605889320374}
