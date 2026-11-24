@@ -1,0 +1,1 @@
+{"name": "isoV_Al_n3_p0", "defect": "V_Al", "rep": 4, "n_vac": 3, "sites": [15, 27, 81], "d_min_A": 7.0606541835725105, "n_Ni": 64, "n_Al": 61, "n_atoms": 125, "energy_eV": -677.7840069703399, "volume_A3": 1517.6683942696284, "converged": true, "n_steps": 20, "time_s": 61.73187327384949}

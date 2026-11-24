@@ -155,29 +155,56 @@ def fig_matched(s):
     plt.close(fig)
 
 
+def seed_points():
+    """Individual random-placement results of the existing vacancy / antisite models."""
+    import glob
+    d = pd.concat([pd.read_csv(f) for f in sorted(glob.glob(
+        os.path.join(AN, "b2_offstoich_volumes*.csv")))], ignore_index=True)
+    d = d[d.converged.astype(bool) & d.branch.isin(["vacancy", "antisite"])]
+    return d.drop_duplicates("structure_id")
+
+
 def fig_overlay(df):
     bm = pd.read_csv(os.path.join(AN, "energy_composition_table.csv"))
+    sp = seed_points()
     p = df[df.kind == "perfect"]
-    fig, ax = plt.subplots(figsize=(18, 10))
-    for b, c, l in (("antisite", "tab:blue", "反サイトモデル（ランダム配置の平均）"),
-                    ("vacancy", "tab:red", "空孔モデル（ランダム配置の平均）")):
+    fig, ax = plt.subplots(figsize=(20, 11))
+    for b, c, l in (("antisite", "tab:blue", "反サイトモデル"),
+                    ("vacancy", "tab:red", "空孔モデル")):
         g = bm[bm.branch == b]
         g = pd.concat([g, pd.DataFrame(dict(x_Al=[0.5], Ef=[float(p.E_form_eV_atom.iloc[0])],
                                             Ef_std=[0.0]))]).sort_values("x_Al")
-        ax.errorbar(g.x_Al, g.Ef, yerr=g.Ef_std, fmt="o-", color=c, ms=10, capsize=4, label=l)
-    st = {"isolated": ("s", "tab:green", "孤立欠陥"), "pair": ("^", "tab:orange", "対"),
-          "triple": ("D", "tab:purple", "三量体")}
+        ax.errorbar(g.x_Al, g.Ef, yerr=g.Ef_std, fmt="o-", color=c, ms=10, capsize=4,
+                    label=f"{l}（ランダム配置の平均）")
+        q = sp[sp.branch == b]
+        ax.scatter(q.x_Al, q.E_form_eV_atom, marker="x", s=110, c=c, lw=2, zorder=2,
+                   label=f"{l}（各ランダム配置）")
+    iso_path = os.path.join(AN, "b2_isolated_vacancies.csv")
+    if os.path.exists(iso_path):
+        iso = pd.read_csv(iso_path)
+        iso = iso[iso.converged.astype(bool)]
+        one = df[(df.kind == "isolated") & df.defects.isin(["V_Ni", "V_Al"])]
+        for d, c in (("V_Ni", "limegreen"), ("V_Al", "darkgreen")):
+            g = iso[iso.defect == d]
+            o = one[one.defects == d]
+            ax.scatter(np.r_[g.x_Al, o.x_Al], np.r_[g.E_form_eV_atom, o.E_form_eV_atom],
+                       marker="s", s=130, c=c, edgecolor="k", zorder=4,
+                       label=rf"単空孔 {tex(d)}（互いに離した配置）")
+    g = df[(df.kind == "isolated") & df.defects.isin(["Ni_Al", "Al_Ni"])]
+    ax.scatter(g.x_Al, g.E_form_eV_atom, marker="s", s=130, c="white", edgecolor="k", zorder=4,
+               label="孤立反サイト")
+    st = {"pair": ("^", "tab:orange", "対"), "triple": ("D", "tab:purple", "三量体")}
     for k, (m, c, l) in st.items():
         g = df[(df.kind == k) & (~df.transformed)]
         ax.scatter(g.x_Al, g.E_form_eV_atom, marker=m, s=90, c=c, edgecolor="k", alpha=0.8,
-                   zorder=3, label=l if k == "isolated" else f"{l}（全配置）")
+                   zorder=3, label=f"{l}（全配置）")
     ax.scatter(p.x_Al, p.E_form_eV_atom, marker="*", s=500, c="gold", edgecolor="k", zorder=5,
                label="完全 B2")
-    ax.set_xlim(0.478, 0.522)
-    ax.set_ylim(-0.697, -0.655)
+    ax.set_xlim(0.464, 0.536)
+    ax.set_ylim(-0.697, -0.625)
     ax.set_xlabel(r"$x_{\rm Al}$")
     ax.set_ylabel(r"生成エネルギー $E_f$ (eV/atom)")
-    ax.set_title("0 K 生成エネルギー：欠陥クラスターの重ね描き（4×4×4 セル）")
+    ax.set_title("0 K 生成エネルギー：単空孔と欠陥クラスターの重ね描き")
     ax.grid(alpha=0.3)
     ax.legend(loc="center left", bbox_to_anchor=(1.01, 0.5))
     fig.tight_layout()
