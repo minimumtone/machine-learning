@@ -200,8 +200,8 @@ def fig_overlay(df):
                    zorder=3, label=f"{l}（全配置）")
     ax.scatter(p.x_Al, p.E_form_eV_atom, marker="*", s=500, c="gold", edgecolor="k", zorder=5,
                label="完全 B2")
-    ax.set_xlim(0.464, 0.536)
-    ax.set_ylim(-0.697, -0.625)
+    ax.set_xlim(0.455, 0.545)
+    ax.set_ylim(-0.697, -0.615)
     ax.set_xlabel(r"$x_{\rm Al}$")
     ax.set_ylabel(r"生成エネルギー $E_f$ (eV/atom)")
     ax.set_title("0 K 生成エネルギー：単空孔と欠陥クラスターの重ね描き")
