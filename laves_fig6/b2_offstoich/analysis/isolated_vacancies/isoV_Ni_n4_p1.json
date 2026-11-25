@@ -1,0 +1,1 @@
+{"name": "isoV_Ni_n4_p1", "defect": "V_Ni", "rep": 4, "n_vac": 4, "sites": [8, 20, 76, 88], "d_min_A": 6.445465945143142, "n_Ni": 60, "n_Al": 64, "n_atoms": 124, "energy_eV": -666.8546747154243, "volume_A3": 1522.0154456347168, "converged": true, "n_steps": 21, "time_s": 69.46844863891602}

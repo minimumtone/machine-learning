@@ -1,0 +1,1 @@
+{"name": "iso_V_Ni", "types": ["V_Ni"], "sites": [0], "kind": "isolated", "n_Ni": 215, "n_Al": 216, "n_atoms": 431, "energy_eV": -2335.586635898791, "volume_A3": 5173.011289866364, "converged": true, "n_steps": 10, "time_s": 171.30677843093872}
