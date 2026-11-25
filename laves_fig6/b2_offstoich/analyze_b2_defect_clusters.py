@@ -2,12 +2,13 @@
 """Binding energies and composition-matched energies of defect pairs / triples in B2-NiAl.
 
 Input : analysis/b2_defect_clusters.csv (run_b2_defect_clusters.py collect)
-Output: analysis/b2_defect_cluster_summary.csv
+        analysis/b2_defect_clusters_6x6x6.csv (run_b2_defect_clusters_6x6x6.py collect, optional)
+Output: analysis/b2_defect_cluster_summary.csv, analysis/b2_defect_cluster_summary_6x6x6.csv
         figures/fig_defect_cluster_binding.png
         figures/fig_defect_cluster_matched.png
         figures/fig_energy_composition_0K_clusters.png
 
-Definitions (E0 = perfect 4x4x4 cell, mu_fu = E0/64 = mu_Ni + mu_Al in B2):
+Definitions (E0 = perfect cell of the same size, mu_fu = E0/N_cell = mu_Ni + mu_Al in B2):
   E_bind  = [E(cluster) - E0] - sum_i [E(isolated_i) - E0]      (negative = bound)
   delta   = dN_Al - dN_Ni                                        (off-stoichiometry)
   E_star  = E - E0 - (dN_Ni + dN_Al)/2 * mu_fu                   (atom-number matched)
@@ -15,6 +16,7 @@ Definitions (E0 = perfect 4x4x4 cell, mu_fu = E0/64 = mu_Ni + mu_Al in B2):
   value depends on the choice mu_Ni = mu_Al = mu_fu/2, so only differences within one
   side (delta > 0 or delta < 0) are meaningful; E_star for delta = 0 is absolute.
 """
+import json
 import os
 
 import matplotlib
@@ -58,7 +60,33 @@ def load():
     return df
 
 
-def summarize(df):
+def load6(df):
+    """6x6x6 results in the same columns as load(); None if not computed.
+
+    defects / dN / multiplicity are taken from the 4x4x4 rows of the same name
+    (identical enumeration), energies and transformed flags from the 6x6x6 run."""
+    path = os.path.join(AN, "b2_defect_clusters_6x6x6.csv")
+    if not os.path.exists(path):
+        return None
+    with open(os.path.join(AN, "b2_offstoich_summary.json")) as f:
+        mu = json.load(f)
+    d = pd.read_csv(path)
+    d = d.merge(df[["name", "defects", "dN_Ni", "dN_Al", "multiplicity"]], on="name")
+    assert len(d) == len(df)
+    ncell = int(d[d.kind == "perfect"].n_atoms.iloc[0]) // 2
+    e0 = float(d[d.kind == "perfect"].energy_eV.iloc[0])
+    d["n_Ni"], d["n_Al"] = ncell + d.dN_Ni, ncell + d.dN_Al
+    assert (d.n_Ni + d.n_Al == d.n_atoms).all()
+    d["x_Al"] = d.n_Al / d.n_atoms
+    d["E_form_eV_atom"] = (d.energy_eV - d.n_Ni * mu["mu_Ni_eV"] - d.n_Al * mu["mu_Al_eV"]) / d.n_atoms
+    d["E_bind_eV"] = d.E_bind_6x6x6_eV
+    d["delta"] = d.dN_Al - d.dN_Ni
+    d["E_star_eV"] = d.energy_eV - e0 - 0.5 * (d.dN_Ni + d.dN_Al) * e0 / ncell
+    d["E_star_per_delta_eV"] = np.where(d.delta != 0, d.E_star_eV / d.delta.abs().replace(0, np.nan), np.nan)
+    return d
+
+
+def summarize(df, suffix=""):
     rows = []
     iso = df[df.kind == "isolated"]
     for _, r in iso.iterrows():
@@ -82,32 +110,40 @@ def summarize(df):
                 row[f"E_bind_boltz_{T:.0f}K_eV"] = float((w * ok.E_bind_eV).sum() / w.sum())
         rows.append(row)
     s = pd.DataFrame(rows)
-    s.to_csv(os.path.join(AN, "b2_defect_cluster_summary.csv"), index=False)
+    s.to_csv(os.path.join(AN, f"b2_defect_cluster_summary{suffix}.csv"), index=False)
     return s
 
 
-def fig_binding(df):
+CELLS = (("4×4×4", "tab:blue", "o", -0.2), ("6×6×6", "tab:green", "s", 0.2))
+
+
+def fig_binding(df, df6=None):
+    sets = [(df,) + CELLS[0]] + ([(df6,) + CELLS[1]] if df6 is not None else [])
     fig, axes = plt.subplots(1, 2, figsize=(22, 13), gridspec_kw=dict(width_ratios=[1, 1]))
     for ax, kind, title in ((axes[0], "pair", "欠陥対（第1〜第5近接）"),
                             (axes[1], "triple", "欠陥三量体（連結した全形状）")):
-        g = df[df.kind == kind]
-        order = list(dict.fromkeys(g.defects))
-        for y, d in enumerate(order):
-            s = g[g.defects == d]
-            a = s[~s.transformed]
-            b = s[s.transformed]
-            ax.scatter(a.E_bind_eV, [y] * len(a), s=150, c="tab:blue", edgecolor="k", zorder=3,
-                       label="配置を保持" if y == 0 else None)
-            if len(a):
-                ax.scatter([a.E_bind_eV.min()], [y], s=330, marker="*", c="tab:red",
-                           edgecolor="k", zorder=4, label="最安定配置" if y == 0 else None)
-            if kind == "pair":
-                f = df[(df.kind == "pair_far") & (df.defects == d)]
-                ax.scatter(f.E_bind_eV, [y] * len(f), s=150, marker="x", c="gray", zorder=3,
-                           label="最遠配置（セルサイズの目安）" if y == 0 else None)
-            if len(b):
-                ax.scatter(np.clip(b.E_bind_eV, XMIN + 0.05, None), [y] * len(b), s=150, marker="<",
-                           facecolor="none", edgecolor="tab:orange", linewidth=2, zorder=3)
+        order = list(dict.fromkeys(df[df.kind == kind].defects))
+        for dd, cell, col, mk, dy in sets:
+            dy = dy if len(sets) > 1 else 0.0
+            g = dd[dd.kind == kind]
+            for y, d in enumerate(order):
+                s = g[g.defects == d]
+                a = s[~s.transformed]
+                b = s[s.transformed]
+                ax.scatter(a.E_bind_eV, [y + dy] * len(a), s=110, marker=mk, c=col, edgecolor="k",
+                           zorder=3, label=f"{cell} セル" if y == 0 else None)
+                if len(a):
+                    ax.scatter([a.E_bind_eV.min()], [y + dy], s=300, marker="*", c="tab:red",
+                               edgecolor="k", zorder=4,
+                               label="最安定配置" if y == 0 and dd is df else None)
+                if kind == "pair":
+                    f = dd[(dd.kind == "pair_far") & (dd.defects == d)]
+                    ax.scatter(f.E_bind_eV, [y + dy] * len(f), s=150, marker="x", c=col, lw=2.5,
+                               zorder=3, label=f"最遠配置（{cell}）" if y == 0 else None)
+                if len(b):
+                    ax.scatter(np.clip(b.E_bind_eV, XMIN + 0.05, None), [y + dy] * len(b), s=130,
+                               marker="<", facecolor="none", edgecolor="tab:orange", linewidth=2,
+                               zorder=3)
         ax.scatter([], [], s=150, marker="<", facecolor="none", edgecolor="tab:orange",
                    linewidth=2, label="緩和中に別の欠陥へ変化（−1.75 eV 以下は枠端に表示）")
         ax.axvline(0, color="k", lw=1)
@@ -119,14 +155,15 @@ def fig_binding(df):
         ax.set_title(title)
         ax.grid(axis="x", alpha=0.3)
     h, l = axes[0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower center", ncol=4, frameon=False)
-    fig.suptitle("B2-NiAl の欠陥クラスター結合エネルギー（MACE-MP-0、4×4×4 セル、0 K）", fontsize=24)
-    fig.tight_layout(rect=(0, 0.05, 1, 0.96))
+    fig.legend(h, l, loc="lower center", ncol=3, frameon=False)
+    cells = " / ".join(x[1] for x in sets)
+    fig.suptitle(f"B2-NiAl の欠陥クラスター結合エネルギー（MACE-MP-0、{cells} セル、0 K）", fontsize=24)
+    fig.tight_layout(rect=(0, 0.09, 1, 0.96))
     fig.savefig(os.path.join(FIG, "fig_defect_cluster_binding.png"), dpi=110)
     plt.close(fig)
 
 
-def fig_matched(s):
+def fig_matched(s, s6=None):
     fig, axes = plt.subplots(1, 3, figsize=(26, 12))
     panels = ((s[s.delta > 0], r"Al 過剰側（$\delta>0$）", "E_star_per_delta_min_eV",
                r"$E^*/|\delta|$：最安定の欠陥との差 (eV)"),
@@ -140,15 +177,28 @@ def fig_matched(s):
         g = g.dropna(subset=[c]).sort_values(c)
         if "per_delta" in c:
             g = g.assign(**{c: g[c] - g[c].min()})
-        ax.barh(range(len(g)), g[c], color=[col[k] for k in g.kind], edgecolor="k")
+        h = 0.8 if s6 is None else 0.4
+        ax.barh(np.arange(len(g)) - (0.4 - h / 2), g[c], height=h,
+                color=[col[k] for k in g.kind], edgecolor="k")
+        if s6 is not None:
+            q = s6.set_index("defects").reindex(g.defects)[c]
+            if "per_delta" in c:
+                q = q - q.min()
+            ax.barh(np.arange(len(g)) + 0.2, q, height=h, color=[col[k] for k in g.kind],
+                    edgecolor="k", hatch="//", alpha=0.55)
         ax.set_yticks(range(len(g)))
         ax.set_yticklabels([tex(d) for d in g.defects])
         ax.invert_yaxis()
         ax.set_xlabel(xl)
         ax.set_title(title)
         ax.grid(axis="x", alpha=0.3)
-    axes[2].legend(handles=[plt.Rectangle((0, 0), 1, 1, color=col[k], ec="k") for k in col],
-                   labels=[lab[k] for k in col], loc="upper right")
+    hs = [plt.Rectangle((0, 0), 1, 1, color=col[k], ec="k") for k in col]
+    ls = [lab[k] for k in col]
+    if s6 is not None:
+        hs += [plt.Rectangle((0, 0), 1, 1, fc="w", ec="k"),
+               plt.Rectangle((0, 0), 1, 1, fc="w", ec="k", hatch="//")]
+        ls += ["4×4×4 セル（濃色）", "6×6×6 セル（斜線）"]
+    axes[2].legend(handles=hs, labels=ls, loc="lower right")
     fig.suptitle("組成変化を揃えたエネルギー比較（各欠陥種の最安定配置、MACE-MP-0、0 K）", fontsize=24)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(os.path.join(FIG, "fig_defect_cluster_matched.png"), dpi=110)
@@ -164,7 +214,7 @@ def seed_points():
     return d.drop_duplicates("structure_id")
 
 
-def fig_overlay(df):
+def fig_overlay(df, df6=None):
     bm = pd.read_csv(os.path.join(AN, "energy_composition_table.csv"))
     sp = seed_points()
     p = df[df.kind == "perfect"]
@@ -197,7 +247,11 @@ def fig_overlay(df):
     for k, (m, c, l) in st.items():
         g = df[(df.kind == k) & (~df.transformed)]
         ax.scatter(g.x_Al, g.E_form_eV_atom, marker=m, s=90, c=c, edgecolor="k", alpha=0.8,
-                   zorder=3, label=f"{l}（全配置）")
+                   zorder=3, label=f"{l}（全配置、4×4×4）")
+        if df6 is not None:
+            g = df6[(df6.kind == k) & (~df6.transformed)]
+            ax.scatter(g.x_Al, g.E_form_eV_atom, marker=m, s=60, facecolor="white", edgecolor=c,
+                       lw=1.8, zorder=3, label=f"{l}（全配置、6×6×6）")
     ax.scatter(p.x_Al, p.E_form_eV_atom, marker="*", s=500, c="gold", edgecolor="k", zorder=5,
                label="完全 B2")
     ax.set_xlim(0.455, 0.545)
@@ -216,9 +270,11 @@ def main():
     df = load()
     df.to_csv(os.path.join(AN, "b2_defect_clusters.csv"), index=False)
     s = summarize(df)
-    fig_binding(df)
-    fig_matched(s)
-    fig_overlay(df)
+    df6 = load6(df)
+    s6 = summarize(df6, "_6x6x6") if df6 is not None else None
+    fig_binding(df, df6)
+    fig_matched(s, s6)
+    fig_overlay(df, df6)
     pd.set_option("display.width", 250)
     print(s.round(3).to_string())
 
