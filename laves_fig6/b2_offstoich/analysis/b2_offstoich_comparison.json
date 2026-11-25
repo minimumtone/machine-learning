@@ -1,12 +1,12 @@
 {
   "n_exp_points_compared": 12,
-  "RMSE_V_A3": 0.1577,
-  "MAPE_V_pct": 0.99,
+  "RMSE_V_A3": 0.1579,
+  "MAPE_V_pct": 0.991,
   "RMSE_V_A3_Ni_rich": 0.0863,
   "MAPE_V_pct_Ni_rich": 0.627,
   "n_points_Ni_rich": 3,
-  "RMSE_V_A3_Al_rich": 0.1752,
-  "MAPE_V_pct_Al_rich": 1.111,
+  "RMSE_V_A3_Al_rich": 0.1753,
+  "MAPE_V_pct_Al_rich": 1.113,
   "n_points_Al_rich": 9,
   "V_B2_perfect": 11.974527545032217,
   "a_B2_perfect": 2.882456714930723,
@@ -87,14 +87,14 @@
     },
     "0.53": {
       "selected_branch": "vacancy",
-      "G_atom_eV": -0.690256,
-      "Omega_total_eV": -83.521017,
-      "dG_eV": -0.036119
+      "G_atom_eV": -0.68783,
+      "Omega_total_eV": -82.539659,
+      "dG_eV": null
     },
     "0.54": {
       "selected_branch": "vacancy",
-      "G_atom_eV": -0.684881,
-      "Omega_total_eV": -80.815908,
+      "G_atom_eV": -0.683273,
+      "Omega_total_eV": -80.626166,
       "dG_eV": null
     },
     "0.55": {
